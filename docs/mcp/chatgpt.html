@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT & Claude Web MCP Setup - JT Power Tools</title>
+    <meta name="description" content="Connect JobTread to ChatGPT and Claude Web via OAuth 2.1. Step-by-step MCP setup guide for AI-powered access to your construction project data.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/mcp/chatgpt.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/mcp/chatgpt.html">
+    <meta property="og:title" content="ChatGPT & Claude Web MCP Setup - JT Power Tools">
+    <meta property="og:description" content="Connect JobTread to ChatGPT and Claude Web via OAuth 2.1. Query your jobs, budgets, and tasks from AI conversations.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <style>
+        .status-banner {
+            background: linear-gradient(135deg, #1a3d2a 0%, #1e332a 100%);
+            border: 1px solid #2d6b3f;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .status-banner .status-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: #4ade80;
+        }
+        .status-banner h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 2px;
+            color: #4ade80;
+            margin-bottom: 8px;
+        }
+        .status-banner p {
+            color: #b0b0b0;
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .status-banner p strong {
+            color: #e0e0e0;
+        }
+        .client-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+        .client-tab {
+            flex: 1;
+            padding: 14px 20px;
+            background: #1A1A1A;
+            border: 1px solid #2A2A2A;
+            border-bottom: none;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 1px;
+            color: #888;
+            transition: all 0.2s;
+        }
+        .client-tab:first-child {
+            border-radius: 10px 0 0 0;
+        }
+        .client-tab:last-child {
+            border-radius: 0 10px 0 0;
+        }
+        .client-tab.active {
+            background: #252525;
+            color: #FE4C0D;
+            border-color: #FE4C0D;
+            border-bottom: 1px solid #252525;
+        }
+        .client-tab:hover:not(.active) {
+            color: #e0e0e0;
+        }
+        .tab-content {
+            display: none;
+            background: #252525;
+            border: 1px solid #2A2A2A;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 28px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .setup-step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: flex-start;
+        }
+        .setup-step:last-child {
+            margin-bottom: 0;
+        }
+        .step-number {
+            min-width: 36px;
+            height: 36px;
+            background: #FE4C0D;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .step-content h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 17px;
+            letter-spacing: 1px;
+            color: #e0e0e0;
+            margin-bottom: 6px;
+        }
+        .step-content p {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .step-content p:last-child {
+            margin-bottom: 0;
+        }
+        .step-content strong {
+            color: #e0e0e0;
+        }
+        .step-content code {
+            background: #1e1e1e;
+            color: #ce9178;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        .url-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            color: #ce9178;
+            margin: 12px 0;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .url-box .copy-btn {
+            background: #FE4C0D;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .url-box .copy-btn:hover {
+            background: #e04300;
+        }
+        .explanation-card {
+            background: #1A1A1A;
+            border: 1px solid #2A2A2A;
+            border-radius: 10px;
+            padding: 28px;
+            margin: 24px 0;
+        }
+        .explanation-card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            letter-spacing: 1px;
+            color: #FE4C0D;
+            margin-bottom: 12px;
+        }
+        .explanation-card p {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        .explanation-card p:last-child {
+            margin-bottom: 0;
+        }
+        .explanation-card strong {
+            color: #e0e0e0;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .comparison-item {
+            background: #1A1A1A;
+            border: 1px solid #2A2A2A;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .comparison-item.supported {
+            border-color: #2d6b3f;
+        }
+        .comparison-item h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #e0e0e0;
+            margin-bottom: 6px;
+        }
+        .comparison-item .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .comparison-item .tag.oauth {
+            background: #1a3d2a;
+            color: #4ade80;
+        }
+        .comparison-item .tag.bearer {
+            background: #1a2d3d;
+            color: #60a5fa;
+        }
+        .comparison-item p {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0;
+        }
+        .prereq-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        .prereq-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #2A2A2A;
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+        .prereq-list li:last-child {
+            border-bottom: none;
+        }
+        .prereq-list li i {
+            color: #FE4C0D;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .prereq-list li a {
+            color: #FE4C0D;
+            text-decoration: none;
+        }
+        .prereq-list li a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .comparison-grid { grid-template-columns: 1fr; }
+            .client-tabs { flex-direction: column; }
+            .client-tab:first-child { border-radius: 10px 10px 0 0; }
+            .client-tab:last-child { border-radius: 0; }
+            .url-box { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">💬</span> ChatGPT & Claude Web MCP Setup</h1>
+            <p class="guide-meta">Connect JobTread to ChatGPT or Claude via OAuth</p>
+        </div>
+
+        <div class="guide-content">
+            <!-- Status Banner -->
+            <div class="status-banner">
+                <div class="status-icon"><i class="ph ph-check-circle"></i></div>
+                <h2>FULLY COMPATIBLE</h2>
+                <p>Both <strong>ChatGPT</strong> and <strong>Claude (web)</strong> support MCP via OAuth 2.1. Connect your JobTread account with a simple sign-in flow &mdash; no manual key copying required.</p>
+            </div>
+
+            <!-- Prerequisites -->
+            <div class="explanation-card">
+                <h3><i class="ph ph-list-checks" style="margin-right: 6px;"></i>Before You Start</h3>
+                <ul class="prereq-list">
+                    <li>
+                        <i class="ph ph-key"></i>
+                        <span><strong>Power User</strong> subscription &mdash; <a href="https://jobtread-tools.pro" target="_blank">Get one here</a></span>
+                    </li>
+                    <li>
+                        <i class="ph ph-puzzle-piece"></i>
+                        <span><strong>JT Power Tools extension</strong> installed in Chrome &mdash; <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank">Install</a></span>
+                    </li>
+                    <li>
+                        <i class="ph ph-identification-card"></i>
+                        <span>Your <strong>License Key</strong> (from your Power User subscription email)</span>
+                    </li>
+                    <li>
+                        <i class="ph ph-shield-check"></i>
+                        <span>Your <strong>Grant Key</strong> (from the JT Power Tools extension &rarr; MCP tab)</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tabbed Setup Instructions -->
+            <h2>Setup Instructions</h2>
+
+            <div class="client-tabs">
+                <div class="client-tab active" onclick="switchTab('chatgpt')">
+                    <i class="ph ph-chat-circle" style="margin-right: 4px;"></i> ChatGPT
+                </div>
+                <div class="client-tab" onclick="switchTab('claude')">
+                    <i class="ph ph-globe" style="margin-right: 4px;"></i> Claude Web
+                </div>
+            </div>
+
+            <!-- ChatGPT Tab -->
+            <div id="tab-chatgpt" class="tab-content active">
+                <div class="setup-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Enable Developer Mode</h4>
+                        <p>Go to <strong>ChatGPT</strong> &rarr; <strong>Settings</strong> &rarr; <strong>Apps</strong> &rarr; <strong>Advanced settings</strong> &rarr; Toggle on <strong>Developer mode</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Create App</h4>
+                        <p>Click <strong>"Create app"</strong> and paste this server URL:</p>
+                        <div class="url-box">
+                            <span id="chatgpt-url">https://jobtread-mcp-server.king0light-ai.workers.dev/mcp</span>
+                            <button class="copy-btn" onclick="copyUrl('chatgpt-url')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Authorize Your Account</h4>
+                        <p>ChatGPT will redirect you to the <strong>JT Power Tools authorization page</strong>. Enter your <strong>License Key</strong> and <strong>Grant Key</strong>, then click <strong>Authorize</strong>.</p>
+                        <p>This connects your JobTread account to ChatGPT securely via OAuth 2.1.</p>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Start Using It</h4>
+                        <p>That's it! Open any ChatGPT conversation and ask about your JobTread data. Try:</p>
+                        <p><code>"Show me my active jobs"</code> or <code>"What tasks are due this week?"</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Claude Web Tab -->
+            <div id="tab-claude" class="tab-content">
+                <div class="setup-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Open Claude Settings</h4>
+                        <p>Go to <a href="https://claude.ai" target="_blank"><strong>claude.ai</strong></a> &rarr; <strong>Settings</strong> &rarr; <strong>Connectors</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Add Custom Connector</h4>
+                        <p>Click <strong>"Add custom connector"</strong> and paste this server URL:</p>
+                        <div class="url-box">
+                            <span id="claude-url">https://jobtread-mcp-server.king0light-ai.workers.dev/mcp</span>
+                            <button class="copy-btn" onclick="copyUrl('claude-url')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Authorize Your Account</h4>
+                        <p>After adding the connector, click <strong>Connect</strong>. This opens the <strong>JT Power Tools authorization page</strong>. Enter your <strong>License Key</strong> and <strong>Grant Key</strong>, then click <strong>Authorize</strong>.</p>
+                        <p>This connects your JobTread account to Claude securely via OAuth 2.1.</p>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Start Using It</h4>
+                        <p>That's it! Open any Claude conversation and ask about your JobTread data. Try:</p>
+                        <p><code>"Show me my active jobs"</code> or <code>"What's the budget for job #1234?"</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="explanation-card">
+                <h3><i class="ph ph-shield-check" style="margin-right: 6px;"></i>How It Works</h3>
+                <p>
+                    Both ChatGPT and Claude use <strong>OAuth 2.1</strong> to securely connect to third-party MCP servers. When you add the server URL, the AI client automatically discovers the authentication endpoints and walks you through a sign-in flow.
+                </p>
+                <p>
+                    Your <strong>License Key</strong> and <strong>Grant Key</strong> are used once during authorization to create a secure, encrypted connection. After that, the AI client uses an OAuth access token &mdash; your keys are never stored by ChatGPT or Claude.
+                </p>
+                <p>
+                    You can revoke access at any time from the AI client's settings.
+                </p>
+            </div>
+
+            <!-- Compatibility -->
+            <h2>MCP Client Compatibility</h2>
+            <div class="comparison-grid">
+                <div class="comparison-item supported">
+                    <h4><i class="ph ph-chat-circle" style="margin-right: 4px;"></i> ChatGPT</h4>
+                    <span class="tag oauth">OAuth 2.1</span>
+                    <p>Auto-discovered OAuth flow. Full tool access via connected apps.</p>
+                </div>
+                <div class="comparison-item supported">
+                    <h4><i class="ph ph-globe" style="margin-right: 4px;"></i> Claude Web</h4>
+                    <span class="tag oauth">OAuth 2.1</span>
+                    <p>Auto-discovered OAuth flow via integrations settings.</p>
+                </div>
+                <div class="comparison-item supported">
+                    <h4><i class="ph ph-terminal" style="margin-right: 4px;"></i> Claude Code</h4>
+                    <span class="tag bearer">Bearer Token</span>
+                    <p>Bearer token auth via CLI config. <a href="claude-code.html" style="color: #FE4C0D;">Setup guide &rarr;</a></p>
+                </div>
+                <div class="comparison-item supported">
+                    <h4><i class="ph ph-cursor-text" style="margin-right: 4px;"></i> Cursor &amp; Others</h4>
+                    <span class="tag bearer">Bearer Token</span>
+                    <p>Bearer token auth via settings. <a href="cursor.html" style="color: #FE4C0D;">Setup guide &rarr;</a></p>
+                </div>
+                <div class="comparison-item supported">
+                    <h4><i class="ph ph-lightning" style="margin-right: 4px;"></i> Grok</h4>
+                    <span class="tag bearer">Bearer Token</span>
+                    <p>Remote MCP tools via xAI API. <a href="grok.html" style="color: #FE4C0D;">Setup guide &rarr;</a></p>
+                </div>
+                <div class="comparison-item supported">
+                    <h4><i class="ph ph-sparkle" style="margin-right: 4px;"></i> Gemini CLI</h4>
+                    <span class="tag bearer">Bearer Token</span>
+                    <p>Native httpUrl MCP config. <a href="gemini.html" style="color: #FE4C0D;">Setup guide &rarr;</a></p>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="explanation-card">
+                <h3><i class="ph ph-wrench" style="margin-right: 6px;"></i>Troubleshooting</h3>
+                <p>
+                    <strong>"License key not found"</strong> &mdash; Double-check your license key from your subscription email. Make sure there are no extra spaces.
+                </p>
+                <p>
+                    <strong>"Invalid Grant Key"</strong> &mdash; Get a fresh grant key from the JT Power Tools Chrome extension &rarr; MCP tab. Grant keys can expire if unused.
+                </p>
+                <p>
+                    <strong>"Tier doesn't include MCP access"</strong> &mdash; MCP requires a <strong>Power User</strong> subscription. <a href="https://jobtread-tools.pro" target="_blank" style="color: #FE4C0D;">Upgrade here</a>.
+                </p>
+                <p>
+                    <strong>Still stuck?</strong> Join our <a href="https://discord.gg/u57GzaT6bp" target="_blank" style="color: #FE4C0D;">Discord</a> for help.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>JT Power Tools &mdash; Made for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function copyUrl(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

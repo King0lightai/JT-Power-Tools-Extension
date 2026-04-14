@@ -1,0 +1,817 @@
+/* === JT Power Tools - Dark Mode Theme === */
+/* Custom dark theme for JobTread interface */
+
+/* === Z-Index Fixes for Sidebars === */
+/* Ensure sidebar panels appear above job tabs and content bars when scrolling */
+.jt-job-tabs-container {
+    position: relative;
+    z-index: 20 !important;
+}
+
+/* Sidebar panels (Daily Log, etc.) need higher z-index to stay above page content */
+/* Target the absolute positioned sidebars on the right side */
+.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"],
+div.z-30.absolute.top-0.bottom-0.right-0 {
+    z-index: 35 !important;
+}
+
+/* Ensure the inner content of sidebars also has proper stacking */
+.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"] > .absolute.inset-0,
+div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
+    z-index: inherit;
+}
+
+/* === Logo Colors === */
+/* Make the JOBTREAD text white in dark mode, but keep orange elements orange */
+.text-gray-800 {
+    color: #ffffff !important;
+}
+
+/* === Schedule Card Overrides (Inline Styles) === */
+/* Dark overlay on task cards to darken bright backgrounds */
+/* Covers month view (td), week/day view (div.select-none), and direct cards (border-l-2) */
+td div.cursor-pointer[style*="background-color"],
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] {
+    position: relative !important;
+}
+
+td div.cursor-pointer[style*="background-color"]::before,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before,
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.65) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+/* Ensure text and content stays above the overlay */
+td div.cursor-pointer[style*="background-color"] > *,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *,
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > * {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Force white text on darkened task cards */
+td div.cursor-pointer[style*="background-color"],
+td div.cursor-pointer[style*="background-color"] *,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *,
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"],
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] * {
+    color: white !important;
+}
+
+/* Keep the left border visible (task type indicator) */
+td div.cursor-pointer[style*="border-left"],
+div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"],
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"] {
+    border-left-width: 4px !important;
+}
+
+/* === Availability View Task Cards (Inline Styles) === */
+/* These cards use text-xs with inline background-color/color, not cursor-pointer */
+td div.h-full > div.text-xs[style*="background-color"] {
+    position: relative !important;
+}
+
+td div.h-full > div.text-xs[style*="background-color"]::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.65) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+/* Ensure text stays above the dark overlay */
+td div.h-full > div.text-xs[style*="background-color"] > * {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Force white text on darkened availability cards */
+td div.h-full > div.text-xs[style*="background-color"],
+td div.h-full > div.text-xs[style*="background-color"] * {
+    color: white !important;
+}
+
+/* === Week/Day View Schedule Cards === */
+/* Week/day view uses grid-based layout instead of table cells */
+/* Target the grid column containers (calendar cell backgrounds, not task cards) */
+div.border-l[style*="grid-column"] {
+    background-color: #2c2c2c !important;
+}
+
+/* Target all week/day view card wrappers (calendar cell backgrounds) */
+div.select-none.break-inside-avoid.p-0.align-top {
+    background-color: #2c2c2c !important;
+}
+
+/* Also target when inside border-l container */
+div.border-l div.select-none.break-inside-avoid {
+    background-color: #2c2c2c !important;
+}
+
+/* Note: Task card backgrounds/text are handled by contrast-fix.js to preserve selected state */
+
+/* === General Styles === */
+/* Global border color */
+*, ::backdrop, ::file-selector-button, :after, :before {
+    border-color: #464646;
+}
+
+/* Transparent border */
+.border-transparent {
+    border-color: transparent;
+}
+
+/* Transparent background */
+.relative.overflow-hidden.select-none.pointer-events-none.rounded-sm.border.p-2.w-full.appearance-none.transition {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Dark caret color */
+.caret-black {
+    caret-color: #ffffff;
+}
+
+/* White border for dark mode */
+.border-white {
+    border-color: #353535;
+}
+
+/* Orange border */
+.border-jtOrange {
+    border-color: #ff5600;
+}
+
+/* Ring color */
+.ring-gray-200 {
+    --tw-ring-color: #696969;
+}
+
+/* Stripe CSS */
+.StripeElement {
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Show more */
+.from-white {
+    --tw-gradient-from: var(--color-white);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #232323 var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+}
+
+/* === Background Colors === */
+.bg-white {
+    background-color: #2c2c2c;
+}
+
+.bg-gray-50 {
+    background-color: #353535;
+}
+
+.bg-gray-100 {
+    background-color: #353535;
+}
+
+.bg-gray-700 {
+    background-color: #515151;
+}
+
+.bg-yellow-100 {
+    background-color: #46442e;
+}
+
+.bg-slate-50 {
+    background-color: #2b2b2b;
+}
+
+.bg-blue-100,
+.bg-blue-50 {
+    background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
+}
+
+/* SVG fill colors for dark mode - used by checkbox/radio circle interiors */
+.fill-blue-50 {
+    fill: #2c2c2c; /* Match dark mode background so checkbox circle interior is dark */
+}
+
+/* Alert background colors for dark mode */
+.bg-green-50 {
+    background-color: #1a3a2e; /* Dark green for green alerts */
+}
+
+.bg-yellow-50 {
+    background-color: #4a3a1a; /* Dark yellow/amber for yellow alerts */
+}
+
+.bg-red-50 {
+    background-color: #4a1f1f; /* Dark red for red alerts */
+}
+
+.bg-orange-50 {
+    background-color: #4a2a1a; /* Dark orange for orange alerts */
+}
+
+.bg-purple-50 {
+    background-color: #3a2a4a; /* Dark purple for purple alerts */
+}
+
+/* Alert text and border colors for dark mode */
+.text-green-500,
+.border-green-500 {
+    color: #34d399;
+    border-color: #34d399;
+}
+
+.text-yellow-500,
+.border-yellow-500 {
+    color: #fbbf24;
+    border-color: #fbbf24;
+}
+
+.text-red-500,
+.border-red-500 {
+    color: #f87171;
+    border-color: #f87171;
+}
+
+.text-orange-500,
+.border-orange-500 {
+    color: #fb923c;
+    border-color: #fb923c;
+}
+
+.text-purple-500,
+.border-purple-500 {
+    color: #a78bfa;
+    border-color: #a78bfa;
+}
+
+/* Alert body text should be white in dark mode, not colored */
+/* Target direct text content inside alert containers */
+.bg-green-50,
+.bg-yellow-50,
+.bg-red-50,
+.bg-orange-50,
+.bg-purple-50 {
+    color: #ffffff;
+}
+
+/* Keep the header/title colored (override the white text for header elements) */
+.bg-green-50 .text-green-500 {
+    color: #34d399 !important;
+}
+
+.bg-yellow-50 .text-yellow-500 {
+    color: #fbbf24 !important;
+}
+
+.bg-red-50 .text-red-500 {
+    color: #f87171 !important;
+}
+
+.bg-orange-50 .text-orange-500 {
+    color: #fb923c !important;
+}
+
+.bg-purple-50 .text-purple-500 {
+    color: #a78bfa !important;
+}
+
+/* Sticky columns need solid colors to prevent see-through when scrolling */
+/* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
+.sticky[style*="left"].bg-blue-50,
+.sticky[style*="left"].bg-blue-100 {
+    background-color: #2f3d54 !important; /* Solid blend of #2c2c2c + 20% blue */
+}
+
+.group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
+.group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
+    background-color: #2f3d54 !important; /* Solid blend for sticky columns */
+}
+
+.sticky[style*="top: 0px"].bg-blue-50,
+.sticky[style*="top: 0px"].bg-blue-100,
+.sticky[style*="top:0px"].bg-blue-50,
+.sticky[style*="top:0px"].bg-blue-100,
+.sticky[style*="top: 0"].bg-blue-50,
+.sticky[style*="top: 0"].bg-blue-100 {
+    background-color: #2f3d54 !important; /* Solid blend for sticky rows at top: 0 only */
+}
+
+/* Today's date indicator in calendar - keep solid blue in dark mode */
+/* Exclude Gantt task bars which have rounded-l-sm/rounded-r-sm and inline background colors */
+.bg-blue-500:not(.rounded-l-sm):not(.rounded-r-sm):not([style*="background-color"]) {
+    background-color: #3b82f6 !important;
+}
+
+.bg-blue-500.text-white {
+    color: #ffffff !important;
+}
+
+/* Gantt task bars - preserve their inline background-color (task type colors) */
+/* These bars have bg-blue-500 as a fallback but should use inline style colors */
+.h-4.rounded-l-sm.rounded-r-sm.bg-blue-500[style*="background-color"] {
+    /* Allow inline styles to take precedence - no !important override */
+}
+
+.bg-gray-800\/80 {
+    background-color: color-mix(in oklab, oklch(0.2 0 0) 80%, transparent);
+}
+
+.focus\:bg-white:focus {
+    background-color: #4b4b4b;
+}
+
+.shadow-sm.font-bold {
+    border: none !important;
+}
+
+/* === Text Colors === */
+/* Wrapped in @media screen to prevent light text colors from being included
+   in spreadsheet exports (e.g., Mac Numbers shows blank data with white text) */
+@media screen {
+    .text-gray-500 {
+        color: #b8b8b8;
+    }
+
+    .text-gray-600 {
+        color: #e0e0e0;
+    }
+
+    .text-slate-600 {
+        color: #9ab0c8;
+    }
+
+    .text-gray-700 {
+        color: #ececec;
+    }
+
+    .text-gray-800 {
+        color: #f2f2f2;
+    }
+
+    .text-gray-900 {
+        color: #f9f9f9;
+    }
+
+    .text-black {
+        color: #ffffff;
+    }
+
+    .sticky.uppercase {
+        color: #ffffff !important;
+    }
+
+    .break-inside-avoid .uppercase, .space-x-2 .uppercase {
+        color: #f5f5f5 !important;
+    }
+}
+
+/* === Shadow Styles === */
+.shadow-line-right {
+    box-shadow: 1px 0 0 #464646;
+}
+
+.shadow-line-left {
+    box-shadow: -1px 0 0 #353535;
+}
+
+.shadow-line-bottom {
+    box-shadow: 0 1px 0 #3d3d3d;
+}
+
+.shadow-sm {
+    --tw-shadow: none;
+    border: solid 1px #414141;
+}
+
+/* Scrollbar track (background) */
+::-webkit-scrollbar {
+  width: 12px; /* or height for horizontal scrollbars */
+  background-color: #5f5f5f; /* light gray background */
+}
+
+/* Scrollbar thumb (the draggable bar) */
+::-webkit-scrollbar-thumb {
+  background-color: #969696; /* dark gray thumb */
+  border-radius: 6px; /* rounded corners */
+  border: 3px solid #5f5f5f !important;
+}
+
+/* === Focus Styles === */
+.focus-within\:bg-white {
+    background-color: #2c2c2c;
+}
+
+.focus-within\:border-cyan-500:focus-within {
+    border-color: #646464;
+}
+
+.focus-within\:bg-blue-50:focus-within {
+    background-color: rgba(59, 130, 246, 0.3); /* Blue with 30% opacity for selection in dark mode */
+}
+
+.focus\:bg-gray-100 {
+    &:focus {
+        background-color: #353535;
+    }
+}
+
+/* === Hover Styles === */
+.hover\:\[\&\:not\(\:focus-within\)\]\:bg-gray-50 {
+    &:hover {
+        &:not(:focus-within) {
+            background-color: #313131;
+        }
+    }
+}
+
+.hover\:bg-gray-50:hover {
+    background-color: #353535;
+}
+
+.hover\:bg-gray-100:hover {
+    background-color: #353535;
+}
+
+.hover\:bg-gray-200:hover {
+    background-color: #515151;
+}
+
+.hover\:bg-slate-50:hover {
+    background-color: #353535;
+}
+
+.hover\:bg-gray-800:hover {
+    background-color: #5a5a5a;
+}
+
+.hover\:text-gray-800:hover {
+    color: #f2f2f2;
+}
+
+.hover\:text-gray-900:hover {
+    color: #ffffff;
+}
+
+.hover\:bg-blue-50 {
+    &:hover {
+        background-color: rgba(59, 130, 246, 0.25); /* Blue with 25% opacity for hover in dark mode */
+    }
+}
+
+.hover\:bg-blue-100:hover {
+    background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for hover in dark mode */
+}
+
+/* === Active Styles === */
+.active\:bg-gray-200 {
+    &:active {
+        background-color: #2c2c2c;
+    }
+}
+
+/* === Group Hover Styles === */
+.group-hover\/row\:bg-gray-50 {
+    background-color: #353535; /* Tailwind Zinc-900 */
+}
+
+.group-hover\/row\:bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for group hover in dark mode */
+}
+
+.group:hover .group-hover\:text-gray-800 {
+    color: #f2f2f2;
+}
+
+.group:hover .group-hover\:bg-slate-50 {
+    background-color: #383b3f;
+}
+
+.group:hover .row\:bg-gray-50 {
+    background-color: #383b3f;
+}
+
+/* === Text Formatter Dark Mode === */
+/* Main toolbar container */
+.jt-formatter-toolbar {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    box-shadow: none !important;
+}
+
+/* Toolbar dividers */
+.jt-toolbar-divider {
+    background: #464646 !important;
+}
+
+/* Toolbar buttons */
+.jt-formatter-toolbar button {
+    background: #353535 !important;
+    color: #e0e0e0 !important;
+    border-color: transparent !important;
+}
+
+.jt-formatter-toolbar button:hover {
+    background: #464646 !important;
+    border-color: #5a5a5a !important;
+}
+
+.jt-formatter-toolbar button:active {
+    background: #2c2c2c !important;
+}
+
+/* Active state buttons (keep blue for visibility) */
+.jt-formatter-toolbar button.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
+
+.jt-formatter-toolbar button.active:hover {
+    background: #2563eb !important;
+    border-color: #1d4ed8 !important;
+}
+
+.jt-formatter-toolbar button.active:active {
+    background: #1d4ed8 !important;
+}
+
+/* Dropdown menus */
+.jt-dropdown-menu {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    box-shadow: none !important;
+}
+
+.jt-dropdown-menu button {
+    color: #e0e0e0 !important;
+}
+
+.jt-dropdown-menu button:hover {
+    background: #464646 !important;
+}
+
+.jt-dropdown-menu button.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+.jt-dropdown-menu button.active:hover {
+    background: #2563eb !important;
+}
+
+/* Color dropdown */
+.jt-color-dropdown {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    box-shadow: none !important;
+}
+
+/* Color options - darken hover backgrounds for better contrast */
+.jt-formatter-toolbar button.jt-color-green:hover {
+    background: #064e3b !important;
+}
+
+.jt-formatter-toolbar button.jt-color-yellow:hover {
+    background: #78350f !important;
+}
+
+.jt-formatter-toolbar button.jt-color-blue:hover {
+    background: #1e3a8a !important;
+}
+
+.jt-formatter-toolbar button.jt-color-red:hover {
+    background: #7f1d1d !important;
+}
+
+.jt-formatter-toolbar button.jt-color-orange:hover {
+    background: #7c2d12 !important;
+}
+
+.jt-formatter-toolbar button.jt-color-purple:hover {
+    background: #4c1d95 !important;
+}
+
+/* === Budget Group Level Row Shading === */
+/* Ensure group level rows have consistent gray shading across ALL cells */
+/* This makes sure row numbers and unit columns also get the group shade */
+/* BUT preserve yellow highlighting for unsaved changes and blue for selection */
+/* Exclude resize handles (.cursor-col-resize) from inheriting background */
+[class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
+    background-color: inherit !important;
+}
+
+/* Also apply to item-under-level rows */
+[class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
+    background-color: inherit !important;
+}
+
+/* === Budget Table Frozen Column Highlighting === */
+/* Only handle colors - no z-index or positioning changes */
+
+/* === Column Resize Handles === */
+/* Reduce z-index so they don't appear over sticky headers when scrolling */
+.absolute.z-10.cursor-col-resize {
+    z-index: 1 !important;
+}
+
+.absolute.z-10.cursor-col-resize:hover {
+    background-color: #555555 !important;
+}
+
+/* === Alert Modal Dark Mode === */
+.jt-alert-modal-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.jt-alert-modal {
+    background: #2c2c2c !important;
+}
+
+.jt-alert-modal-header {
+    background: #2c2c2c !important;
+    border-bottom-color: #464646 !important;
+}
+
+.jt-alert-modal-title {
+    color: #60a5fa !important; /* Lighter cyan for dark mode */
+}
+
+.jt-alert-modal-close {
+    background: #353535 !important;
+    color: #e0e0e0 !important;
+    border-color: #464646 !important;
+}
+
+.jt-alert-modal-close:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-modal-body {
+    background: #2c2c2c !important;
+}
+
+.jt-alert-dropdown-button {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    color: #e0e0e0 !important;
+}
+
+.jt-alert-dropdown-button:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-dropdown-menu {
+    background: #353535 !important;
+    border-color: #464646 !important;
+}
+
+.jt-alert-dropdown-item {
+    background: #353535 !important;
+    border-bottom-color: #464646 !important;
+    color: #e0e0e0 !important;
+}
+
+.jt-alert-dropdown-item:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-dropdown-item.active {
+    background: #1e3a5f !important; /* Darker blue for dark mode */
+}
+
+.jt-alert-subject {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    color: #f2f2f2 !important;
+}
+
+.jt-alert-subject:hover:not(:focus) {
+    background: #464646 !important;
+    border-color: #5a5a5a !important;
+}
+
+.jt-alert-subject:focus {
+    background: #3a3a3a !important;
+    border-color: #60a5fa !important;
+}
+
+.jt-alert-subject::placeholder {
+    color: #9ca3af !important;
+}
+
+.jt-alert-message-container {
+    border-color: #464646 !important;
+}
+
+.jt-alert-message {
+    background: #353535 !important;
+    color: #f2f2f2 !important;
+}
+
+.jt-alert-message:hover:not(:focus) {
+    background: #464646 !important;
+}
+
+.jt-alert-message:focus {
+    background: #3a3a3a !important;
+}
+
+.jt-alert-message::placeholder {
+    color: #9ca3af !important;
+}
+
+.jt-alert-modal-footer {
+    background: #2c2c2c !important;
+    border-top-color: #464646 !important;
+}
+
+.jt-alert-btn-cancel {
+    background: #353535 !important;
+    color: #e0e0e0 !important;
+    border-color: #464646 !important;
+}
+
+.jt-alert-btn-cancel:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-btn-add {
+    background: #10b981 !important;
+    border-color: #059669 !important;
+}
+
+.jt-alert-btn-add:hover {
+    background: #059669 !important;
+}
+
+/* === Preview Mode Alert Dark Mode === */
+.jt-preview-content .bg-blue-50 {
+    background-color: #1e3a5f !important;
+}
+
+.jt-preview-content .bg-yellow-50 {
+    background-color: #4a3a1a !important;
+}
+
+.jt-preview-content .bg-red-50 {
+    background-color: #4a1f1f !important;
+}
+
+.jt-preview-content .bg-green-50 {
+    background-color: #1a3a2e !important;
+}
+
+.jt-preview-content .bg-orange-50 {
+    background-color: #4a2a1a !important;
+}
+
+.jt-preview-content .bg-purple-50 {
+    background-color: #3a2a4a !important;
+}
+
+.jt-preview-content .text-blue-500,
+.jt-preview-content .border-blue-500 {
+    color: #60a5fa !important;
+    border-color: #60a5fa !important;
+}
+
+.jt-preview-content .text-yellow-500,
+.jt-preview-content .border-yellow-500 {
+    color: #fbbf24 !important;
+    border-color: #fbbf24 !important;
+}
+
+.jt-preview-content .text-red-500,
+.jt-preview-content .border-red-500 {
+    color: #f87171 !important;
+    border-color: #f87171 !important;
+}
+
+.jt-preview-content .text-green-500,
+.jt-preview-content .border-green-500 {
+    color: #34d399 !important;
+    border-color: #34d399 !important;
+}
+
+.jt-preview-content .text-jtOrange,
+.jt-preview-content .border-jtOrange {
+    color: #ff7733 !important;
+    border-color: #ff7733 !important;
+}
+
+.jt-preview-content .text-purple-500,
+.jt-preview-content .border-purple-500 {
+    color: #a78bfa !important;
+    border-color: #a78bfa !important;
+}

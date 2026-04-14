@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Filtering - JT Power Tools</title>
+    <meta name="description" content="Auto-hide empty columns in JobTread Kanban boards. Focus on active workflow stages by filtering out unused columns automatically.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/guides/kanban-filter.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/guides/kanban-filter.html">
+    <meta property="og:title" content="Kanban Filtering - JT Power Tools">
+    <meta property="og:description" content="Auto-hide empty columns in JobTread Kanban boards. Focus on active workflow stages by filtering out unused columns automatically.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">📋</span> Kanban Filtering</h1>
+            <p class="guide-meta">Free Feature - Hide Empty Columns</p>
+        </div>
+
+        <div class="guide-content">
+            <h2>Overview</h2>
+            <p>Kanban Filtering automatically hides empty columns (0 items) in JobTread's Kanban/grouped views. This gives you a cleaner board that focuses on columns that actually have work in them, reducing visual clutter and horizontal scrolling.</p>
+
+            <h3>Key Features</h3>
+            <ul>
+                <li><strong>Auto-Hide Empty Columns</strong> - Columns with 0 items are hidden automatically</li>
+                <li><strong>Real-Time Updates</strong> - When a column becomes empty or populated, it updates instantly</li>
+                <li><strong>Works With Any Grouping</strong> - Status, assignee, priority, or any other grouping field</li>
+                <li><strong>Schedule & Tasks Pages</strong> - Works on both schedule and to-do Kanban views</li>
+                <li><strong>Non-Destructive</strong> - Only hides the view, never deletes columns or data</li>
+                <li><strong>Automatic Detection</strong> - No configuration needed, just enable and go</li>
+            </ul>
+
+            <h2>How It Works</h2>
+
+            <h3>Column Detection</h3>
+            <p>The feature identifies Kanban columns by their structure and styling:</p>
+            <ul>
+                <li>Detects column containers with Kanban-specific CSS classes</li>
+                <li>Reads the item count from column headers</li>
+                <li>Monitors for changes when items are added, moved, or removed</li>
+            </ul>
+
+            <h3>Filtering Logic</h3>
+            <ul>
+                <li><strong>Count = 0</strong> → Column is hidden</li>
+                <li><strong>Count > 0</strong> → Column is shown</li>
+                <li>Re-evaluates whenever the board changes</li>
+            </ul>
+
+            <h3>Real-Time Updates</h3>
+            <p>The filter automatically re-applies when:</p>
+            <ul>
+                <li>Items are dragged between columns</li>
+                <li>Items are created or deleted</li>
+                <li>Filters or grouping options change</li>
+                <li>Page navigation occurs</li>
+            </ul>
+
+            <h2>Supported Pages</h2>
+
+            <p>Kanban Filtering works on these JobTread pages when in Kanban/grouped view:</p>
+            <ul>
+                <li><strong>Schedule</strong> - When grouped by status, assignee, etc.</li>
+                <li><strong>Tasks</strong> - When grouped by any field</li>
+                <li><strong>To-Dos</strong> - When using Kanban board view</li>
+            </ul>
+
+            <div class="info-box tip">
+                <strong>Note</strong>
+                <p>This feature only works when JobTread is displaying a Kanban/column view. In list or Gantt views, there are no columns to filter.</p>
+            </div>
+
+            <h2>Getting Started</h2>
+
+            <ol class="steps">
+                <li>
+                    <strong>Enable the Feature</strong><br>
+                    Open JT Power Tools popup and enable "Kanban Filtering"
+                </li>
+                <li>
+                    <strong>Navigate to Kanban View</strong><br>
+                    Go to Schedule or Tasks and switch to a grouped/Kanban view
+                </li>
+                <li>
+                    <strong>See Cleaner Board</strong><br>
+                    Empty columns are automatically hidden
+                </li>
+                <li>
+                    <strong>Move Items Freely</strong><br>
+                    When you move an item to make a column empty, it hides. When you move items in, it appears.
+                </li>
+            </ol>
+
+            <h2>Visual Behavior</h2>
+
+            <h3>Before Kanban Filtering</h3>
+            <ul>
+                <li>All columns visible including empty ones</li>
+                <li>Wide horizontal scroll to see populated columns</li>
+                <li>Visual clutter from unused status/category columns</li>
+            </ul>
+
+            <h3>After Kanban Filtering</h3>
+            <ul>
+                <li>Only columns with items are visible</li>
+                <li>More compact, focused board</li>
+                <li>Less horizontal scrolling needed</li>
+                <li>Easier to see where work actually is</li>
+            </ul>
+
+            <h2>Common Use Cases</h2>
+
+            <h3>Status-Based Boards</h3>
+            <p>When grouping by status, you might have statuses like "Not Started", "In Progress", "On Hold", "Complete". If no items are "On Hold", that column hides automatically.</p>
+
+            <h3>Assignee Boards</h3>
+            <p>When grouping by team member, columns for team members with no assigned tasks are hidden, showing only who has active work.</p>
+
+            <h3>Task Type Boards</h3>
+            <p>When grouping by task type (Inspection, Material Delivery, Rough-In, etc.), columns for task types with no items are hidden, letting you focus on what's actually scheduled.</p>
+
+            <h2>Tips & Best Practices</h2>
+
+            <h3>Workflow Benefits</h3>
+            <ul>
+                <li>See at a glance which statuses/categories have active work</li>
+                <li>Reduce time scrolling through empty columns</li>
+                <li>Focus meetings on columns that matter</li>
+                <li>Quickly identify bottlenecks in populated columns</li>
+            </ul>
+
+            <h3>Works Well With</h3>
+            <ul>
+                <li><strong>Auto Collapse Completed</strong> - Hide empty columns and collapse finished groups</li>
+                <li><strong>Freeze Header</strong> - Column headers stay visible while scrolling</li>
+                <li><strong>Dark Mode</strong> - Clean board in comfortable dark theme</li>
+            </ul>
+
+            <h2>Troubleshooting</h2>
+
+            <h3>Columns Not Hiding?</h3>
+            <ul>
+                <li>Make sure the feature is enabled in the popup</li>
+                <li>Verify you're in Kanban/grouped view (not list or Gantt)</li>
+                <li>Check that the column count actually shows 0</li>
+                <li>Try refreshing the page</li>
+            </ul>
+
+            <h3>Column Flickering?</h3>
+            <ul>
+                <li>This can happen during rapid updates</li>
+                <li>The feature uses debouncing to minimize flicker</li>
+                <li>Wait a moment for the board to settle</li>
+            </ul>
+
+            <h3>Want to See All Columns?</h3>
+            <ul>
+                <li>Simply disable the feature in the popup</li>
+                <li>All columns will show immediately</li>
+                <li>Re-enable anytime to hide empty columns again</li>
+            </ul>
+
+            <h2>Technical Details</h2>
+
+            <h3>Performance</h3>
+            <ul>
+                <li>Uses CSS <code>display: none</code> for efficient hiding</li>
+                <li>Debounced updates (150ms) prevent excessive re-processing</li>
+                <li>MutationObserver watches for changes efficiently</li>
+                <li>Minimal impact on page performance</li>
+            </ul>
+
+            <h3>Compatibility</h3>
+            <ul>
+                <li><strong>Dark Mode</strong> - Works with both light and dark themes</li>
+                <li><strong>All Grouping Types</strong> - Status, assignee, priority, etc.</li>
+                <li><strong>Expanded & Collapsed Views</strong> - Works with both column states</li>
+            </ul>
+
+            <h2>Related Guides</h2>
+            <ul>
+                <li><a href="auto-collapse.html">Auto Collapse Completed</a> - Automatically collapse finished groups</li>
+                <li><a href="drag-drop.html">Schedule Task Checkboxes</a> - Mark tasks complete from any view</li>
+                <li><a href="freeze-header.html">Freeze Header</a> - Keep column headers visible</li>
+                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

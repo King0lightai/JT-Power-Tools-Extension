@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Changelog - JT Power Tools</title>
+    <meta name="description" content="Track every change to your JobTread budgets with an automatic changelog. See who changed what, when, and the before/after values.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/guides/budget-changelog.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/guides/budget-changelog.html">
+    <meta property="og:title" content="Budget Changelog - JT Power Tools">
+    <meta property="og:description" content="Track every change to your JobTread budgets with an automatic changelog. See who changed what, when, and the before/after values.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">📊</span> Budget Changelog</h1>
+            <p class="guide-meta">Power User Feature - Compare Budget Backups</p>
+        </div>
+
+        <div class="guide-content">
+            <div class="info-box premium">
+                <strong>Power User Feature</strong>
+                <p>This feature requires a Power User license and API configuration. <a href="premium.html">Learn how to activate your license</a>.</p>
+            </div>
+
+            <h2>Overview</h2>
+            <p>Budget Changelog lets you compare budget backups and see exactly what changed between versions. When you open the Budget Backups sidebar in JobTread, you can select two backups to compare and get a detailed, human-readable report of all additions, deletions, and modifications.</p>
+
+            <h3>Key Features</h3>
+            <ul>
+                <li><strong>Side-by-Side Comparison</strong> - Compare any two budget backups</li>
+                <li><strong>Human-Readable Changes</strong> - See changes in plain language, not raw data</li>
+                <li><strong>Line Item Tracking</strong> - Track additions, deletions, and modifications</li>
+                <li><strong>Cost Change Summary</strong> - See total cost impact of changes</li>
+                <li><strong>Detailed Report</strong> - Opens a formatted report in a new tab</li>
+            </ul>
+
+            <h2>Requirements</h2>
+
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>JT Power Tools extension installed</li>
+                <li>Active Power User license</li>
+                <li><strong>JobTread API Grant Key configured</strong> (required)</li>
+                <li>Budget backups created in JobTread</li>
+            </ul>
+
+            <div class="info-box tip">
+                <strong>API Configuration Required</strong>
+                <p>Budget Changelog requires API access to parse and compare budget backup data. Configure your Grant Key in the extension settings before using this feature.</p>
+            </div>
+
+            <h2>Setting Up</h2>
+
+            <h3>Step 1: Configure API Access</h3>
+            <ol class="steps">
+                <li>Open the JT Power Tools popup</li>
+                <li>Go to the "License" tab</li>
+                <li>Scroll to the API Configuration section</li>
+                <li>Enter your JobTread Grant Key</li>
+                <li>Click "Test Connection" to verify</li>
+            </ol>
+
+            <h3>Step 2: Enable Budget Changelog</h3>
+            <ol class="steps">
+                <li>In the extension popup, find "Budget Changelog"</li>
+                <li>Toggle it ON</li>
+                <li>Refresh JobTread to apply changes</li>
+            </ol>
+
+            <h2>Using Budget Changelog</h2>
+
+            <h3>Comparing Budgets</h3>
+            <ol class="steps">
+                <li>
+                    <strong>Open a Job Budget</strong><br>
+                    Navigate to any job's budget page in JobTread
+                </li>
+                <li>
+                    <strong>Open Budget Backups Sidebar</strong><br>
+                    Click on the Budget Backups option to open the sidebar
+                </li>
+                <li>
+                    <strong>Select Backups to Compare</strong><br>
+                    Check the boxes next to two backup versions you want to compare
+                </li>
+                <li>
+                    <strong>Click Compare</strong><br>
+                    Click the "Compare Selected" button that appears
+                </li>
+                <li>
+                    <strong>View the Report</strong><br>
+                    A detailed changelog report opens in a new tab
+                </li>
+            </ol>
+
+            <h2>Understanding the Report</h2>
+
+            <h3>Report Sections</h3>
+            <p>The changelog report includes several sections:</p>
+
+            <h4>Summary</h4>
+            <ul>
+                <li>Date range of the comparison</li>
+                <li>Total number of changes</li>
+                <li>Net cost impact</li>
+            </ul>
+
+            <h4>Added Items</h4>
+            <ul>
+                <li>New line items added to the budget</li>
+                <li>Shows item name, quantity, and cost</li>
+                <li>Highlighted in green</li>
+            </ul>
+
+            <h4>Removed Items</h4>
+            <ul>
+                <li>Line items that were deleted</li>
+                <li>Shows what was removed and its cost</li>
+                <li>Highlighted in red</li>
+            </ul>
+
+            <h4>Modified Items</h4>
+            <ul>
+                <li>Items that changed between versions</li>
+                <li>Shows before and after values</li>
+                <li>Includes quantity, cost, and description changes</li>
+                <li>Highlighted in yellow/orange</li>
+            </ul>
+
+            <h3>Change Types Tracked</h3>
+            <ul>
+                <li><strong>Quantity Changes</strong> - When quantities increase or decrease</li>
+                <li><strong>Price Changes</strong> - Unit cost modifications</li>
+                <li><strong>Total Cost Changes</strong> - Overall line item cost differences</li>
+                <li><strong>Description Changes</strong> - Text or name modifications</li>
+                <li><strong>Group Changes</strong> - Items moved between budget groups</li>
+            </ul>
+
+            <h2>Common Use Cases</h2>
+
+            <h3>Change Order Documentation</h3>
+            <p>Use Budget Changelog to document what changed for change orders:</p>
+            <ul>
+                <li>Create a backup before making changes</li>
+                <li>Make your budget modifications</li>
+                <li>Create another backup after changes</li>
+                <li>Compare the two to generate a change summary</li>
+                <li>Use the report for client communication or records</li>
+            </ul>
+
+            <h3>Audit Trail</h3>
+            <p>Track budget changes over time:</p>
+            <ul>
+                <li>Compare current budget to the original estimate</li>
+                <li>See cumulative changes throughout a project</li>
+                <li>Identify when specific changes were made</li>
+            </ul>
+
+            <h3>Team Review</h3>
+            <p>Review changes made by team members:</p>
+            <ul>
+                <li>Compare backups from different dates</li>
+                <li>See what was modified and by how much</li>
+                <li>Verify changes match approved modifications</li>
+            </ul>
+
+            <h2>Best Practices</h2>
+
+            <h3>Creating Useful Backups</h3>
+            <ul>
+                <li>Create backups before major budget changes</li>
+                <li>Use descriptive backup names (e.g., "Pre-Change Order #3")</li>
+                <li>Create backups at key project milestones</li>
+                <li>Maintain regular backup schedules for active projects</li>
+            </ul>
+
+            <h3>Effective Comparisons</h3>
+            <ul>
+                <li>Compare sequential backups for detailed change tracking</li>
+                <li>Compare original to current for overall project changes</li>
+                <li>Use the report for client-facing change documentation</li>
+            </ul>
+
+            <h2>Troubleshooting</h2>
+
+            <h3>Compare Button Not Appearing</h3>
+            <p><strong>Solution:</strong></p>
+            <ul>
+                <li>Verify Budget Changelog is enabled in extension popup</li>
+                <li>Check that your API Grant Key is configured</li>
+                <li>Make sure you've selected exactly two backups</li>
+                <li>Refresh the page and try again</li>
+            </ul>
+
+            <h3>Report Not Loading</h3>
+            <p><strong>Solution:</strong></p>
+            <ul>
+                <li>Check your internet connection</li>
+                <li>Verify your API key has proper permissions</li>
+                <li>Try with a different pair of backups</li>
+                <li>Check browser console for error messages</li>
+            </ul>
+
+            <h3>Missing Change Data</h3>
+            <p><strong>Solution:</strong></p>
+            <ul>
+                <li>Ensure both backups contain valid budget data</li>
+                <li>Very old backups may have different data formats</li>
+                <li>Try comparing more recent backups</li>
+            </ul>
+
+            <h2>Related Guides</h2>
+            <ul>
+                <li><a href="custom-field-filter.html">Job Switcher Filter</a> - Another Power User feature</li>
+                <li><a href="budget-hierarchy.html">Budget Hierarchy Shading</a> - Visual budget organization</li>
+                <li><a href="premium.html">Premium Features</a> - License activation and API setup</li>
+                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>JT Power Tools - Made with love for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,47 @@
+/* ==========================================================================
+   FAT GANTT - DEPENDENCY LINE ENHANCEMENT
+   Makes dependency lines thicker and easier to click in Gantt view
+   ========================================================================== */
+
+/* Thicken dependency lines (blue - default state) */
+svg path.cursor-pointer.stroke-blue-400,
+svg path.cursor-pointer.pointer-events-auto.stroke-blue-400 {
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Thicken selected dependency lines (red - selected state) */
+svg path.cursor-pointer.stroke-red-400,
+svg path.cursor-pointer.pointer-events-auto.stroke-red-400 {
+  stroke-width: 4 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  /* Bring selected line to front */
+  position: relative;
+  z-index: 10;
+}
+
+/* Thicken gray dependency lines (completed/inactive dependencies) */
+svg path.cursor-pointer.stroke-gray-400,
+svg path.cursor-pointer.pointer-events-auto.stroke-gray-400 {
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Dark mode - ensure good visibility */
+body.jt-dark-mode svg path.stroke-blue-400,
+.dark svg path.stroke-blue-400 {
+  stroke: #60a5fa !important;
+}
+
+body.jt-dark-mode svg path.stroke-red-400,
+.dark svg path.stroke-red-400 {
+  stroke: #f87171 !important;
+}
+
+body.jt-dark-mode svg path.stroke-gray-400,
+.dark svg path.stroke-gray-400 {
+  stroke: #9ca3af !important;
+}

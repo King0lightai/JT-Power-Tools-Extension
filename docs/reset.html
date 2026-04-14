@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - JT Power Tools</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        p {
+            color: #6b7280;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .button:hover {
+            background-color: #4338ca;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .help-text {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 24px;
+        }
+
+        .help-text a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .help-text a:hover {
+            text-decoration: underline;
+        }
+
+        #manual-section {
+            display: none;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .token-box {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 16px 0;
+            text-align: left;
+        }
+
+        .copy-button {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .copy-button:hover {
+            background: #d1d5db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">JT Power Tools</div>
+
+        <div id="loading-state">
+            <div class="spinner"></div>
+            <h1>Opening Extension...</h1>
+            <p>You should be redirected to the JT Power Tools extension to reset your password.</p>
+        </div>
+
+        <div id="error-state" style="display: none;">
+            <div class="error">
+                <strong>Missing Reset Token</strong><br>
+                This link appears to be invalid or incomplete.
+            </div>
+            <p>Please request a new password reset from the JT Power Tools extension.</p>
+            <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="button" target="_blank">Open Extension Page</a>
+        </div>
+
+        <div id="fallback-state" style="display: none;">
+            <h1>Click to Continue</h1>
+            <p>Click the button below to open JT Power Tools and reset your password.</p>
+            <a id="reset-link" href="#" class="button">Reset Password</a>
+
+            <div id="manual-section">
+                <p style="font-size: 14px; margin-bottom: 12px;"><strong>Extension not opening?</strong></p>
+                <p style="font-size: 14px;">Make sure JT Power Tools is installed, then copy this link and paste it in your browser:</p>
+                <div class="token-box" id="full-url"></div>
+                <button class="copy-button" onclick="copyUrl()">Copy Link</button>
+            </div>
+        </div>
+
+        <p class="help-text">
+            Need help? <a href="mailto:support@jtpowertools.com">Contact Support</a>
+        </p>
+    </div>
+
+    <script>
+        // Extension ID
+        const EXTENSION_ID = 'kfbcifdgmcendohejbiiojjkgdbjkpcn';
+
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Build extension URL
+        const extensionUrl = `chrome-extension://${EXTENSION_ID}/popup/popup.html?reset_token=${token}`;
+
+        function showError() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+        }
+
+        function showFallback() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('fallback-state').style.display = 'block';
+            document.getElementById('reset-link').href = extensionUrl;
+            document.getElementById('full-url').textContent = extensionUrl;
+        }
+
+        function copyUrl() {
+            navigator.clipboard.writeText(extensionUrl).then(() => {
+                const btn = document.querySelector('.copy-button');
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy Link'; }, 2000);
+            });
+        }
+
+        // Main logic
+        if (!token) {
+            showError();
+        } else {
+            // Try to redirect immediately
+            window.location.href = extensionUrl;
+
+            // After 1.5 seconds, if we're still here, show fallback
+            setTimeout(() => {
+                showFallback();
+
+                // After 3 more seconds, show manual instructions
+                setTimeout(() => {
+                    document.getElementById('manual-section').style.display = 'block';
+                }, 3000);
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

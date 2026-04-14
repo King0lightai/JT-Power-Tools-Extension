@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JT Power Tools</title>
+  <!-- Theme-aware favicons -->
+  <link rel="icon" href="../icons/icon16-light.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="../icons/icon16-dark.png" media="(prefers-color-scheme: dark)">
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-content">
+        <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
+        <h1>Power Tools</h1>
+        <span class="version">v4.5.3</span>
+        <button class="header-action-btn" id="refreshBtn" title="Refresh current tab">
+          <i class="ph ph-arrows-clockwise"></i>
+        </button>
+        <button class="header-action-btn" id="popupThemeToggle" title="Toggle popup theme">
+          <i class="ph ph-sun theme-icon light-icon"></i>
+          <i class="ph ph-moon theme-icon dark-icon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <div class="tab-list">
+        <button class="tab-item active" data-tab="features">
+          <i class="ph ph-lightning tab-icon"></i>
+          <span class="tab-label">Features</span>
+        </button>
+        <button class="tab-item" data-tab="appearance">
+          <i class="ph ph-palette tab-icon"></i>
+          <span class="tab-label">Theme</span>
+        </button>
+        <button class="tab-item" data-tab="account">
+          <i class="ph ph-user-circle tab-icon"></i>
+          <span class="tab-label">Account</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Tab Content -->
+    <div class="tab-content-wrapper">
+
+      <!-- ==================== FEATURES TAB ==================== -->
+      <div class="tab-content active" id="tab-features">
+        <div class="features-section">
+
+          <!-- Master Toggle -->
+          <div class="master-toggle-bar">
+            <div class="master-toggle-info">
+              <i class="ph ph-power category-icon"></i>
+              <span class="master-toggle-label">All Features</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="masterToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Schedule & Calendar Category -->
+          <div class="feature-category">
+            <div class="category-header collapsed" data-category="schedule">
+              <i class="ph ph-calendar-blank category-icon"></i>
+              <span class="category-title">Schedule & Calendar</span>
+              <span class="category-count">7</span>
+              <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-features collapsed" data-category-content="schedule">
+              <!-- No Badge (Free) -->
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Kanban Type Filter <i class="ph ph-question feature-help" data-guide="kanban-filter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Hide empty type columns in Kanban view when filtering</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="kanbanTypeFilter" data-feature="kanbanTypeFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Auto Collapse Completed Groups <i class="ph ph-question feature-help" data-guide="auto-collapse" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Collapse 100% complete groups on page load</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Fat Gantt <i class="ph ph-question feature-help" data-guide="fat-gantt" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Thicker dependency lines for easier clicking</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="ganttLines" data-feature="ganttLines">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Pro -->
+              <div class="feature-item premium" id="dragDropFeature">
+                <div class="feature-info">
+                  <h3>Schedule Task Checkboxes <i class="ph ph-question feature-help" data-guide="drag-drop" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Mark task cards complete</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="dragDrop" data-feature="dragDrop">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="availabilityFilterFeature">
+                <div class="feature-info">
+                  <h3>Availability Filter <i class="ph ph-question feature-help" data-guide="availability-filter" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Filter assignees by role or category in availability view</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="availabilityFilter" data-feature="availabilityFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="taskTypeFilterFeature">
+                <div class="feature-info">
+                  <h3>Unassigned Availability <i class="ph ph-question feature-help" data-guide="unassigned-availability" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>See unassigned tasks in schedule availability, filtered by type</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="taskTypeFilter" data-feature="taskTypeFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Job Access Collapse</h3>
+                  <p>Collapse/expand sections in the Job Access panel</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="jobAccessCollapse" data-feature="jobAccessCollapse">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+
+            </div>
+          </div>
+
+          <!-- Productivity Tools Category -->
+          <div class="feature-category">
+            <div class="category-header collapsed" data-category="productivity">
+              <i class="ph ph-lightning category-icon"></i>
+              <span class="category-title">Productivity Tools</span>
+              <span class="category-count">11</span>
+              <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-features collapsed" data-category-content="productivity">
+              <!-- No Badge (Free) -->
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Auto Sum <i class="ph ph-question feature-help" data-guide="auto-sum" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Select budget line items to see live cost, price &amp; profit totals</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="budgetTools" data-feature="budgetTools">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Text Formatter <i class="ph ph-question feature-help" data-guide="text-formatter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Rich text toolbar for budgets, logs & tasks</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="formatter" data-feature="formatter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Message Counter & Templates <i class="ph ph-question feature-help" data-guide="character-counter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Create, save and paste signatures and messages</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="characterCounter" data-feature="characterCounter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Essential -->
+              <div class="feature-item" id="smartJobSwitcherFeature">
+                <div class="feature-info">
+                  <h3>Smart Resize <i class="ph ph-question feature-help" data-guide="job-switcher" title="Learn more"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Resize any sidebar</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="smartJobSwitcher" data-feature="smartJobSwitcher">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="quickNotesFeature">
+                <div class="feature-info">
+                  <h3>Quick Notes <i class="ph ph-question feature-help" data-guide="quick-notes" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Persistent notepad accessible from any page (Q+N)</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="quickNotes" data-feature="quickNotes">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="freezeHeaderFeature">
+                <div class="feature-info">
+                  <h3>Freeze Header <i class="ph ph-question feature-help" data-guide="freeze-header" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Keep job tabs visible while scrolling</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="freezeHeader" data-feature="freezeHeader">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="pdfMarkupToolsFeature">
+                <div class="feature-info">
+                  <h3>PDF Markup Tools <i class="ph ph-question feature-help" data-guide="pdf-markup-tools" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Stamps and eraser tools for PDFs</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="pdfMarkupTools" data-feature="pdfMarkupTools">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="reverseThreadOrderFeature">
+                <div class="feature-info">
+                  <h3>Reverse Thread Order <i class="ph ph-question feature-help" data-guide="reverse-thread-order" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Newest messages and reply form at the top</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="reverseThreadOrder" data-feature="reverseThreadOrder">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Pro -->
+              <div class="feature-item premium" id="previewModeFeature">
+                <div class="feature-info">
+                  <h3>Preview Mode <i class="ph ph-question feature-help" data-guide="preview-mode" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
+                  <p>See your formatted text rendered instantly</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="previewMode" data-feature="previewMode">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="customFieldFilterFeature">
+                <div class="feature-info">
+                  <h3>Job Switcher Filter <i class="ph ph-question feature-help" data-guide="custom-field-filter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>Filter jobs by custom fields in Job Switcher</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="customFieldFilter" data-feature="customFieldFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="budgetChangelogFeature">
+                <div class="feature-info">
+                  <h3>Budget Changelog <i class="ph ph-question feature-help" data-guide="budget-changelog" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>Compare budget backups and see what changed</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Saved for a later version
+              <div class="feature-item premium" id="fileDragToFolderFeature">
+                <div class="feature-info">
+                  <h3>Files Drag to Folder <i class="ph ph-question feature-help" data-guide="file-drag-to-folder" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Drag files onto folders to organize them</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="fileDragToFolder" data-feature="fileDragToFolder">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              -->
+            </div>
+          </div>
+
+          <!-- Appearance Category (just toggles, no customization) -->
+          <div class="feature-category">
+            <div class="category-header collapsed" data-category="appearance-features">
+              <i class="ph ph-palette category-icon"></i>
+              <span class="category-title">Appearance</span>
+              <span class="category-count">5</span>
+              <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-features collapsed" data-category-content="appearance-features">
+              <!-- No Badge (Free) -->
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Contrast Fix <i class="ph ph-question feature-help" data-guide="contrast-fix" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Better text readability in schedule view</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Budget Hierarchy Shading <i class="ph ph-question feature-help" data-guide="budget-hierarchy" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Visual shading for nested budget groups</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Dark Mode <i class="ph ph-question feature-help" data-guide="dark-mode" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
+                  <p>Dark theme for JobTread interface</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="darkMode" data-feature="darkMode">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Pro -->
+              <div class="feature-item premium" id="rgbThemeFeature">
+                <div class="feature-info">
+                  <h3>Custom Theme <i class="ph ph-question feature-help" data-guide="custom-theme" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Create your own custom color theme</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Org Logo</h3>
+                  <p>Replace the JT logo with your org's branding (set by admin in portal)</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="orgLogo" data-feature="orgLogo">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+      </div>
+
+      <!-- ==================== THEME TAB ==================== -->
+      <div class="tab-content" id="tab-appearance">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-palette"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">Theme Customization</h2>
+              <p class="panel-desc">Personalize your JobTread experience</p>
+            </div>
+          </div>
+
+          <div class="theme-customization-panel">
+            <div class="color-pickers">
+              <div class="color-group">
+                <label>Primary Color</label>
+                <div class="color-row">
+                  <div class="color-input-wrapper">
+                    <input type="color" id="primaryColorPicker" value="#3B82F6">
+                    <span class="color-value" id="primaryColorValue">#3B82F6</span>
+                  </div>
+                  <div class="preview-box primary" id="previewPrimary">Primary</div>
+                </div>
+              </div>
+
+              <div class="color-group">
+                <label>Background Color</label>
+                <div class="color-row">
+                  <div class="color-input-wrapper">
+                    <input type="color" id="backgroundColorPicker" value="#F3E8FF">
+                    <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
+                  </div>
+                  <div class="preview-box background" id="previewBackground">Background</div>
+                </div>
+              </div>
+
+              <div class="color-group">
+                <label>Text Color</label>
+                <div class="color-row">
+                  <div class="color-input-wrapper">
+                    <input type="color" id="textColorPicker" value="#1F1B29">
+                    <span class="color-value" id="textColorValue">#1F1B29</span>
+                  </div>
+                  <div class="preview-box text" id="previewText">Text</div>
+                </div>
+              </div>
+            </div>
+
+            <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
+
+            <!-- Preloaded Themes -->
+            <div class="preloaded-themes">
+              <div class="preview-label">Quick Themes</div>
+              <div class="preloaded-theme-circles">
+                <button class="preloaded-theme-circle" data-preset="ocean" title="Ocean">
+                  <span class="preset-ring" style="background: conic-gradient(#0EA5E9 0% 33%, #E0F2FE 33% 66%, #0C4A6E 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="forest" title="Forest">
+                  <span class="preset-ring" style="background: conic-gradient(#16A34A 0% 33%, #DCFCE7 33% 66%, #14532D 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="sunset" title="Sunset">
+                  <span class="preset-ring" style="background: conic-gradient(#EA580C 0% 33%, #FFF7ED 33% 66%, #431407 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="berry" title="Berry">
+                  <span class="preset-ring" style="background: conic-gradient(#7C3AED 0% 33%, #F3E8FF 33% 66%, #1F1B29 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="slate" title="Slate">
+                  <span class="preset-ring" style="background: conic-gradient(#64748B 0% 33%, #F1F5F9 33% 66%, #1E293B 66% 100%);"></span>
+                </button>
+              </div>
+              <div class="preloaded-theme-circles" style="margin-top: 8px;">
+                <button class="preloaded-theme-circle" data-preset="midnight" title="Midnight">
+                  <span class="preset-ring" style="background: conic-gradient(#60A5FA 0% 33%, #1E293B 33% 66%, #CBD5E1 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="ember" title="Ember">
+                  <span class="preset-ring" style="background: conic-gradient(#F97316 0% 33%, #292524 33% 66%, #D6D3D1 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="neon" title="Neon">
+                  <span class="preset-ring" style="background: conic-gradient(#22D3EE 0% 33%, #18181B 33% 66%, #E4E4E7 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="plum" title="Plum">
+                  <span class="preset-ring" style="background: conic-gradient(#A78BFA 0% 33%, #1C1917 33% 66%, #D4D4D8 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="charcoal" title="Charcoal">
+                  <span class="preset-ring" style="background: conic-gradient(#A1A1AA 0% 33%, #27272A 33% 66%, #E4E4E7 66% 100%);"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Saved Themes -->
+            <div class="saved-themes">
+              <div class="preview-label">Saved Themes</div>
+              <div class="theme-slots">
+                <div class="theme-slot" data-slot="0">
+                  <input type="text" class="theme-name" id="themeName0" placeholder="Theme 1" maxlength="20">
+                  <div class="theme-colors">
+                    <span class="color-dot" id="slot0Primary"></span>
+                    <span class="color-dot" id="slot0Background"></span>
+                    <span class="color-dot" id="slot0Text"></span>
+                  </div>
+                  <button class="save-theme-btn" data-slot="0">Save</button>
+                  <button class="load-theme-btn" data-slot="0" style="display: none;">Load</button>
+                </div>
+                <div class="theme-slot" data-slot="1">
+                  <input type="text" class="theme-name" id="themeName1" placeholder="Theme 2" maxlength="20">
+                  <div class="theme-colors">
+                    <span class="color-dot" id="slot1Primary"></span>
+                    <span class="color-dot" id="slot1Background"></span>
+                    <span class="color-dot" id="slot1Text"></span>
+                  </div>
+                  <button class="save-theme-btn" data-slot="1">Save</button>
+                  <button class="load-theme-btn" data-slot="1" style="display: none;">Load</button>
+                </div>
+                <div class="theme-slot" data-slot="2">
+                  <input type="text" class="theme-name" id="themeName2" placeholder="Theme 3" maxlength="20">
+                  <div class="theme-colors">
+                    <span class="color-dot" id="slot2Primary"></span>
+                    <span class="color-dot" id="slot2Background"></span>
+                    <span class="color-dot" id="slot2Text"></span>
+                  </div>
+                  <button class="save-theme-btn" data-slot="2">Save</button>
+                  <button class="load-theme-btn" data-slot="2" style="display: none;">Load</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Theme toggle requirement notice -->
+          <div class="theme-notice" id="themeNotice">
+            <p><i class="ph ph-lightbulb"></i> Enable <strong>Custom Theme</strong> in the Features tab to use theme customization.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== ACCOUNT TAB ==================== -->
+      <div class="tab-content" id="tab-account">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-user-circle"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">Account</h2>
+              <p class="panel-desc">Sign in to unlock premium features</p>
+            </div>
+          </div>
+
+          <!-- Migration Banner -->
+          <div class="migration-banner" id="migrationBanner" style="display: none;">
+            <button class="migration-dismiss" id="migrationDismiss" title="Dismiss">
+              <i class="ph ph-x"></i>
+            </button>
+            <div class="migration-content">
+              <i class="ph ph-sparkle"></i>
+              <div class="migration-text">
+                <strong>NEW: Manage your team online</strong>
+                <p>Sign in to invite members &amp; manage keys.</p>
+              </div>
+              <button class="btn-small btn-primary" id="migrationSignInBtn">Sign In</button>
+            </div>
+          </div>
+
+          <!-- Account Section -->
+          <div class="account-section" id="accountSection">
+            <!-- Logged In State -->
+            <div class="account-logged-in" id="accountLoggedIn" style="display: none;">
+              <div class="account-card">
+                <div class="account-avatar">
+                  <i class="ph ph-user-circle"></i>
+                </div>
+                <div class="account-info">
+                  <p class="account-email" id="accountEmail">user@example.com</p>
+                  <p class="account-org" id="accountOrg"></p>
+                </div>
+                <button id="logoutBtn" class="btn-secondary btn-small">Sign Out</button>
+              </div>
+              <div class="account-status-row">
+                <div class="account-status-item" id="accountLicenseStatus">
+                  <i class="ph ph-crown"></i>
+                  <span id="accountTier">Pro Tier</span>
+                </div>
+                <div class="account-status-item active" id="accountConnectionStatus">
+                  <i class="ph ph-check-circle"></i>
+                  <span>Active</span>
+                </div>
+              </div>
+              <a href="https://app.jtpowertools.com/dashboard.html" target="_blank"
+                 id="manageTeamLink" class="manage-team-link" style="display: none;">
+                <i class="ph ph-users-three"></i> Manage Team <i class="ph ph-arrow-square-out"></i>
+              </a>
+            </div>
+
+            <!-- Login Form -->
+            <div class="account-login" id="accountLogin" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-sign-in"></i> Sign In</h3>
+                <p>Access your account across devices</p>
+              </div>
+              <div class="account-form">
+                <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                <button id="loginBtn" class="btn-primary">Sign In</button>
+                <p class="form-switch">
+                  <a href="#" id="showForgotPasswordBtn" class="forgot-link">Forgot Password?</a>
+                </p>
+                <p class="form-switch">
+                  Don't have an account? <a href="#" id="showRegisterBtn">Create one</a>
+                </p>
+              </div>
+              <div class="account-error" id="loginError" style="display: none;"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="account-register" id="accountRegister" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-user-plus"></i> Create Account</h3>
+                <p>Sync your data across all devices</p>
+              </div>
+              <div class="account-form">
+                <input type="text" id="registerName" placeholder="Display Name (optional)" autocomplete="name">
+                <input type="email" id="registerEmail" placeholder="Email" autocomplete="email">
+                <input type="password" id="registerPassword" placeholder="Password (8+ characters)" autocomplete="new-password">
+                <button id="registerBtn" class="btn-primary">Create Account</button>
+                <p class="form-switch">
+                  Already have an account? <a href="#" id="showLoginBtn">Sign in</a>
+                </p>
+              </div>
+              <div class="account-error" id="registerError" style="display: none;"></div>
+            </div>
+
+            <!-- Forgot Password Form -->
+            <div class="account-forgot-password" id="accountForgotPassword" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-envelope"></i> Reset Password</h3>
+                <p>Enter your email to receive a reset link</p>
+              </div>
+              <div class="account-form">
+                <input type="email" id="forgotEmail" placeholder="Email" autocomplete="email">
+                <button id="sendResetBtn" class="btn-primary">Send Reset Link</button>
+                <p class="form-switch">
+                  <a href="#" id="backToLoginBtn">Back to Sign In</a>
+                </p>
+              </div>
+              <div class="account-success" id="forgotSuccess" style="display: none;"></div>
+              <div class="account-error" id="forgotError" style="display: none;"></div>
+            </div>
+
+            <!-- Reset Password Form (shown when reset_token is in URL) -->
+            <div class="account-reset-password" id="accountResetPassword" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-lock-key"></i> Set New Password</h3>
+                <p>Enter your new password below</p>
+              </div>
+              <div class="account-form">
+                <input type="password" id="newPassword" placeholder="New password (8+ characters)" autocomplete="new-password">
+                <input type="password" id="confirmPassword" placeholder="Confirm password" autocomplete="new-password">
+                <button id="resetPasswordBtn" class="btn-primary">Reset Password</button>
+              </div>
+              <div class="account-success" id="resetSuccess" style="display: none;"></div>
+              <div class="account-error" id="resetError" style="display: none;"></div>
+            </div>
+
+            <!-- Setup Prompt (shown after license validation) -->
+            <div class="account-setup-prompt" id="accountSetupPrompt" style="display: none;">
+              <div class="setup-prompt-content">
+                <i class="ph ph-cloud-arrow-up"></i>
+                <h3>Sync Across Devices</h3>
+                <p>Create an account to sync your notes, templates, and settings across all your devices.</p>
+                <a href="https://app.jtpowertools.com/register" target="_blank" id="setupAccountBtn" class="btn-primary">Register Account <i class="ph ph-arrow-square-out"></i></a>
+                <a href="#" id="skipAccountBtn" class="skip-link">Skip for now</a>
+                <a href="#" id="signInBtn" class="sign-in-link">Already have an account? Sign in</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Portal Links -->
+          <div class="portal-links" id="portalLinks" style="display: none;">
+            <div class="portal-links-header">
+              <h3><i class="ph ph-gear-six"></i> Manage on Portal</h3>
+            </div>
+            <a href="https://app.jtpowertools.com/dashboard.html" target="_blank" class="portal-link-item">
+              <i class="ph ph-users-three"></i>
+              <div class="portal-link-text">
+                <strong>Manage Team</strong>
+                <p>Invite members, manage roles</p>
+              </div>
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
+            </a>
+            <a href="https://app.jtpowertools.com/dashboard.html#mcp" target="_blank" class="portal-link-item">
+              <i class="ph ph-robot"></i>
+              <div class="portal-link-text">
+                <strong>AI Server (MCP)</strong>
+                <p>Setup instructions, tools &amp; config</p>
+              </div>
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
+            </a>
+            <a href="https://gumroad.com/library" target="_blank" class="portal-link-item">
+              <i class="ph ph-crown"></i>
+              <div class="portal-link-text">
+                <strong>Manage License &amp; Subscription</strong>
+                <p>View receipts, upgrade, cancel</p>
+              </div>
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
+            </a>
+          </div>
+
+          <!-- Get License CTA (shown when not signed in) -->
+          <div class="get-license-cta" id="getLicenseCta">
+            <div class="cta-content">
+              <i class="ph ph-crown"></i>
+              <div>
+                <strong>Unlock Premium Features</strong>
+                <p>Get access to Pro and Power User tools, AI integration, team management, and more.</p>
+              </div>
+            </div>
+            <a href="https://premium.jtpowertools.com" target="_blank" class="btn-primary btn-small">Get a License</a>
+          </div>
+
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- Footer Links -->
+    <div class="footer-section">
+      <a href="https://jtpowertools.com/changelog.html" class="footer-link" target="_blank" title="See what's new in this version"><i class="ph ph-clipboard-text"></i> What's New</a>
+      <span class="footer-separator">•</span>
+      <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback" class="footer-link" target="_blank"><i class="ph ph-chat-circle"></i> Feedback</a>
+      <span class="footer-separator">•</span>
+      <a href="https://www.facebook.com/share/g/1YfFePwdtx/" class="footer-link" target="_blank"><i class="ph ph-facebook-logo"></i> Facebook</a>
+      <span class="footer-separator">•</span>
+      <a href="https://discord.gg/u57GzaT6bp" class="footer-link" target="_blank"><i class="ph ph-discord-logo"></i> Discord</a>
+    </div>
+  </div>
+
+  <script src="../utils/browser-polyfill.js"></script>
+  <script src="../utils/defaults.js"></script>
+  <script src="../config/worker-config.js"></script>
+  <script src="../services/license.js"></script>
+  <script src="../services/account-service.js"></script>
+  <script src="../services/jobtread-pro-service.js"></script>
+  <script src="../services/jobtread-api.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

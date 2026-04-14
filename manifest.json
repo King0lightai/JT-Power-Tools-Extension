@@ -1,0 +1,121 @@
+{
+  "manifest_version": 3,
+  "name": "JT Power Tools",
+  "version": "4.5.3",
+  "description": "Supercharge JobTread with task checkboxes, dark mode, text formatting, quick notes, and 16+ productivity features for contractors.",
+  "icons": {
+    "16": "icons/icon16-light.png",
+    "48": "icons/icon48-light.png",
+    "128": "icons/icon128-light.png"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.jobtread.com/*",
+    "https://api.jobtread.com/*",
+    "https://*.workers.dev/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16-light.png",
+      "48": "icons/icon48-light.png",
+      "128": "icons/icon128-light.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://app.jobtread.com/*"],
+      "js": [
+        "utils/browser-polyfill.js",
+        "utils/defaults.js",
+        "utils/logger.js",
+        "utils/error-handler.js",
+        "utils/storage-wrapper.js",
+        "utils/dom-helpers.js",
+        "utils/sanitizer.js",
+        "utils/color-utils.js",
+        "utils/debounce.js",
+        "utils/org-detector.js",
+        "config/worker-config.js",
+        "services/license.js",
+        "services/account-service.js",
+        "services/jobtread-pro-service.js",
+        "services/jobtread-api.js",
+        "services/grant-key-resolver.js",
+        "features/drag-drop-modules/view-detector.js",
+        "features/drag-drop-modules/date-utils.js",
+        "features/drag-drop-modules/weekend-utils.js",
+        "features/drag-drop-modules/ui-utils.js",
+        "features/drag-drop-modules/todo-drag-drop.js",
+        "features/drag-drop-modules/sidebar-manager.js",
+        "features/drag-drop-modules/date-changer.js",
+        "features/drag-drop-modules/event-handlers.js",
+        "features/drag-drop-modules/infinite-scroll.js",
+        "features/drag-drop-modules/task-completion.js",
+        "features/drag-drop-modules/action-items-completion.js",
+        "features/drag-drop.js",
+        "features/contrast-fix.js",
+        "features/formatter-modules/detection.js",
+        "features/formatter-modules/formats.js",
+        "features/formatter-modules/toolbar.js",
+        "features/formatter-modules/alert-modal.js",
+        "features/formatter.js",
+        "features/preview-mode.js",
+        "features/dark-mode.js",
+        "features/rgb-theme-modules/palette.js",
+        "features/rgb-theme.js",
+        "features/job-switcher.js",
+        "features/budget-hierarchy.js",
+        "features/quick-notes-modules/storage.js",
+        "features/quick-notes-modules/markdown.js",
+        "features/quick-notes-modules/editor.js",
+        "features/quick-notes.js",
+        "features/help-sidebar-support.js",
+        "features/keyboard-shortcuts.js",
+        "features/freeze-header.js",
+        "features/character-counter.js",
+        "features/kanban-type-filter.js",
+        "features/auto-collapse-groups.js",
+        "features/budget-tools.js",
+        "features/pdf-markup-tools.js",
+        "features/custom-field-filter.js",
+        "features/budget-changelog-modules/csv-parser.js",
+        "features/budget-changelog-modules/diff-engine.js",
+        "features/budget-changelog-modules/report-app.js",
+        "features/budget-changelog-modules/ui.js",
+        "features/budget-changelog.js",
+        "features/availability-filter.js",
+        "features/gantt-lines.js",
+        "features/reverse-thread-order.js",
+        "features/task-type-filter.js",
+        "features/job-access-collapse.js",
+        "features/org-logo.js",
+        "content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "report.html",
+        "features/budget-changelog-modules/report-app.js",
+        "styles/formatter-toolbar.css",
+        "styles/dark-mode.css",
+        "styles/quick-notes.css",
+        "styles/preview-mode.css",
+        "styles/availability-filter.css",
+        "styles/gantt-lines.css",
+        "styles/task-type-filter.css",
+        "icons/*.png"
+      ],
+      "matches": ["https://app.jobtread.com/*"]
+    }
+  ]
+}

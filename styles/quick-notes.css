@@ -1,0 +1,2262 @@
+/**
+ * Quick Notes Feature Styles
+ * Seamless integration with Jobtread's UI
+ */
+
+/* Quick Notes Button - Base and Active State */
+.jt-quick-notes-btn {
+  /* Ensure button is always visible */
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.jt-quick-notes-btn.jt-notes-button-active {
+  background: #3b82f6 !important;
+  color: white !important;
+}
+
+.jt-quick-notes-btn.jt-notes-button-active:hover {
+  background: #2563eb !important;
+}
+
+
+/* Notes Panel - Jobtread Sidebar Style */
+.jt-quick-notes-panel {
+  position: fixed;
+  top: 52px; /* Below header bar and shadow line */
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 100%;
+  background: white;
+  box-shadow: -1px 0 0 0 rgba(0, 0, 0, 0.1);
+  z-index: 999999;
+  display: flex;
+  flex-direction: row-reverse;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  pointer-events: none;
+}
+
+.jt-quick-notes-panel.visible {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.jt-quick-notes-panel.editor-open {
+  width: 600px;
+}
+
+.jt-quick-notes-panel:not(.editor-open) .jt-notes-editor {
+  display: none;
+}
+
+/* Resize Handle */
+.jt-notes-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.2s;
+  /* Hide resize handle when editor is not open (sidebar-only view) */
+  display: none;
+}
+
+/* Only show resize handle when editor is open */
+.jt-quick-notes-panel.editor-open .jt-notes-resize-handle {
+  display: block;
+}
+
+.jt-notes-resize-handle:hover {
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.jt-notes-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: #d1d5db;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.jt-notes-resize-handle:hover::before {
+  opacity: 1;
+}
+
+.jt-quick-notes-panel.resizing {
+  transition: none;
+  user-select: none;
+}
+
+.jt-quick-notes-panel.resizing .jt-notes-resize-handle {
+  background: rgba(6, 182, 212, 0.3);
+}
+
+.jt-quick-notes-panel.resizing .jt-notes-resize-handle::before {
+  opacity: 1;
+  background: #06b6d4;
+}
+
+/* Sidebar */
+.jt-notes-sidebar {
+  width: 280px;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  flex-shrink: 0;
+}
+
+/* Sidebar Header - Jobtread Style */
+.jt-notes-sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  gap: 8px;
+}
+
+.jt-notes-sidebar-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin: 0;
+}
+
+.jt-notes-sidebar-close-button {
+  flex-shrink: 0;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.jt-notes-sidebar-close-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.jt-notes-sidebar-close-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-notes-new-button {
+  width: 100%;
+  background: #0891b2;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.jt-notes-new-button:hover {
+  background: #0e7490;
+}
+
+.jt-notes-new-button:active {
+  background: #155e75;
+}
+
+
+/* Search */
+.jt-notes-search-container {
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Export/Import Actions Container */
+.jt-notes-actions-container {
+  padding: 8px 16px 12px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 8px;
+}
+
+.jt-notes-action-button {
+  flex: 1;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.jt-notes-action-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+
+.jt-notes-action-button:active {
+  background: #f3f4f6;
+  transform: translateY(1px);
+}
+
+.jt-notes-action-button svg {
+  flex-shrink: 0;
+}
+
+.jt-notes-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.15s;
+  background: white;
+}
+
+.jt-notes-search-input:hover:not(:focus) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-notes-search-input:focus {
+  background: white;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 1px #06b6d4;
+}
+
+/* Notes List */
+.jt-notes-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  background: white;
+}
+
+.jt-notes-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.jt-notes-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jt-notes-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.jt-notes-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.jt-notes-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Note Item */
+.jt-note-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.jt-note-item:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-note-item.active {
+  background: #ecfeff;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 1px #06b6d4;
+}
+
+.jt-note-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.jt-note-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-note-delete {
+  background: transparent;
+  border: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 16px;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.jt-note-delete:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+/* Pin button */
+.jt-note-pin {
+  background: transparent;
+  border: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  color: #d1d5db;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.jt-note-pin:hover {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.jt-note-pin.pinned {
+  color: #f59e0b;
+}
+
+.jt-note-pin.pinned:hover {
+  background: #fef3c7;
+}
+
+/* Pinned note styling */
+.jt-note-item.pinned {
+  border-left: 3px solid #f59e0b;
+  padding-left: 9px;
+}
+
+.jt-note-item-preview {
+  font-size: 12px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.jt-note-item-date {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+/* Editor */
+.jt-notes-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  overflow: hidden;
+}
+
+.jt-notes-editor-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  padding: 32px;
+}
+
+.jt-notes-editor-empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.jt-notes-editor-empty-text {
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Editor Header - Jobtread Style */
+.jt-notes-editor-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  min-height: 57px;
+}
+
+.jt-notes-title-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0;
+  background: transparent;
+}
+
+.jt-notes-title-input::placeholder {
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+/* Back Button - Hidden on desktop, visible on mobile */
+.jt-notes-back-button {
+  display: none;
+  flex-shrink: 0;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+}
+
+.jt-notes-back-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.jt-notes-back-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Close Button - Jobtread Style */
+.jt-notes-close-button {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.jt-notes-close-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-notes-close-button:active {
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.jt-notes-close-button::before {
+  content: '✕';
+  font-size: 14px;
+}
+
+.jt-notes-close-button::after {
+  content: 'Close';
+  font-size: 13px;
+}
+
+/* Formatting Toolbar */
+.jt-notes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.jt-notes-format-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #6b7280;
+}
+
+.jt-notes-format-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.jt-notes-format-btn:active {
+  background: #e5e7eb;
+}
+
+.jt-notes-format-btn.active {
+  background: #cffafe;
+  color: #0e7490;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3);
+}
+
+.jt-notes-format-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-notes-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
+/* Content Input - Contenteditable WYSIWYG */
+.jt-notes-content-input {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #374151;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.jt-notes-content-input:empty:before {
+  content: attr(data-placeholder);
+  color: #d1d5db;
+  pointer-events: none;
+}
+
+.jt-notes-content-input strong,
+.jt-notes-content-input b {
+  font-weight: 600;
+}
+
+.jt-notes-content-input em,
+.jt-notes-content-input i {
+  font-style: italic;
+}
+
+.jt-notes-content-input u {
+  text-decoration: underline;
+}
+
+.jt-notes-content-input s,
+.jt-notes-content-input del,
+.jt-notes-content-input strike {
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.jt-notes-content-input code {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  color: #dc2626;
+}
+
+.jt-notes-content-input a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.jt-notes-content-input a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.jt-notes-content-input div {
+  min-height: 1.6em;
+}
+
+/* Rendered Markdown Elements */
+.jt-note-item-preview strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.jt-note-item-preview em {
+  font-style: italic;
+  color: #374151;
+}
+
+.jt-note-item-preview u {
+  text-decoration: underline;
+}
+
+.jt-note-item-preview s,
+.jt-note-item-preview del,
+.jt-note-item-preview strike {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.jt-note-item-preview code {
+  background: #f3f4f6;
+  border-radius: 2px;
+  padding: 1px 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85em;
+  color: #dc2626;
+}
+
+.jt-note-item-preview a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.jt-note-checkbox,
+.jt-note-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.jt-notes-content-input .jt-note-checkbox,
+.jt-notes-content-input .jt-note-bullet {
+  min-height: 1.6em;
+  margin: 2px 0;
+}
+
+.jt-note-checkbox input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.jt-note-checkbox span[contenteditable="true"] {
+  min-width: 1px;
+  display: inline-block;
+}
+
+.jt-note-checkbox span[contenteditable="true"]:empty:before {
+  content: '\200B'; /* Zero-width space for cursor visibility */
+  color: transparent;
+}
+
+.jt-note-checkbox.checked span {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.jt-note-bullet {
+  padding-left: 0;
+}
+
+/* Bullet indentation levels */
+.jt-note-bullet[data-indent="1"] {
+  padding-left: 20px;
+}
+
+.jt-note-bullet[data-indent="2"] {
+  padding-left: 40px;
+}
+
+.jt-note-bullet[data-indent="3"] {
+  padding-left: 60px;
+}
+
+.jt-note-bullet[data-indent="4"] {
+  padding-left: 80px;
+}
+
+.jt-note-bullet[data-indent="5"] {
+  padding-left: 100px;
+}
+
+/* Table Styles */
+.jt-note-table-container {
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.jt-note-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.jt-note-table th,
+.jt-note-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+  min-width: 80px;
+}
+
+.jt-note-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.jt-note-table td {
+  background: white;
+  color: #4b5563;
+}
+
+.jt-note-table th:focus,
+.jt-note-table td:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.jt-note-table tr:hover td {
+  background: #f9fafb;
+}
+
+/* Table Dark Mode */
+body.jt-dark-mode .jt-note-table,
+.dark .jt-note-table {
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-note-table th,
+.dark .jt-note-table th {
+  background: #333333;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-note-table td,
+.dark .jt-note-table td {
+  background: #2c2c2c;
+  color: #b0b0b0;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-note-table th:focus,
+body.jt-dark-mode .jt-note-table td:focus,
+.dark .jt-note-table th:focus,
+.dark .jt-note-table td:focus {
+  outline-color: #60a5fa;
+}
+
+body.jt-dark-mode .jt-note-table tr:hover td,
+.dark .jt-note-table tr:hover td {
+  background: #333333;
+}
+
+/* Table Context Menu */
+.jt-note-table-context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  min-width: 160px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.jt-table-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.1s;
+}
+
+.jt-table-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.jt-table-menu-danger {
+  color: #dc2626;
+}
+
+.jt-table-menu-danger:hover {
+  background: #fef2f2;
+}
+
+.jt-table-menu-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+/* Table Context Menu Dark Mode */
+body.jt-dark-mode .jt-note-table-context-menu,
+.dark .jt-note-table-context-menu {
+  background: #2c2c2c;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-table-menu-item,
+.dark .jt-table-menu-item {
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-table-menu-item:hover,
+.dark .jt-table-menu-item:hover {
+  background: #333333;
+}
+
+body.jt-dark-mode .jt-table-menu-danger,
+.dark .jt-table-menu-danger {
+  color: #f87171;
+}
+
+body.jt-dark-mode .jt-table-menu-danger:hover,
+.dark .jt-table-menu-danger:hover {
+  background: #3f1f1f;
+}
+
+body.jt-dark-mode .jt-table-menu-divider,
+.dark .jt-table-menu-divider {
+  background: #404040;
+}
+
+/* Editor Footer */
+.jt-notes-editor-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #9ca3af;
+  background: white;
+  min-height: 45px;
+}
+
+.jt-notes-word-count {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.jt-notes-updated {
+  font-style: italic;
+}
+
+/* Tabs - My Notes / Team Notes */
+.jt-notes-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.jt-notes-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.jt-notes-tab:hover:not(.active) {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.jt-notes-tab.active {
+  color: #0891b2;
+  border-bottom-color: #0891b2;
+}
+
+.jt-notes-tab-count {
+  padding: 2px 6px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.jt-notes-tab.active .jt-notes-tab-count {
+  background: #cffafe;
+  color: #0891b2;
+}
+
+/* Note Item Meta with Attribution */
+.jt-note-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jt-note-attribution {
+  font-size: 10px;
+  color: #6b7280;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* Team Notes Login Prompt */
+.jt-notes-login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.jt-notes-login-prompt svg {
+  color: #9ca3af;
+  opacity: 0.6;
+}
+
+.jt-notes-login-prompt p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.jt-notes-login-prompt .jt-notes-login-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Loading State */
+.jt-notes-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.jt-notes-loading::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #0891b2;
+  border-radius: 50%;
+  animation: jt-notes-spin 0.8s linear infinite;
+}
+
+@keyframes jt-notes-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Theme Compatibility - Dark Mode - Matches JT Power Tools Dark Mode */
+.jt-quick-notes-panel.dark-theme {
+  background: #2c2c2c;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor,
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+.jt-quick-notes-panel.dark-theme .jt-notes-list,
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
+  background: #2c2c2c;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar {
+  border-left-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-header {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
+  border-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input,
+.jt-quick-notes-panel.dark-theme .jt-notes-title-input,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input {
+  background: #353535;
+  color: #d1d5db;
+  border-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input::placeholder,
+.jt-quick-notes-panel.dark-theme .jt-notes-title-input::placeholder,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input::placeholder {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input:focus {
+  background: #353535;
+  border-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item {
+  background: #353535;
+  border-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item:hover {
+  background: #404040;
+  border-color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item.active {
+  background: #164e63;
+  border-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-title {
+  color: #f5f5f5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-date {
+  color: #6b7280;
+}
+
+/* Dark theme - Pin button */
+.jt-quick-notes-panel.dark-theme .jt-note-pin {
+  color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-pin:hover {
+  background: #3d3424;
+  color: #f59e0b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-pin.pinned {
+  color: #f59e0b;
+}
+
+/* Dark theme - Tabs */
+.jt-quick-notes-panel.dark-theme .jt-notes-tabs {
+  background: #2c2c2c;
+  border-bottom-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab:hover:not(.active) {
+  background: #353535;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab.active {
+  color: #22d3ee;
+  border-bottom-color: #22d3ee;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab-count {
+  background: #404040;
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab.active .jt-notes-tab-count {
+  background: #164e63;
+  color: #22d3ee;
+}
+
+/* Dark theme - Attribution */
+.jt-quick-notes-panel.dark-theme .jt-note-attribution {
+  color: #6b7280;
+}
+
+/* Dark theme - Login prompt */
+.jt-quick-notes-panel.dark-theme .jt-notes-login-prompt svg {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-login-prompt p {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-login-prompt .jt-notes-login-hint {
+  color: #6b7280;
+}
+
+/* Dark theme - Loading */
+.jt-quick-notes-panel.dark-theme .jt-notes-loading {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-loading::before {
+  border-color: #464646;
+  border-top-color: #22d3ee;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-close-button {
+  background: #353535;
+  border-color: #464646;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-close-button:hover {
+  background: #404040;
+  border-color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:hover {
+  background: #353535;
+  color: #d1d5db;
+  border-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:active {
+  background: #404040;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn.active {
+  background: #164e63;
+  color: #22d3ee;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.4);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
+  background: #464646;
+}
+
+/* Dark theme - New formatting elements */
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input code {
+  background: #404040;
+  border-color: #525252;
+  color: #fca5a5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input a {
+  color: #60a5fa;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input a:hover {
+  color: #93c5fd;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview code {
+  background: #404040;
+  color: #fca5a5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview a {
+  color: #60a5fa;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button:hover {
+  background: #353535;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-back-button {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-back-button:hover {
+  background: #353535;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button {
+  background: #0891b2;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button:hover {
+  background: #0e7490;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button:active {
+  background: #155e75;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-actions-container {
+  background: #2c2c2c;
+  border-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-action-button {
+  background: #353535;
+  border-color: #464646;
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-action-button:hover {
+  background: #404040;
+  border-color: #525252;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-action-button:active {
+  background: #353535;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-empty {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-empty {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview strong {
+  color: #f5f5f5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview em {
+  color: #cbd5e1;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input strong,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input b {
+  color: #f5f5f5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input em,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input i {
+  color: #cbd5e1;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover {
+  background: rgba(6, 182, 212, 0.3);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle::before {
+  background: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover::before {
+  background: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme.resizing .jt-notes-resize-handle::before {
+  background: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-list::-webkit-scrollbar-thumb {
+  background: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-list::-webkit-scrollbar-thumb:hover {
+  background: #525252;
+}
+
+/* Theme Compatibility - Custom RGB Theme */
+.jt-quick-notes-panel.custom-theme {
+  /* Use CSS variables that will be set dynamically */
+  background: var(--jt-notes-bg, white);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor,
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-search-container,
+.jt-quick-notes-panel.custom-theme .jt-notes-list,
+.jt-quick-notes-panel.custom-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-footer {
+  background: var(--jt-notes-bg, white);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-title-input,
+.jt-quick-notes-panel.custom-theme .jt-notes-content-input,
+.jt-quick-notes-panel.custom-theme .jt-note-item-title {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-search-input,
+.jt-quick-notes-panel.custom-theme .jt-notes-content-input {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-note-item {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-note-item.active {
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-resize-handle:hover {
+  background: rgba(var(--jt-notes-primary-rgb, 6, 182, 212), 0.2);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-resize-handle::before {
+  background: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme.resizing .jt-notes-resize-handle::before {
+  background: var(--jt-notes-primary, #06b6d4);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-actions-container {
+  background: var(--jt-notes-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-action-button {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+  color: var(--jt-notes-text, #4b5563);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-action-button:hover {
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+/* Custom theme - borders and sidebar */
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar {
+  border-left-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-header {
+  box-shadow: 0 1px 0 0 var(--jt-notes-border, rgba(0, 0, 0, 0.1));
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-search-container,
+.jt-quick-notes-panel.custom-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-footer {
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tabs {
+  background: var(--jt-notes-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab {
+  color: var(--jt-notes-text-secondary, #6b7280);
+  border-color: transparent;
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab:hover {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab.active {
+  color: var(--jt-notes-primary, #06b6d4);
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+/* Custom theme - close button */
+.jt-quick-notes-panel.custom-theme .jt-notes-close-button {
+  color: var(--jt-notes-text-secondary, #6b7280);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-close-button:hover {
+  color: var(--jt-notes-text, #374151);
+  background: var(--jt-notes-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .jt-quick-notes-panel {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .jt-quick-notes-panel.editor-open {
+    width: 100%;
+    max-width: 100vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .jt-quick-notes-panel {
+    width: 100% !important;
+    max-width: 100vw !important;
+    flex-direction: column !important;
+    top: 52px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .jt-quick-notes-panel.editor-open {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  /* Hide resize handle on mobile */
+  .jt-notes-resize-handle {
+    display: none !important;
+  }
+
+  .jt-notes-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-left: none;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+
+  /* When no note is selected, sidebar takes full height */
+  .jt-quick-notes-panel:not(.editor-open) .jt-notes-sidebar {
+    height: 100%;
+    max-height: none;
+  }
+
+  /* When a note is open, show sidebar as header strip and editor below */
+  .jt-quick-notes-panel.editor-open .jt-notes-sidebar {
+    display: none;
+  }
+
+  .jt-quick-notes-panel.editor-open .jt-notes-editor {
+    width: 100% !important;
+    height: 100%;
+    flex: 1;
+  }
+
+  .jt-notes-editor {
+    width: 100% !important;
+    min-height: auto;
+    flex: 1;
+  }
+
+  /* Add a back button in editor header for mobile */
+  .jt-notes-editor-header {
+    padding: 12px 16px;
+  }
+
+  .jt-notes-editor-empty {
+    padding: 24px 16px;
+  }
+
+  .jt-notes-editor-empty-icon {
+    font-size: 48px;
+  }
+
+  .jt-notes-editor-empty-text {
+    font-size: 14px;
+  }
+}
+
+/* Dark theme border fix for mobile */
+@media (max-width: 768px) {
+  .jt-quick-notes-panel.dark-theme .jt-notes-sidebar {
+    border-left: none;
+    border-bottom-color: #464646;
+  }
+
+  /* Show back button on mobile */
+  .jt-notes-back-button {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .jt-notes-close-button::after {
+    display: none;
+  }
+
+  .jt-notes-sidebar-header {
+    padding: 12px 16px;
+  }
+
+  .jt-notes-search-container {
+    padding: 10px 16px;
+  }
+
+  .jt-notes-actions-container {
+    padding: 6px 16px 10px;
+  }
+
+  .jt-notes-list {
+    padding: 6px;
+  }
+
+  .jt-note-item {
+    padding: 10px 12px;
+  }
+}
+
+/* ============================================
+   Folder Organization Styles
+   ============================================ */
+
+/* Folder Group Container */
+.jt-notes-folder-group {
+  margin-bottom: 4px;
+}
+
+/* Folder Header - Clickable */
+.jt-notes-folder-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.jt-notes-folder-header:hover {
+  background: #e5e7eb;
+}
+
+/* Folder Chevron */
+.jt-notes-folder-chevron {
+  font-size: 10px;
+  color: #6b7280;
+  transition: transform 0.2s;
+  width: 12px;
+  text-align: center;
+}
+
+.jt-notes-folder-group.collapsed .jt-notes-folder-chevron {
+  transform: rotate(-90deg);
+}
+
+/* Folder Name */
+.jt-notes-folder-name {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Folder Count Badge */
+.jt-notes-folder-count {
+  padding: 2px 6px;
+  background: #d1d5db;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* Folder Actions */
+.jt-notes-folder-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.jt-notes-folder-header:hover .jt-notes-folder-actions {
+  opacity: 1;
+}
+
+.jt-notes-folder-add {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #d1d5db;
+  color: #374151;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.jt-notes-folder-add:hover {
+  background: #0891b2;
+  color: white;
+}
+
+/* Folder Delete Button */
+.jt-notes-folder-delete {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s, background 0.2s;
+}
+
+.jt-notes-folder-header:hover .jt-notes-folder-delete {
+  opacity: 1;
+}
+
+.jt-notes-folder-delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Folder Color Button */
+.jt-notes-folder-color-btn {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+  color: #9ca3af;
+}
+
+.jt-notes-folder-color-btn:hover {
+  border-color: #9ca3af;
+  transform: scale(1.1);
+}
+
+.jt-notes-folder-color-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* When folder has a color */
+.jt-notes-folder-group.has-color .jt-notes-folder-color-btn {
+  border-color: transparent;
+}
+
+/* Folder drag handle */
+.jt-notes-folder-drag-handle {
+  font-size: 10px;
+  color: #d1d5db;
+  cursor: grab;
+  user-select: none;
+  padding: 0 2px;
+  letter-spacing: -1px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.jt-notes-folder-header:hover .jt-notes-folder-drag-handle {
+  opacity: 1;
+}
+
+.jt-notes-folder-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Folder drag states */
+.jt-notes-folder-group.dragging {
+  opacity: 0.5;
+}
+
+.jt-notes-folder-group.drag-over-above {
+  border-top: 2px solid #06b6d4;
+  margin-top: -2px;
+}
+
+.jt-notes-folder-group.drag-over-below {
+  border-bottom: 2px solid #06b6d4;
+  margin-bottom: -2px;
+}
+
+/* Note drag states */
+.jt-note-item.dragging {
+  opacity: 0.5;
+}
+
+.jt-note-item.drag-over-above {
+  border-top: 2px solid #4f46e5 !important;
+  margin-top: -2px;
+}
+
+.jt-note-item.drag-over-below {
+  border-bottom: 2px solid #4f46e5 !important;
+  margin-bottom: -2px;
+}
+
+.jt-notes-folder-group.drag-over {
+  background: rgba(6, 182, 212, 0.1);
+  border-color: #06b6d4;
+}
+
+.jt-notes-folder-group.drag-over .jt-notes-folder-header {
+  background: rgba(6, 182, 212, 0.2);
+  border-radius: 4px;
+}
+
+/* Folder Color Picker Dropdown */
+.jt-folder-color-picker {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  min-width: 200px;
+}
+
+.jt-color-picker-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.jt-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.jt-color-swatch {
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  font-weight: 600;
+  transition: all 0.15s;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.jt-color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.jt-color-swatch.selected {
+  border-color: #1f2937;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #1f2937;
+}
+
+.jt-color-swatch.jt-color-none {
+  background: white;
+  border: 2px dashed #d1d5db;
+  color: #9ca3af;
+  text-shadow: none;
+}
+
+.jt-color-swatch.jt-color-none:hover {
+  border-color: #9ca3af;
+}
+
+.jt-color-swatch.jt-color-none.selected {
+  border-style: solid;
+  border-color: #1f2937;
+}
+
+/* Folder Content - Collapsible */
+.jt-notes-folder-content {
+  padding: 4px 0 4px 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out, padding 0.2s;
+}
+
+.jt-notes-folder-group.collapsed .jt-notes-folder-content {
+  max-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Folder Selector in Editor Header */
+.jt-notes-folder-select-wrapper {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.jt-notes-folder-select {
+  padding: 4px 24px 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #374151;
+  background: #f9fafb;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  min-width: 90px;
+  max-width: 140px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.jt-notes-folder-select:hover {
+  border-color: #9ca3af;
+  background-color: #f3f4f6;
+}
+
+.jt-notes-folder-select:focus {
+  border-color: #06b6d4;
+  background-color: white;
+  box-shadow: 0 0 0 1px #06b6d4;
+}
+
+.jt-notes-folder-select option {
+  padding: 8px;
+}
+
+/* ============================================
+   Folder Dark Mode Styles
+   ============================================ */
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-header {
+  background: #353535;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-header:hover {
+  background: #404040;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-chevron {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-name {
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-count {
+  background: #464646;
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-add {
+  background: #464646;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-add:hover {
+  background: #0891b2;
+  color: white;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-delete {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-delete:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn {
+  border-color: #525252;
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn:hover {
+  border-color: #6b7280;
+}
+
+/* Dark theme drag handle */
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-drag-handle {
+  color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-group.drag-over-above {
+  border-top-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-group.drag-over-below {
+  border-bottom-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-group.drag-over {
+  background: rgba(6, 182, 212, 0.15);
+}
+
+/* Dark theme note drag indicators */
+.jt-quick-notes-panel.dark-theme .jt-note-item.drag-over-above {
+  border-top-color: #818cf8 !important;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item.drag-over-below {
+  border-bottom-color: #818cf8 !important;
+}
+
+/* Dark theme color picker */
+body.jt-dark-mode .jt-folder-color-picker,
+.dark .jt-folder-color-picker {
+  background: #2c2c2c;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-color-picker-header,
+.dark .jt-color-picker-header {
+  color: #9ca3af;
+}
+
+body.jt-dark-mode .jt-color-swatch.selected,
+.dark .jt-color-swatch.selected {
+  border-color: #e5e7eb;
+  box-shadow: 0 0 0 2px #2c2c2c, 0 0 0 4px #e5e7eb;
+}
+
+body.jt-dark-mode .jt-color-swatch.jt-color-none,
+.dark .jt-color-swatch.jt-color-none {
+  background: #2c2c2c;
+  border-color: #525252;
+  color: #6b7280;
+}
+
+body.jt-dark-mode .jt-color-swatch.jt-color-none:hover,
+.dark .jt-color-swatch.jt-color-none:hover {
+  border-color: #6b7280;
+}
+
+body.jt-dark-mode .jt-color-swatch.jt-color-none.selected,
+.dark .jt-color-swatch.jt-color-none.selected {
+  border-color: #e5e7eb;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select {
+  background-color: #353535;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  border-color: #464646;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select:hover {
+  background-color: #404040;
+  border-color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select:focus {
+  border-color: #06b6d4;
+  background-color: #404040;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select option {
+  background: #353535;
+  color: #d1d5db;
+}
+
+/* ============================================
+   Folder Custom Theme Styles
+   ============================================ */
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-header {
+  background: var(--jt-notes-input-bg, #f3f4f6);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-name {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-count {
+  background: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-select {
+  background-color: var(--jt-notes-input-bg, #f9fafb);
+  border-color: var(--jt-notes-border, #d1d5db);
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-select:focus {
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+/* ============================================
+   WYSIWYG Editor Container
+   ============================================ */
+
+/* WYSIWYG Container */
+.jt-notes-wysiwyg-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Numbered List Styles */
+.jt-note-numbered {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.jt-notes-content-input .jt-note-numbered {
+  min-height: 1.6em;
+  margin: 2px 0;
+}
+
+/* Numbered list indentation */
+.jt-note-numbered[data-indent="1"] {
+  padding-left: 20px;
+}
+
+.jt-note-numbered[data-indent="2"] {
+  padding-left: 40px;
+}
+
+.jt-note-numbered[data-indent="3"] {
+  padding-left: 60px;
+}
+
+/* Dark theme - WYSIWYG Container */
+.jt-quick-notes-panel.dark-theme .jt-notes-wysiwyg-container {
+  background: #2c2c2c;
+}
+
+/* Custom theme - WYSIWYG Container */
+.jt-quick-notes-panel.custom-theme .jt-notes-wysiwyg-container {
+  background: var(--jt-notes-bg, white);
+}
+
+/* ==========================================================================
+   SIDEBAR COLLAPSE FEATURE
+   ========================================================================== */
+
+/* Sidebar header buttons container */
+.jt-notes-sidebar-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Collapse button in sidebar header */
+.jt-notes-collapse-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.jt-notes-collapse-btn:hover {
+  color: #374151;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Rotate chevron when sidebar is collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+/* Collapsed sidebar state - hide content but keep header strip */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  overflow: hidden !important;
+}
+
+/* Hide sidebar content when collapsed, but keep header */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-tabs,
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-search-container,
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-actions-container,
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-list {
+  display: none !important;
+}
+
+/* Make sidebar header vertical when collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar-header {
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 12px;
+}
+
+/* Hide title when collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar-title {
+  display: none;
+}
+
+/* Stack buttons vertically when collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar-header-buttons {
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Panel width adjustments when sidebar is collapsed */
+.jt-quick-notes-panel.sidebar-collapsed.editor-open {
+  width: 500px; /* Editor min width (452px) + collapsed sidebar strip (48px) */
+}
+
+/* When collapsed without editor open, just show the thin strip */
+.jt-quick-notes-panel.sidebar-collapsed:not(.editor-open) {
+  width: 48px;
+}
+
+/* Smooth transition for sidebar collapse */
+.jt-notes-sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark theme styles for collapse button */
+.jt-quick-notes-panel.dark-theme .jt-notes-collapse-btn {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-collapse-btn:hover {
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark theme - collapsed sidebar strip */
+.jt-quick-notes-panel.dark-theme.sidebar-collapsed .jt-notes-sidebar {
+  background: #2c2c2c;
+  border-left-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme.sidebar-collapsed .jt-notes-sidebar-header {
+  background: #2c2c2c;
+}
+
+/* Custom theme styles for collapse button */
+.jt-quick-notes-panel.custom-theme .jt-notes-collapse-btn {
+  color: var(--jt-notes-text-secondary, #6b7280);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-collapse-btn:hover {
+  color: var(--jt-notes-text, #374151);
+  background: var(--jt-notes-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+/* Custom theme - collapsed sidebar strip */
+.jt-quick-notes-panel.custom-theme.sidebar-collapsed .jt-notes-sidebar {
+  background: var(--jt-notes-bg, white);
+  border-left-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme.sidebar-collapsed .jt-notes-sidebar-header {
+  background: var(--jt-notes-bg, white);
+}

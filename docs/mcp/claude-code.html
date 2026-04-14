@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code MCP Setup - JT Power Tools</title>
+    <meta name="description" content="Connect Claude Code to your JobTread data via MCP. Step-by-step setup with bearer token authentication for CLI-based AI workflows.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/mcp/claude-code.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/mcp/claude-code.html">
+    <meta property="og:title" content="Claude Code MCP Setup - JT Power Tools">
+    <meta property="og:description" content="Connect Claude Code to your JobTread data via MCP. Bearer token setup for CLI-based AI workflows.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <style>
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 16px 0;
+        }
+        .code-block .comment { color: #6a9955; }
+        .code-block .string { color: #ce9178; }
+        .code-block .key { color: #9cdcfe; }
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .copy-btn:hover {
+            background: var(--accent-dark);
+        }
+        .placeholder {
+            background: #3d3d00;
+            color: #ffcc00;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">🤖</span> Claude Code MCP Setup</h1>
+            <p class="guide-meta">Connect Claude Code to your JobTread data via MCP</p>
+        </div>
+
+        <div class="guide-content">
+            <h2>What You'll Need</h2>
+            <ul>
+                <li><strong>JT Power Tools Premium</strong> - Active subscription with MCP access</li>
+                <li><strong>License Key</strong> - Your JT Power Tools license key</li>
+                <li><strong>Grant Key</strong> - Your JobTread API grant key (from the API tab in the extension popup)</li>
+                <li><strong>Claude Code</strong> - Installed and configured</li>
+            </ul>
+
+            <div class="info-box tip">
+                <strong>Claude Code Native HTTP Support</strong>
+                <p>Claude Code supports HTTP MCP servers directly - no additional tools like mcp-remote needed!</p>
+            </div>
+
+            <h2>Step 1: Get Your Credentials</h2>
+            <ol class="steps">
+                <li>
+                    <strong>Open JT Power Tools Popup</strong><br>
+                    Click the extension icon in your Chrome toolbar while on JobTread
+                </li>
+                <li>
+                    <strong>Go to the API Tab</strong><br>
+                    Click the "API" tab to find your Grant Key
+                </li>
+                <li>
+                    <strong>Go to the License Tab</strong><br>
+                    Click the "License" tab to find your License Key
+                </li>
+                <li>
+                    <strong>Copy Both Keys</strong><br>
+                    You'll need both for the configuration
+                </li>
+            </ol>
+
+            <h2>Step 2: Configure Claude Code</h2>
+            <p>Open your Claude Code settings file. The location depends on your OS:</p>
+            <ul>
+                <li><strong>macOS:</strong> <code>~/.claude/settings.json</code></li>
+                <li><strong>Windows:</strong> <code>%APPDATA%\Claude\settings.json</code></li>
+                <li><strong>Linux:</strong> <code>~/.config/claude/settings.json</code></li>
+            </ul>
+
+            <h3>Add the MCP Server Configuration</h3>
+            <p>Add the following to your <code>mcpServers</code> object:</p>
+
+            <div class="code-block" id="configCode">
+<span class="key">"jobtread"</span>: {
+  <span class="key">"url"</span>: <span class="string">"https://mcp.jobtread-tools.pro/sse"</span>,
+  <span class="key">"headers"</span>: {
+    <span class="key">"Authorization"</span>: <span class="string">"Bearer <span class="placeholder">YOUR_LICENSE_KEY</span>:<span class="placeholder">YOUR_GRANT_KEY</span>"</span>
+  }
+}</div>
+            <button class="copy-btn" onclick="copyConfig()">Copy Configuration</button>
+
+            <div class="info-box warning">
+                <strong>Replace Placeholders</strong>
+                <p>Make sure to replace <code>YOUR_LICENSE_KEY</code> and <code>YOUR_GRANT_KEY</code> with your actual keys!</p>
+            </div>
+
+            <h3>Full Example Settings File</h3>
+            <p>If you don't have a settings file yet, here's a complete example:</p>
+
+            <div class="code-block">
+{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"jobtread"</span>: {
+      <span class="key">"url"</span>: <span class="string">"https://mcp.jobtread-tools.pro/sse"</span>,
+      <span class="key">"headers"</span>: {
+        <span class="key">"Authorization"</span>: <span class="string">"Bearer YOUR_LICENSE_KEY:YOUR_GRANT_KEY"</span>
+      }
+    }
+  }
+}</div>
+
+            <h2>Step 3: Restart Claude Code</h2>
+            <ol class="steps">
+                <li>
+                    <strong>Save the Settings File</strong><br>
+                    Make sure your changes are saved
+                </li>
+                <li>
+                    <strong>Restart Claude Code</strong><br>
+                    Close and reopen Claude Code to load the new configuration
+                </li>
+                <li>
+                    <strong>Verify Connection</strong><br>
+                    Try asking Claude about your JobTread data
+                </li>
+            </ol>
+
+            <h2>Step 4: Test the Connection</h2>
+            <p>Try these example prompts to verify the connection works:</p>
+            <ul>
+                <li>"List my recent JobTread jobs"</li>
+                <li>"Show me open tasks for this week"</li>
+                <li>"What customers do I have?"</li>
+                <li>"Summarize the budget for [job name]"</li>
+            </ul>
+
+            <h2>Available Tools</h2>
+            <p>The MCP server provides these read-only tools:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>search_jobs</code></td>
+                        <td>Search and list JobTread jobs</td>
+                    </tr>
+                    <tr>
+                        <td><code>list_customers</code></td>
+                        <td>Get customer information</td>
+                    </tr>
+                    <tr>
+                        <td><code>list_vendors</code></td>
+                        <td>Get vendor information</td>
+                    </tr>
+                    <tr>
+                        <td><code>list_tasks</code></td>
+                        <td>Get tasks and to-dos</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_budgets</code></td>
+                        <td>Get budget details for jobs</td>
+                    </tr>
+                    <tr>
+                        <td><code>knowledge_lookup</code></td>
+                        <td>Search knowledge base</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box tip">
+                <strong>Read-Only Access</strong>
+                <p>For security, the MCP server only provides read access to your data. To make changes, use the JobTread web interface.</p>
+            </div>
+
+            <h2>Troubleshooting</h2>
+
+            <h3>Connection Failed</h3>
+            <ul>
+                <li>Verify your License Key and Grant Key are correct</li>
+                <li>Check that your premium subscription is active</li>
+                <li>Ensure the URL is exactly <code>https://mcp.jobtread-tools.pro/sse</code></li>
+                <li>Check the Authorization header format: <code>Bearer LICENSE:GRANT</code></li>
+            </ul>
+
+            <h3>No Data Returned</h3>
+            <ul>
+                <li>Make sure your Grant Key has the necessary permissions</li>
+                <li>Try regenerating your Grant Key in the API tab</li>
+                <li>Check that you have data in JobTread to query</li>
+            </ul>
+
+            <h2>Next Steps</h2>
+            <div class="cards">
+                <a href="../guides/premium.html" class="card">
+                    <div class="card-icon">🔑</div>
+                    <h3>Premium Features</h3>
+                    <p>Learn about all premium features included with your subscription</p>
+                </a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" class="card" target="_blank">
+                    <div class="card-icon">💬</div>
+                    <h3>Get Support</h3>
+                    <p>Ask questions or report issues on GitHub</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../guides/../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function copyConfig() {
+            const config = `"jobtread": {
+  "url": "https://mcp.jobtread-tools.pro/sse",
+  "headers": {
+    "Authorization": "Bearer YOUR_LICENSE_KEY:YOUR_GRANT_KEY"
+  }
+}`;
+            navigator.clipboard.writeText(config).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Configuration', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

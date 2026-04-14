@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - JT Power Tools</title>
+    <meta name="description" content="The story behind JT Power Tools — built by a construction IT leader who refused to settle for workarounds.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/about.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jtpowertools.com/about.html">
+    <meta property="og:title" content="About - JT Power Tools">
+    <meta property="og:description" content="The story behind JT Power Tools — built by a construction IT leader who refused to settle for workarounds.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        /* -- About Hero -- */
+        .about-hero {
+            padding: 80px 0 48px;
+            text-align: center;
+        }
+        .about-hero h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(36px, 6vw, 56px);
+            letter-spacing: 3px;
+            color: var(--light);
+            margin-bottom: 12px;
+        }
+        .about-hero h1 span { color: var(--yellow); }
+        .about-hero p {
+            color: var(--gray-light);
+            font-size: 18px;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* -- Story Section -- */
+        .story-section { padding: 48px 0 64px; }
+        .story-container {
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .story-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 12px;
+            padding: 40px;
+        }
+        .story-card h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 1px;
+            color: var(--yellow);
+            margin-bottom: 16px;
+        }
+        .story-card p {
+            color: var(--gray-light);
+            font-size: 15px;
+            line-height: 1.75;
+            margin-bottom: 20px;
+        }
+        .story-card p:last-child { margin-bottom: 0; }
+        .story-card strong { color: var(--light); }
+        .story-card em {
+            color: var(--gray);
+            font-style: normal;
+        }
+
+        .story-divider {
+            width: 60px;
+            height: 3px;
+            background: var(--yellow);
+            border-radius: 2px;
+            margin: 32px 0;
+            opacity: 0.6;
+        }
+
+        /* -- Pain Points -- */
+        .pain-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0 8px;
+        }
+        .pain-point {
+            background: var(--dark);
+            border: 1px solid var(--dark-border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        .pain-point:hover { border-color: var(--yellow); }
+        .pain-point .pp-icon {
+            font-size: 24px;
+            color: var(--yellow);
+            margin-bottom: 8px;
+        }
+        .pain-point h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: var(--light);
+            margin-bottom: 4px;
+        }
+        .pain-point p {
+            font-size: 12.5px;
+            color: var(--gray);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* -- Stats Bar -- */
+        .about-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+            padding: 48px 0;
+        }
+        .about-stat { text-align: center; }
+        .about-stat-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px;
+            color: var(--yellow);
+            line-height: 1;
+        }
+        .about-stat-label {
+            font-size: 13px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* -- Built With -- */
+        .built-with-section { padding: 48px 0 64px; }
+        .built-with-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .built-with-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .built-with-card:hover {
+            border-color: var(--yellow);
+            transform: translateY(-2px);
+        }
+        .built-with-card .bw-icon {
+            font-size: 28px;
+            color: var(--yellow);
+            margin-bottom: 10px;
+        }
+        .built-with-card h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 1px;
+            color: var(--light);
+            margin-bottom: 6px;
+        }
+        .built-with-card p {
+            font-size: 13px;
+            color: var(--gray);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* -- Mobile -- */
+        @media (max-width: 768px) {
+            .story-card { padding: 28px; }
+            .about-stats { gap: 28px; }
+            .about-stat-number { font-size: 32px; }
+            .pain-points { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .pain-points { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Our Story</p>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="documentation.html">Docs</a>
+                <a href="index.html#install">Install</a>
+                <a href="index.html#pricing">Pricing</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="roadmap.html">Roadmap</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="about-hero">
+        <div class="container">
+            <h1>BUILT BY <span>REFUSING TO SETTLE</span></h1>
+            <p>JT Power Tools started because one IT leader at a general contractor wanted to reduce friction for his team — and never stopped.</p>
+        </div>
+    </section>
+
+    <!-- Origin Story -->
+    <section class="story-section">
+        <div class="story-container">
+            <div class="story-card">
+                <h2>THE PROBLEM</h2>
+                <p>
+                    I oversee IT &amp; Logistics at a Design Build general contractor. I help shape our processes and workflows, keeping us AI-driven and efficient. My team uses JobTread every day to run jobs, track budgets, and keep projects on schedule. It's a great platform &mdash; but there were things that drove me crazy.
+                </p>
+                <p>
+                    Formatting text in budget descriptions? Copy-paste from somewhere else. Checking off tasks from the schedule view? Open the task, scroll down, click complete, navigate back. Every. Single. Time. A dark theme to ease eye strain during long sessions? Not an option.
+                </p>
+
+                <div class="pain-points">
+                    <div class="pain-point">
+                        <div class="pp-icon"><i class="ph ph-moon"></i></div>
+                        <h4>Dark Mode</h4>
+                        <p>No dark theme for long work sessions</p>
+                    </div>
+                    <div class="pain-point">
+                        <div class="pp-icon"><i class="ph ph-text-aa"></i></div>
+                        <h4>Text Formatting</h4>
+                        <p>No bold, italic, or headers in descriptions</p>
+                    </div>
+                    <div class="pain-point">
+                        <div class="pp-icon"><i class="ph ph-check-square"></i></div>
+                        <h4>Quick Completion</h4>
+                        <p>Too many clicks to mark a task done</p>
+                    </div>
+                </div>
+
+                <div class="story-divider"></div>
+
+                <h2>THE SOLUTION</h2>
+                <p>
+                    So I built the fixes myself. A Chrome extension that adds the features my team needed &mdash; drag and drop for the schedule, a text formatter, task checkboxes right on the calendar. Small things, but they saved us real time every day.
+                </p>
+                <p>
+                    Then I realized: <strong>every team using JobTread has these same pain points.</strong> What started as internal tools for my team turned into something bigger. I added dark mode, a job switcher, budget hierarchy shading, quick notes &mdash; features that any construction team could use.
+                </p>
+
+                <div class="story-divider"></div>
+
+                <h2>THE REALITY</h2>
+                <p>
+                    I have a full-time job. I have <strong>three kids, all six and under.</strong> This isn't a venture-backed startup with a team of engineers. It's one person building in the margins &mdash; early mornings, late nights, nap times.
+                </p>
+                <p>
+                    I build JT Power Tools with <strong>Claude Code</strong> as my development partner. AI handles the heavy lifting on code architecture while I focus on knowing exactly what construction teams need &mdash; the same AI-driven approach I bring to my day job. It's a workflow that lets a solo developer ship features at a pace that shouldn't be possible.
+                </p>
+                <p>
+                    Five months in, we're at <strong>20 features, 40+ releases, and 400+ users.</strong> Every feature exists because someone on a job site said "I wish I could do this." That's still how it works.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section>
+        <div class="container">
+            <div class="about-stats">
+                <div class="about-stat">
+                    <div class="about-stat-number">1</div>
+                    <div class="about-stat-label">Developer</div>
+                </div>
+                <div class="about-stat">
+                    <div class="about-stat-number">20</div>
+                    <div class="about-stat-label">Features</div>
+                </div>
+                <div class="about-stat">
+                    <div class="about-stat-number">400+</div>
+                    <div class="about-stat-label">Users</div>
+                </div>
+                <div class="about-stat">
+                    <div class="about-stat-number">5</div>
+                    <div class="about-stat-label">Months</div>
+                </div>
+                <div class="about-stat">
+                    <div class="about-stat-number">3</div>
+                    <div class="about-stat-label">Kids</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Built With -->
+    <section class="built-with-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">HOW IT'S MADE</p>
+                <h2 class="section-title">THE STACK</h2>
+            </div>
+            <div class="built-with-grid">
+                <div class="built-with-card">
+                    <div class="bw-icon"><i class="ph ph-puzzle-piece"></i></div>
+                    <h4>Chrome Extension</h4>
+                    <p>Manifest V3, modular architecture, zero dependencies</p>
+                </div>
+                <div class="built-with-card">
+                    <div class="bw-icon"><i class="ph ph-robot"></i></div>
+                    <h4>Claude Code</h4>
+                    <p>AI-assisted development &mdash; the reason a solo dev can ship this fast</p>
+                </div>
+                <div class="built-with-card">
+                    <div class="bw-icon"><i class="ph ph-cloud"></i></div>
+                    <h4>Cloudflare Workers</h4>
+                    <p>MCP server, license proxy, and API infrastructure at the edge</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="cta-title">WANT TO HELP SHAPE WHAT'S NEXT?</h2>
+            <p class="cta-subtitle">Join the community, request features, or just say hi.</p>
+            <div class="cta-buttons-row">
+                <a href="https://discord.gg/u57GzaT6bp" class="cta-button" target="_blank">
+                    <i class="ph ph-discord-logo" style="margin-right: 6px;"></i>Join Discord
+                </a>
+                <a href="roadmap.html#suggest" class="cta-button secondary">
+                    <i class="ph ph-lightbulb" style="margin-right: 6px;"></i>Request a Feature
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <p>JT Power Tools &mdash; Made for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="changelog.html"><i class="ph ph-clipboard-text"></i> What's New</a>
+                <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback"><i class="ph ph-chat-circle"></i> Feedback</a>
+                <a href="https://www.facebook.com/share/g/1YfFePwdtx/" target="_blank"><i class="ph ph-facebook-logo"></i> Facebook</a>
+                <a href="https://discord.gg/u57GzaT6bp" target="_blank"><i class="ph ph-discord-logo"></i> Discord</a>
+            </div>
+            <div class="footer-links secondary">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="documentation.html">Documentation</a>
+                <a href="about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

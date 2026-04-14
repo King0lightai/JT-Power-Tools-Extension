@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - JT Power Tools</title>
+    <meta name="description" content="Full version history for JT Power Tools. See every new feature, bug fix, and improvement across all releases.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/changelog.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jtpowertools.com/changelog.html">
+    <meta property="og:title" content="Changelog - JT Power Tools">
+    <meta property="og:description" content="Full version history for JT Power Tools. See every new feature, bug fix, and improvement.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        .feature-name {
+            font-weight: 600;
+            color: var(--light);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="documentation.html">Docs</a>
+                <a href="index.html#install">Install</a>
+                <a href="index.html#pricing">Pricing</a>
+                <a href="changelog.html" class="active">Changelog</a>
+                <a href="roadmap.html">Roadmap</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="changelog-container">
+        <header class="hero">
+            <h1>📋 Changelog</h1>
+            <p class="subtitle">Track all changes, improvements, and new features</p>
+        </header>
+
+        <!-- Version 4.5.3 — MCP Tool Consolidation, ChatGPT Compat, JWT Auth, Admin Org Logos, Catalog Formatter -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.5.3</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">April 13, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter on Catalog</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Text formatter toolbar now appears on Description fields in the catalog</li>
+                            <li class="sub-item">Works in both inline table cells and Cost Item/Cost Group sidebars</li>
+                            <li class="sub-item">Only Description fields get the toolbar — custom fields stay clean</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Admin-Managed Org Logos</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Admins can now set org logos in the portal Extension tab — no more per-user config</li>
+                            <li class="sub-item">Logo URL stored per org alongside extension grant keys</li>
+                            <li class="sub-item">All team members get the logo automatically via the grant key resolver</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">ChatGPT MCP Connector Support</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">ChatGPT can now discover and use all JobTread MCP tools (~73 tools)</li>
+                            <li class="sub-item">Fixed stateless pre-initialization, SSE GET endpoint, and OAuth token race condition</li>
+                            <li class="sub-item">Consolidated 9 tool pairs to reduce payload (91 &rarr; 80 tool definitions)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Portal JWT Authentication for Pro Worker</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Pro Worker now accepts portal JWT — eliminates device registration requirement</li>
+                            <li class="sub-item">Users switching browsers (Edge &rarr; Chrome) no longer lose access to Pro features</li>
+                            <li class="sub-item">Extension automatically sends JWT when signed into the portal</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Feature Toggle Sync on Logout</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">API-dependent features now auto-disable when signed out of the portal</li>
+                            <li class="sub-item">Toggles sync to storage and notify content scripts — no more stuck features</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed browser polyfill infinite recursion on Edge/Chrome (sendMessage alias guard)</li>
+                    <li class="change-item">Fixed PDF Markup Tools cleanup error (const WeakMap reassignment)</li>
+                    <li class="change-item">Fixed OrgLogo MutationObserver infinite loop (debounce + disconnect/reconnect)</li>
+                    <li class="change-item">Fixed OrgDetector race condition — waits for JT header before falling back to legacy keys</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.5.0 — Interactive Budget Changelog, Job Switcher Upgrades, Freeze Header Fixes -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.5.0</span>
+                <span class="version-badge"></span>
+                <span class="version-date">April 5, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Interactive Budget Changelog Report</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Budget comparisons now open a full interactive report in a dedicated tab</li>
+                            <li class="sub-item">Sticky toolbar with search, type filter chips (Added/Removed/Modified/Unchanged), cost group dropdown, and minimum dollar threshold</li>
+                            <li class="sub-item">Sortable table columns with collapsible cost group sections and per-group subtotals</li>
+                            <li class="sub-item">Delta view and Side-by-Side view toggle for comparing old vs new values</li>
+                            <li class="sub-item">Click any row to expand and see full details including word-level description diffs</li>
+                            <li class="sub-item">Export to CSV, copy summary to clipboard, or print (auto-expands all groups)</li>
+                            <li class="sub-item">Handles 1000+ line items with auto-collapsing groups for performance</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Job Switcher Upgrades</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Sort jobs by Recent, A&rarr;Z, or Z&rarr;A with persistent sort preference</li>
+                            <li class="sub-item">Filter by Location custom fields (&#x1F4CD; prefixed) — works just like job custom fields</li>
+                            <li class="sub-item">Location name and address displayed on each job in the results list</li>
+                            <li class="sub-item">Infinite scroll pagination — loads 50 jobs at a time as you scroll down</li>
+                            <li class="sub-item">Compact filter UI layout — status and sort controls on a single row</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Job Access Collapse</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Per-section collapse toggles in the Job Access panel (Customer, Internal, Vendor, etc.)</li>
+                            <li class="sub-item">Collapse state persists across page loads and SPA navigation</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Org Logo Replacement</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Replace the generic JobTread logo in the org switcher with your company logo</li>
+                            <li class="sub-item">Configure via image URL in extension popup settings (Appearance section)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed Budget Changelog 400 error on jobs with 100+ budget backups (pagination cursor fix)</li>
+                    <li class="change-item">Fixed Budget Changelog blank page caused by JobTread CSP blocking inline scripts — now renders via extension page</li>
+                    <li class="change-item">Fixed Compare Backups stack overflow on large budgets with 3000+ item safety limit</li>
+                    <li class="change-item">Fixed Freeze Header activating on <code>/catalog</code> pages where it shouldn't</li>
+                    <li class="change-item">Fixed Update Folder sidebar dropping below frozen headers</li>
+                    <li class="change-item">Fixed Job Switcher keyboard shortcuts (CapsLock compatibility, orphaned state cleanup)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.4.1 — Multi-Org AI Keys, Auto Sum, Budget Changelog Fix, Knowledge Base -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.4.1</span>
+                <span class="version-date">March 29, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Multi-Org AI Grant Keys (MCP)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Power Users can now add multiple AI grant keys for different JobTread organizations</li>
+                            <li class="sub-item">Each MCP connection (Claude, ChatGPT, Cursor) is scoped to one organization's data</li>
+                            <li class="sub-item">OAuth flow shows an org picker when multiple keys are configured</li>
+                            <li class="sub-item">CLI clients use the <code>X-JT-Org</code> header to select which org to connect</li>
+                            <li class="sub-item">Manage keys in the portal dashboard under AI &amp; MCP → AI Grant Keys</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">JobTread Knowledge Base (MCP)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Scraped and indexed the full JobTread knowledge base for AI-powered search</li>
+                            <li class="sub-item">AI assistants can now answer "how do I..." questions about JobTread features</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">Auto Sum</span> — Renamed from "Budget Tools" for clarity. New guide page added.</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">Budget Changelog</span> — Fixed not finding grant key when user signs in through the portal account system. Now prioritizes the portal login key over potentially stale cached keys.</li>
+                    <li class="change-item"><span class="feature-name">Schedule Feature Count</span> — Fixed popup showing 5 instead of 6 in the Schedule &amp; Calendar category header</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📝</span> Documentation</h3>
+                <ul class="change-list">
+                    <li class="change-item">Rewrote Installation &amp; Premium guides for new portal account system</li>
+                    <li class="change-item">Added Auto Sum feature guide</li>
+                    <li class="change-item">Added Official JobTread Partner badge to site footer</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.0.4 — Budget Tools, Dark Mode & Theme Support, Toggle Fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.0.4</span>
+                <span class="version-date">March 28, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget Tools — Selection Totals Panel</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Select budget line items to see a live "Selection Totals" panel in the MASS BUDGET ACTIONS sidebar</li>
+                            <li class="sub-item">Shows Extended Cost, Extended Price, and Profit (with margin %) for all selected rows</li>
+                            <li class="sub-item">Dynamically reads column headers — works regardless of which columns are configured or their order</li>
+                            <li class="sub-item">Handles TBD items gracefully (skips them and shows a count)</li>
+                            <li class="sub-item">Excludes parent group rows — only sums actual line items</li>
+                            <li class="sub-item">Handles JobTread's lazy/virtual row loading: selected rows scrolled out of view still contribute to totals</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Budget Tools — Dark Mode & Custom Theme Support</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Dark mode uses neutral grey palette with brighter green/red for profit/loss readability</li>
+                            <li class="sub-item">RGB custom theme reads CSS variables to adapt to any custom palette</li>
+                            <li class="sub-item">Theme colors auto-update on each render — toggling themes while the panel is open works seamlessly</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">Budget Tools Toggle</span> — Fixed toggle state not persisting; <code>getCurrentSettings()</code> and <code>loadSettings()</code> were missing <code>budgetTools</code>, so every settings save overwrote it with the default (false)</li>
+                    <li class="change-item"><span class="feature-name">Text Formatter</span> — Fixed toolbar not appearing in the Cost Item Details sidebar panel; the orange-header exclusion filter now exempts panels whose header text is "cost item details"</li>
+                    <li class="change-item"><span class="feature-name">Freeze Header</span> — Fixed not recognising the schedule week/month calendar view header; added <code>time[datetime]</code> detection so the day/week column header row is correctly frozen</li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter — Budget Description Fields</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed toolbar not appearing in Description fields that already have content</li>
+                            <li class="sub-item">Added sticky-column detection fallback for identifying Description textareas</li>
+                            <li class="sub-item">Fixed toolbar z-index (raised to 35) to appear above data rows</li>
+                            <li class="sub-item">Fixed header row search to find the column header outside the scroll container</li>
+                        </ul>
+                    </li>
+                    <li class="change-item"><span class="feature-name">Claude.ai MCP Setup</span> — Updated portal dashboard instructions to match Claude.ai's renamed UI ("Settings → Connectors" / "Add a custom connector")</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.0.0 — Web Portal, Extension Sign-In, MCP Dashboards & Workflows -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.0.0</span>
+                <span class="version-date">March 22, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Web Portal — app.jtpowertools.com</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Full web portal for team and license management</li>
+                            <li class="sub-item">Login, registration, forgot/reset password flows</li>
+                            <li class="sub-item">Admin dashboard with org overview, team members, and invite management</li>
+                            <li class="sub-item">JobTread Connection card and AI Server (MCP) card for grant key management</li>
+                            <li class="sub-item">On-brand design system (Bebas Neue headers, Source Sans 3 body, #FE4C0D gradient)</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Portal Backend — Auth, Admin & Invites</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JWT-based authentication with HMAC-SHA256 signing and PBKDF2 password hashing</li>
+                            <li class="sub-item">Admin endpoints for team management, invite creation, role updates</li>
+                            <li class="sub-item">Invite system with email-specific or shareable open links</li>
+                            <li class="sub-item">Auto-owner assignment for first registrant or Gumroad purchase email match</li>
+                            <li class="sub-item">Rate limiting on auth endpoints</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Extension Sign-In Flow</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Inline portal sign-in in popup for premium feature access</li>
+                            <li class="sub-item">Grant key auto-syncs from portal on sign-in</li>
+                            <li class="sub-item">Migration banner for existing license key users</li>
+                            <li class="sub-item">"Manage Team" link for owners/admins opens portal dashboard</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Extension Simplification</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Removed License, API, and MCP tabs from popup — all configuration now in portal</li>
+                            <li class="sub-item">Simplified to Features + Theme + Account tabs</li>
+                            <li class="sub-item">Extended refresh token TTL to 90 days with rolling renewal</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Dashboard Management Tools</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jobtread_create_dashboard</code> — create from 7 predefined templates or custom tile arrays</li>
+                            <li class="sub-item"><code>jobtread_update_dashboard</code> — rename, add/remove tiles with auto-merge</li>
+                            <li class="sub-item">Delete mutation guard on <code>raw_query</code></li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Team Notes Write Tools</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jobtread_create_team_note</code> — save to org knowledge base with "(via AI)" attribution</li>
+                            <li class="sub-item"><code>jobtread_update_team_note</code> — update title, content, folder, or pin status</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Workflow Tools</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jobtread_list_workflows</code>, <code>jobtread_get_workflow</code>, <code>jobtread_list_workflow_runs</code> — read tools</li>
+                            <li class="sub-item"><code>jobtread_create_workflow</code> — create automations with 66 trigger types and 41 action types</li>
+                            <li class="sub-item"><code>jobtread_update_workflow</code> — update name, trigger, status, or action tree</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Branding & Polish</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New extension icons with updated logo</li>
+                            <li class="sub-item">Branded invite emails via Resend with install instructions</li>
+                            <li class="sub-item">MCP setup instructions with tabs for Claude Code, Claude Desktop, Claude Web, ChatGPT</li>
+                            <li class="sub-item">Role-based dashboard views in portal</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">Portal</span> — Fixed team members table showing removed members; fixed password verification crash on legacy hash format; fixed auth queries using wrong table</li>
+                    <li class="change-item"><span class="feature-name">MCP <code>search_jobs</code></span> — Fixed status filter returning too few results; now over-fetches before client-side filtering</li>
+                    <li class="change-item"><span class="feature-name">MCP <code>list_tasks</code> / <code>get_schedule</code></span> — Fixed 413 errors on large jobs; reduced default limit, trimmed nested data</li>
+                    <li class="change-item"><span class="feature-name">MCP <code>get_org_summary</code></span> — Fixed amount labels from "cents" to "dollars" to match actual API values</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⬆️</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">Added <code>hasMore</code> and <code>count</code> fields to task/schedule responses for pagination awareness</li>
+                    <li class="change-item">Improved tool descriptions to differentiate <code>list_tasks</code> vs <code>get_schedule</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.7.0 — Expand/Collapse All, MCP Config Security -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.7.0</span>
+                <span class="version-date">March 14, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget — Expand/Collapse All Groups Button</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Single smart toggle button added to budget table Name header</li>
+                            <li class="sub-item">Auto-detects current group state (expanded vs collapsed)</li>
+                            <li class="sub-item">Shows Phosphor ArrowsOut/ArrowsIn icons matching detected state</li>
+                            <li class="sub-item">Clicks native expand/collapse buttons 5 times to cover all nesting levels</li>
+                            <li class="sub-item">Updates icon when native buttons or individual group chevrons are clicked</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">Unassigned Availability</span> — Renamed from "Task Type Filter" with updated description and new <a href="guides/unassigned-availability.html">docs guide</a></li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Config & Grant Key Hardening</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Removed grant key copy button from popup — keys should not be re-exposed after creation</li>
+                            <li class="sub-item">Changed grant key display from masked value to simple "Configured" / "Not configured" status</li>
+                            <li class="sub-item">Generated MCP configs now use placeholders instead of embedding real credentials</li>
+                            <li class="sub-item">Status message guides users to replace placeholders with their own keys</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.93 — MCP Upload Tools, Firefox Compatibility, Freeze Header Fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.93</span>
+                <span class="version-date">March 12, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — File Upload Tools</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jobtread_upload_file</code> — uploads a file from a URL to a JobTread job as a comment attachment</li>
+                            <li class="sub-item"><code>jobtread_upload_file_to_cost_item</code> — uploads a file from a URL and attaches it directly to a budget line item</li>
+                            <li class="sub-item">Supports images (JPG, PNG, GIF, WebP), PDFs, and documents up to 25MB</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Firefox Extension — Browser Polyfill & Compatibility</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed popup not refreshing the JT page when toggling settings — <code>chrome.tabs</code> methods were not polyfilled for Firefox MV2</li>
+                            <li class="sub-item">Fixed popup dark mode toggle not persisting — <code>chrome.runtime.sendMessage</code> was not returning Promises in Firefox</li>
+                            <li class="sub-item">Fixed <code>setIcon</code> crash in Firefox MV2 background script — <code>browserAction.setIcon()</code> returns <code>undefined</code> (not a Promise), now handled gracefully</li>
+                            <li class="sub-item">Expanded <code>browser-polyfill.js</code> to cover <code>chrome.tabs</code> and <code>chrome.runtime.sendMessage</code></li>
+                            <li class="sub-item">Synced <code>manifest.firefox.json</code> content scripts and web_accessible_resources with current Chrome manifest</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Firefox — License Proxy Origin Fix</span> — Fixed "Unauthorized origin" error on Firefox sync requests; proxy now allows requests with valid JWT tokens even without an Origin header
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span> — Fixed full-page overlay sidebars (History, Selection Details) being pushed down by frozen headers; sidebars inside overlay containers are now excluded from positioning adjustments
+                    </li>
+                    <li class="change-item"><span class="feature-name">Custom Theme</span> — Fixed task card overlay covering assignee avatar icons; rounded avatar elements are now excluded from the overlay</li>
+                    <li class="change-item"><span class="feature-name">Character Counter</span> — Fixed counter and message template buttons pushing the Send button off-screen in narrow sidebars</li>
+                    <li class="change-item"><span class="feature-name">Availability Filter</span> — Fixed positioning at the job level; filter now inserts directly above the availability grid</li>
+                    <li class="change-item"><span class="feature-name">Dark Mode</span> — Fixed schedule availability task cards not being styled in dark mode</li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed toolbar not appearing in Daily Log and Cost Item Details sidebars</li>
+                            <li class="sub-item">Fixed toolbar following focus to non-Description fields in budget table</li>
+                            <li class="sub-item">Fixed budget description toolbar covering the line item row above</li>
+                            <li class="sub-item">Fixed toolbar not following the textarea when scrolling</li>
+                        </ul>
+                    </li>
+                    <li class="change-item"><span class="feature-name">Task Type Filter</span> — Refactored to route API calls through Pro Worker instead of direct Pave calls</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">MCP Popup</span> — Updated MCP tab to list all 57 tools (was 24 read-only), with write tools visually distinguished with green icons</li>
+                    <li class="change-item"><span class="feature-name">Availability Filter</span> — Redesigned to compact single-row layout matching the Task Type Filter style</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">MCP Server — Token Efficiency</span> — Reduced token consumption across all 57 tools by trimming descriptions, shortening parameter strings, removing redundant response fields, and compressing knowledge sections</li>
+                    <li class="change-item"><span class="feature-name">Firefox Defaults</span> — Synced inline fallback defaults in both <code>background.js</code> and <code>service-worker.js</code> to match <code>defaults.js</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.92 — Keyboard Shortcuts Enhancement, Smart Resize Rename, Bug Fixes -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.92</span>
+                <span class="version-date">March 8, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Keyboard Shortcuts Enhancement</span> — Always-on feature that enriches JT's native <kbd>Shift+?</kbd> keyboard shortcuts modal
+                        <ul class="sub-list">
+                            <li class="sub-item">Injects missing JT native shortcuts: Job Actions, Budget Actions, Catalog Actions, Schedule & To-Do Actions</li>
+                            <li class="sub-item">Appends missing items to existing Navigation and General Actions sections</li>
+                            <li class="sub-item">Adds JT Power Tools shortcuts section (Q+N, Ctrl+B/I/U)</li>
+                            <li class="sub-item">Full dark mode support — automatically styles the entire modal when Dark Mode is active</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Renamed <span class="feature-name">Quick Job Switcher</span> to <span class="feature-name">Smart Resize</span> — description updated to "Resize any sidebar" to reflect generic sidebar resize capability</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed Text Formatter toolbar blocking Tab key navigation in message compose fields</li>
+                    <li class="change-item">Fixed Freeze Header pushing down Time Entry and Add Time Entry sidebar headers</li>
+                    <li class="change-item">Fixed Freeze Header pushing down Daily Log and Notifications sidebars (case-insensitive detection)</li>
+                    <li class="change-item">Fixed drag-drop checkboxes appearing on fresh installs without a license key</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Smart Resize</span> — sidebar resize is now generic, with push vs overlay classification
+                        <ul class="sub-list">
+                            <li class="sub-item">Resize handles appear on any JobTread sidebar, not just the Job Switcher</li>
+                            <li class="sub-item">Each sidebar type remembers its own width independently</li>
+                            <li class="sub-item">Push sidebars (Job Switcher, Notifications, Help, Daily Logs, Time Clock, Time Entry) adjust main content padding</li>
+                            <li class="sub-item">Overlay sidebars (Cost Item, Budget, Estimate panels) float on top without pushing content</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.9 — MCP PDF/Image Reader, Dashboards, Custom Fields -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.9</span>
+                <span class="version-date">March 6, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — PDF & Image Reader</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">AI assistants can now extract text from PDF files attached to jobs or from direct URLs via the new <code>jobtread_parse_pdf</code> tool</li>
+                            <li class="sub-item">Scanned PDFs and image-based pages are automatically detected — embedded images are extracted and sent to AI vision models for reading</li>
+                            <li class="sub-item">Enables bid leveling, scope alignment, contract review, and spec analysis directly through your AI assistant</li>
+                            <li class="sub-item">Supports configurable page ranges (e.g., "1-5", "1,3,5") with a 50-page max per request</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Dashboard Access</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New <code>jobtread_list_dashboards</code> tool to list all dashboards in your organization</li>
+                            <li class="sub-item">New <code>jobtread_get_dashboard</code> tool to read dashboard tiles, positions, sizes, and configurations</li>
+                            <li class="sub-item">Pull key metrics for production meetings, reporting, and forecasting</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Custom Fields Enhancement</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Custom fields tool now supports filtering by entity type: jobs, locations, accounts, daily logs, and cost items</li>
+                            <li class="sub-item">Previously hardcoded to job fields only — now returns fields for any entity type or all types at once</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Knowledge Base Expansion</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">AI assistants can now look up JobTread's custom text formatting syntax (bold, italic, underline, colors, alerts, tables)</li>
+                            <li class="sub-item">New formulas & parameters reference for building cost item formulas with job parameters, quantities, and custom fields</li>
+                            <li class="sub-item">Complete functions reference with math, conditionals, and utility functions</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Tool Naming Alignment</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Renamed tools to match JobTread terminology — <code>search_contacts</code> → <code>search_accounts</code>, <code>get_financial_summary</code> → <code>get_documents_summary</code></li>
+                            <li class="sub-item">Updated all tool descriptions to use JobTread-specific terms (cost items, cost groups, documents vs files)</li>
+                            <li class="sub-item">Tool count increased from 22 to 24</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header — Schedule Sidebar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed long-standing bug where schedule sidebar panels (Update Task, Task Details) would go out of the viewport when Freeze Header was active</li>
+                            <li class="sub-item">JobTread's JavaScript continuously overwrites inline positioning — now uses a dedicated MutationObserver to re-correct sidebar placement below frozen tabs</li>
+                            <li class="sub-item">Also fixes the sidebar scrollbar being cut off at the bottom on Schedule pages</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Character Counter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Moved counter inline within the toolbar for a cleaner layout in both main and reply message forms</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Reverse Thread Order</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Reply button positioning — now cleanly overlays the header bar instead of sitting too low</li>
+                            <li class="sub-item">Fixed feature not being properly tier-locked to Essential in the popup settings</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🌐</span> Website</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Homepage Updates</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added dedicated MCP / AI Integration section with cards linking to setup guides for ChatGPT, Claude, Cursor, Grok, Gemini, and more</li>
+                            <li class="sub-item">Gumroad checkout now opens directly from pricing buttons — no more redirect to a separate page</li>
+                            <li class="sub-item">New tier-colored pricing buttons (green Essential, orange Pro, purple Power User) with hover fill effects</li>
+                            <li class="sub-item">Power User tier now highlighted as "Most Powerful" with purple accent</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Documentation & SEO</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added MCP / AI Integration cards to documentation page (Grok, Gemini CLI guides)</li>
+                            <li class="sub-item">Added SEO meta tags (description, canonical, Open Graph) across all 30+ docs pages</li>
+                            <li class="sub-item">Added structured data (JSON-LD) for SoftwareApplication on homepage</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.8 — OAuth & Multi-Field Filter -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.8</span>
+                <span class="version-date">March 3, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — OAuth 2.1 Support</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">MCP server now supports OAuth 2.1 authorization flow for platforms that require it (e.g., Claude.ai Remote MCP)</li>
+                            <li class="sub-item">Built-in authorization page lets you enter your License Key and Grant Key directly in the browser during the OAuth handshake</li>
+                            <li class="sub-item">Tokens are issued and validated seamlessly — no manual Bearer header setup needed for OAuth-connected clients</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter — Multi-Field Filtering</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Filter jobs by multiple custom fields simultaneously with AND logic (e.g., PM = "John" AND Job Type = "Renovation")</li>
+                            <li class="sub-item">Active filters display as chip tags — click the chip text to edit that field's values, click × to remove it</li>
+                            <li class="sub-item">Fields already in use are hidden from the dropdown to prevent duplicates</li>
+                            <li class="sub-item">Multi-field saved filters are fully supported with backward compatibility for existing single-field saves</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed saved filters dropdown not appearing — moved to a dedicated dropdown above the field selector for reliable access</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.7 — MCP Server Beta -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.7</span>
+                <span class="version-date">March 1, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server Integration (Beta — Power User Tier)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Connect your AI assistant (Claude, ChatGPT, Gemini) directly to your JobTread data via the Model Context Protocol</li>
+                            <li class="sub-item">22 read-only tools give your AI visibility into jobs, budgets, tasks, schedules, contacts, daily logs, time entries, files, and more</li>
+                            <li class="sub-item">New MCP tab in the popup with full setup guide, prerequisites checklist, and platform-specific config generator</li>
+                            <li class="sub-item">One-click copy configs for Claude Code, Claude Desktop, ChatGPT, and Gemini CLI — auto-embeds your License Key and Grant Key</li>
+                            <li class="sub-item">Team Notes tools let your AI search and read shared notes across your organization</li>
+                            <li class="sub-item">Financial summary tool aggregates documents by type and status for quick reporting</li>
+                            <li class="sub-item">Read-only for now — your AI can view data but cannot create, update, or delete anything</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed formatter toolbars appearing in every description field when a job budget loads with all groups collapsed — hidden fields now skip toolbar pre-creation and get toolbars on-demand when focused</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Add/Edit Items panel headers scrolling away instead of staying frozen</li>
+                            <li class="sub-item">Fixed Cost Item Details sidebar stuck behind frozen navigation bar</li>
+                            <li class="sub-item">Fixed footer totals row losing its bottom-sticky positioning in the Add/Edit Items panel</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed spreadsheet exports showing blank data when dark mode is enabled — text color overrides now only apply on-screen via @media screen</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.6 — Major Update -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.6</span>
+                <span class="version-date">February 27, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Company Shared Templates (Essential+ Tier)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New org-wide "Company Templates" tab in the message template dropdown — any team member on Essential tier or higher can create, edit, and delete shared templates</li>
+                            <li class="sub-item">Tabbed UI with "My Templates" and "Company" tabs; Company tab selected by default for paid users</li>
+                            <li class="sub-item">Created-by attribution shows who made each company template</li>
+                            <li class="sub-item">Template buttons now appear on Daily Log Notes textarea in the sidebar</li>
+                            <li class="sub-item">Manage Templates modal (settings gear) now supports both personal and company templates with tab-aware CRUD</li>
+                            <li class="sub-item">5-minute client-side cache keeps things fast; full dark mode support</li>
+                            <li class="sub-item">Free users see no changes — personal templates work exactly as before</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode — Pinned Mode</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New pin button toggles between docked and pinned modes — pinned panel stays open even when you leave the textarea</li>
+                            <li class="sub-item">Drag the panel by its header bar to reposition anywhere on screen</li>
+                            <li class="sub-item">Resize by dragging right edge, bottom edge, or corner handle (280–800px wide, 150–600px tall)</li>
+                            <li class="sub-item">Content follows focus — when pinned, the preview updates to whichever textarea you click into</li>
+                            <li class="sub-item">Position and size are remembered across sessions</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed formatter toolbars covering Cancel/Save buttons in the Daily Log sidebar — only the actively focused toolbar now gets sticky positioning; all others reset to normal document flow</li>
+                            <li class="sub-item">Added CSS z-index rule to ensure sidebar sticky footers always render above formatter toolbars</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Message Templates</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Daily Log Notes detection failing when Freeze Header is disabled — no longer depends on Freeze Header's sidebar class</li>
+                            <li class="sub-item">Fixed race condition where tier check hadn't completed before rendering template tabs</li>
+                            <li class="sub-item">Fixed Company tab showing empty on first dropdown open</li>
+                            <li class="sub-item">Fixed "Set as default" checkbox incorrectly appearing for company templates</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Availability Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed saved filter views not applying when clicked — MutationObserver rebuild was clobbering the applied view state</li>
+                            <li class="sub-item">Fixed click listener leak — outside-click handler was re-added on every UI rebuild without removing the previous one</li>
+                            <li class="sub-item">Fixed delete view refresh using a double-click workaround — now properly re-renders the list</li>
+                            <li class="sub-item">Fixed z-index too high — filter panel now slides correctly under the frozen header</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Memory Leaks</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed setInterval leaks in Auto Collapse Groups, Freeze Header, and Kanban Type Filter — intervals are now tracked and cleared in cleanup()</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">API Proxy &amp; CORS</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed SSRF vulnerability in the service worker API proxy — now validates sender origin and enforces a URL allowlist</li>
+                            <li class="sub-item">Tightened CORS on Pro Worker and License Proxy — per-request origin resolution instead of wildcard</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">XSS Prevention</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed XSS in Preview Mode markdown renderer — raw text is now HTML-escaped before formatting; link URLs sanitized to block javascript: and data: schemes</li>
+                            <li class="sub-item">Fixed javascript: URL injection in Quick Notes markdown links</li>
+                            <li class="sub-item">Fixed XSS via unsanitized error messages and API data in Budget Changelog</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Code Quality &amp; Deduplication</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Consolidated escapeHtml across 6 files into shared Sanitizer.escapeHTML()</li>
+                            <li class="sub-item">Consolidated adjustColorBrightness into shared ColorUtils utility</li>
+                            <li class="sub-item">Replaced stale inline defaultSettings in popup with shared JTDefaults module</li>
+                            <li class="sub-item">Removed dead code in Preview Mode</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Availability Filter UX</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Filter panel now remembers its collapsed/expanded state across refreshes</li>
+                            <li class="sub-item">Active filter count badge shows how many assignees are hidden when panel is collapsed</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Account &amp; Server</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Auto-device registration on login — new devices automatically connect without re-entering the grant key</li>
+                            <li class="sub-item">Fixed tier enforcement reading from licenses table instead of trusting user defaults</li>
+                            <li class="sub-item">Added session cleanup on token refresh and scheduled daily maintenance</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.51 — Hotfix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.51</span>
+                <span class="version-date">February 23, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Hotfix</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header — Global Sidebar Positioning</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Notifications, Daily Log, and other full-size sidebars dropping down on some devices where the header height resolves to a sub-pixel value</li>
+                            <li class="sub-item">Global sidebar positioning now uses the actual measured header height instead of a hardcoded 48px value</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter — Overflow Dropdown Sizing</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Shrunk overflow dropdown items to match the compact toolbar size (22px) — previously they were 32px, making them noticeably larger than the rest of the bar</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.5 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.5</span>
+                <span class="version-date">February 21, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header — Job Context Indicator</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Never lose track of which job you're in — when you scroll past the job header, the job name/number appears in the top header bar</li>
+                            <li class="sub-item">Click the job name to instantly open the Job Switcher</li>
+                            <li class="sub-item">Uses zero additional screen space — injected between the logo and search bar</li>
+                            <li class="sub-item">Supports dark mode and custom themes</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter — Multi-Select & Saved Filters</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Select multiple values for a custom field with OR logic — jobs matching any selected value are shown</li>
+                            <li class="sub-item">Checkbox dropdown with Select All / Clear All controls and a selected count badge</li>
+                            <li class="sub-item">Save and load named filter presets directly from the status dropdown</li>
+                            <li class="sub-item">Saved filters are shared across your company — requires JT Power Tools account</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Kanban Task Checkboxes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed checkboxes not appearing when Kanban is grouped by Job, Type, or other fields</li>
+                            <li class="sub-item">Improved card detection reliability with fallback selectors for grouped views</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed multi-value filter not returning results due to API format mismatch</li>
+                            <li class="sub-item">Fixed saved filter names being swallowed by Job Switcher keyboard shortcuts</li>
+                            <li class="sub-item">Server now limits to 25 custom fields and excludes unsupported field types</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed toolbar appearing on document signature and metadata fields</li>
+                            <li class="sub-item">Fixed toolbar appearing on file description fields in modals</li>
+                            <li class="sub-item">Fixed floating toolbar not vanishing when switching fields on budget page</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed global sidebars (Notifications, Job Switcher) dropping down with blank space above</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed extension running on jobtread.com marketing site instead of only app.jobtread.com</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.4 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.4</span>
+                <span class="version-date">February 15, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Reverse Thread Order (Essential)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Newest messages appear at the top of threads instead of the bottom</li>
+                            <li class="sub-item">Reply button and message editor load above the conversation for immediate access</li>
+                            <li class="sub-item">Works across all message locations — jobs, documents, daily logs, and sidebars</li>
+                            <li class="sub-item">Pure CSS approach keeps React stable — Cancel, Send, and navigation all work normally</li>
+                            <li class="sub-item">Single-message threads also supported for consistent experience</li>
+                            <li class="sub-item">Clean toggle on/off — disabling restores original message order instantly</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.3</span>
+                <span class="version-date">February 13, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme Quick Presets</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">10 preloaded theme presets as clickable color circles in the Theme tab</li>
+                            <li class="sub-item">Light themes: Ocean, Forest, Sunset, Berry, Slate</li>
+                            <li class="sub-item">Dark themes: Midnight, Ember, Neon, Plum, Charcoal</li>
+                            <li class="sub-item">Click any preset to instantly load and apply the theme</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Toolbar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Compact toolbar everywhere — smaller buttons (22px), 11px font, 12px icons for a cleaner look</li>
+                            <li class="sub-item">Sticky scroll in all contexts — toolbar follows textarea during scroll in modals, job overview, and custom fields (not just sidebars)</li>
+                            <li class="sub-item">Message field toolbar repositioned from below to above the textarea</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Re-enabled Text Formatter on Files, Customer, and Vendor pages (previously excluded)</li>
+                    <li class="change-item">Fixed Text Formatter missing on Message fields in document-type pages</li>
+                    <li class="change-item">Fixed toolbar covering bottom buttons in edit job popup modals</li>
+                    <li class="change-item">Fixed sticky toolbar overlapping page headers in sidebars</li>
+                    <li class="change-item">Fixed formatter toolbar appearing below character counter on page load</li>
+                    <li class="change-item">Fixed floating toolbar appearing on custom fields in budget table</li>
+                    <li class="change-item">Fixed sidebar toolbar positioning — switched from fixed to sticky positioning</li>
+                    <li class="change-item">Fixed toolbar staying in floating position after clicking away from textarea</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.2 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.2</span>
+                <span class="version-date">February 12, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Takeoff Print Tool (PDF Markup Tools)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Print construction takeoff drawings directly from JobTread</li>
+                            <li class="sub-item">Integrated Print button in JobTread's native takeoff toolbar</li>
+                            <li class="sub-item">Plan comparison view support — prints both overlaid layers with color filters</li>
+                            <li class="sub-item">Dynamic page sizing fits the drawing to any paper size</li>
+                            <li class="sub-item">Auto landscape/portrait detection based on drawing aspect ratio</li>
+                            <li class="sub-item">Clean export hides all UI, showing only the drawing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Eraser Tool</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Improved eraser reliability — simulates Backspace keypress instead of searching for trash icon in DOM</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Takeoff Print Tool</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Auto orientation and fit-to-page printing for any paper size</li>
+                            <li class="sub-item">Proper SVG measurement using viewBox attributes for accurate dimensions</li>
+                            <li class="sub-item">Clean print layout using dedicated print wrapper instead of visibility: hidden</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed Print button not appearing in takeoff toolbar due to SPA navigation URL gating</li>
+                    <li class="change-item">Fixed "Cannot find takeoff drawing area" in plan comparison view with image-based containers</li>
+                    <li class="change-item">Fixed account login/register forms hidden when no license key was entered</li>
+                    <li class="change-item">Added retry logic with exponential backoff for schedule task checkboxes on slow-loading pages</li>
+                    <li class="change-item">Fixed checkbox circle appearing white in dark mode and custom themes (fill-blue-50 override)</li>
+                    <li class="change-item">Fixed Action Items completion failing due to extension running inside hidden iframe</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.1 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.1</span>
+                <span class="version-date">February 10, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed license key not syncing on new device login</li>
+                    <li class="change-item">Fixed grant key not syncing on new device login</li>
+                    <li class="change-item">Fixed deleted notes and templates reappearing on new devices</li>
+                    <li class="change-item">Fixed personal notes folders not syncing across devices</li>
+                    <li class="change-item">Fixed team notes folder column missing in database</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.0</span>
+                <span class="version-date">February 8, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">User Accounts & Cloud Sync</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Create an account to sync notes and templates across all your devices</li>
+                            <li class="sub-item">Secure login with email and password</li>
+                            <li class="sub-item">Grant key system for API access and team features</li>
+                            <li class="sub-item">Account management in extension popup</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Team Notes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Share notes with your entire JobTread organization</li>
+                            <li class="sub-item">Real-time collaboration with automatic sync every 15 seconds</li>
+                            <li class="sub-item">See who created each note with author attribution</li>
+                            <li class="sub-item">Separate "My Notes" and "Team Notes" tabs in Quick Notes panel</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Folder Organization</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Organize notes into custom folders</li>
+                            <li class="sub-item">Drag and drop notes between folders</li>
+                            <li class="sub-item">Drag folder headers to reorder folders</li>
+                            <li class="sub-item">Assign custom colors to folders for visual organization</li>
+                            <li class="sub-item">Pin important notes to the top of their folder</li>
+                            <li class="sub-item">Folders sync with your account across devices</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Fat Gantt</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Makes Gantt chart dependency lines thicker (3.5px vs 1.5px)</li>
+                            <li class="sub-item">Much easier to click and select dependency connections</li>
+                            <li class="sub-item">Selected (red) lines are even thicker for visibility</li>
+                            <li class="sub-item">Dark mode compatible with brighter colors</li>
+                            <li class="sub-item">Free feature, enabled by default</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">AI assistant integration for JobTread data</li>
+                            <li class="sub-item">Connect Claude, ChatGPT, Cursor, and other AI tools</li>
+                            <li class="sub-item">22 read-only tools for jobs, budgets, tasks, schedules, contacts, and more</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes Panel Overhaul</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Panel now pushes JobTread content to the left instead of overlaying</li>
+                            <li class="sub-item">Collapsible sidebar - hide notes list while keeping editor visible</li>
+                            <li class="sub-item">Smart resize detection that respects minimum editor width</li>
+                            <li class="sub-item">Collapsed state remembered across sessions</li>
+                            <li class="sub-item">Full custom RGB theme compatibility for all new UI elements</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes Editor</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Pure WYSIWYG editor - no markdown syntax visible</li>
+                            <li class="sub-item">Table support with right-click row/column management</li>
+                            <li class="sub-item">Enter key creates new list items automatically</li>
+                            <li class="sub-item">Ctrl+click to open links while editing</li>
+                            <li class="sub-item">Fixed undo/redo functionality</li>
+                            <li class="sub-item">Fixed formatting in list items</li>
+                            <li class="sub-item">Fixed backspace across formatted text boundaries</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed folder persistence for personal notes sync</li>
+                    <li class="change-item">Fixed team notes folder assignments not saving to server</li>
+                    <li class="change-item">Fixed Quick Notes toolbar affecting Text Formatter toolbar</li>
+                    <li class="change-item">Fixed resize handle showing when no note is open</li>
+                    <li class="change-item">Fixed extension context invalidation errors</li>
+                    <li class="change-item">Fixed invalid folder names being created from click events</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📝</span> Privacy & Data</h3>
+                <ul class="change-list">
+                    <li class="change-item">Updated privacy policy for cloud sync and team features</li>
+                    <li class="change-item">Cloud sync is optional - local-only mode still available</li>
+                    <li class="change-item">Team Notes only shared within your organization</li>
+                    <li class="change-item">All data encrypted in transit (HTTPS)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.5.5 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.5</span>
+                <span class="version-date">February 5, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Availability Filter (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added availability filter for Pro users</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.5.4 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.4</span>
+                <span class="version-date">February 4, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Kanban Task Checkboxes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added completion checkboxes to Kanban task cards (To-Dos and Schedule views)</li>
+                            <li class="sub-item">Click checkbox to toggle task completion without opening the full task details</li>
+                            <li class="sub-item">Works seamlessly with existing calendar view task checkboxes</li>
+                            <li class="sub-item">Opens sidebar in background to toggle progress, then automatically closes</li>
+                            <li class="sub-item">Visual feedback with loading state and completion notifications</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Consistency</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Budget table: Floating expanded toolbar now ONLY appears for Description fields</li>
+                            <li class="sub-item">All other fields use embedded compact toolbar (sidebar fields, messages, daily logs, etc.)</li>
+                            <li class="sub-item">Budget table custom fields (Internal Notes, etc.) now correctly get NO toolbar</li>
+                            <li class="sub-item">Floating toolbar hidden when cost items are filtered (use sidebar to edit)</li>
+                            <li class="sub-item">Embedded toolbars now appear on page load, not just on focus</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Mobile Support Foundation</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Increased mobile support functionality for future versions of the extension</li>
+                            <li class="sub-item">Quick Notes panel now takes full screen width on mobile devices</li>
+                            <li class="sub-item">Added back button navigation for mobile note editing</li>
+                            <li class="sub-item">Fixed Auto Collapse Completed Groups to work on both desktop and mobile Schedule/Gantt views</li>
+                            <li class="sub-item">Quick Job Switcher auto-disables on mobile (keyboard-driven feature)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.5.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.3</span>
+                <span class="version-date">January 31, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes Header Button</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Removed URL restrictions - Quick Notes now available on all JobTread pages</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Message Templates & Character Counter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Redesigned Templates and Settings buttons to match JobTread's native button styling</li>
+                            <li class="sub-item">Added Phosphor-style icons for cleaner appearance</li>
+                            <li class="sub-item">Character counter now displays below the toolbar as a separate row</li>
+                            <li class="sub-item">Templates buttons positioned inline with Send button for better workflow</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode Styling Consistency</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Standardized dark mode background to neutral gray (#2c2c2c) across all components</li>
+                            <li class="sub-item">Updated extension popup dark theme with consistent neutral grays</li>
+                            <li class="sub-item">Updated PDF Markup Tools buttons for dark mode compatibility</li>
+                            <li class="sub-item">Updated Message Templates buttons for dark mode compatibility</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.5.2 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.2</span>
+                <span class="version-date">January 27, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget Changelog (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Compare budget backups and see exactly what changed between versions</li>
+                            <li class="sub-item">Track additions, deletions, and modifications with a detailed report</li>
+                            <li class="sub-item">Perfect for change order documentation and audit trails</li>
+                            <li class="sub-item">Print Report and Copy Summary buttons for easy sharing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Extension Popup Overhaul</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added help icons next to feature titles linking to feature guides</li>
+                            <li class="sub-item">Updated feature descriptions for accuracy and clarity</li>
+                            <li class="sub-item">Renamed "Smart Job Switcher" to "Quick Job Switcher"</li>
+                            <li class="sub-item">Renamed "Message Character Counter" to "Message Counter & Templates"</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Documentation Updates</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added tier-specific badges (Essential, Pro, Power User) to feature cards</li>
+                            <li class="sub-item">Created new guides for PDF Markup Tools, Custom Field Filter, and Budget Changelog</li>
+                            <li class="sub-item">Updated guides with correct tier labels and requirements</li>
+                            <li class="sub-item">Updated pricing cards with aligned buttons and "Most Popular" badge</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes Header Button</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed button styling to match JobTread's native header icons</li>
+                            <li class="sub-item">Proper size and vertical alignment with other header icons</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.5.1 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.1</span>
+                <span class="version-date">January 24, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header - Documents Page Panel Fix</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed ADD/EDIT ITEMS panel and COST ITEM DETAILS sidebar appearing behind frozen headers on Documents page</li>
+                            <li class="sub-item">Panel now correctly adjusts its sticky position to stay below frozen headers when scrolling</li>
+                            <li class="sub-item">Lowered frozen header z-index when edit panel is open to prevent overlap</li>
+                            <li class="sub-item">Added dedicated detection for the ADD/EDIT ITEMS panel on Documents pages</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Enhancements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Text formatter now appears in COST ITEM DETAILS sidebar when editing document line items</li>
+                            <li class="sub-item">Built custom embedded text formatter toolbar for the Alert Builder modal</li>
+                            <li class="sub-item">Alert modal toolbar supports bold, italic, underline, strikethrough, headings, lists, colors, links, quotes, and horizontal rules</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Popup Layout Fix</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Custom Theme customization panel appearing below API Integration section</li>
+                            <li class="sub-item">Theme customization options now appear directly below the Custom Theme toggle in the Appearance category</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Budget Changelog Sidebar Detection Fix</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Budget Changelog compare controls not appearing in Budget Backups sidebar</li>
+                            <li class="sub-item">Added missing default setting that prevented the feature from initializing</li>
+                            <li class="sub-item">Updated sidebar selector for more reliable detection</li>
+                            <li class="sub-item">Compare controls now appear with proper styling inside the sidebar content area</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Budget Changelog API & Report Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Pave API query returning only 10 backups from the same day</li>
+                            <li class="sub-item">Added proper pagination parameters to fetch up to 100 backups sorted by date</li>
+                            <li class="sub-item">Fixed changelog report opening with broken styling (raw text, no CSS)</li>
+                            <li class="sub-item">Replaced Tailwind CDN with comprehensive inline CSS for reliable rendering</li>
+                            <li class="sub-item">Fixed "Items Modified: undefined" by adding missing calculation to diff engine</li>
+                            <li class="sub-item">Print Report and Copy Summary buttons now work correctly</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.5.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.0</span>
+                <span class="version-date">January 18, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Message Signature</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Create and save a reusable signature for messages</li>
+                            <li class="sub-item">Edit Signature button opens modal to create/edit your signature text</li>
+                            <li class="sub-item">Insert button injects saved signature into message fields at cursor position</li>
+                            <li class="sub-item">Signature syncs across devices via Chrome storage</li>
+                            <li class="sub-item">Ctrl+Enter keyboard shortcut to save signature in modal</li>
+                            <li class="sub-item">Full dark mode support</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Four-Tier License System</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><strong>FREE</strong>: Core features work without any license (Text Formatter, Dark Mode, Contrast Fix, Character Counter, Budget Hierarchy, Kanban Filter, Auto Collapse)</li>
+                            <li class="sub-item"><strong>Essential ($10)</strong>: Quick Notes, Smart Job Switcher, Freeze Header, PDF Markup Tools</li>
+                            <li class="sub-item"><strong>Pro ($20)</strong>: Schedule & Task Checkboxes, Custom Theme, Preview Mode</li>
+                            <li class="sub-item"><strong>Power User ($30)</strong>: Custom Field Filter, MCP Server Access, AI Knowledge Base</li>
+                            <li class="sub-item">Backwards compatible: existing "JT Power Tools" purchasers get PRO tier</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Filter jobs by custom field values in Job Switcher sidebar</li>
+                            <li class="sub-item">API-powered dropdown auto-populates with available values</li>
+                            <li class="sub-item">Requires API configuration in extension settings</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">AI Integration Panel (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">MCP server config generator for Claude, ChatGPT, Cursor, Gemini</li>
+                            <li class="sub-item">One-click copy configuration to clipboard</li>
+                            <li class="sub-item">Connection status testing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">Updated popup UI with tier badges on features</li>
+                    <li class="change-item">License section shows current tier and available upgrades</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.4.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.4.3</span>
+                <span class="version-date">January 14, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">PDF Tools</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New PDF annotation and editing capabilities</li>
+                            <li class="sub-item">Stamps feature for adding custom stamps to PDF documents</li>
+                            <li class="sub-item">Eraser tool for removing annotations and markups</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed embedded compact toolbar appearing on budget custom fields</li>
+                            <li class="sub-item">Budget custom fields now correctly use floating expanded toolbar</li>
+                            <li class="sub-item">Fixed toolbar display in Cost Item Details sidebar</li>
+                            <li class="sub-item">Restored sticky toolbar behavior for sidebar fields with large text content</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.10 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.10</span>
+                <span class="version-date">January 6, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">ToDo Drag & Drop</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Drag and drop To-Dos in month calendar view to change due dates</li>
+                            <li class="sub-item">Works on To-Dos pages (URL contains "to-dos")</li>
+                            <li class="sub-item">Uses the "Due" date field for To-Dos (unlike tasks which have Start/End dates)</li>
+                            <li class="sub-item">Seamless integration with existing drag & drop infrastructure</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode Enhancements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed last line getting cut off when scrolling in preview pane</li>
+                            <li class="sub-item">Fixed blockquotes rendering as separate elements with gaps</li>
+                            <li class="sub-item">Fixed inline icons showing as placeholder characters - now renders actual SVG icons</li>
+                            <li class="sub-item">Simplified alert box styling to match JobTread rendering</li>
+                            <li class="sub-item">Improved paragraph spacing consistency</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header Improvements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Time Clock and Daily Log global sidebars appearing too low on page</li>
+                            <li class="sub-item">Fixed Notifications sidebar positioning to stay at native header level</li>
+                            <li class="sub-item">Fixed Files page left sidebar sliding under frozen action bar</li>
+                            <li class="sub-item">Added max-height constraint to Files sidebar to prevent scroll jump at bottom of page</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.9 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.9</span>
+                <span class="version-date">December 25, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Toolbar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed embedded toolbar to stay in document flow for job overview columns</li>
+                            <li class="sub-item">Toolbar now properly embeds between field label and textarea</li>
+                            <li class="sub-item">Prevents toolbar from expanding across entire viewport</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Smart Job Switcher</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed sidebar not closing when pressing Enter to select a job</li>
+                            <li class="sub-item">Improved close button detection with multiple fallback strategies</li>
+                            <li class="sub-item">Better detection of highlighted jobs from arrow key navigation</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.8 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.8</span>
+                <span class="version-date">December 22, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Overhaul</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Completely reformatted toolbar appearance with modern design</li>
+                            <li class="sub-item">Added compact and expanded toolbar versions for different contexts</li>
+                            <li class="sub-item">Full compatibility with custom RGB themes and dark mode</li>
+                            <li class="sub-item">Toolbar now scrolls with textareas for better usability</li>
+                            <li class="sub-item">Budget view toolbar docked to bottom for always-visible access</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.6 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.6</span>
+                <span class="version-date">December 5, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Auto Collapse Completed Groups</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Automatically collapses schedule groups that are 100% complete on page load</li>
+                            <li class="sub-item">Reduces clutter by hiding completed work while keeping active items visible</li>
+                            <li class="sub-item">Works on Schedule views with grouped tasks</li>
+                            <li class="sub-item">Groups expand normally when clicked to view completed items</li>
+                            <li class="sub-item">Helps focus on remaining work without manual collapsing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme Overhaul</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Complete overhaul with HSL-based color palette generation</li>
+                            <li class="sub-item">Rich palette with multiple background, border, and text shades</li>
+                            <li class="sub-item">Distinct hover/focus/active state colors (not brightness filters)</li>
+                            <li class="sub-item">Theme-harmonized alert colors that adapt to light/dark backgrounds</li>
+                            <li class="sub-item">Better visual separation between UI layers</li>
+                            <li class="sub-item">Fixed dropdown menus and popper-positioned elements</li>
+                            <li class="sub-item">Fixed scrollbars only appearing on scrollable containers</li>
+                            <li class="sub-item">Clean lines in Gantt chart (removed unnecessary shadows)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed budget hierarchy resize handles getting shaded</li>
+                    <li class="change-item">Fixed Smart Job Switcher to select highlighted item on Enter when using arrow keys</li>
+                    <li class="change-item">Fixed dark toolbars and file viewers being incorrectly themed</li>
+                    <li class="change-item">Fixed content tiles incorrectly getting popup shadows</li>
+                    <li class="change-item">Fixed native formatter detection for custom fields in labels</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.5 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.5</span>
+                <span class="version-date">December 3, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Kanban Type Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Automatically hides empty columns (0 items) when in Kanban view grouped by type</li>
+                            <li class="sub-item">Clean up your Kanban board by removing clutter from empty type columns</li>
+                            <li class="sub-item">Works on both Schedule and Tasks/To-Dos pages</li>
+                            <li class="sub-item">Real-time updates as filters are applied or content changes</li>
+                            <li class="sub-item">Easy toggle on/off from the extension popup</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode Improvements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Gantt task bars displaying blue instead of task type colors</li>
+                            <li class="sub-item">Fixed week and day view schedule cards displaying light background instead of dark</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Task Completion</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Skip mark complete checkbox for tasks with subtasks (JobTread requires all subtasks to be completed first)</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Enabled text formatter toolbar for message fields</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.4 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.4</span>
+                <span class="version-date">November 27, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Keeps job info and navigation tabs visible while scrolling</li>
+                            <li class="sub-item">Sticky header stays at top of viewport for easy access</li>
+                            <li class="sub-item">Quick access to job details without scrolling back up</li>
+                            <li class="sub-item">Works seamlessly with sidebar content</li>
+                            <li class="sub-item">Prevents frozen elements from overlapping scrollable content</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Message Character Counter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Displays character count for message text fields</li>
+                            <li class="sub-item">Shows current character count in real-time as you type</li>
+                            <li class="sub-item">Counter appears in the toolbar next to the writing assistant</li>
+                            <li class="sub-item">Helps stay within character limits before submitting messages</li>
+                            <li class="sub-item">Clean, unobtrusive display that doesn't interfere with typing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.3</span>
+                <span class="version-date">November 22, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Architecture & Stability</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><strong>Most Stable Version Yet</strong>: Comprehensive restructuring for enhanced reliability</li>
+                            <li class="sub-item">Restructured color theme and dark mode systems for better performance</li>
+                            <li class="sub-item">Improved code organization and modularity across all features</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter & Preview Mode Enhancements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added more robust formatting rendering and detection</li>
+                            <li class="sub-item">Enhanced compatibility with various textarea types and page structures</li>
+                            <li class="sub-item">Improved reliability of formatter toolbar appearance</li>
+                            <li class="sub-item">Better detection of editable fields for formatter activation</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Color Theme & Dark Mode</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Complete restructuring of color theme implementation</li>
+                            <li class="sub-item">Enhanced dark mode reliability and consistency</li>
+                            <li class="sub-item">Improved theme switching and color application logic</li>
+                            <li class="sub-item">Better integration between custom themes and dark mode</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
+                    <strong>Note:</strong> This release represents a major stability milestone for JT Power Tools. Extensive restructuring of core systems has significantly improved reliability and performance. This is the beta version demonstrating the extension's readiness for broader use.
+                </p>
+            </div>
+        </div>
+
+        <!-- Version 3.3.2 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.2</span>
+                <span class="version-date">November 20, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode Enhancements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added inline color markup support for text highlighting</li>
+                            <li class="sub-item">Upgraded alert builder to JobTread-style modal dialog</li>
+                            <li class="sub-item">Improved alert rendering with proper styling and icons</li>
+                            <li class="sub-item">Fixed alert heading level from 4 to 3 hashtags for better hierarchy</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes Improvements</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Expanded Quick Notes button to appear on all main pages with action bars</li>
+                            <li class="sub-item">Better integration with JobTread's page structure</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed preview button staying blue when preview window closes</li>
+                            <li class="sub-item">Fixed preview mode bug where switching rows showed previous row content</li>
+                            <li class="sub-item">Improved preview button state management</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Prevented text formatter from appearing on settings page</li>
+                            <li class="sub-item">Improved compatibility with different page types</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed cursor visibility in dark mode for budget textareas</li>
+                            <li class="sub-item">Fixed budget row highlighting to supersede hierarchy shading in dark mode</li>
+                            <li class="sub-item">Fixed bright spacer divs in budget rows when highlighted</li>
+                            <li class="sub-item">Restored blue row highlight for budget row selection in dark mode</li>
+                            <li class="sub-item">Removed orange text to white conversion in dark mode for better consistency</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">General Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed button detection to support both div and link action buttons</li>
+                            <li class="sub-item">Improved overall UI stability and consistency</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.1 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.1</span>
+                <span class="version-date">November 17 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Action Items Quick Completion</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Checkboxes added to Action Items card for instant task completion</li>
+                            <li class="sub-item">Complete action items directly from dashboard without navigation</li>
+                            <li class="sub-item">Hidden iframe technology ensures seamless background completion</li>
+                            <li class="sub-item">Visual feedback with smooth fade-out animation when tasks are completed</li>
+                            <li class="sub-item">Automatic task removal from list upon successful completion</li>
+                            <li class="sub-item">Smart task ID extraction from both schedule and to-do URLs</li>
+                            <li class="sub-item">Real-time Save button detection and state monitoring</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Month Schedule Task Completion</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Checkboxes added to task cards in month schedule view</li>
+                            <li class="sub-item">Quickly mark tasks complete or incomplete directly from calendar</li>
+                            <li class="sub-item">Visual completion status indicator shows current task state</li>
+                            <li class="sub-item">Instant task status updates without opening task details</li>
+                            <li class="sub-item">Works seamlessly with existing drag & drop functionality</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Help Sidebar Integration</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JT Power Tools support section added to JobTread help sidebar</li>
+                            <li class="sub-item">Help Sidebar Support feature now always enabled by default</li>
+                            <li class="sub-item">Better integration with JobTread's native help system</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Action Items & Task Completion</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed task completion to use full-size hidden iframe for proper toolbar rendering</li>
+                            <li class="sub-item">Fixed Save button detection and enabled state checking</li>
+                            <li class="sub-item">Improved task completion reliability with better timeout handling</li>
+                            <li class="sub-item">Cleaned up orphaned code that was causing JavaScript errors</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">UI & Display Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Quick Notes from running on settings pages</li>
+                            <li class="sub-item">Fixed sidebar hiding CSS from blocking help modals</li>
+                            <li class="sub-item">Fixed sticky header text elements from overlapping when scrolling</li>
+                            <li class="sub-item">Fixed column resize handles appearing over frozen column headers</li>
+                            <li class="sub-item">Fixed search bar to use shaded background on hover instead of primary color</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Theme & Appearance Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed dark mode background colors with !important flag to prevent white flash</li>
+                            <li class="sub-item">Added solid blue background for today's date in dark mode calendar</li>
+                            <li class="sub-item">Fixed text formatter and preview mode disabled for Time Clock Notes field</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.3.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.0</span>
+                <span class="version-date">November 13, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Persistent notepad accessible from any JobTread page</li>
+                            <li class="sub-item">Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel</li>
+                            <li class="sub-item">Create, edit, search, and organize multiple notes</li>
+                            <li class="sub-item">Rich markdown formatting support (bold, italic, lists, checkboxes)</li>
+                            <li class="sub-item">WYSIWYG editor with formatting toolbar</li>
+                            <li class="sub-item">Resizable sidebar panel for comfortable note-taking</li>
+                            <li class="sub-item">Notes sync across devices via Chrome storage</li>
+                            <li class="sub-item">Word count and last updated timestamps</li>
+                            <li class="sub-item">Export/Import functionality for backup and transfer</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode (Premium)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Live preview of formatted text with floating preview panel</li>
+                            <li class="sub-item">Click preview button (eye icon) on textareas to see rendered formatting</li>
+                            <li class="sub-item">Converts markdown to beautifully styled HTML</li>
+                            <li class="sub-item">Works on budget descriptions and daily log fields</li>
+                            <li class="sub-item">Real-time updates as you type</li>
+                            <li class="sub-item">Intelligent positioning to avoid viewport edges</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">Added feedback link to popup for easier user support</li>
+                    <li class="change-item">Removed mutual exclusivity between formatter and preview mode</li>
+                    <li class="change-item">Added custom theme support for per-job tab navigation</li>
+                    <li class="change-item">Improved custom theme to use primary color for selected states</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed preview button not showing on first focus</li>
+                    <li class="change-item">Improved preview button visibility and content readability</li>
+                    <li class="change-item">Skip text formatter and preview mode on /files path</li>
+                    <li class="change-item">Exclude formatter and preview mode from vendors, customers, and time entries pages</li>
+                    <li class="change-item">Fixed custom theme to preserve orange text color</li>
+                    <li class="change-item">Fixed budget table borders and preview button visibility</li>
+                    <li class="change-item">Fixed theming for Preview Mode and Quick Notes</li>
+                    <li class="change-item">Reverted orange text color override in dark mode</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.2.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.2.3</span>
+                <span class="version-date">November 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget Hierarchy Shading</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Progressive visual shading for nested budget groups (up to 5 levels)</li>
+                            <li class="sub-item">Level 1 (top) = Lightest, Level 5 (deepest) = Darkest</li>
+                            <li class="sub-item">Line items automatically inherit parent group shading</li>
+                            <li class="sub-item">Adapts intelligently to Dark Mode and Custom Theme</li>
+                            <li class="sub-item">Preserves yellow highlighting for unsaved changes</li>
+                            <li class="sub-item">Real-time updates when expanding/collapsing groups</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">Improved budget hierarchy shading using HSL color space</li>
+                    <li class="change-item">Added primary color tooltips for text formatter buttons</li>
+                    <li class="change-item">Custom theme now applies to selected box borders</li>
+                    <li class="change-item">Theme-aware styling for JobTread header logo</li>
+                    <li class="change-item">Collapsible customize button for cleaner interface</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed budget hierarchy URL detection for all budget page variations</li>
+                    <li class="change-item">Added dark mode support for text formatter toolbar</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Smart Job Switcher now supports both J+S and Alt+J keyboard shortcuts</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.1.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.1.0</span>
+                <span class="version-date">November 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Smart Job Switcher</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">J+S keyboard shortcut to instantly open job switcher</li>
+                            <li class="sub-item">Type to search and filter jobs in real-time</li>
+                            <li class="sub-item">Enter to select top result and navigate</li>
+                            <li class="sub-item">Escape to cancel and close</li>
+                            <li class="sub-item">Fully keyboard-driven workflow for power users</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Drag & Drop Modularization</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Refactored from 1,475 lines to modular architecture</li>
+                            <li class="sub-item">Split into 6 focused modules</li>
+                            <li class="sub-item">Main file reduced to 149 lines (90% reduction)</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">Renamed "Budget Formatter" to "Text Formatter" for clarity</li>
+                    <li class="change-item">Redesigned theme customization with inline color previews</li>
+                    <li class="change-item">Added Premium badge to Schedule Drag & Drop feature</li>
+                    <li class="change-item">Simplified popup to minimal white aesthetic</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed December→January year transitions (2025→2026)</li>
+                    <li class="change-item">Fixed date moves in future years</li>
+                    <li class="change-item">Always includes year in date format for accuracy</li>
+                    <li class="change-item">Color switching: Change colors by clicking different color buttons</li>
+                    <li class="change-item">Active color detection and button highlighting</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.0.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.0.0</span>
+                <span class="version-date">November 4, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">Added Custom Theme feature (Premium)</li>
+                    <li class="change-item">RGB color sliders for personalized themes</li>
+                    <li class="change-item">Mutual exclusivity between appearance modes</li>
+                    <li class="change-item">Integrated contrast fix into custom theme</li>
+                    <li class="change-item">Enhanced popup UI with collapsible sections</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 1.0.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v1.0.0</span>
+                <span class="version-date">October 29, 2025</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎉</span> Initial Release</h3>
+                <ul class="change-list">
+                    <li class="change-item">Four core features: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode</li>
+                    <li class="change-item">Premium licensing system via Gumroad</li>
+                    <li class="change-item">Clean, professional popup interface</li>
+                    <li class="change-item">Cross-year drag & drop support</li>
+                    <li class="change-item">Smart weekend detection with override</li>
+                    <li class="change-item">React-compatible formatting events</li>
+                    <li class="change-item">Toggle controls via popup UI</li>
+                    <li class="change-item">Modular architecture for easy expansion</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="documentation.html">Documentation</a>
+                <a href="about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# robots.txt for JT Power Tools
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://YOURUSERNAME.github.io/jt-powertools/sitemap.xml

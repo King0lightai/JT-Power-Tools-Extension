@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Other MCP Clients Setup - JT Power Tools</title>
+    <meta name="description" content="Generic MCP client setup for JT Power Tools. Connect any MCP-compatible AI tool to your JobTread data with bearer token authentication.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/mcp/other.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/mcp/other.html">
+    <meta property="og:title" content="Other MCP Clients Setup - JT Power Tools">
+    <meta property="og:description" content="Generic MCP client setup for connecting any AI tool to your JobTread construction data.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <style>
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 16px 0;
+        }
+        .code-block .comment { color: #6a9955; }
+        .code-block .string { color: #ce9178; }
+        .code-block .key { color: #9cdcfe; }
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .copy-btn:hover {
+            background: var(--accent-dark);
+        }
+        .placeholder {
+            background: #3d3d00;
+            color: #ffcc00;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .endpoint-table td:first-child {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">🔌</span> Other MCP Clients</h1>
+            <p class="guide-meta">Generic setup guide for any MCP-compatible client</p>
+        </div>
+
+        <div class="guide-content">
+            <h2>Overview</h2>
+            <p>The JT Power Tools MCP server is compatible with any client that supports the Model Context Protocol (MCP). This guide provides the technical details needed to connect any MCP client to your JobTread data.</p>
+
+            <h2>What You'll Need</h2>
+            <ul>
+                <li><strong>JT Power Tools Premium</strong> - Active subscription with MCP access</li>
+                <li><strong>License Key</strong> - Your JT Power Tools license key</li>
+                <li><strong>Grant Key</strong> - Your JobTread API grant key (from the API tab in the extension popup)</li>
+                <li><strong>MCP-Compatible Client</strong> - Any application supporting MCP</li>
+            </ul>
+
+            <h2>Server Endpoints</h2>
+            <table class="endpoint-table">
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>URL</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>SSE Endpoint</td>
+                        <td><code>https://mcp.jobtread-tools.pro/sse</code></td>
+                        <td>Server-Sent Events for real-time communication</td>
+                    </tr>
+                    <tr>
+                        <td>Message Endpoint</td>
+                        <td><code>https://mcp.jobtread-tools.pro/message</code></td>
+                        <td>HTTP POST for sending messages</td>
+                    </tr>
+                    <tr>
+                        <td>Health Check</td>
+                        <td><code>https://mcp.jobtread-tools.pro/health</code></td>
+                        <td>Server health status</td>
+                    </tr>
+                    <tr>
+                        <td>Tools List</td>
+                        <td><code>https://mcp.jobtread-tools.pro/tools</code></td>
+                        <td>Available MCP tools</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Authentication</h2>
+            <p>All requests must include an Authorization header with a Bearer token. The token format is:</p>
+
+            <div class="code-block">
+Authorization: Bearer <span class="placeholder">LICENSE_KEY</span>:<span class="placeholder">GRANT_KEY</span></div>
+
+            <p>Where:</p>
+            <ul>
+                <li><strong>LICENSE_KEY</strong> - Your JT Power Tools premium license key</li>
+                <li><strong>GRANT_KEY</strong> - Your JobTread API grant key</li>
+            </ul>
+
+            <div class="info-box warning">
+                <strong>Security Note</strong>
+                <p>Keep your keys secure. Never share them publicly or commit them to version control.</p>
+            </div>
+
+            <h2>Standard MCP Configuration</h2>
+            <p>For clients using the standard MCP JSON configuration format:</p>
+
+            <div class="code-block" id="configCode">
+{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"jobtread"</span>: {
+      <span class="key">"url"</span>: <span class="string">"https://mcp.jobtread-tools.pro/sse"</span>,
+      <span class="key">"headers"</span>: {
+        <span class="key">"Authorization"</span>: <span class="string">"Bearer <span class="placeholder">YOUR_LICENSE_KEY</span>:<span class="placeholder">YOUR_GRANT_KEY</span>"</span>
+      }
+    }
+  }
+}</div>
+            <button class="copy-btn" onclick="copyConfig()">Copy Configuration</button>
+
+            <h2>Claude Desktop (via mcp-remote)</h2>
+            <p>Claude Desktop only supports local stdio servers. Use <code>mcp-remote</code> as a bridge:</p>
+
+            <h3>Step 1: Install mcp-remote</h3>
+            <div class="code-block">
+npm install -g mcp-remote</div>
+
+            <h3>Step 2: Configure Claude Desktop</h3>
+            <p>Add to <code>~/.claude/claude_desktop_config.json</code> (macOS) or <code>%APPDATA%\Claude\claude_desktop_config.json</code> (Windows):</p>
+
+            <div class="code-block">
+{
+  <span class="key">"jobtread"</span>: {
+    <span class="key">"command"</span>: <span class="string">"npx"</span>,
+    <span class="key">"args"</span>: [
+      <span class="string">"mcp-remote"</span>,
+      <span class="string">"https://mcp.jobtread-tools.pro/sse"</span>,
+      <span class="string">"--header"</span>,
+      <span class="string">"Authorization: Bearer <span class="placeholder">YOUR_LICENSE_KEY</span>:<span class="placeholder">YOUR_GRANT_KEY</span>"</span>
+    ]
+  }
+}</div>
+
+            <h2>HTTP API Usage</h2>
+            <p>For custom integrations, you can use the HTTP endpoints directly:</p>
+
+            <h3>List Available Tools</h3>
+            <div class="code-block">
+curl -X GET "https://mcp.jobtread-tools.pro/tools" \
+  -H "Authorization: Bearer YOUR_LICENSE_KEY:YOUR_GRANT_KEY"</div>
+
+            <h3>Call a Tool</h3>
+            <div class="code-block">
+curl -X POST "https://mcp.jobtread-tools.pro/message" \
+  -H "Authorization: Bearer YOUR_LICENSE_KEY:YOUR_GRANT_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "search_jobs",
+      "arguments": {
+        "query": "kitchen remodel"
+      }
+    }
+  }'</div>
+
+            <h2>Available Tools</h2>
+            <p>The MCP server provides these read-only tools:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool Name</th>
+                        <th>Description</th>
+                        <th>Parameters</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>search_jobs</code></td>
+                        <td>Search and list JobTread jobs</td>
+                        <td><code>query</code> (optional), <code>status</code> (optional)</td>
+                    </tr>
+                    <tr>
+                        <td><code>list_customers</code></td>
+                        <td>Get customer information</td>
+                        <td><code>limit</code> (optional)</td>
+                    </tr>
+                    <tr>
+                        <td><code>list_vendors</code></td>
+                        <td>Get vendor information</td>
+                        <td><code>limit</code> (optional)</td>
+                    </tr>
+                    <tr>
+                        <td><code>list_tasks</code></td>
+                        <td>Get tasks and to-dos</td>
+                        <td><code>job_id</code> (optional), <code>status</code> (optional)</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_budgets</code></td>
+                        <td>Get budget details for jobs</td>
+                        <td><code>job_id</code> (required)</td>
+                    </tr>
+                    <tr>
+                        <td><code>knowledge_lookup</code></td>
+                        <td>Search knowledge base</td>
+                        <td><code>query</code> (required)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box tip">
+                <strong>Read-Only Access</strong>
+                <p>For security, the MCP server currently provides read-only access to your data. To make changes, use the JobTread web interface.</p>
+            </div>
+
+            <h2>Testing the Connection</h2>
+            <p>Use the health endpoint to verify your connection:</p>
+
+            <div class="code-block">
+curl -X GET "https://mcp.jobtread-tools.pro/health"</div>
+
+            <p>Expected response:</p>
+            <div class="code-block">
+{
+  <span class="key">"status"</span>: <span class="string">"healthy"</span>,
+  <span class="key">"version"</span>: <span class="string">"1.0.0"</span>
+}</div>
+
+            <h2>Troubleshooting</h2>
+
+            <h3>401 Unauthorized</h3>
+            <ul>
+                <li>Check that your License Key is valid and active</li>
+                <li>Verify the Grant Key is correct</li>
+                <li>Ensure the Authorization header format is correct: <code>Bearer LICENSE:GRANT</code></li>
+            </ul>
+
+            <h3>403 Forbidden</h3>
+            <ul>
+                <li>Your subscription may not include MCP access</li>
+                <li>Check your subscription tier supports the MCP feature</li>
+            </ul>
+
+            <h3>Connection Timeout</h3>
+            <ul>
+                <li>Verify the endpoint URL is correct</li>
+                <li>Check your network connection</li>
+                <li>Try the health endpoint to verify server status</li>
+            </ul>
+
+            <h3>Empty Results</h3>
+            <ul>
+                <li>Verify your Grant Key has the necessary permissions in JobTread</li>
+                <li>Check that you have data in JobTread matching your query</li>
+                <li>Try regenerating your Grant Key in the API tab</li>
+            </ul>
+
+            <h2>Rate Limits</h2>
+            <p>To ensure fair usage:</p>
+            <ul>
+                <li><strong>Requests per minute:</strong> 60</li>
+                <li><strong>Concurrent connections:</strong> 5</li>
+            </ul>
+            <p>If you exceed these limits, you'll receive a 429 (Too Many Requests) response.</p>
+
+            <h2>Support</h2>
+            <p>Need help setting up your MCP client?</p>
+            <div class="cards">
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" class="card" target="_blank">
+                    <div class="card-icon">💬</div>
+                    <h3>GitHub Issues</h3>
+                    <p>Ask questions or report issues</p>
+                </a>
+                <a href="../guides/premium.html" class="card">
+                    <div class="card-icon">🔑</div>
+                    <h3>Premium Features</h3>
+                    <p>Learn about all premium features</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../guides/../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function copyConfig() {
+            const config = `{
+  "mcpServers": {
+    "jobtread": {
+      "url": "https://mcp.jobtread-tools.pro/sse",
+      "headers": {
+        "Authorization": "Bearer YOUR_LICENSE_KEY:YOUR_GRANT_KEY"
+      }
+    }
+  }
+}`;
+            navigator.clipboard.writeText(config).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Configuration', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

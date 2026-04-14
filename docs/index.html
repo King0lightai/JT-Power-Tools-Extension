@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JT Power Tools - JobTread Is Great. This Makes It Awesome.</title>
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="JT Power Tools - JobTread Is Great. This Makes It Awesome.">
+    <meta name="description" content="The all-in-one Chrome extension toolkit for JobTread. Task checkboxes, dark mode, rich text formatting, and 14+ productivity features for contractors.">
+    <meta name="keywords" content="JobTread, Chrome extension, construction software, project management, contractor tools, scheduling, dark mode, task management, custom themes">
+    <meta name="author" content="JT Power Tools">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jtpowertools.com/">
+    <meta property="og:title" content="JT Power Tools - JobTread Is Great. This Makes It Awesome.">
+    <meta property="og:description" content="The all-in-one Chrome extension toolkit for JobTread. Task checkboxes, dark mode, rich text formatting, and 14+ productivity features for contractors.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <meta property="og:site_name" content="JT Power Tools">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://jtpowertools.com/">
+    <meta name="twitter:title" content="JT Power Tools - JobTread Is Great. This Makes It Awesome.">
+    <meta name="twitter:description" content="The all-in-one Chrome extension toolkit for JobTread. Task checkboxes, dark mode, rich text formatting, and 14+ productivity features for contractors.">
+    <meta name="twitter:image" content="https://jtpowertools.com/og-image.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://jtpowertools.com/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Gumroad Overlay Checkout -->
+    <script src="https://gumroad.com/js/gumroad.js"></script>
+    <style>
+        /* Tier-colored pricing buttons */
+        .pricing-card .tier-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s, color 0.3s;
+            border: 2px solid transparent;
+        }
+        .tier-btn.tier-essential {
+            background: transparent;
+            border-color: #00c896;
+            color: #00c896;
+        }
+        .tier-btn.tier-essential:hover {
+            background: #00c896;
+            color: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 200, 150, 0.3);
+        }
+        .tier-btn.tier-pro {
+            background: transparent;
+            border-color: #ff8c42;
+            color: #ff8c42;
+        }
+        .tier-btn.tier-pro:hover {
+            background: linear-gradient(135deg, #FE4C0D 0%, #FF6B35 100%);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 140, 66, 0.3);
+        }
+        .tier-btn.tier-power {
+            background: transparent;
+            border-color: #c850ff;
+            color: #c850ff;
+        }
+        .tier-btn.tier-power:hover {
+            background: #c850ff;
+            color: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(200, 80, 255, 0.3);
+        }
+        /* Billing Toggle */
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 16px;
+        }
+        .billing-label {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray);
+            transition: color 0.3s;
+            user-select: none;
+        }
+        .billing-label.active {
+            color: #fff;
+        }
+        .save-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00c896, #00a87a);
+            color: #000;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+        }
+        .billing-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .billing-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .billing-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #333;
+            border-radius: 28px;
+            transition: background 0.3s;
+            border: 2px solid #555;
+        }
+        .billing-slider::before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .billing-switch input:checked + .billing-slider {
+            background: #00c896;
+            border-color: #00c896;
+        }
+        .billing-switch input:checked + .billing-slider::before {
+            transform: translateX(24px);
+        }
+        /* Price transition */
+        .pricing-price {
+            transition: opacity 0.2s;
+        }
+        .pricing-price.switching {
+            opacity: 0.3;
+        }
+        /* Powered by Gumroad */
+        .powered-by-gumroad {
+            text-align: center;
+            margin-top: 24px;
+            margin-bottom: -8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--gray);
+            letter-spacing: 0.3px;
+        }
+        .powered-by-gumroad a {
+            color: #ff90e8;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .powered-by-gumroad a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "JT Power Tools",
+        "operatingSystem": "Chrome, Edge, Firefox, Safari (Coming Soon)",
+        "applicationCategory": "BrowserApplication",
+        "description": "Chrome extension toolkit that enhances JobTread construction management software with dark mode, text formatting, schedule tools, and AI integrations.",
+        "url": "https://jtpowertools.com/",
+        "downloadUrl": "https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn",
+        "offers": [
+            { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
+            { "@type": "Offer", "price": "10.00", "priceCurrency": "USD", "name": "Essential" },
+            { "@type": "Offer", "price": "20.00", "priceCurrency": "USD", "name": "Pro" },
+            { "@type": "Offer", "price": "30.00", "priceCurrency": "USD", "name": "Power User" }
+        ],
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "ratingCount": "2",
+            "bestRating": "5"
+        },
+        "author": { "@type": "Organization", "name": "JT Power Tools" }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="documentation.html">Docs</a>
+                <a href="index.html#install">Install</a>
+                <a href="index.html#pricing">Pricing</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="roadmap.html">Roadmap</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="home-hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>JOBTREAD IS GREAT. <span>THIS MAKES IT AWESOME.</span></h1>
+                    <p class="tagline">The all-in-one browser extension toolkit that transforms JobTread into a powerhouse. Dark mode, rich text formatting, message templates, job switcher filtering, and more.</p>
+                    <div class="hero-buttons">
+                        <a href="#install" class="cta-button">Install Free Extension</a>
+                        <a href="#features" class="cta-button secondary">See Features</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-card popup-mockup">
+                        <!-- Popup Header -->
+                        <div class="popup-header">
+                            <img src="850icon.png" alt="JT" class="popup-header-icon icon-dark">
+                            <img src="icon128-light.png" alt="JT" class="popup-header-icon icon-light">
+                            <span class="popup-header-title">Power Tools</span>
+                            <span class="popup-version">v4.0.0</span>
+                            <div class="popup-theme-btn" id="popupThemeToggle" title="Toggle light/dark mode">
+                                <i class="ph ph-moon theme-icon-moon"></i>
+                                <i class="ph ph-sun theme-icon-sun"></i>
+                            </div>
+                        </div>
+                        <!-- Tab Nav -->
+                        <div class="popup-tab-nav">
+                            <div class="popup-tab active"><i class="ph ph-lightning"></i><span>Features</span></div>
+                            <div class="popup-tab"><i class="ph ph-palette"></i><span>Theme</span></div>
+                            <div class="popup-tab"><i class="ph ph-plugs-connected"></i><span>API</span></div>
+                            <div class="popup-tab"><i class="ph ph-key"></i><span>License</span></div>
+                        </div>
+                        <!-- Category: Schedule -->
+                        <div class="popup-category">
+                            <div class="popup-category-header">
+                                <div class="popup-cat-icon"><i class="ph ph-calendar-blank"></i></div>
+                                <span class="popup-cat-title">Schedule & Calendar</span>
+                                <span class="popup-cat-count">5</span>
+                                <span class="popup-cat-arrow">▼</span>
+                            </div>
+                            <div class="popup-feature">
+                                <div class="popup-feature-info">
+                                    <span class="popup-feature-name">Auto Collapse Completed</span>
+                                    <span class="popup-feature-desc">Collapse 100% complete groups</span>
+                                </div>
+                                <div class="toggle active"></div>
+                            </div>
+                            <div class="popup-feature">
+                                <div class="popup-feature-info">
+                                    <span class="popup-feature-name">Schedule Task Checkboxes <span class="popup-badge pro">Pro</span></span>
+                                    <span class="popup-feature-desc">Mark task cards complete</span>
+                                </div>
+                                <div class="toggle active"></div>
+                            </div>
+                        </div>
+                        <!-- Category: Productivity -->
+                        <div class="popup-category">
+                            <div class="popup-category-header">
+                                <div class="popup-cat-icon"><i class="ph ph-lightning"></i></div>
+                                <span class="popup-cat-title">Productivity Tools</span>
+                                <span class="popup-cat-count">8</span>
+                                <span class="popup-cat-arrow">▼</span>
+                            </div>
+                            <div class="popup-feature">
+                                <div class="popup-feature-info">
+                                    <span class="popup-feature-name">Text Formatter</span>
+                                    <span class="popup-feature-desc">Rich text toolbar for budgets & tasks</span>
+                                </div>
+                                <div class="toggle active"></div>
+                            </div>
+                            <div class="popup-feature">
+                                <div class="popup-feature-info">
+                                    <span class="popup-feature-name">Quick Notes <span class="popup-badge essential">Essential</span></span>
+                                    <span class="popup-feature-desc">Persistent notepad (Q+N)</span>
+                                </div>
+                                <div class="toggle"></div>
+                            </div>
+                        </div>
+                        <!-- Category: Appearance -->
+                        <div class="popup-category">
+                            <div class="popup-category-header">
+                                <div class="popup-cat-icon"><i class="ph ph-palette"></i></div>
+                                <span class="popup-cat-title">Appearance</span>
+                                <span class="popup-cat-count">4</span>
+                                <span class="popup-cat-arrow">▼</span>
+                            </div>
+                            <div class="popup-feature">
+                                <div class="popup-feature-info">
+                                    <span class="popup-feature-name">Dark Mode</span>
+                                    <span class="popup-feature-desc">Dark theme for JobTread</span>
+                                </div>
+                                <div class="toggle active"></div>
+                            </div>
+                            <div class="popup-feature">
+                                <div class="popup-feature-info">
+                                    <span class="popup-feature-name">Custom Theme <span class="popup-badge pro">Pro</span></span>
+                                    <span class="popup-feature-desc">Create your own color theme</span>
+                                </div>
+                                <div class="toggle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="home-features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">FEATURES</p>
+                <h2 class="section-title">THE MISSING PIECE OF YOUR JOBTREAD WORKFLOW</h2>
+                <p class="section-subtitle">JT Power Tools adds the essential features you've always wished for, designed specifically for the speed of the construction industry.</p>
+            </div>
+            <div class="features-grid">
+
+                <!-- 1. High-Impact Workflow Tools -->
+                <div class="feature-section-label">High-Impact Workflow Tools<span>Features that directly change how you interact with data to complete tasks faster.</span></div>
+
+                <a href="guides/drag-drop.html" class="feature-card pro">
+                    <span class="tier-badge pro">Pro</span>
+                    <div class="feature-icon"><i class="ph ph-check-square"></i></div>
+                    <h3>SCHEDULE & TASK CHECKBOXES</h3>
+                    <p>Checkboxes on task cards in month schedule view and Action Items for instant task completion. Mark tasks complete or incomplete directly from the calendar without opening task details. Visual feedback with smooth animations.</p>
+                </a>
+                <a href="guides/budget-changelog.html" class="feature-card power-user">
+                    <span class="tier-badge power-user">Power User</span>
+                    <div class="feature-icon"><i class="ph ph-git-diff"></i></div>
+                    <h3>BUDGET CHANGELOG</h3>
+                    <p>Compare budget backups and see exactly what changed between versions. Track additions, deletions, and modifications with a detailed report. Perfect for change order documentation and audit trails.</p>
+                </a>
+                <a href="guides/custom-field-filter.html" class="feature-card power-user">
+                    <span class="tier-badge power-user">Power User</span>
+                    <div class="feature-icon"><i class="ph ph-funnel"></i></div>
+                    <h3>JOB SWITCHER FILTER</h3>
+                    <p>Filter jobs by custom field values in the Job Switcher. API-powered dropdown auto-populates with your custom field values. Quickly find jobs based on project manager, status, or any custom field.</p>
+                </a>
+                <a href="guides/availability-filter.html" class="feature-card pro">
+                    <span class="tier-badge pro">Pro</span>
+                    <div class="feature-icon"><i class="ph ph-funnel"></i></div>
+                    <h3>AVAILABILITY FILTER</h3>
+                    <p>Filter assignees by role, department, or category in the Schedule Availability view. Save custom filter views for instant recall. Hierarchical toggles with count badges and smooth collapse animations.</p>
+                </a>
+
+                <!-- 2. Content & Editing Efficiency -->
+                <div class="feature-section-label">Content & Editing Efficiency<span>Speed up creation and review of project documentation.</span></div>
+
+                <a href="guides/text-formatter.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-text-aa"></i></div>
+                    <h3>TEXT FORMATTER</h3>
+                    <p>Rich text formatting toolbar for budget descriptions and notes. Bold, italic, headings, lists, tables, colors, and more. Full keyboard shortcuts support (Ctrl/Cmd + B/I/U).</p>
+                </a>
+                <a href="guides/preview-mode.html" class="feature-card pro">
+                    <span class="tier-badge pro">Pro</span>
+                    <div class="feature-icon"><i class="ph ph-eye"></i></div>
+                    <h3>PREVIEW MODE</h3>
+                    <p>Live preview of formatted text with a floating preview panel. See how your markdown renders in real-time as you type. Works on budget descriptions and daily log fields.</p>
+                </a>
+                <a href="guides/pdf-markup-tools.html" class="feature-card essential">
+                    <span class="tier-badge essential">Essential</span>
+                    <div class="feature-icon"><i class="ph ph-file-pdf"></i></div>
+                    <h3>PDF MARKUP TOOLS</h3>
+                    <p>Enhanced PDF annotation with professional stamps and improved eraser. Approval stamps, date stamps, and architecture symbols for construction plan markup. Perfect for document review and redlining.</p>
+                </a>
+                <a href="guides/character-counter.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-hash"></i></div>
+                    <h3>CHARACTER COUNTER & TEMPLATES</h3>
+                    <p>Real-time character count for messages plus reusable templates. Create and save message templates for quick insertion with one click. Syncs across devices via Chrome storage.</p>
+                </a>
+
+                <!-- 3. Visual Data Organization -->
+                <div class="feature-section-label">Visual Data Organization<span>Process information on screen more quickly with smarter layouts.</span></div>
+
+                <a href="guides/budget-hierarchy.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-tree-structure"></i></div>
+                    <h3>BUDGET HIERARCHY SHADING</h3>
+                    <p>Progressive visual shading for nested budget groups up to 5 levels deep. Instantly identify group hierarchy and relationships at a glance. Line items auto-inherit parent shading.</p>
+                </a>
+                <a href="guides/auto-sum.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-calculator"></i></div>
+                    <h3>AUTO SUM</h3>
+                    <p>Select budget line items to see live totals for Extended Cost, Extended Price, and Profit with margin. Handles virtual scrolling, skips parent groups, and adapts to dark mode and custom themes.</p>
+                </a>
+                <a href="guides/auto-collapse.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-folder-simple"></i></div>
+                    <h3>AUTO COLLAPSE COMPLETED</h3>
+                    <p>Automatically collapses schedule groups that are 100% complete on page load. Reduces clutter while keeping active items visible. Groups expand normally when clicked.</p>
+                </a>
+                <a href="guides/kanban-filter.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-kanban"></i></div>
+                    <h3>KANBAN FILTERING</h3>
+                    <p>Automatically hides empty columns in Kanban/grouped views. Reduces visual clutter and horizontal scrolling. Updates in real-time as items are moved between columns.</p>
+                </a>
+                <a href="guides/reverse-thread-order.html" class="feature-card essential">
+                    <span class="tier-badge essential">Essential</span>
+                    <div class="feature-icon"><i class="ph ph-sort-descending"></i></div>
+                    <h3>REVERSE THREAD ORDER</h3>
+                    <p>Newest messages appear at the top of threads with the reply form and editor above the conversation. Works across all message locations — jobs, documents, daily logs, and sidebars.</p>
+                </a>
+
+                <!-- 4. Interface & Legibility -->
+                <div class="feature-section-label">Interface & Legibility<span>Comfort and accessibility improvements for long work sessions.</span></div>
+
+                <a href="guides/freeze-header.html" class="feature-card essential">
+                    <span class="tier-badge essential">Essential</span>
+                    <div class="feature-icon"><i class="ph ph-push-pin"></i></div>
+                    <h3>FREEZE HEADER</h3>
+                    <p>Keeps job info and navigation tabs visible while scrolling. Sticky header stays at top for easy access to job details without scrolling back up.</p>
+                </a>
+                <a href="guides/contrast-fix.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-sun-dim"></i></div>
+                    <h3>CONTRAST FIX</h3>
+                    <p>Automatically adjusts text colors for better readability in schedule views using WCAG contrast formulas. Highlights the current date. Real-time updates as content changes.</p>
+                </a>
+                <a href="guides/dark-mode.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-moon"></i></div>
+                    <h3>DARK MODE</h3>
+                    <p>Beautiful dark theme for JobTread that reduces eye strain during long work sessions. Customized specifically for construction management workflows. Syncs automatically across all your devices.</p>
+                </a>
+                <a href="guides/fat-gantt.html" class="feature-card">
+                    <div class="feature-icon"><i class="ph ph-chart-line-up"></i></div>
+                    <h3>FAT GANTT</h3>
+                    <p>Makes Gantt dependency lines thicker and easier to click. Lines increased from 1.5px to 3.5px with rounded corners. Selected lines are highlighted for clear visibility.</p>
+                </a>
+                <a href="guides/custom-theme.html" class="feature-card pro">
+                    <span class="tier-badge pro">Pro</span>
+                    <div class="feature-icon"><i class="ph ph-palette"></i></div>
+                    <h3>CUSTOM THEME</h3>
+                    <p>Personalize JobTread with your own color palette. Choose primary, background, and text colors. Save up to 3 custom themes for quick switching. Preserves task type colors.</p>
+                </a>
+                <a href="guides/quick-notes.html" class="feature-card essential">
+                    <span class="tier-badge essential">Essential</span>
+                    <div class="feature-icon"><i class="ph ph-notepad"></i></div>
+                    <h3>QUICK NOTES</h3>
+                    <p>Persistent notepad accessible from any JobTread page. Press Q+N or click the header icon. Create, edit, search, and organize multiple notes with rich formatting. Syncs across devices.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Available Everywhere -->
+    <section class="available-everywhere" id="install">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">INSTALL</p>
+                <h2 class="section-title">EVERYWHERE YOU WORK</h2>
+            </div>
+            <div class="cta-buttons-row">
+                <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="cta-button chrome-cta" target="_blank">
+                    <img src="chrome-color-svgrepo-com.svg" alt="Chrome" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Install for Chrome
+                </a>
+                <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" class="cta-button edge-cta" target="_blank">
+                    <img src="microsoft-edge-logo_svgstack_com_28201770610048.svg" alt="Edge" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Install for Edge
+                </a>
+                <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" class="cta-button firefox-cta" target="_blank">
+                    <img src="Firefox_logo,_2017.png" alt="Firefox" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Install for Firefox
+                </a>
+                <span class="cta-button safari-cta">
+                    <img src="safari.png" alt="Safari" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Safari — Soon
+                </span>
+            </div>
+            <p class="everywhere-note">💡 Use <strong>Brave</strong>, <strong>Arc</strong>, or <strong>Opera</strong>? Choose <strong>Chrome</strong> — they all use the same store.</p>
+            <p class="everywhere-note">📱 Safari supports extensions on <strong>iPhone & iPad</strong> · Firefox & Edge support extensions on <strong>Android</strong></p>
+        </div>
+    </section>
+
+    <!-- MCP / AI Integration -->
+    <section class="mcp-integration" id="mcp">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">AI INTEGRATION</p>
+                <h2 class="section-title">CONNECT JOBTREAD TO YOUR AI TOOLS</h2>
+                <p class="section-subtitle">Ask questions about your jobs, budgets, and tasks in plain English. JT Power Tools includes an MCP server that connects your JobTread data to popular AI platforms.</p>
+            </div>
+
+            <div class="mcp-grid">
+                <a href="mcp/chatgpt.html" class="mcp-card">
+                    <div class="mcp-card-icon"><img src="ChatGPT-Logo.svg.png" alt="ChatGPT" class="mcp-logo"></div>
+                    <h3>CHATGPT</h3>
+                    <p>Connect via OAuth in seconds. Ask about jobs, budgets, and tasks from any ChatGPT conversation.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/other.html" class="mcp-card">
+                    <div class="mcp-card-icon"><img src="Claude_AI_symbol.svg" alt="Claude" class="mcp-logo"></div>
+                    <h3>CLAUDE</h3>
+                    <p>One-click OAuth connector for Claude.ai. Query your JobTread data with Anthropic's AI assistant.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/gemini.html" class="mcp-card">
+                    <div class="mcp-card-icon"><img src="gemini-color.png" alt="Gemini" class="mcp-logo"></div>
+                    <h3>GEMINI</h3>
+                    <p>Use Google's Gemini CLI to query JobTread data. Native MCP support with httpUrl configuration.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/grok.html" class="mcp-card">
+                    <div class="mcp-card-icon"><img src="grok--v2.png" alt="Grok" class="mcp-logo"></div>
+                    <h3>GROK</h3>
+                    <p>Connect xAI's Grok to your JobTread data via remote MCP tools. Bearer token setup in minutes.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/claude-code.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-terminal"></i></div>
+                    <h3>CLAUDE CODE</h3>
+                    <p>Bearer token auth for CLI workflows. Access JobTread data from your development environment.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/cursor.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-code"></i></div>
+                    <h3>CURSOR &amp; MORE</h3>
+                    <p>Works with Cursor, Windsurf, and any MCP-compatible AI client via bearer token auth.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+            </div>
+
+            <div class="mcp-examples">
+                <p class="mcp-examples-label">EXAMPLE PROMPTS</p>
+                <div class="mcp-prompt-chips">
+                    <span class="mcp-chip">"Compare this bid request against the project scope"</span>
+                    <span class="mcp-chip">"Pull key metrics for my production meeting"</span>
+                    <span class="mcp-chip">"Forecast labor needs for the next 2 weeks"</span>
+                    <span class="mcp-chip">"Pull historical budget data to develop costs for a new project"</span>
+                </div>
+            </div>
+
+            <p class="mcp-tier-note">
+                MCP Server Access is included with the <a href="index.html#pricing">Power User</a> plan
+            </p>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">HOW IT WORKS</p>
+                <h2 class="section-title">UP AND RUNNING IN MINUTES</h2>
+            </div>
+            <div class="home-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>INSTALL</h3>
+                    <p>Add JT Power Tools from the Chrome Web Store. One click, no signup required.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>NAVIGATE</h3>
+                    <p>Go to JobTread and click the extension icon in your toolbar.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>TOGGLE</h3>
+                    <p>Enable the features you want. Settings save automatically and sync across devices.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>POWER UP</h3>
+                    <p>Start working faster with your new superpowers. Features activate instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews -->
+    <section class="reviews" id="reviews">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">REVIEWS</p>
+                <h2 class="section-title">WHAT CONTRACTORS ARE SAYING</h2>
+                <p class="section-subtitle">Real feedback from the Chrome Web Store</p>
+            </div>
+            <div class="reviews-grid">
+                <div class="review-card">
+                    <div class="stars">★★★★★</div>
+                    <blockquote>"This is a badass extension for JobTread! Thank you so much for these tools!"</blockquote>
+                    <div class="review-author">
+                        <div class="review-avatar">CU</div>
+                        <div>
+                            <div class="review-name">Chris Uhler</div>
+                            <div class="review-date">December 2, 2025</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="stars">★★★★★</div>
+                    <blockquote>"My Eyes!!!!! Love the dark mode. I'll be showing this to my other estimator this week!"</blockquote>
+                    <div class="review-author">
+                        <div class="review-avatar">BM</div>
+                        <div>
+                            <div class="review-name">Brendan McConkie</div>
+                            <div class="review-date">November 16, 2025</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="reviews-cta">
+                <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="cta-button secondary">See All Reviews on Chrome Web Store →</a>
+            </div>
+            <p class="join-users">Join <strong>400+</strong> contractors already using JT Power Tools</p>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="home-pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">PRICING</p>
+                <h2 class="section-title">CHOOSE YOUR PLAN</h2>
+                <p class="section-subtitle">One subscription covers your entire organization</p>
+                <!-- Billing Toggle -->
+                <div class="billing-toggle">
+                    <span class="billing-label" id="monthlyLabel">Monthly</span>
+                    <label class="billing-switch">
+                        <input type="checkbox" id="billingToggle">
+                        <span class="billing-slider"></span>
+                    </label>
+                    <span class="billing-label" id="yearlyLabel">Yearly <span class="save-badge">Save 17%</span></span>
+                </div>
+            </div>
+            <div class="pricing-cards four-tier">
+                <div class="pricing-card">
+                    <div class="pricing-tier">FREE</div>
+                    <div class="pricing-price">$0</div>
+                    <p class="pricing-desc">Core tools to get started</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> Text Formatter</li>
+                        <li><span class="check">✓</span> Dark Mode</li>
+                        <li><span class="check">✓</span> Contrast Fix</li>
+                        <li><span class="check">✓</span> Character Counter & Templates</li>
+                        <li><span class="check">✓</span> Budget Hierarchy Shading</li>
+                        <li><span class="check">✓</span> Budget Auto Sum</li>
+                        <li><span class="check">✓</span> Kanban Type Filter</li>
+                        <li><span class="check">✓</span> Auto Collapse Groups</li>
+                    </ul>
+                    <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="cta-button secondary" target="_blank">Install Free</a>
+                </div>
+                <div class="pricing-card" data-monthly="10" data-yearly="100">
+                    <div class="pricing-tier">ESSENTIAL</div>
+                    <div class="pricing-price"><span class="price-amount">$10</span><span class="price-period">/mo</span></div>
+                    <p class="pricing-desc">Productivity tools for teams</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> Everything in Free</li>
+                        <li><span class="check">✓</span> Quick Notes</li>
+                        <li><span class="check">✓</span> Smart Resize</li>
+                        <li><span class="check">✓</span> Freeze Header</li>
+                        <li><span class="check">✓</span> PDF Markup Tools</li>
+                        <li><span class="check">✓</span> Reverse Thread Order</li>
+                    </ul>
+                    <a class="tier-btn tier-essential" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Essential</a>
+                </div>
+                <div class="pricing-card" data-monthly="20" data-yearly="200">
+                    <div class="pricing-tier">PRO</div>
+                    <div class="pricing-price"><span class="price-amount">$20</span><span class="price-period">/mo</span></div>
+                    <p class="pricing-desc">Power users & customization</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> Everything in Essential</li>
+                        <li><span class="check">✓</span> Schedule & Task Checkboxes</li>
+                        <li><span class="check">✓</span> Custom Theme (3 slots)</li>
+                        <li><span class="check">✓</span> Preview Mode</li>
+                        <li><span class="check">✓</span> Availability Filter</li>
+                    </ul>
+                    <a class="tier-btn tier-pro" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Pro</a>
+                </div>
+                <div class="pricing-card featured" data-monthly="30" data-yearly="300">
+                    <div class="pricing-tier">POWER USER</div>
+                    <div class="pricing-price"><span class="price-amount">$30</span><span class="price-period">/mo</span></div>
+                    <p class="pricing-desc">API-powered features</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> Everything in Pro</li>
+                        <li><span class="check">✓</span> Job Switcher Filter</li>
+                        <li><span class="check">✓</span> Budget Changelog</li>
+                        <li><span class="check">✓</span> Unassigned Availability</li>
+                        <li class="highlight"><span class="check">✓</span> MCP Server Access</li>
+                    </ul>
+                    <a class="tier-btn tier-power" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Power User</a>
+                </div>
+            </div>
+            <p class="powered-by-gumroad">Powered by <a href="https://gumroad.com" target="_blank" rel="noopener">Gumroad</a></p>
+            <div class="company-note">
+                <h4>💼 ONE SUBSCRIPTION, UNLIMITED USERS</h4>
+                <p>Your monthly subscription covers your entire organization. Share with all employees who need access — no per-user fees, no hidden costs. Cancel anytime.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="cta-title">READY TO POWER UP YOUR JOBTREAD?</h2>
+            <p class="cta-subtitle">Join contractors who are already working smarter, not harder. Install in seconds.</p>
+            <div class="cta-buttons-row">
+                <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="cta-button chrome-cta" target="_blank">
+                    <img src="chrome-color-svgrepo-com.svg" alt="Chrome" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Install for Chrome
+                </a>
+                <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" class="cta-button edge-cta" target="_blank">
+                    <img src="microsoft-edge-logo_svgstack_com_28201770610048.svg" alt="Edge" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Install for Edge
+                </a>
+                <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" class="cta-button firefox-cta" target="_blank">
+                    <img src="Firefox_logo,_2017.png" alt="Firefox" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Install for Firefox
+                </a>
+                <span class="cta-button safari-cta">
+                    <img src="safari.png" alt="Safari" width="18" height="18" style="vertical-align: middle; margin-right: 6px;">Safari — Soon
+                </span>
+            </div>
+            <p class="mobile-cta-note">💡 Chrome, Brave, Arc, & Opera users — choose Chrome. They all use the same store!</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container footer-compact">
+            <div class="footer-left">
+                <a href="https://www.jobtread.com" target="_blank" rel="noopener" class="footer-badge">
+                    <img src="experience-driven-by-jobtread-inverted.svg" alt="Experience Driven by JobTread">
+                </a>
+                <span class="footer-partner-label">Official JobTread Partner</span>
+            </div>
+            <div class="footer-center">
+                <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+                <div class="footer-links">
+                    <a href="changelog.html"><i class="ph ph-clipboard-text"></i> What's New</a>
+                    <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback"><i class="ph ph-chat-circle"></i> Feedback</a>
+                    <a href="https://www.facebook.com/share/g/1YfFePwdtx/" target="_blank"><i class="ph ph-facebook-logo"></i> Facebook</a>
+                    <a href="https://discord.gg/u57GzaT6bp" target="_blank"><i class="ph ph-discord-logo"></i> Discord</a>
+                </div>
+            </div>
+            <div class="footer-right">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="documentation.html">Documentation</a>
+                <a href="about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('popupThemeToggle').addEventListener('click', function() {
+            document.querySelector('.popup-mockup').classList.toggle('popup-light');
+        });
+
+        // Billing toggle — monthly/yearly
+        (function() {
+            const toggle = document.getElementById('billingToggle');
+            const monthlyLabel = document.getElementById('monthlyLabel');
+            const yearlyLabel = document.getElementById('yearlyLabel');
+            const cards = document.querySelectorAll('.pricing-card[data-monthly]');
+
+            function updatePricing(isYearly) {
+                monthlyLabel.classList.toggle('active', !isYearly);
+                yearlyLabel.classList.toggle('active', isYearly);
+
+                cards.forEach(card => {
+                    const priceEl = card.querySelector('.pricing-price');
+                    const amountEl = card.querySelector('.price-amount');
+                    const periodEl = card.querySelector('.price-period');
+
+                    priceEl.classList.add('switching');
+                    setTimeout(() => {
+                        if (isYearly) {
+                            amountEl.textContent = '$' + card.dataset.yearly;
+                            periodEl.textContent = '/yr';
+                        } else {
+                            amountEl.textContent = '$' + card.dataset.monthly;
+                            periodEl.textContent = '/mo';
+                        }
+                        priceEl.classList.remove('switching');
+                    }, 150);
+                });
+            }
+
+            // Set initial state
+            monthlyLabel.classList.add('active');
+
+            toggle.addEventListener('change', function() {
+                updatePricing(this.checked);
+            });
+        })();
+    </script>
+
+    <!-- 🎉 V4 Launch Celebration Confetti -->
+    <div id="v4-banner" style="position:fixed;top:0;left:0;right:0;z-index:10000;background:linear-gradient(135deg,#FE4C0D,#FF6B35);padding:10px 20px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 2px 12px rgba(254,76,13,0.4);cursor:pointer;" onclick="this.style.display='none'">
+      <span style="font-size:20px;">🎉</span>
+      <span style="color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;">V4.0 IS HERE — WEB PORTAL, AI INTEGRATION & MORE!</span>
+      <span style="font-size:20px;">🚀</span>
+      <span style="color:rgba(255,255,255,0.7);font-size:12px;margin-left:8px;">✕</span>
+    </div>
+    <script>
+      // Confetti burst on page load
+      (function() {
+        const colors = ['#FE4C0D', '#FF6B35', '#FFD700', '#fff', '#FF4500'];
+        const canvas = document.createElement('canvas');
+        canvas.id = 'confetti-canvas';
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        let W, H;
+        function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const pieces = [];
+        for (let i = 0; i < 150; i++) {
+          pieces.push({
+            x: Math.random() * W,
+            y: Math.random() * -H,
+            w: Math.random() * 8 + 4,
+            h: Math.random() * 6 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vy: Math.random() * 3 + 2,
+            vx: Math.random() * 2 - 1,
+            rot: Math.random() * 360,
+            rv: Math.random() * 6 - 3,
+            opacity: 1
+          });
+        }
+
+        let start = Date.now();
+        function draw() {
+          const elapsed = Date.now() - start;
+          ctx.clearRect(0, 0, W, H);
+
+          // Fade out after 4 seconds
+          const fadeStart = 4000;
+          const fadeDuration = 2000;
+
+          pieces.forEach(p => {
+            p.y += p.vy;
+            p.x += p.vx;
+            p.rot += p.rv;
+            p.vy += 0.03;
+
+            if (elapsed > fadeStart) {
+              p.opacity = Math.max(0, 1 - (elapsed - fadeStart) / fadeDuration);
+            }
+
+            ctx.save();
+            ctx.globalAlpha = p.opacity;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot * Math.PI / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+          });
+
+          if (elapsed < fadeStart + fadeDuration) {
+            requestAnimationFrame(draw);
+          } else {
+            canvas.remove();
+          }
+        }
+        draw();
+
+        // Also push nav down to not overlap banner
+        document.querySelector('.navbar').style.marginTop = '44px';
+      })();
+    </script>
+</body>
+</html>

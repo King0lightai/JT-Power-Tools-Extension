@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok MCP Setup - JT Power Tools</title>
+    <meta name="description" content="Connect xAI's Grok to your JobTread data via MCP. Step-by-step setup guide for bearer token authentication with Grok's remote MCP tools.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/mcp/grok.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/mcp/grok.html">
+    <meta property="og:title" content="Grok MCP Setup - JT Power Tools">
+    <meta property="og:description" content="Connect xAI's Grok to your JobTread data via MCP. Bearer token setup for AI-powered access to your construction project data.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <style>
+        .status-banner {
+            background: linear-gradient(135deg, #1a3d2a 0%, #1e332a 100%);
+            border: 1px solid #2d6b3f;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .status-banner .status-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: #4ade80;
+        }
+        .status-banner h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 2px;
+            color: #4ade80;
+            margin-bottom: 8px;
+        }
+        .status-banner p {
+            color: #b0b0b0;
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .status-banner p strong {
+            color: #e0e0e0;
+        }
+        .setup-step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: flex-start;
+        }
+        .setup-step:last-child {
+            margin-bottom: 0;
+        }
+        .step-number {
+            min-width: 36px;
+            height: 36px;
+            background: #FE4C0D;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .step-content h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 17px;
+            letter-spacing: 1px;
+            color: #e0e0e0;
+            margin-bottom: 6px;
+        }
+        .step-content p {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .step-content p:last-child {
+            margin-bottom: 0;
+        }
+        .step-content strong {
+            color: #e0e0e0;
+        }
+        .step-content code {
+            background: #1e1e1e;
+            color: #ce9178;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        .url-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            color: #ce9178;
+            margin: 12px 0;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .url-box .copy-btn {
+            background: #FE4C0D;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .url-box .copy-btn:hover {
+            background: #e04300;
+        }
+        .code-block {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px 18px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            margin: 12px 0;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+        .code-block .key { color: #9cdcfe; }
+        .code-block .string { color: #ce9178; }
+        .placeholder {
+            background: #3d3d00;
+            color: #ffcc00;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .explanation-card {
+            background: #1A1A1A;
+            border: 1px solid #2A2A2A;
+            border-radius: 10px;
+            padding: 28px;
+            margin: 24px 0;
+        }
+        .explanation-card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            letter-spacing: 1px;
+            color: #FE4C0D;
+            margin-bottom: 12px;
+        }
+        .explanation-card p {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        .explanation-card p:last-child {
+            margin-bottom: 0;
+        }
+        .explanation-card strong {
+            color: #e0e0e0;
+        }
+        .prereq-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        .prereq-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #2A2A2A;
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+        .prereq-list li:last-child {
+            border-bottom: none;
+        }
+        .prereq-list li i {
+            color: #FE4C0D;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .prereq-list li a {
+            color: #FE4C0D;
+            text-decoration: none;
+        }
+        .prereq-list li a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .url-box { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">&#9889;</span> Grok MCP Setup</h1>
+            <p class="guide-meta">Connect xAI's Grok to your JobTread data via MCP</p>
+        </div>
+
+        <div class="guide-content">
+            <!-- Status Banner -->
+            <div class="status-banner">
+                <div class="status-icon"><i class="ph ph-check-circle"></i></div>
+                <h2>FULLY COMPATIBLE</h2>
+                <p><strong>Grok</strong> supports remote MCP tools natively. Connect your JobTread account using bearer token authentication and start querying your project data with natural language.</p>
+            </div>
+
+            <!-- Prerequisites -->
+            <div class="explanation-card">
+                <h3><i class="ph ph-list-checks" style="margin-right: 6px;"></i>Before You Start</h3>
+                <ul class="prereq-list">
+                    <li>
+                        <i class="ph ph-key"></i>
+                        <span><strong>Power User</strong> subscription &mdash; <a href="https://jobtread-tools.pro" target="_blank">Get one here</a></span>
+                    </li>
+                    <li>
+                        <i class="ph ph-puzzle-piece"></i>
+                        <span><strong>JT Power Tools extension</strong> installed in Chrome &mdash; <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank">Install</a></span>
+                    </li>
+                    <li>
+                        <i class="ph ph-identification-card"></i>
+                        <span>Your <strong>License Key</strong> (from your Power User subscription email)</span>
+                    </li>
+                    <li>
+                        <i class="ph ph-shield-check"></i>
+                        <span>Your <strong>Grant Key</strong> (from the JT Power Tools extension &rarr; MCP tab)</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Setup Instructions -->
+            <h2>Setup Instructions</h2>
+
+            <div class="setup-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Get Your Keys</h4>
+                    <p>Open the <strong>JT Power Tools</strong> Chrome extension and go to the <strong>MCP</strong> tab. Select <strong>Grok</strong> from the platform picker to see your configuration. You'll need your <strong>License Key</strong> and <strong>Grant Key</strong>.</p>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Configure Grok's MCP Settings</h4>
+                    <p>In your Grok client or xAI API configuration, add the JT Power Tools MCP server. Use the following server URL:</p>
+                    <div class="url-box">
+                        <span id="grok-url">https://jobtread-mcp-server.king0light-ai.workers.dev/mcp</span>
+                        <button class="copy-btn" onclick="copyUrl('grok-url')">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Add Authentication Header</h4>
+                    <p>Add an <code>Authorization</code> header with your keys in the format:</p>
+                    <div class="code-block">Authorization: Bearer <span class="placeholder">YOUR_LICENSE_KEY</span>:<span class="placeholder">YOUR_GRANT_KEY</span></div>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>Full MCP Configuration</h4>
+                    <p>If your Grok client uses a JSON MCP config file, add this:</p>
+                    <div class="code-block">{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"jobtread"</span>: {
+      <span class="key">"url"</span>: <span class="string">"https://jobtread-mcp-server.king0light-ai.workers.dev/mcp"</span>,
+      <span class="key">"headers"</span>: {
+        <span class="key">"Authorization"</span>: <span class="string">"Bearer <span class="placeholder">YOUR_LICENSE_KEY</span>:<span class="placeholder">YOUR_GRANT_KEY</span>"</span>
+      }
+    }
+  }
+}</div>
+                    <p>Or use the <strong>Copy Config</strong> button in the JT Power Tools extension MCP tab &mdash; it pre-fills your keys automatically.</p>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>Start Using It</h4>
+                    <p>That's it! Ask Grok about your JobTread data. Try:</p>
+                    <p><code>"Show me my active jobs"</code> or <code>"What tasks are due this week?"</code></p>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="explanation-card">
+                <h3><i class="ph ph-shield-check" style="margin-right: 6px;"></i>How It Works</h3>
+                <p>
+                    Grok connects to the JT Power Tools MCP server using <strong>bearer token authentication</strong>. Your License Key and Grant Key are combined into a single token that authenticates each request.
+                </p>
+                <p>
+                    The MCP server provides <strong>24 read-only tools</strong> for querying your JobTread data &mdash; jobs, budgets, tasks, schedules, contacts, daily logs, and more. Your data cannot be modified through MCP.
+                </p>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="explanation-card">
+                <h3><i class="ph ph-wrench" style="margin-right: 6px;"></i>Troubleshooting</h3>
+                <p>
+                    <strong>"401 Unauthorized"</strong> &mdash; Double-check your License Key and Grant Key. Make sure the format is <code>Bearer LICENSE_KEY:GRANT_KEY</code> with a colon separator.
+                </p>
+                <p>
+                    <strong>"Grant Key expired"</strong> &mdash; Grant keys expire after 3 months of inactivity. Generate a fresh one from the JT Power Tools extension &rarr; MCP tab.
+                </p>
+                <p>
+                    <strong>"Tier doesn't include MCP access"</strong> &mdash; MCP requires a <strong>Power User</strong> subscription. <a href="https://jobtread-tools.pro" target="_blank" style="color: #FE4C0D;">Upgrade here</a>.
+                </p>
+                <p>
+                    <strong>Still stuck?</strong> Join our <a href="https://discord.gg/u57GzaT6bp" target="_blank" style="color: #FE4C0D;">Discord</a> for help.
+                </p>
+            </div>
+
+            <!-- Other Clients -->
+            <h2>Other AI Clients</h2>
+            <div class="cards">
+                <a href="chatgpt.html" class="card">
+                    <div class="card-icon">&#128172;</div>
+                    <h3>ChatGPT & Claude Web</h3>
+                    <p>OAuth 2.1 setup for web clients</p>
+                </a>
+                <a href="claude-code.html" class="card">
+                    <div class="card-icon">&#128187;</div>
+                    <h3>Claude Code</h3>
+                    <p>CLI setup with bearer tokens</p>
+                </a>
+                <a href="cursor.html" class="card">
+                    <div class="card-icon">&#128296;</div>
+                    <h3>Cursor & More</h3>
+                    <p>IDE and other MCP clients</p>
+                </a>
+                <a href="gemini.html" class="card">
+                    <div class="card-icon">&#10024;</div>
+                    <h3>Gemini</h3>
+                    <p>Google Gemini CLI setup</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>JT Power Tools &mdash; Made for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function copyUrl(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

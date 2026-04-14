@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - JT Power Tools</title>
+    <meta name="description" content="Complete documentation and setup guides for JT Power Tools. Learn how to use every feature of the JobTread Chrome extension.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/documentation.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jtpowertools.com/documentation.html">
+    <meta property="og:title" content="Documentation - JT Power Tools">
+    <meta property="og:description" content="Complete documentation and setup guides for JT Power Tools. Learn how to use every feature.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 32px;
+        }
+        .docs-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 12px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s, border-color 0.3s;
+            display: block;
+        }
+        .docs-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--yellow);
+        }
+        .docs-card .card-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .docs-card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            letter-spacing: 1px;
+            color: var(--light);
+            margin-bottom: 8px;
+        }
+        .docs-card p {
+            color: var(--gray);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .docs-card .tier {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        .tier.free { background: rgba(255, 217, 61, 0.15); color: var(--yellow); }
+        .tier.essential { background: rgba(0, 200, 150, 0.15); color: #00c896; }
+        .tier.pro { background: rgba(255, 140, 66, 0.15); color: #ff8c42; }
+        .tier.power-user { background: rgba(200, 80, 255, 0.15); color: #c850ff; }
+        .docs-section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 2px;
+            color: var(--light);
+            margin-top: 48px;
+            margin-bottom: 8px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--dark-border);
+        }
+        .docs-section-desc {
+            color: var(--gray);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="documentation.html" class="active">Docs</a>
+                <a href="index.html#install">Install</a>
+                <a href="index.html#pricing">Pricing</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="roadmap.html">Roadmap</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">📚</span> Documentation</h1>
+            <p class="guide-meta">Guides, setup instructions, and feature documentation for JT Power Tools</p>
+        </div>
+
+        <!-- Getting Started -->
+        <h2 class="docs-section-title">GETTING STARTED</h2>
+        <p class="docs-section-desc">Installation, setup, and licensing</p>
+        <div class="docs-grid">
+            <a href="guides/installation.html" class="docs-card">
+                <i class="ph ph-download-simple card-icon"></i>
+                <h3>INSTALLATION & SETUP</h3>
+                <p>Get started with JT Power Tools in minutes. Chrome and Edge installation, first-time setup, and troubleshooting.</p>
+            </a>
+            <a href="guides/premium.html" class="docs-card">
+                <i class="ph ph-key card-icon"></i>
+                <h3>PREMIUM & LICENSING</h3>
+                <p>Pricing tiers, license activation, and company-wide subscription management. One subscription covers your entire organization.</p>
+            </a>
+        </div>
+
+        <!-- Free Features -->
+        <h2 class="docs-section-title">FREE FEATURES</h2>
+        <p class="docs-section-desc">Core tools included at no cost</p>
+        <div class="docs-grid">
+            <a href="guides/dark-mode.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-moon card-icon"></i>
+                <h3>DARK MODE</h3>
+                <p>Beautiful dark theme for JobTread that reduces eye strain. Syncs across all devices.</p>
+            </a>
+            <a href="guides/text-formatter.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-text-aa card-icon"></i>
+                <h3>TEXT FORMATTER</h3>
+                <p>Rich text formatting toolbar for budget descriptions and notes. Bold, italic, headings, lists, tables, and more.</p>
+            </a>
+            <a href="guides/contrast-fix.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-sun-dim card-icon"></i>
+                <h3>CONTRAST FIX</h3>
+                <p>Automatically adjusts text colors for better readability in schedule views using WCAG contrast formulas.</p>
+            </a>
+            <a href="guides/character-counter.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-hash card-icon"></i>
+                <h3>CHARACTER COUNTER & TEMPLATES</h3>
+                <p>Real-time character count for messages plus reusable templates for quick insertion.</p>
+            </a>
+            <a href="guides/budget-hierarchy.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-tree-structure card-icon"></i>
+                <h3>BUDGET HIERARCHY SHADING</h3>
+                <p>Progressive visual shading for nested budget groups up to 5 levels deep.</p>
+            </a>
+            <a href="guides/kanban-filter.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-kanban card-icon"></i>
+                <h3>KANBAN FILTERING</h3>
+                <p>Automatically hides empty columns in Kanban/grouped views to reduce clutter.</p>
+            </a>
+            <a href="guides/auto-collapse.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-folder-simple card-icon"></i>
+                <h3>AUTO COLLAPSE COMPLETED</h3>
+                <p>Automatically collapses schedule groups that are 100% complete on page load.</p>
+            </a>
+            <a href="guides/fat-gantt.html" class="docs-card">
+                <span class="tier free">FREE</span>
+                <i class="ph ph-chart-line-up card-icon"></i>
+                <h3>FAT GANTT</h3>
+                <p>Makes Gantt dependency lines thicker and easier to click with rounded corners.</p>
+            </a>
+        </div>
+
+        <!-- Essential Features -->
+        <h2 class="docs-section-title">ESSENTIAL FEATURES</h2>
+        <p class="docs-section-desc">Productivity tools for teams — $10/mo</p>
+        <div class="docs-grid">
+            <a href="guides/quick-notes.html" class="docs-card">
+                <span class="tier essential">ESSENTIAL</span>
+                <i class="ph ph-notepad card-icon"></i>
+                <h3>QUICK NOTES</h3>
+                <p>Persistent notepad accessible from any JobTread page. Create, edit, search, and organize multiple notes.</p>
+            </a>
+            <a href="guides/job-switcher.html" class="docs-card">
+                <span class="tier essential">ESSENTIAL</span>
+                <i class="ph ph-lightning card-icon"></i>
+                <h3>QUICK JOB SWITCHER</h3>
+                <p>Enhanced job switcher with keyboard selection and resizable sidebar.</p>
+            </a>
+            <a href="guides/freeze-header.html" class="docs-card">
+                <span class="tier essential">ESSENTIAL</span>
+                <i class="ph ph-push-pin card-icon"></i>
+                <h3>FREEZE HEADER</h3>
+                <p>Keeps job info and navigation tabs visible while scrolling through long pages.</p>
+            </a>
+            <a href="guides/pdf-markup-tools.html" class="docs-card">
+                <span class="tier essential">ESSENTIAL</span>
+                <i class="ph ph-file-pdf card-icon"></i>
+                <h3>PDF MARKUP TOOLS</h3>
+                <p>Enhanced PDF annotation with professional stamps and improved eraser for construction plan markup.</p>
+            </a>
+        </div>
+
+        <!-- Pro Features -->
+        <h2 class="docs-section-title">PRO FEATURES</h2>
+        <p class="docs-section-desc">Power users & customization — $20/mo</p>
+        <div class="docs-grid">
+            <a href="guides/drag-drop.html" class="docs-card">
+                <span class="tier pro">PRO</span>
+                <i class="ph ph-check-square card-icon"></i>
+                <h3>SCHEDULE & TASK CHECKBOXES</h3>
+                <p>Checkboxes on task cards in month schedule view and Action Items for instant task completion.</p>
+            </a>
+            <a href="guides/custom-theme.html" class="docs-card">
+                <span class="tier pro">PRO</span>
+                <i class="ph ph-palette card-icon"></i>
+                <h3>CUSTOM THEME</h3>
+                <p>Personalize JobTread with your own color palette. Save up to 3 custom themes for quick switching.</p>
+            </a>
+            <a href="guides/preview-mode.html" class="docs-card">
+                <span class="tier pro">PRO</span>
+                <i class="ph ph-eye card-icon"></i>
+                <h3>PREVIEW MODE</h3>
+                <p>Live preview of formatted text with a floating preview panel. See markdown rendered in real-time.</p>
+            </a>
+            <a href="guides/availability-filter.html" class="docs-card">
+                <span class="tier pro">PRO</span>
+                <i class="ph ph-funnel card-icon"></i>
+                <h3>AVAILABILITY FILTER</h3>
+                <p>Filter assignees by role or category in the Schedule Availability view. Save and load custom filter views.</p>
+            </a>
+        </div>
+
+        <!-- Power User Features -->
+        <h2 class="docs-section-title">POWER USER FEATURES</h2>
+        <p class="docs-section-desc">API-powered features — $30/mo</p>
+        <div class="docs-grid">
+            <a href="guides/custom-field-filter.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-funnel card-icon"></i>
+                <h3>JOB SWITCHER FILTER</h3>
+                <p>Filter jobs by custom field values in the Job Switcher. API-powered dropdown auto-populates with your values.</p>
+            </a>
+            <a href="guides/budget-changelog.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-git-diff card-icon"></i>
+                <h3>BUDGET CHANGELOG</h3>
+                <p>Compare budget backups and see exactly what changed between versions. Track additions, deletions, and modifications.</p>
+            </a>
+            <a href="guides/unassigned-availability.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-clipboard-text card-icon"></i>
+                <h3>UNASSIGNED AVAILABILITY</h3>
+                <p>See unassigned tasks in schedule availability, filtered by type. Spot scheduling gaps and assign work fast.</p>
+            </a>
+        </div>
+
+        <!-- MCP / AI Integration -->
+        <h2 class="docs-section-title">MCP / AI INTEGRATION</h2>
+        <p class="docs-section-desc">Connect AI tools to your JobTread data — Power User tier</p>
+        <div class="docs-grid">
+            <a href="mcp/chatgpt.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-chat-circle-dots card-icon"></i>
+                <h3>CHATGPT & CLAUDE WEB</h3>
+                <p>Connect ChatGPT or Claude.ai to your JobTread data via OAuth 2.1. One-click authorization setup.</p>
+            </a>
+            <a href="mcp/claude-code.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-terminal card-icon"></i>
+                <h3>CLAUDE CODE</h3>
+                <p>CLI setup with bearer token authentication. Query your JobTread data from the terminal.</p>
+            </a>
+            <a href="mcp/cursor.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-wrench card-icon"></i>
+                <h3>CURSOR & MORE</h3>
+                <p>IDE and desktop MCP client setup. Works with Cursor, Windsurf, Claude Desktop, and more.</p>
+            </a>
+            <a href="mcp/grok.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-lightning card-icon"></i>
+                <h3>GROK</h3>
+                <p>Connect xAI's Grok to your JobTread data via remote MCP tools with bearer token auth.</p>
+            </a>
+            <a href="mcp/gemini.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-sparkle card-icon"></i>
+                <h3>GEMINI CLI</h3>
+                <p>Use Google's Gemini CLI to query JobTread data. Native MCP support with httpUrl configuration.</p>
+            </a>
+            <a href="mcp/other.html" class="docs-card">
+                <span class="tier power-user">POWER USER</span>
+                <i class="ph ph-plugs-connected card-icon"></i>
+                <h3>OTHER MCP CLIENTS</h3>
+                <p>Generic setup guide for any MCP-compatible client. Server endpoints, authentication, and API reference.</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="changelog.html"><i class="ph ph-clipboard-text"></i> What's New</a>
+                <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback"><i class="ph ph-chat-circle"></i> Feedback</a>
+                <a href="https://www.facebook.com/share/g/1YfFePwdtx/" target="_blank"><i class="ph ph-facebook-logo"></i> Facebook</a>
+                <a href="https://discord.gg/u57GzaT6bp" target="_blank"><i class="ph ph-discord-logo"></i> Discord</a>
+            </div>
+            <div class="footer-links secondary">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="documentation.html">Documentation</a>
+                <a href="about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

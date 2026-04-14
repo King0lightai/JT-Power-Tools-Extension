@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unassigned Availability - JT Power Tools</title>
+    <meta name="description" content="See unassigned tasks in JobTread's schedule availability view, filtered by task type. Quickly spot gaps in your schedule and assign work.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/guides/unassigned-availability.html">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://jtpowertools.com/guides/unassigned-availability.html">
+    <meta property="og:title" content="Unassigned Availability - JT Power Tools">
+    <meta property="og:description" content="See unassigned tasks in JobTread's schedule availability view, filtered by task type. Quickly spot gaps in your schedule and assign work.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../documentation.html">Docs</a>
+                <a href="../index.html#install">Install</a>
+                <a href="../index.html#pricing">Pricing</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../roadmap.html">Roadmap</a>
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1><span class="icon">📋</span> Unassigned Availability</h1>
+            <p class="guide-meta">Power User Feature - See unassigned tasks in schedule availability, filtered by type</p>
+        </div>
+
+        <div class="guide-content">
+            <h2>Overview</h2>
+            <p>Unassigned Availability injects a dedicated <strong>TASKS</strong> row into JobTread's Schedule Availability view showing all tasks that haven't been assigned to anyone yet. Tasks are color-coded by type (Labor, Material, Equipment, etc.) and grouped by date so you can quickly spot scheduling gaps and assign work right from the availability grid.</p>
+
+            <div class="info-box premium">
+                <strong>Power User Feature</strong>
+                <p>Unassigned Availability requires a Power User subscription and a configured JobTread API connection (Grant Key). <a href="premium.html">Learn about pricing tiers</a>.</p>
+            </div>
+
+            <h3>Key Features</h3>
+            <ul>
+                <li><strong>Unassigned Task Row</strong> - Dedicated row at the top of the availability grid showing tasks with no assignee</li>
+                <li><strong>Task Type Filtering</strong> - Interactive filter bar with color-coded chips for each task type (Labor, Material, Equipment, etc.)</li>
+                <li><strong>Date-Grouped Cards</strong> - Tasks appear under the correct date columns matching the visible schedule week</li>
+                <li><strong>Click to Open</strong> - Click any task card on the global schedule to open its sidebar for quick assignment</li>
+                <li><strong>Persistent Selections</strong> - Filter choices sync across sessions via Chrome storage</li>
+                <li><strong>Collapsible Filter Bar</strong> - Expand or collapse the filter bar to save screen space</li>
+                <li><strong>Smart Caching</strong> - 2-minute data cache prevents redundant API calls when navigating the same week</li>
+                <li><strong>Dark Mode & Custom Theme Support</strong> - Full compatibility with all JT Power Tools themes</li>
+            </ul>
+
+            <h2>How It Works</h2>
+
+            <h3>The TASKS Row</h3>
+            <p>When enabled, a new <strong>TASKS</strong> row appears as the first row in the availability table. Each date column shows task cards for unassigned tasks scheduled on that day:</p>
+            <ul>
+                <li>Each card displays the <strong>task name</strong> and <strong>job name/number</strong></li>
+                <li>Cards are <strong>color-coded</strong> by task type using 10 distinct pastel colors</li>
+                <li>When more tasks exist than can be shown, a <strong>"+ X tasks"</strong> summary link appears at the bottom of the column</li>
+            </ul>
+
+            <h3>The Filter Bar</h3>
+            <p>Above the availability table, a filter bar lets you control which task types are visible:</p>
+            <ul>
+                <li><strong>Type chips</strong> - Click to toggle individual task types on or off</li>
+                <li><strong>All / None</strong> - Quick buttons to show or hide all types at once</li>
+                <li><strong>Refresh</strong> - Force a fresh data fetch (bypasses the 2-minute cache)</li>
+                <li><strong>Collapse toggle</strong> - Minimize the filter bar when you don't need it</li>
+            </ul>
+
+            <h3>Task Interaction</h3>
+            <ul>
+                <li>On the <strong>global schedule</strong> (organization-level), clicking a task card opens its sidebar so you can assign it immediately</li>
+                <li>On a <strong>job-level schedule</strong>, clicking shows a toast message directing you to the global schedule for assignment</li>
+            </ul>
+
+            <h2>Getting Started</h2>
+
+            <ol class="steps">
+                <li>
+                    <strong>Prerequisites</strong><br>
+                    Make sure you have a Power User subscription and your JobTread Grant Key is configured in the JT Power Tools popup under the API section
+                </li>
+                <li>
+                    <strong>Enable the Feature</strong><br>
+                    Open the JT Power Tools popup and enable "Unassigned Availability" under the Schedule &amp; Calendar category
+                </li>
+                <li>
+                    <strong>Navigate to Schedule Availability</strong><br>
+                    Go to the Schedule page and switch to the Availability view
+                </li>
+                <li>
+                    <strong>View Unassigned Tasks</strong><br>
+                    The TASKS row appears at the top of the grid. Expand the filter bar above to filter by task type
+                </li>
+                <li>
+                    <strong>Assign Tasks</strong><br>
+                    Click any task card (on the global schedule) to open its sidebar and assign it to a team member
+                </li>
+            </ol>
+
+            <h2>Common Use Cases</h2>
+
+            <h3>Morning Scheduling</h3>
+            <p>Open the global schedule availability view to see all unassigned tasks for the week. Cross-reference with team member availability rows below to decide who gets what.</p>
+
+            <h3>Workload Balancing</h3>
+            <p>Filter to a specific task type (e.g., Labor) to see which jobs still need crew assigned. Compare against the availability rows to find team members with open slots.</p>
+
+            <h3>Material Coordination</h3>
+            <p>Filter to Material tasks to see upcoming material needs that haven't been assigned to a vendor yet. Assign vendors directly from the availability view.</p>
+
+            <h3>Weekly Planning Meetings</h3>
+            <p>Use the filter bar to focus on one task type at a time during team meetings. Walk through unassigned work by category and assign on the spot.</p>
+
+            <h2>Tips & Best Practices</h2>
+
+            <ul>
+                <li>Use <strong>"None"</strong> first, then enable just the task type you need — easier than toggling off everything you don't</li>
+                <li>The <strong>Refresh</strong> button is useful after assigning tasks — it re-fetches to confirm the task is no longer unassigned</li>
+                <li>Collapse the filter bar after setting your filters to give more screen space to the availability grid</li>
+                <li>Task cards show the <strong>job number</strong> so you can quickly identify which project needs attention</li>
+            </ul>
+
+            <h3>Works Well With</h3>
+            <ul>
+                <li><a href="availability-filter.html"><strong>Availability Filter</strong></a> - Filter which team members appear in the availability grid</li>
+                <li><a href="freeze-header.html"><strong>Freeze Header</strong></a> - Keep date headers visible while scrolling through many assignee rows</li>
+                <li><a href="dark-mode.html"><strong>Dark Mode</strong></a> - Full dark theme support for comfortable viewing</li>
+                <li><a href="custom-theme.html"><strong>Custom Theme</strong></a> - Task cards and filter bar respect your custom color palette</li>
+            </ul>
+
+            <h2>Troubleshooting</h2>
+
+            <h3>TASKS Row Not Appearing?</h3>
+            <ul>
+                <li>Make sure the feature is enabled in the JT Power Tools popup</li>
+                <li>Verify you're on the <strong>Schedule page</strong> with <strong>Availability</strong> view selected</li>
+                <li>Check that your <strong>Grant Key</strong> is configured (required for API access)</li>
+                <li>Try refreshing the page — the feature needs the availability grid to load first</li>
+            </ul>
+
+            <h3>No Tasks Showing?</h3>
+            <ul>
+                <li>All tasks for the visible week may already be assigned</li>
+                <li>Check that task type filters aren't hiding the tasks — click <strong>"All"</strong> to show everything</li>
+                <li>Try the <strong>Refresh</strong> button to force a fresh data fetch</li>
+            </ul>
+
+            <h3>Can't Click Task Cards?</h3>
+            <ul>
+                <li>Task card interaction only works on the <strong>global schedule</strong> (organization level)</li>
+                <li>On job-level schedules, a toast message will direct you to use the global schedule instead</li>
+            </ul>
+
+            <h3>Filter Selections Not Saving?</h3>
+            <ul>
+                <li>Filter selections are saved to Chrome sync storage automatically</li>
+                <li>Make sure you're signed into Chrome for cross-device sync</li>
+                <li>If storage is full, try disabling unused features to free space</li>
+            </ul>
+
+            <h2>Technical Details</h2>
+
+            <h3>Performance</h3>
+            <ul>
+                <li>API responses are cached for <strong>2 minutes</strong> to reduce server load</li>
+                <li>Data is only fetched when the visible date range changes</li>
+                <li>DOM updates are debounced (300ms) to prevent excessive re-rendering</li>
+                <li>MutationObserver watches for schedule changes efficiently</li>
+            </ul>
+
+            <h3>Data Source</h3>
+            <ul>
+                <li>Task types fetched via <code>JobTreadProService.getTaskTypes()</code></li>
+                <li>Unassigned tasks fetched via <code>JobTreadProService.getUnassignedTasks()</code></li>
+                <li>Both routes go through the authenticated Pro Worker pipeline</li>
+            </ul>
+
+            <h3>Compatibility</h3>
+            <ul>
+                <li><strong>Dark Mode</strong> - Full dark theme support with neutral grey palette</li>
+                <li><strong>Custom Themes</strong> - Respects CSS custom properties for RGB themes</li>
+                <li><strong>Chrome, Edge & Firefox</strong> - Works on all supported browsers</li>
+            </ul>
+
+            <h2>Related Guides</h2>
+            <ul>
+                <li><a href="availability-filter.html">Availability Filter</a> - Filter assignees in the availability grid</li>
+                <li><a href="kanban-filter.html">Kanban Filtering</a> - Hide empty columns in Kanban views</li>
+                <li><a href="custom-field-filter.html">Job Switcher Filter</a> - Filter jobs by custom field values</li>
+                <li><a href="freeze-header.html">Freeze Header</a> - Keep headers visible while scrolling</li>
+                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>JT Power Tools — Made with love for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../documentation.html">Documentation</a>
+                <a href="../about.html">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
