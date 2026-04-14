@@ -186,7 +186,7 @@ https://github.com/King0lightai/JT-Power-Tools
 
 For privacy questions or concerns:
 - Email: support@jtpowertools.com
-- GitHub Issues: https://github.com/King0lightai/JT-Power-Tools/issues
+- GitHub Issues: https://github.com/King0lightai/JT-Power-Tools-Extension/issues
 
 ## Legal Disclaimer
 
