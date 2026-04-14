@@ -175,7 +175,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
     quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
     kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
     ganttLines: true, pdfMarkupTools: true, reverseThreadOrder: false,
-    jobAccessCollapse: false, orgLogo: false,
+    jobAccessCollapse: false, orgLogo: true,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
     savedThemes: [null, null, null]
   };
@@ -633,7 +633,6 @@ async function loadSettings() {
     setCheckbox('budgetTools', settings.budgetTools !== undefined ? settings.budgetTools : false);
     setCheckbox('ganttLines', settings.ganttLines !== undefined ? settings.ganttLines : true);
     setCheckbox('jobAccessCollapse', settings.jobAccessCollapse !== undefined ? settings.jobAccessCollapse : false);
-    setCheckbox('orgLogo', settings.orgLogo !== undefined ? settings.orgLogo : false);
 
     // ESSENTIAL features - require any license (Essential, Pro, Power User)
     setCheckbox('quickNotes', hasEssentialFeatures && (settings.quickNotes !== undefined ? settings.quickNotes : true));
@@ -870,7 +869,7 @@ async function getCurrentSettings() {
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
     reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),
     jobAccessCollapse: getCheckboxValue('jobAccessCollapse', defaultSettings.jobAccessCollapse),
-    orgLogo: getCheckboxValue('orgLogo', defaultSettings.orgLogo),
+    orgLogo: true,
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes
