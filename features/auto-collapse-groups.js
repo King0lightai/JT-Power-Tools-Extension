@@ -7,6 +7,7 @@ const AutoCollapseGroupsFeature = (() => {
   let observer = null;
   let initialCollapseApplied = false;
   let collapseTimeout = null;
+  let navigationTimeout = null;
   let urlCheckInterval = null;
   let popstateHandler = null;
 
@@ -256,7 +257,9 @@ const AutoCollapseGroupsFeature = (() => {
   function startObserver() {
     if (observer) return;
 
-    let navigationTimeout = null;
+    // navigationTimeout is module-scoped so cleanup() can cancel it —
+    // otherwise a pending timeout could fire applyInitialCollapse() after
+    // the feature is disabled.
 
     observer = new MutationObserver((mutations) => {
       if (!isActive) return;
@@ -369,6 +372,11 @@ const AutoCollapseGroupsFeature = (() => {
     if (collapseTimeout) {
       clearTimeout(collapseTimeout);
       collapseTimeout = null;
+    }
+
+    if (navigationTimeout) {
+      clearTimeout(navigationTimeout);
+      navigationTimeout = null;
     }
 
     if (urlCheckInterval) {

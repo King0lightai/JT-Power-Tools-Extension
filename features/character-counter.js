@@ -1522,9 +1522,13 @@ const CharacterCounterFeature = (() => {
         }
       }, { signal });
 
-      // Close on Escape key
+      // Close on Escape — only if THIS overlay is the topmost one. Without
+      // this check, Escape pressed while the edit modal sits on top of the
+      // manager modal closes BOTH (each document-scoped handler fires).
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        if (e.key !== 'Escape') return;
+        const allOverlays = document.querySelectorAll('.jt-signature-modal-overlay');
+        if (allOverlays[allOverlays.length - 1] === overlay) {
           closeModal();
         }
       }, { signal });
@@ -1810,9 +1814,13 @@ const CharacterCounterFeature = (() => {
         }
       }, { signal });
 
-      // Close on Escape key
+      // Close on Escape — only if THIS overlay is the topmost one. Without
+      // this check, Escape pressed while the edit modal sits on top of the
+      // manager modal closes BOTH (each document-scoped handler fires).
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        if (e.key !== 'Escape') return;
+        const allOverlays = document.querySelectorAll('.jt-signature-modal-overlay');
+        if (allOverlays[allOverlays.length - 1] === overlay) {
           closeModal();
         }
       }, { signal });

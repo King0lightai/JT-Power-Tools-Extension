@@ -53,6 +53,22 @@ const OrgLogoFeature = (() => {
         }
       }
 
+      // Restrict to HTTPS only. The portal is the admin-controlled source of
+      // this URL, but defense-in-depth: reject javascript:/data:/blob:/http:
+      // schemes and URLs with attribute-breaking chars before setting img.src.
+      if (logoUrl) {
+        const isHttps = typeof logoUrl === 'string' && /^https:\/\//i.test(logoUrl.trim());
+        const safe = isHttps && typeof Sanitizer !== 'undefined'
+          ? Sanitizer.sanitizeURL(logoUrl, null)
+          : null;
+        if (!safe) {
+          console.warn('OrgLogo: Rejecting non-HTTPS or malformed logo URL:', logoUrl);
+          logoUrl = null;
+        } else {
+          logoUrl = safe;
+        }
+      }
+
       const svgs = switcher.querySelectorAll('svg');
 
       if (!logoUrl) {

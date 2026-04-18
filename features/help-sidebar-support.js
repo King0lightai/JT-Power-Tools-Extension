@@ -40,6 +40,10 @@ const HelpSidebarSupportFeature = (() => {
     // Remove injected element
     removeInjectedElement();
 
+    // Remove injected hover-style block
+    const hoverStyles = document.getElementById('jt-support-link-styles');
+    if (hoverStyles) hoverStyles.remove();
+
     console.log('HelpSidebarSupport: Deactivated');
   }
 
@@ -218,15 +222,20 @@ const HelpSidebarSupportFeature = (() => {
       </div>
     `;
 
-    // Add hover effects
-    const style = document.createElement('style');
-    style.textContent = `
-      .jt-support-link:hover {
-        filter: brightness(0.95) !important;
-        border-color: ${theme.accent} !important;
-      }
-    `;
-    document.head.appendChild(style);
+    // Add hover effects. Use a stable id and skip if already present so that
+    // repeated sidebar open/close cycles don't pile up <style> blocks in
+    // <head>. cleanup() also removes this.
+    if (!document.getElementById('jt-support-link-styles')) {
+      const style = document.createElement('style');
+      style.id = 'jt-support-link-styles';
+      style.textContent = `
+        .jt-support-link:hover {
+          filter: brightness(0.95) !important;
+          border-color: ${theme.accent} !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
     // Append to the divide container
     divideContainer.appendChild(supportSection);

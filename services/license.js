@@ -37,7 +37,10 @@ const LicenseService = (() => {
     'characterCounter', // Simple utility
     'budgetHierarchy',  // Visual enhancement for budget tables
     'kanbanTypeFilter', // Simple - auto-hide empty Kanban columns
-    'autoCollapseGroups' // Simple - collapse 100% complete groups
+    'autoCollapseGroups', // Simple - collapse 100% complete groups
+    'ganttLines',       // Simple visual enhancement for Gantt chart
+    'jobAccessCollapse', // Simple UI collapse helper
+    'budgetTools'       // Auto Sum — simple totals helper
   ];
 
   // ESSENTIAL tier features ($10) - "I want more"
@@ -45,7 +48,8 @@ const LicenseService = (() => {
     'quickNotes',       // Persistent notepad with sync
     'smartJobSwitcher', // Keyboard navigation (J+S, Alt+J)
     'freezeHeader',     // Sticky headers for tables
-    'pdfMarkupTools'    // PDF annotations
+    'pdfMarkupTools',   // PDF annotations
+    'orgLogo'           // Admin-managed via portal; requires account (Essential+)
   ];
 
   // PRO tier features ($20) - "I want premium"
@@ -54,15 +58,24 @@ const LicenseService = (() => {
   const PRO_FEATURES = [
     'dragDrop',         // Schedule & Task Checkboxes (legacy key name)
     'rgbTheme',         // Custom color theming
-    'previewMode'       // Live markdown preview
+    'previewMode',      // Live markdown preview
+    'reverseThreadOrder', // Reverse message thread order
+    'availabilityFilter'  // Team availability filtering
   ];
 
   // POWER USER tier features ($30) - "I want everything + AI"
   const POWER_USER_FEATURES = [
     'customFieldFilter', // API-powered job filtering
     'budgetChangelog',   // Compare budget backups
+    'taskTypeFilter',    // Power-user schedule filtering
     'mcpAccess',         // AI integration
     'aiKnowledge'        // AI-powered assistance
+  ];
+
+  // INTERNAL features - always enabled, not user-toggleable, bypass tier check
+  const INTERNAL_FEATURES = [
+    'helpSidebarSupport',
+    'keyboardShortcuts'
   ];
 
   /**
@@ -468,6 +481,32 @@ const LicenseService = (() => {
   }
 
   /**
+   * Check if a feature is internal (always enabled, bypasses tier check).
+   * @param {string} feature
+   * @returns {boolean}
+   */
+  function isInternalFeature(feature) {
+    return INTERNAL_FEATURES.includes(feature);
+  }
+
+  /**
+   * Check if a feature requires a paid license (i.e. is in any non-FREE tier).
+   * Single source of truth — replaces the old JTDefaults.isPremiumFeature.
+   * Internal and FREE features return false.
+   * @param {string} feature
+   * @returns {boolean}
+   */
+  function requiresLicense(feature) {
+    if (INTERNAL_FEATURES.includes(feature)) return false;
+    if (FREE_FEATURES.includes(feature)) return false;
+    return (
+      ESSENTIAL_FEATURES.includes(feature) ||
+      PRO_FEATURES.includes(feature) ||
+      POWER_USER_FEATURES.includes(feature)
+    );
+  }
+
+  /**
    * Check if a specific feature is available for a given tier
    * @param {string|null} tier - The tier to check ('essential', 'pro', 'power_user', or null)
    * @param {string} feature - The feature name to check
@@ -561,6 +600,8 @@ const LicenseService = (() => {
     getTier,
     tierHasFeature,
     isFeatureFree,
+    isInternalFeature,
+    requiresLicense,
     getTierDisplayName,
     getFeaturesForTier,
 
@@ -570,7 +611,8 @@ const LicenseService = (() => {
     FREE_FEATURES,
     ESSENTIAL_FEATURES,
     PRO_FEATURES,
-    POWER_USER_FEATURES
+    POWER_USER_FEATURES,
+    INTERNAL_FEATURES
   };
 })();
 

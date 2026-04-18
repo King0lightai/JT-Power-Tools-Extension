@@ -1850,6 +1850,12 @@ const PDFMarkupToolsFeature = (() => {
     // Measure drawing to determine orientation
     const { orientation } = measurePrintSize(container);
 
+    // Remove any leftover print wrapper / style from a previous invocation —
+    // otherwise rapid repeat clicks create duplicate #jt-print-wrapper nodes
+    // (id collision silently works in practice but produces broken output).
+    document.getElementById('jt-print-wrapper')?.remove();
+    document.getElementById('jt-takeoff-print-styles')?.remove();
+
     // Create a top-level print wrapper
     const printWrapper = document.createElement('div');
     printWrapper.id = 'jt-print-wrapper';
@@ -1963,14 +1969,30 @@ const PDFMarkupToolsFeature = (() => {
     `;
     document.head.appendChild(printStyle);
 
-    // Trigger print dialog
-    window.print();
-
-    // Cleanup after print dialog closes (or is cancelled)
-    setTimeout(() => {
+    // Cleanup on afterprint — this fires when the dialog is dismissed
+    // (either the job printed or the user cancelled). Previously cleanup ran
+    // on a hardcoded 1s timer, which corrupted long-running dialogs (wrapper
+    // removed mid-print) and left orphans if the dialog was left open.
+    // Attach only once; afterprint fires exactly once per print invocation.
+    const onAfterPrint = () => {
+      window.removeEventListener('afterprint', onAfterPrint);
       printStyle.remove();
       printWrapper.remove();
-    }, 1000);
+    };
+    window.addEventListener('afterprint', onAfterPrint);
+
+    // Fallback: if afterprint never fires (very old browser / edge case),
+    // GC these nodes after 60s so we never leak forever.
+    setTimeout(() => {
+      if (document.contains(printWrapper)) {
+        window.removeEventListener('afterprint', onAfterPrint);
+        printStyle.remove();
+        printWrapper.remove();
+      }
+    }, 60000);
+
+    // Trigger print dialog
+    window.print();
 
     showNotification(`Print: ${orientation} - select your paper size in the dialog`);
   }

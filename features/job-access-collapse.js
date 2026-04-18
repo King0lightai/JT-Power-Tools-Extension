@@ -27,10 +27,14 @@ const JobAccessCollapseFeature = (() => {
 
     applyToPage();
 
-    // Watch for SPA navigation / new panels
-    observer = new MutationObserver(() => {
-      applyToPage();
-    });
+    // Watch for SPA navigation / new panels. Debounced because applyToPage
+    // walks the DOM for every matching header; firing it on every document
+    // mutation during page-load storms is wasteful.
+    const debouncedApply = (typeof TimingUtils !== 'undefined' && TimingUtils.debounce)
+      ? TimingUtils.debounce(applyToPage, 150)
+      : applyToPage;
+
+    observer = new MutationObserver(debouncedApply);
     observer.observe(document.body, { childList: true, subtree: true });
 
     console.log('JobAccessCollapse: Initialized');

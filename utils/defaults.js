@@ -28,6 +28,7 @@ const JTDefaults = (() => {
     characterCounter: false,
     pdfMarkupTools: true,
     reverseThreadOrder: false,
+    budgetTools: false,
 
     // Free Features - Appearance & Themes
     darkMode: false,
@@ -73,11 +74,6 @@ const JTDefaults = (() => {
     apiExperimental: ['customFieldFilter'],
     powerUser: ['budgetChangelog', 'taskTypeFilter']
   };
-
-  /**
-   * Premium features that require a license
-   */
-  const PREMIUM_FEATURES = ['dragDrop', 'previewMode', 'rgbTheme', 'availabilityFilter'];
 
   /**
    * Timing constants (in milliseconds)
@@ -172,15 +168,6 @@ const JTDefaults = (() => {
   }
 
   /**
-   * Check if a feature is premium
-   * @param {string} featureKey - Feature key to check
-   * @returns {boolean} True if feature is premium
-   */
-  function isPremiumFeature(featureKey) {
-    return PREMIUM_FEATURES.includes(featureKey);
-  }
-
-  /**
    * Merge settings with defaults, ensuring all keys exist
    * @param {Object} settings - Partial settings object
    * @returns {Object} Complete settings object with defaults filled in
@@ -211,13 +198,11 @@ const JTDefaults = (() => {
   return {
     DEFAULT_SETTINGS,
     FEATURE_CATEGORIES,
-    PREMIUM_FEATURES,
     TIMING,
     SIZES,
     SELECTORS,
     STORAGE_KEYS,
     getDefaultSettings,
-    isPremiumFeature,
     mergeWithDefaults
   };
 })();

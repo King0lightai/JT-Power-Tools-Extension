@@ -1395,12 +1395,15 @@ const PreviewModeFeature = (() => {
     // Inline colors [!color:green] text - process before other formatting
     result = result.replace(/\[!color:(\w+)\]\s*(.+?)(?=\[!color:|$)/g, '<span class="jt-color-$1">$2</span>');
 
-    // Links [text](url) - sanitize URL to block javascript:/data: schemes
+    // Links [text](url) - sanitize URL and attr-escape before href interpolation
     result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
       const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
         ? Sanitizer.sanitizeURL(url, '#')
-        : (url.trim().toLowerCase().startsWith('javascript:') || url.trim().toLowerCase().startsWith('data:')) ? '#' : url;
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+        : '#';
+      const hrefAttr = (typeof Sanitizer !== 'undefined' && Sanitizer.escapeAttr)
+        ? Sanitizer.escapeAttr(safeUrl)
+        : safeUrl;
+      return `<a href="${hrefAttr}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     });
 
     // Inline formatting (bold, italic, underline, strikethrough)

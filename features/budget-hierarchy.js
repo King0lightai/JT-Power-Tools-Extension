@@ -9,6 +9,10 @@ const BudgetHierarchyFeature = (() => {
   let styleElement = null;
   let observer = null;
   let clickController = null; // AbortController for click listener
+  // Guards the observer against reacting to its own mutations. applyGroupShading
+  // mutates classes on budget rows — those mutations would otherwise trigger
+  // the body-subtree observer and queue another apply, creating a reflow loop.
+  let isApplyingShading = false;
 
   // Use shared ColorUtils module
   const {
@@ -392,39 +396,47 @@ const BudgetHierarchyFeature = (() => {
       return;
     }
 
-    const groupCells = findAllGroupCells();
+    isApplyingShading = true;
+    try {
+      const groupCells = findAllGroupCells();
 
-    // First, remove all existing shading from items
-    removeAllItemShading();
+      // First, remove all existing shading from items
+      removeAllItemShading();
 
-    // Apply shading to all groups
-    groupCells.forEach(groupCell => {
-      applyShading(groupCell);
-    });
+      // Apply shading to all groups
+      groupCells.forEach(groupCell => {
+        applyShading(groupCell);
+      });
 
-    // Now shade all line items by finding their parent groups
-    let allRows = document.querySelectorAll('[class*="group/row"]');
+      // Now shade all line items by finding their parent groups
+      let allRows = document.querySelectorAll('[class*="group/row"]');
 
-    if (allRows.length === 0) {
-      allRows = document.querySelectorAll('.group\\/row');
-    }
-
-    allRows.forEach(row => {
-      // Skip if it's a group row
-      const isGroup = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
-      if (isGroup) return;
-
-      // This is a line item, find its parent group
-      const parentGroup = findParentGroupForItem(row);
-      if (parentGroup) {
-        // Remove any existing item-level classes
-        for (let i = 1; i <= 5; i++) {
-          row.classList.remove(`jt-item-under-level-${i}`);
-        }
-        // Add the parent group's level
-        row.classList.add(`jt-item-under-level-${parentGroup.level}`);
+      if (allRows.length === 0) {
+        allRows = document.querySelectorAll('.group\\/row');
       }
-    });
+
+      allRows.forEach(row => {
+        // Skip if it's a group row
+        const isGroup = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
+        if (isGroup) return;
+
+        // This is a line item, find its parent group
+        const parentGroup = findParentGroupForItem(row);
+        if (parentGroup) {
+          // Remove any existing item-level classes
+          for (let i = 1; i <= 5; i++) {
+            row.classList.remove(`jt-item-under-level-${i}`);
+          }
+          // Add the parent group's level
+          row.classList.add(`jt-item-under-level-${parentGroup.level}`);
+        }
+      });
+    } finally {
+      // Drain any mutation records our own class changes just queued so the
+      // observer callback doesn't see them and schedule another apply.
+      if (observer) observer.takeRecords();
+      isApplyingShading = false;
+    }
   }
 
   // Remove all shading classes
@@ -450,6 +462,8 @@ const BudgetHierarchyFeature = (() => {
 
     observer = new MutationObserver((mutations) => {
       if (!isActive) return;
+      // Ignore mutations we caused ourselves to avoid a reflow loop.
+      if (isApplyingShading) return;
 
       // Check if any changes warrant reapplying shading
       let shouldReapply = false;

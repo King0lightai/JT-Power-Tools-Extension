@@ -207,6 +207,48 @@ async function loadSettings() {
   }
 }
 
+// Track which blocked features we've already logged this session, to avoid
+// spamming the console every time handleSettingsChange fires.
+const loggedBlockedFeatures = new Set();
+
+/**
+ * Enforce the tier gate for a feature. Returns true if the feature is
+ * allowed to initialize; false if it should be blocked.
+ *
+ * Hard-block policy:
+ *   - Internal features (helpSidebarSupport, keyboardShortcuts): always allowed.
+ *   - FREE features: always allowed.
+ *   - Paid features: require LicenseService.tierHasFeature(tier, key) to be true.
+ *   - Unknown features: blocked (fail closed).
+ *
+ * Defense-in-depth only — the popup UI is the primary gate. This prevents a
+ * user who flips settings directly in chrome.storage from getting paid features
+ * without a valid license.
+ */
+async function isFeatureAllowedByTier(featureKey) {
+  const license = window.LicenseService;
+  if (!license) {
+    // LicenseService missing — this should not happen since it's loaded before
+    // content.js. Fail closed: only allow explicitly-internal features so the
+    // extension's core plumbing still works, but don't grant anything paid.
+    console.warn('JT-Tools: LicenseService not available — blocking tier-gated features');
+    return featureKey === 'helpSidebarSupport' || featureKey === 'keyboardShortcuts';
+  }
+
+  if (license.isInternalFeature(featureKey)) return true;
+  if (license.isFeatureFree(featureKey)) return true;
+
+  try {
+    const tier = await license.getTier();
+    return license.tierHasFeature(tier, featureKey);
+  } catch (error) {
+    // Network/storage error while resolving tier — fail closed. The popup will
+    // re-prompt the user to re-validate next time they open it.
+    console.warn(`JT-Tools: Tier resolution failed for ${featureKey}, blocking:`, error);
+    return false;
+  }
+}
+
 /**
  * Initialize a feature module safely
  * @param {string} featureKey - Feature key from featureModules
@@ -216,6 +258,16 @@ async function initializeFeature(featureKey) {
 
   if (!module) {
     console.error(`JT-Tools: Unknown feature key: ${featureKey}`);
+    return;
+  }
+
+  // Tier gate — block paid features without a valid license tier.
+  const allowed = await isFeatureAllowedByTier(featureKey);
+  if (!allowed) {
+    if (!loggedBlockedFeatures.has(featureKey)) {
+      console.warn(`JT-Tools: ${module.name} blocked — current license tier does not grant access`);
+      loggedBlockedFeatures.add(featureKey);
+    }
     return;
   }
 

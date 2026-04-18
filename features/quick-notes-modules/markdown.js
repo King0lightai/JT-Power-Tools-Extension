@@ -23,12 +23,15 @@ const QuickNotesMarkdown = (() => {
 
     let html = escapeHtml(text);
 
-    // Parse links [text](url) - sanitize URL to block javascript:/data: schemes
+    // Parse links [text](url) - sanitize URL and attr-escape before href interpolation
     html = html.replace(/\[(.+?)\]\((.+?)\)/g, (match, linkText, url) => {
       const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
         ? Sanitizer.sanitizeURL(url, '#')
-        : (url.trim().toLowerCase().startsWith('javascript:') || url.trim().toLowerCase().startsWith('data:')) ? '#' : url;
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+        : '#';
+      const hrefAttr = (typeof Sanitizer !== 'undefined' && Sanitizer.escapeAttr)
+        ? Sanitizer.escapeAttr(safeUrl)
+        : safeUrl;
+      return `<a href="${hrefAttr}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
     });
 
     // Parse inline code `code`
@@ -172,12 +175,15 @@ const QuickNotesMarkdown = (() => {
     // Escape HTML first
     let html = escapeHtml(text);
 
-    // Parse links [text](url) - sanitize URL to block javascript:/data: schemes
+    // Parse links [text](url) - sanitize URL and attr-escape before href interpolation
     html = html.replace(/\[(.+?)\]\((.+?)\)/g, (match, linkText, url) => {
       const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
         ? Sanitizer.sanitizeURL(url, '#')
-        : (url.trim().toLowerCase().startsWith('javascript:') || url.trim().toLowerCase().startsWith('data:')) ? '#' : url;
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+        : '#';
+      const hrefAttr = (typeof Sanitizer !== 'undefined' && Sanitizer.escapeAttr)
+        ? Sanitizer.escapeAttr(safeUrl)
+        : safeUrl;
+      return `<a href="${hrefAttr}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
     });
 
     // Parse inline code `code`

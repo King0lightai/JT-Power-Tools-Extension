@@ -26,9 +26,20 @@ const SmartJobSwitcherFeature = (() => {
   const OLD_STORAGE_KEY = 'jt-job-switcher-width'; // Legacy chrome.storage.sync key
   const STORAGE_PREFIX = 'jt-sidebar-';
   const MIN_WIDTH = 280;
-  const MAX_WIDTH = 800;
+  const MAX_WIDTH_FLOOR = 800;
   const DEFAULT_WIDTH = 400;
   const SIDEBAR_SELECTOR = 'div.z-30.absolute.top-0.bottom-0.right-0';
+
+  /**
+   * Maximum sidebar width scales with the viewport so ultrawide monitors can
+   * resize sidebars beyond the old fixed 800px ceiling. Always leaves at least
+   * 400px for the main content area, and never goes below the 800px floor so
+   * behavior on normal screens is unchanged.
+   */
+  function getMaxWidth() {
+    const viewport = typeof window !== 'undefined' ? window.innerWidth : 0;
+    return Math.max(MAX_WIDTH_FLOOR, viewport - 400);
+  }
 
   /**
    * Detect the sidebar type from its content for per-sidebar width storage.
@@ -102,8 +113,10 @@ const SmartJobSwitcherFeature = (() => {
       const saved = localStorage.getItem(STORAGE_PREFIX + sidebarType);
       if (saved) {
         const width = parseInt(saved, 10);
-        if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
-          return width;
+        if (width >= MIN_WIDTH) {
+          // Clamp to current viewport's max — a width saved on an ultrawide
+          // may exceed the max on a smaller screen.
+          return Math.min(width, getMaxWidth());
         }
       }
     } catch (e) {
@@ -139,7 +152,7 @@ const SmartJobSwitcherFeature = (() => {
       const oldWidth = data[OLD_STORAGE_KEY];
       if (oldWidth) {
         const width = parseInt(oldWidth, 10);
-        if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
+        if (width >= MIN_WIDTH && width <= getMaxWidth()) {
           localStorage.setItem(STORAGE_PREFIX + 'job-switcher', String(width));
           console.log('SmartJobSwitcher: Migrated saved width from sync storage to localStorage');
         }
@@ -326,7 +339,7 @@ const SmartJobSwitcherFeature = (() => {
           el.style.paddingRight = `${newWidth}px`;
         } else {
           const currentPadding = parseInt(el.style.paddingRight, 10);
-          if (currentPadding >= MIN_WIDTH && currentPadding <= MAX_WIDTH) {
+          if (currentPadding >= MIN_WIDTH && currentPadding <= getMaxWidth()) {
             el.style.paddingRight = `${newWidth}px`;
           }
         }
@@ -356,7 +369,7 @@ const SmartJobSwitcherFeature = (() => {
         delete sibling.dataset.jtPushPadding;
       } else {
         const pr = parseInt(sibling.style.paddingRight, 10);
-        if (pr >= MIN_WIDTH && pr <= MAX_WIDTH) {
+        if (pr >= MIN_WIDTH && pr <= getMaxWidth()) {
           sibling.style.paddingRight = '';
         }
       }
@@ -379,7 +392,7 @@ const SmartJobSwitcherFeature = (() => {
     for (const el of elementsWithPadding) {
       if (el.dataset.jtPushPadding) continue; // Already handled above
       const pr = parseInt(el.style.paddingRight, 10);
-      if (pr >= MIN_WIDTH && pr <= MAX_WIDTH) {
+      if (pr >= MIN_WIDTH && pr <= getMaxWidth()) {
         const activeSidebar = el.querySelector?.(SIDEBAR_SELECTOR) ||
                              el.parentElement?.querySelector?.(SIDEBAR_SELECTOR);
         if (!activeSidebar) {
@@ -427,8 +440,8 @@ const SmartJobSwitcherFeature = (() => {
     const deltaX = resizeState.startX - e.clientX;
     let newWidth = resizeState.startWidth + deltaX;
 
-    // Clamp to min/max
-    newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+    // Clamp to min/max (max scales with viewport for ultrawide monitors)
+    newWidth = Math.max(MIN_WIDTH, Math.min(getMaxWidth(), newWidth));
 
     // Apply new width and update main content
     updateSidebarWidth(sidebar, newWidth);

@@ -23,6 +23,10 @@ const QuickNotesFeature = (() => {
   let isResizing = false;
   let isLoadingTeamNotes = false;
   let teamNotesLoaded = false;
+  // Current selectionchange handler bound for the note editor. Re-rendering
+  // the editor (switching notes / tabs / folders) registers a new one; this
+  // lets us remove the previous one so listeners don't accumulate.
+  let selectionChangeHandler = null;
 
   // Folder organization state
   let myNotesCollapsedFolders = new Set(); // Collapsed folders for My Notes
@@ -1665,13 +1669,19 @@ const QuickNotesFeature = (() => {
       }
     });
 
-    // Update formatting button states on selection change
-    // Pass toolbar to scope button queries (prevents affecting Text Formatter buttons)
-    document.addEventListener('selectionchange', () => {
+    // Update formatting button states on selection change.
+    // Pass toolbar to scope button queries (prevents affecting Text Formatter buttons).
+    // Re-rendering the editor registers a new handler — remove the previous
+    // one first so listeners don't accumulate across note/folder/tab switches.
+    if (selectionChangeHandler) {
+      document.removeEventListener('selectionchange', selectionChangeHandler);
+    }
+    selectionChangeHandler = () => {
       if (document.activeElement === contentInput && editor.updateFormattingButtons && toolbar) {
         editor.updateFormattingButtons(contentInput, toolbar);
       }
-    });
+    };
+    document.addEventListener('selectionchange', selectionChangeHandler);
 
     // Handle paste to sanitize content
     contentInput.addEventListener('paste', (e) => {
@@ -2639,6 +2649,12 @@ const QuickNotesFeature = (() => {
 
     // Remove visibility change listener
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+    // Remove editor selectionchange listener
+    if (selectionChangeHandler) {
+      document.removeEventListener('selectionchange', selectionChangeHandler);
+      selectionChangeHandler = null;
+    }
 
     // Remove resize event listeners (fix memory leak)
     if (resizeHandlers.mouseMove) {

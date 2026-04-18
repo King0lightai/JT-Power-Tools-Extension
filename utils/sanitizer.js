@@ -116,7 +116,8 @@ const Sanitizer = (() => {
         return defaultUrl;
       }
 
-      const trimmed = url.trim().toLowerCase();
+      const raw = url.trim();
+      const trimmed = raw.toLowerCase();
 
       // Reject dangerous protocols
       const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
@@ -127,12 +128,22 @@ const Sanitizer = (() => {
         }
       }
 
+      // Reject URLs containing characters that are not valid in URLs and that
+      // would break out of an HTML attribute value when interpolated. Valid
+      // URLs must percent-encode these. This defends every caller that
+      // interpolates the result into href="..." / src="..." contexts, even if
+      // they forget to escape the attribute value.
+      if (/["'<>\s`]/.test(raw) || /[\u0000-\u001f]/.test(raw)) {
+        console.warn('Sanitizer: URL contains invalid characters:', url);
+        return defaultUrl;
+      }
+
       // Only allow http, https, and relative URLs
       if (trimmed.startsWith('http://') ||
           trimmed.startsWith('https://') ||
           trimmed.startsWith('/') ||
           trimmed.startsWith('#')) {
-        return url.trim();
+        return raw;
       }
 
       console.warn('Sanitizer: Invalid URL format:', url);
@@ -141,6 +152,27 @@ const Sanitizer = (() => {
       console.error('Sanitizer: sanitizeURL error:', error);
       return defaultUrl;
     }
+  }
+
+  /**
+   * Escape a string for safe interpolation inside an HTML attribute value.
+   *
+   * Unlike escapeHTML (which uses textContent→innerHTML and only escapes
+   * &, <, >), this escapes all five attribute-sensitive characters including
+   * " and '. Use this whenever building HTML via template strings where a
+   * value lands inside attr="..." or attr='...'.
+   *
+   * @param {string} value
+   * @returns {string}
+   */
+  function escapeAttr(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /**
@@ -309,6 +341,7 @@ const Sanitizer = (() => {
     sanitizeHexColor,
     sanitizeCSSValue,
     escapeHTML,
+    escapeAttr,
     sanitizeHTML,
     sanitizeURL,
     isValidLicenseKeyFormat,

@@ -209,14 +209,33 @@ const AvailabilityFilterFeature = (() => {
   /**
    * Load saved filter selections from storage
    */
+  // Defensive: strip __proto__/constructor/prototype keys from a plain object
+  // loaded from storage to prevent prototype-pollution if a corrupt or
+  // malicious sync payload ever reaches us. Chrome's storage serialization
+  // already guards against direct prototype reassignment, but later code
+  // that indexes by user-controlled keys (e.g. currentFilters.categories[k])
+  // should never see these special names.
+  function sanitizeStoredObject(obj) {
+    if (!obj || typeof obj !== 'object') return {};
+    const clean = Object.create(null);
+    for (const key of Object.keys(obj)) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+      const v = obj[key];
+      clean[key] = (v && typeof v === 'object' && !Array.isArray(v))
+        ? sanitizeStoredObject(v)
+        : v;
+    }
+    return clean;
+  }
+
   async function loadFilterSelections() {
     try {
       const result = await chrome.storage.sync.get([STORAGE_KEY]);
       if (result[STORAGE_KEY]) {
         const saved = result[STORAGE_KEY];
         currentFilters = {
-          categories: saved.categories || {},
-          assignees: saved.assignees || {}
+          categories: sanitizeStoredObject(saved.categories),
+          assignees: sanitizeStoredObject(saved.assignees)
         };
 
         // Migrate from old format (roles/vendors) to new format (assignees)

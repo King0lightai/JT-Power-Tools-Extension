@@ -415,6 +415,25 @@ const BudgetChangelogUI = (() => {
    * @param {Object} options - Options with dates
    * @returns {string} Complete HTML document
    */
+  /**
+   * JSON-encode a value for safe interpolation into an inline <script> block.
+   *
+   * Plain JSON.stringify does NOT escape '</script>' — an item name like
+   * `</script><img src=x onerror=...>` would break out of the script context
+   * and execute arbitrary JS in the blob: URL's origin. This helper escapes:
+   *   - '<' and '>'  → prevents </script> and <!-- sequences
+   *   - '&'          → defensive for mixed-HTML/JS contexts
+   *   - U+2028/U+2029 → valid JSON but terminate JS string literals
+   */
+  function jsonForScript(value) {
+    return JSON.stringify(value)
+      .replace(/</g, '\\u003c')
+      .replace(/>/g, '\\u003e')
+      .replace(/&/g, '\\u0026')
+      .replace(/\u2028/g, '\\u2028')
+      .replace(/\u2029/g, '\\u2029');
+  }
+
   function generateFullReportHTML(diff, options) {
     const jobName = getJobNameFromPage() || 'Budget';
     const { summary } = diff;
@@ -598,7 +617,7 @@ const BudgetChangelogUI = (() => {
 
   <script>
     (function() {
-      var summaryText = ${JSON.stringify(String(BudgetDiffEngine.generateTextSummary(diff, options)))};
+      var summaryText = ${jsonForScript(String(BudgetDiffEngine.generateTextSummary(diff, options)))};
 
       // Wait for DOM to be fully ready
       function init() {

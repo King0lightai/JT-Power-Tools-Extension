@@ -72,12 +72,12 @@ const BudgetChangelogFeature = (() => {
    */
   function init() {
     if (isActive) {
-      if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Already active, skipping init');
+      if (DEBUG) console.log('BudgetChangelog: Already active, skipping init');
       return;
     }
 
     isActive = true;
-    if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Initializing...');
+    if (DEBUG) console.log('BudgetChangelog: Initializing...');
 
     // Start observing for Budget Backups sidebar
     startSidebarObserver();
@@ -399,6 +399,10 @@ const BudgetChangelogFeature = (() => {
     let cursor = null;
     let page = 0;
     const PAGE_SIZE = 100;
+    // Defend against the API echoing the same cursor back twice — an infinite
+    // pagination loop in the wild would otherwise only terminate at the 50-page
+    // safety cap (5000 rows) and spam the server along the way.
+    const seenCursors = new Set();
 
     do {
       page++;
@@ -459,9 +463,19 @@ const BudgetChangelogFeature = (() => {
         url: backup.url
       })));
 
-      cursor = backupData?.nextPage || null;
+      const nextCursor = backupData?.nextPage || null;
 
-      if (DEBUG) console.log(`BudgetChangelog: Page ${page}: ${nodes.length} backups, nextPage: ${!!cursor}`);
+      if (DEBUG) console.log(`BudgetChangelog: Page ${page}: ${nodes.length} backups, nextPage: ${!!nextCursor}`);
+
+      // Stop if the API handed us a cursor we've already followed — this
+      // would otherwise be an infinite loop bounded only by the 50-page cap.
+      if (nextCursor && seenCursors.has(nextCursor)) {
+        console.warn('BudgetChangelog: pagination cursor repeated, stopping early at page', page);
+        cursor = null;
+      } else {
+        if (nextCursor) seenCursors.add(nextCursor);
+        cursor = nextCursor;
+      }
 
     } while (cursor && page < 50); // Safety cap at 50 pages (5000 backups)
 

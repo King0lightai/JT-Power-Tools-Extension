@@ -15,7 +15,9 @@
   "host_permissions": [
     "https://*.jobtread.com/*",
     "https://api.jobtread.com/*",
-    "https://*.workers.dev/*"
+    "https://jobtread-mcp-server.king0light-ai.workers.dev/*",
+    "https://jt-tools-license-proxy.king0light-ai.workers.dev/*",
+    "https://jobtread-tools-pro.king0light-ai.workers.dev/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",

@@ -6,6 +6,7 @@ const FreezeHeaderFeature = (() => {
   let observer = null;
   let styleElement = null;
   let debounceTimer = null;
+  let resizeHandler = null;
   let popupObserver = null;
   let jobContextObserver = null;
   let urlCheckInterval = null;
@@ -1892,14 +1893,18 @@ const FreezeHeaderFeature = (() => {
       }
     }, 500);
 
-    // Update position on window resize
-    window.addEventListener('resize', () => {
+    // Update position on window resize. Track the handler so cleanup() can
+    // remove it — otherwise hot-toggling the feature leaks one resize
+    // listener per cycle and the orphan keeps firing updatePositions() on a
+    // deactivated feature.
+    resizeHandler = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         updatePositions();
         adjustDragBoundarySidebars();
       }, 100);
-    });
+    };
+    window.addEventListener('resize', resizeHandler);
   }
 
   /**
@@ -1929,6 +1934,12 @@ const FreezeHeaderFeature = (() => {
     if (urlCheckInterval) {
       clearInterval(urlCheckInterval);
       urlCheckInterval = null;
+    }
+
+    // Remove window resize listener (fix memory leak on hot-toggle)
+    if (resizeHandler) {
+      window.removeEventListener('resize', resizeHandler);
+      resizeHandler = null;
     }
 
     // Clean up popup observer

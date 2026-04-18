@@ -191,70 +191,63 @@ const BudgetDiffEngine = (() => {
    * @returns {Object} Summary statistics
    */
   function calculateSummary(oldItems, newItems, added, removed, modified, unchanged = []) {
-    // Calculate old totals
-    let oldTotalCost = 0;
-    let oldTotalPrice = 0;
+    // Sum in integer cents to avoid floating-point drift over thousands of
+    // items. Large budgets ($1M+) summed from raw floats can otherwise
+    // display cents that are off by a penny — especially painful since
+    // costChange / priceChange are derived as differences of these sums.
+    const toCents = (v) => (v === null || v === undefined) ? 0 : Math.round(v * 100);
+
+    let oldTotalCostC = 0, oldTotalPriceC = 0;
     for (const item of oldItems) {
-      if (item.extendedCost !== null) oldTotalCost += item.extendedCost;
-      if (item.extendedPrice !== null) oldTotalPrice += item.extendedPrice;
+      if (item.extendedCost !== null) oldTotalCostC += toCents(item.extendedCost);
+      if (item.extendedPrice !== null) oldTotalPriceC += toCents(item.extendedPrice);
     }
 
-    // Calculate new totals
-    let newTotalCost = 0;
-    let newTotalPrice = 0;
+    let newTotalCostC = 0, newTotalPriceC = 0;
     for (const item of newItems) {
-      if (item.extendedCost !== null) newTotalCost += item.extendedCost;
-      if (item.extendedPrice !== null) newTotalPrice += item.extendedPrice;
+      if (item.extendedCost !== null) newTotalCostC += toCents(item.extendedCost);
+      if (item.extendedPrice !== null) newTotalPriceC += toCents(item.extendedPrice);
     }
 
-    // Calculate impact of changes
-    let addedCost = 0;
-    let addedPrice = 0;
+    let addedCostC = 0, addedPriceC = 0;
     for (const item of added) {
-      if (item.extendedCost !== null) addedCost += item.extendedCost;
-      if (item.extendedPrice !== null) addedPrice += item.extendedPrice;
+      if (item.extendedCost !== null) addedCostC += toCents(item.extendedCost);
+      if (item.extendedPrice !== null) addedPriceC += toCents(item.extendedPrice);
     }
 
-    let removedCost = 0;
-    let removedPrice = 0;
+    let removedCostC = 0, removedPriceC = 0;
     for (const item of removed) {
-      if (item.extendedCost !== null) removedCost += item.extendedCost;
-      if (item.extendedPrice !== null) removedPrice += item.extendedPrice;
+      if (item.extendedCost !== null) removedCostC += toCents(item.extendedCost);
+      if (item.extendedPrice !== null) removedPriceC += toCents(item.extendedPrice);
     }
 
-    let modifiedCostDelta = 0;
-    let modifiedPriceDelta = 0;
+    let modifiedCostDeltaC = 0, modifiedPriceDeltaC = 0;
     for (const mod of modified) {
       for (const change of mod.changes) {
-        if (change.field === 'extendedCost') {
-          modifiedCostDelta += change.delta;
-        }
-        if (change.field === 'extendedPrice') {
-          modifiedPriceDelta += change.delta;
-        }
+        if (change.field === 'extendedCost') modifiedCostDeltaC += toCents(change.delta);
+        if (change.field === 'extendedPrice') modifiedPriceDeltaC += toCents(change.delta);
       }
     }
 
-    // Calculate unchanged count from the actual unchanged array
     const unchangedCount = unchanged.length;
 
     return {
-      oldTotalCost,
-      oldTotalPrice,
-      newTotalCost,
-      newTotalPrice,
-      costChange: newTotalCost - oldTotalCost,
-      priceChange: newTotalPrice - oldTotalPrice,
+      oldTotalCost: oldTotalCostC / 100,
+      oldTotalPrice: oldTotalPriceC / 100,
+      newTotalCost: newTotalCostC / 100,
+      newTotalPrice: newTotalPriceC / 100,
+      costChange: (newTotalCostC - oldTotalCostC) / 100,
+      priceChange: (newTotalPriceC - oldTotalPriceC) / 100,
       addedCount: added.length,
       removedCount: removed.length,
       modifiedCount: modified.length,
       unchangedCount: Math.max(0, unchangedCount),
-      addedCost,
-      addedPrice,
-      removedCost,
-      removedPrice,
-      modifiedCostDelta,
-      modifiedPriceDelta
+      addedCost: addedCostC / 100,
+      addedPrice: addedPriceC / 100,
+      removedCost: removedCostC / 100,
+      removedPrice: removedPriceC / 100,
+      modifiedCostDelta: modifiedCostDeltaC / 100,
+      modifiedPriceDelta: modifiedPriceDeltaC / 100
     };
   }
 

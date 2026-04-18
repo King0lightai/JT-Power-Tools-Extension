@@ -201,6 +201,54 @@ const ALLOWED_API_ORIGINS = [
 ];
 
 /**
+ * Proxy request sanitization — the service worker has host_permissions to
+ * JobTread and can bypass CORS. If a compromised in-page script or extension
+ * page reaches this proxy, we must not forward arbitrary methods, headers, or
+ * bodies — particularly not Authorization or Cookie headers which could be
+ * used to exfiltrate user tokens.
+ *
+ * Callers (services/jobtread-api.js, features/budget-changelog.js) only need
+ * JSON POST/GET, so that's all we allow.
+ */
+const PROXY_ALLOWED_METHODS = new Set(['GET', 'POST']);
+const PROXY_ALLOWED_CONTENT_TYPES = new Set([
+  'application/json',
+  'application/json; charset=utf-8',
+  'application/json;charset=utf-8'
+]);
+
+function sanitizeProxyOptions(options) {
+  const opts = (options && typeof options === 'object') ? options : {};
+
+  const rawMethod = typeof opts.method === 'string' ? opts.method.toUpperCase() : 'GET';
+  if (!PROXY_ALLOWED_METHODS.has(rawMethod)) {
+    throw new Error(`Proxy: method not allowed: ${rawMethod}`);
+  }
+
+  // Start from a fresh header object — do NOT inherit anything the caller sent
+  // beyond the specific values we vet below.
+  const headers = { 'Content-Type': 'application/json' };
+  if (opts.headers && typeof opts.headers === 'object') {
+    const ct = opts.headers['Content-Type'] || opts.headers['content-type'];
+    if (typeof ct === 'string') {
+      if (!PROXY_ALLOWED_CONTENT_TYPES.has(ct.toLowerCase())) {
+        throw new Error(`Proxy: Content-Type not allowed: ${ct}`);
+      }
+      headers['Content-Type'] = ct;
+    }
+  }
+
+  const sanitized = { method: rawMethod, headers, credentials: 'omit' };
+  if (rawMethod === 'POST' && opts.body !== undefined) {
+    if (typeof opts.body !== 'string') {
+      throw new Error('Proxy: body must be a pre-serialized string');
+    }
+    sanitized.body = opts.body;
+  }
+  return sanitized;
+}
+
+/**
  * Validate that the message sender is trusted
  * Only allows messages from this extension's own scripts or from JobTread tabs
  * @param {Object} sender - Chrome runtime message sender
@@ -257,8 +305,16 @@ function isAllowedApiUrl(url) {
  * @returns {Promise<Object>} API response
  */
 async function handleApiRequest(url, options) {
+  let sanitized;
   try {
-    const response = await fetch(url, options);
+    sanitized = sanitizeProxyOptions(options);
+  } catch (error) {
+    console.warn('JT-Tools API Proxy: rejected caller options:', error.message);
+    return { success: false, error: error.message };
+  }
+
+  try {
+    const response = await fetch(url, sanitized);
 
     const responseText = await response.text();
 

@@ -60,12 +60,19 @@ const DarkModeFeature = (() => {
     document.head.appendChild(styleElement);
   }
 
-  // Watch for DOM changes
+  // Watch for DOM changes. Debounced because highlightCurrentDate scans the
+  // whole document with querySelectorAll on every mutation batch — without
+  // debouncing, a busy page (typing, scrolling, React re-renders) pegs the
+  // main thread.
   function startObserver() {
+    const debouncedHighlight = (typeof TimingUtils !== 'undefined' && TimingUtils.debounce)
+      ? TimingUtils.debounce(highlightCurrentDate, 150)
+      : highlightCurrentDate;
+
     observer = new MutationObserver((mutations) => {
       const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
       if (hasNewNodes) {
-        highlightCurrentDate();
+        debouncedHighlight();
       }
     });
 

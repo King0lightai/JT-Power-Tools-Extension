@@ -14,6 +14,10 @@ const BudgetTools = (() => {
   let debounceTimer = null;
   let injectedPanel = null;
   let clickHandler = null;
+  // Guards the body-subtree observer against reacting to mutations we cause
+  // ourselves (rendering into injectedPanel). Without it, every render queues
+  // another scheduleUpdate — a debounced reflow loop on any page activity.
+  let isUpdating = false;
 
   // Persists cost/price across lazy row unloads.
   // Key: row number string (e.g. "42"). Value: { cost, price, isTbd }
@@ -104,7 +108,10 @@ const BudgetTools = (() => {
         continue;
       }
 
-      const isSelected = Array.from(row.children).some(c => c.className?.includes?.('bg-blue-100'));
+      // classList.contains is safe for both HTML and SVG elements; c.className
+      // on an SVG element is a SVGAnimatedString (not a string), so
+      // c.className?.includes would silently skip SVG children.
+      const isSelected = Array.from(row.children).some(c => c.classList?.contains?.('bg-blue-100'));
 
       if (isSelected) {
         const costRaw = getCellValue(row.children[colIndices['Extended Cost']]);
@@ -208,22 +215,28 @@ const BudgetTools = (() => {
   }
 
   function renderTotals(el, colIndices) {
-    let totalCost = 0, totalPrice = 0;
+    // Sum in integer cents to avoid floating-point drift across thousands of
+    // rows — a budget totalling $1M+ summed from raw $0.10+$0.20 floats could
+    // otherwise display cents that are off by a penny, and Profit / Margin
+    // are derived from these sums.
+    let totalCostCents = 0, totalPriceCents = 0;
     let countWithCost = 0, countWithPrice = 0, tbdCount = 0;
     const hasCost = colIndices['Extended Cost'] !== undefined;
     const hasPrice = colIndices['Extended Price'] !== undefined;
 
     for (const { cost, price, isTbd } of selectionMap.values()) {
       if (hasCost) {
-        if (cost !== null) { totalCost += cost; countWithCost++; }
+        if (cost !== null) { totalCostCents += Math.round(cost * 100); countWithCost++; }
         else if (isTbd) tbdCount++;
       }
-      if (hasPrice && price !== null) { totalPrice += price; countWithPrice++; }
+      if (hasPrice && price !== null) { totalPriceCents += Math.round(price * 100); countWithPrice++; }
     }
 
+    const totalCost = totalCostCents / 100;
+    const totalPrice = totalPriceCents / 100;
     const count = selectionMap.size;
-    const profit = totalPrice - totalCost;
-    const margin = totalPrice > 0 ? (profit / totalPrice * 100) : 0;
+    const profit = (totalPriceCents - totalCostCents) / 100;
+    const margin = totalPriceCents > 0 ? ((totalPriceCents - totalCostCents) / totalPriceCents * 100) : 0;
     const t = getThemeColors();
 
     el.innerHTML = '';
@@ -299,43 +312,51 @@ const BudgetTools = (() => {
   function update() {
     if (!isActive || !isBudgetPage()) return;
 
-    const contentArea = findPanelContentArea();
+    isUpdating = true;
+    try {
+      const contentArea = findPanelContentArea();
 
-    if (!contentArea) {
-      // Panel closed — clear all tracked state for the next selection session
-      selectionMap.clear();
-      injectedPanel = null;
-      return;
-    }
-
-    // Inject our totals element if not already present — after the heading row
-    if (!contentArea.querySelector('.jt-budget-tools-totals')) {
-      injectedPanel = buildTotalsEl();
-      const headingChild = Array.from(contentArea.children).find(
-        child => child.textContent?.toLowerCase().includes('mass budget actions')
-      );
-      if (headingChild && headingChild.nextSibling) {
-        contentArea.insertBefore(injectedPanel, headingChild.nextSibling);
-      } else if (headingChild) {
-        contentArea.appendChild(injectedPanel);
-      } else {
-        contentArea.insertBefore(injectedPanel, contentArea.firstChild);
+      if (!contentArea) {
+        // Panel closed — clear all tracked state for the next selection session
+        selectionMap.clear();
+        injectedPanel = null;
+        return;
       }
-    } else {
-      injectedPanel = contentArea.querySelector('.jt-budget-tools-totals');
+
+      // Inject our totals element if not already present — after the heading row
+      if (!contentArea.querySelector('.jt-budget-tools-totals')) {
+        injectedPanel = buildTotalsEl();
+        const headingChild = Array.from(contentArea.children).find(
+          child => child.textContent?.toLowerCase().includes('mass budget actions')
+        );
+        if (headingChild && headingChild.nextSibling) {
+          contentArea.insertBefore(injectedPanel, headingChild.nextSibling);
+        } else if (headingChild) {
+          contentArea.appendChild(injectedPanel);
+        } else {
+          contentArea.insertBefore(injectedPanel, contentArea.firstChild);
+        }
+      } else {
+        injectedPanel = contentArea.querySelector('.jt-budget-tools-totals');
+      }
+
+      const colIndices = getColumnIndices();
+
+      // Sync visible rows into the persistent map
+      syncSelectionMap(colIndices);
+
+      if (selectionMap.size === 0) {
+        injectedPanel.innerHTML = '';
+        return;
+      }
+
+      renderTotals(injectedPanel, colIndices);
+    } finally {
+      // Drain mutation records our own DOM writes just queued so the observer
+      // callback doesn't see them and schedule another update.
+      if (observer) observer.takeRecords();
+      isUpdating = false;
     }
-
-    const colIndices = getColumnIndices();
-
-    // Sync visible rows into the persistent map
-    syncSelectionMap(colIndices);
-
-    if (selectionMap.size === 0) {
-      injectedPanel.innerHTML = '';
-      return;
-    }
-
-    renderTotals(injectedPanel, colIndices);
   }
 
   function scheduleUpdate() {
@@ -363,7 +384,17 @@ const BudgetTools = (() => {
     isActive = true;
     console.log('BudgetTools: Initializing...');
 
-    observer = new MutationObserver(scheduleUpdate);
+    observer = new MutationObserver((mutations) => {
+      // Ignore mutations we just caused — both the isUpdating flag (fast
+      // path) and a target check (belt-and-suspenders against timing).
+      if (isUpdating) return;
+      if (injectedPanel && mutations.every(m =>
+        m.target === injectedPanel || injectedPanel.contains(m.target)
+      )) {
+        return;
+      }
+      scheduleUpdate();
+    });
     observer.observe(document.body, {
       childList: true,
       subtree: true,

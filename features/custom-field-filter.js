@@ -25,6 +25,21 @@ const CustomFieldFilterFeature = (() => {
   const SIDEBAR_SELECTOR = 'div.z-30.absolute.top-0.bottom-0.right-0';
 
   /**
+   * Safely parse a JSON-serialized dataset.options string. Returns [] on
+   * any malformed payload instead of throwing — a corrupt option blob must
+   * not take down the filter UI.
+   */
+  function parseFieldOptions(raw) {
+    try {
+      const parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.warn('CustomFieldFilter: Failed to parse field options, defaulting to []:', e);
+      return [];
+    }
+  }
+
+  /**
    * Check if a sidebar element is specifically the Job Switcher
    */
   function isJobSwitcherSidebar(sidebar) {
@@ -183,6 +198,14 @@ const CustomFieldFilterFeature = (() => {
    * Inject custom field filter UI after the search input
    */
   async function injectFilterUI(searchInput) {
+    // Synchronous short-circuit first: if the filter UI is already injected,
+    // bail before firing any async isConfigured() calls. Opening and closing
+    // the Job Switcher sidebar quickly could otherwise race multiple
+    // injections.
+    if (document.getElementById('jt-custom-field-filter')) {
+      return;
+    }
+
     // Check if API is configured (Worker or Direct)
     let isApiConfigured = false;
 
@@ -200,9 +223,9 @@ const CustomFieldFilterFeature = (() => {
       return;
     }
 
-    // Check if we already injected the filter UI
-    const existing = document.getElementById('jt-custom-field-filter');
-    if (existing) {
+    // Re-check after the async gap — another concurrent injection may have
+    // completed while we were awaiting isConfigured().
+    if (document.getElementById('jt-custom-field-filter')) {
       return;
     }
 
@@ -564,7 +587,7 @@ const CustomFieldFilterFeature = (() => {
     const fieldOption = Array.from(fieldSelect.options).find(o => o.value === fieldId);
     if (!fieldOption) return;
 
-    const fieldOptions = JSON.parse(fieldOption.dataset.options || '[]');
+    const fieldOptions = parseFieldOptions(fieldOption.dataset.options);
 
     if (fieldOptions && fieldOptions.length > 0) {
       populateValueCheckboxes(fieldOptions);
@@ -864,7 +887,7 @@ const CustomFieldFilterFeature = (() => {
         if (valuesRow) valuesRow.style.display = 'flex';
 
         // Load values for this field
-        const fieldOptions = JSON.parse(fieldOption.dataset.options || '[]');
+        const fieldOptions = parseFieldOptions(fieldOption.dataset.options);
         const fieldName = fieldOption.textContent;
 
         if (fieldOptions && fieldOptions.length > 0) {
@@ -1073,7 +1096,7 @@ const CustomFieldFilterFeature = (() => {
         // Show values row
         if (valuesRow) valuesRow.style.display = 'flex';
 
-        const fieldOptions = JSON.parse(selectedOption.dataset.options || '[]');
+        const fieldOptions = parseFieldOptions(selectedOption.dataset.options);
         const fieldName = selectedOption.textContent;
 
         // Update label
@@ -1749,13 +1772,12 @@ const CustomFieldFilterFeature = (() => {
 
   // ─── Helpers ──────────────────────────────────────────────────────
 
-  // Delegate to shared Sanitizer utility
+  // Delegate to shared Sanitizer utility — Sanitizer.escapeAttr escapes all
+  // five attribute-sensitive chars (& < > " ') whereas this module's former
+  // local escapeAttr missed < and >, allowing attribute injection if a
+  // field value contained them.
   const escapeHtml = (text) => Sanitizer.escapeHTML(text);
-
-  function escapeAttr(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  const escapeAttr = (text) => Sanitizer.escapeAttr(text);
 
   // ─── Location Filter ─────────────────────────────────────────────
 
