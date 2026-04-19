@@ -6,9 +6,12 @@
 const OrgLogoFeature = (() => {
   let isActive = false;
   let observer = null;
-  let currentLogoUrl = null;
+  let appliedFor = { orgName: null, logoUrl: null }; // what's currently painted
   let isApplying = false;
+  let applyPending = false; // re-run requested while in-flight
   let debounceTimer = null;
+  let consecutiveRetries = 0; // runaway-guard for applyPending re-runs
+  const MAX_RETRIES = 3;
 
   function init() {
     if (isActive) return;
@@ -32,26 +35,68 @@ const OrgLogoFeature = (() => {
   }
 
   function handleOrgChange() {
-    currentLogoUrl = null; // Force re-fetch for new org
+    // Invalidate what's painted so applyLogo won't early-return as up-to-date.
+    appliedFor = { orgName: null, logoUrl: null };
+    consecutiveRetries = 0; // fresh state
     applyLogo();
   }
 
   async function applyLogo() {
-    if (isApplying) return;
+    if (isApplying) {
+      applyPending = true;
+      return;
+    }
     isApplying = true;
 
     try {
       const switcher = findSwitcher();
       if (!switcher) return;
 
-      let logoUrl = null;
+      // Fast path: if the observer fired but the active org and the DOM logo
+      // both match what we last painted, skip the async fetch entirely.
+      const orgBefore = window.OrgDetector?.getActiveOrg() || null;
+      const existingImg = switcher.querySelector('.jt-org-logo');
+      if (
+        appliedFor.orgName === orgBefore &&
+        appliedFor.orgName !== null &&
+        existingImg &&
+        existingImg.src === appliedFor.logoUrl
+      ) {
+        consecutiveRetries = 0;
+        return;
+      }
+
+      let resolved = { orgName: null, logoUrl: null };
       if (window.GrantKeyResolver?.getLogoUrl) {
         try {
-          logoUrl = await window.GrantKeyResolver.getLogoUrl();
+          resolved = await window.GrantKeyResolver.getLogoUrl();
         } catch (e) {
           console.error('OrgLogo: Failed to get logo URL:', e);
         }
       }
+
+      const orgNow = window.OrgDetector?.getActiveOrg() || null;
+
+      // Guard: the fetched data must correspond to the currently-active org.
+      // If mismatch, queue a re-run — the next pass will pull from cache and paint.
+      // orgBefore is intentionally NOT checked; if OrgDetector only became ready
+      // during the await, and resolved.orgName matches orgNow, we can paint.
+      if (resolved.orgName !== orgNow) {
+        if (consecutiveRetries < MAX_RETRIES) {
+          console.debug(`OrgLogo: org mismatch (fetched-for: ${resolved.orgName}, active: ${orgNow}) — re-run scheduled (${consecutiveRetries + 1}/${MAX_RETRIES})`);
+          applyPending = true;
+        } else {
+          console.warn('OrgLogo: hit max retries on org mismatch, giving up for now');
+          consecutiveRetries = 0;
+        }
+        return;
+      }
+
+      // Reached a stable state — reset retry counter
+      consecutiveRetries = 0;
+
+      const svgs = switcher.querySelectorAll('svg');
+      let logoUrl = resolved.logoUrl;
 
       // Restrict to HTTPS only. The portal is the admin-controlled source of
       // this URL, but defense-in-depth: reject javascript:/data:/blob:/http:
@@ -69,17 +114,19 @@ const OrgLogoFeature = (() => {
         }
       }
 
-      const svgs = switcher.querySelectorAll('svg');
-
       if (!logoUrl) {
         removeLogo(switcher);
         svgs.forEach(svg => svg.style.display = '');
-        currentLogoUrl = null;
+        appliedFor = { orgName: orgNow, logoUrl: null };
         return;
       }
 
-      // Skip if same logo already applied and element exists
-      if (logoUrl === currentLogoUrl && switcher.querySelector('.jt-org-logo')) {
+      // Already painted this exact (org, URL) pair
+      if (
+        appliedFor.orgName === orgNow &&
+        appliedFor.logoUrl === logoUrl &&
+        switcher.querySelector('.jt-org-logo')
+      ) {
         return;
       }
 
@@ -97,32 +144,43 @@ const OrgLogoFeature = (() => {
           console.warn('OrgLogo: Image failed to load:', logoUrl);
           img.remove();
           svgs.forEach(svg => svg.style.display = '');
-          currentLogoUrl = null;
+          appliedFor = { orgName: null, logoUrl: null };
         };
         switcher.prepend(img);
       }
 
       img.src = logoUrl;
-      currentLogoUrl = logoUrl;
+      appliedFor = { orgName: orgNow, logoUrl };
 
-      // Re-connect observer after DOM changes
       if (observer) {
         observer.observe(document.body, { childList: true, subtree: true });
       }
     } finally {
       isApplying = false;
+      if (applyPending) {
+        applyPending = false;
+        consecutiveRetries++;
+        // 150ms backoff so we don't busy-loop if OrgDetector keeps racing us
+        setTimeout(() => applyLogo(), 150);
+      }
     }
   }
 
+  /**
+   * Locate the org switcher element.
+   *
+   * The switcher is a `div.relative.rounded-sm` that contains BOTH an <svg>
+   * (the JT logo icon) AND a <select> (the org dropdown). Other
+   * `.relative.rounded-sm` elements in the JT header (Quick Notes, clock,
+   * bell, help, etc.) also have SVGs but never have a <select> — so the
+   * <select> child is the reliable discriminator.
+   */
   function findSwitcher() {
     const candidates = document.querySelectorAll('div.relative.rounded-sm');
     for (const el of candidates) {
-      if (el.querySelector('svg') && el.closest('header, nav, [class*="header"]')) {
+      if (el.querySelector('select') && el.querySelector('svg')) {
         return el;
       }
-    }
-    for (const el of candidates) {
-      if (el.querySelector('svg')) return el;
     }
     return null;
   }
@@ -152,8 +210,10 @@ const OrgLogoFeature = (() => {
       switcher.querySelectorAll('svg').forEach(svg => svg.style.display = '');
     }
 
-    currentLogoUrl = null;
+    appliedFor = { orgName: null, logoUrl: null };
     isApplying = false;
+    applyPending = false;
+    consecutiveRetries = 0;
     isActive = false;
     console.log('OrgLogo: Cleaned up');
   }

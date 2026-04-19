@@ -7,6 +7,7 @@
 const GrantKeyResolver = (() => {
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   let cache = {}; // { orgName: { grantKey, orgId, expiresAt } }
+  let inFlight = {}; // { orgName: Promise<grantKey|null> } — dedup concurrent fetches
   let toastShownForOrgs = new Set();
 
   /**
@@ -64,35 +65,49 @@ const GrantKeyResolver = (() => {
       return cached.grantKey;
     }
 
-    try {
-      const response = await chrome.runtime.sendMessage({
-        type: 'FETCH_EXTENSION_GRANT_KEY',
-        orgName
-      });
-
-      if (response && response.success && response.grantKey) {
-        cache[orgName] = {
-          grantKey: response.grantKey,
-          orgId: response.orgId,
-          logoUrl: response.logoUrl || null,
-          expiresAt: Date.now() + CACHE_TTL,
-        };
-        toastShownForOrgs.delete(orgName);
-        return response.grantKey;
-      }
-
-      // We have an org name, so we're in multi-org mode.
-      // NEVER fall back to legacy keys — that would return another org's key.
-      if (!toastShownForOrgs.has(orgName)) {
-        toastShownForOrgs.add(orgName);
-        showMissingKeyToast(orgName);
-      }
-      return null;
-    } catch (err) {
-      // Any error (network, context invalidated, etc.) when we have an org name:
-      // return null, not legacy keys. Legacy keys belong to a different org.
-      return null;
+    // Dedup: if a fetch for this org is already in flight, return the same promise.
+    // Prevents rapid org-switch (A→B→A) from firing parallel fetches that can
+    // write results back to the cache out of order.
+    if (inFlight[orgName]) {
+      return inFlight[orgName];
     }
+
+    const fetchPromise = (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: 'FETCH_EXTENSION_GRANT_KEY',
+          orgName
+        });
+
+        if (response && response.success && response.grantKey) {
+          cache[orgName] = {
+            grantKey: response.grantKey,
+            orgId: response.orgId,
+            logoUrl: response.logoUrl || null,
+            expiresAt: Date.now() + CACHE_TTL,
+          };
+          toastShownForOrgs.delete(orgName);
+          return response.grantKey;
+        }
+
+        // We have an org name, so we're in multi-org mode.
+        // NEVER fall back to legacy keys — that would return another org's key.
+        if (!toastShownForOrgs.has(orgName)) {
+          toastShownForOrgs.add(orgName);
+          showMissingKeyToast(orgName);
+        }
+        return null;
+      } catch (err) {
+        // Any error (network, context invalidated, etc.) when we have an org name:
+        // return null, not legacy keys. Legacy keys belong to a different org.
+        return null;
+      } finally {
+        delete inFlight[orgName];
+      }
+    })();
+
+    inFlight[orgName] = fetchPromise;
+    return fetchPromise;
   }
 
   async function getFallbackGrantKey() {
@@ -174,28 +189,31 @@ const GrantKeyResolver = (() => {
     toastShownForOrgs.clear();
   }
 
-  window.addEventListener('jt-org-changed', () => {
-    // Don't clear cache — new org might already be cached
-  });
+  // Note: we deliberately do NOT clear the cache on `jt-org-changed`.
+  // The cache is keyed by orgName, so each org has its own independent
+  // entry — switching orgs reads the correct entry. In-flight fetch dedup
+  // (see `inFlight` above) handles the rapid-switch race.
 
   /**
    * Get the logo URL for the current org from cached grant key data.
-   * Returns null if no logo set or no cache.
+   * Returns { orgName, logoUrl } so callers can verify the response matches
+   * the org that was active when they called. Caller is expected to compare
+   * the returned orgName against the currently-active org before painting.
    */
   async function getLogoUrl() {
     const orgName = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
-    if (!orgName) return null;
+    if (!orgName) return { orgName: null, logoUrl: null };
 
     const cached = cache[orgName];
     if (cached && cached.expiresAt > Date.now() && cached.logoUrl !== undefined) {
-      return cached.logoUrl;
+      return { orgName, logoUrl: cached.logoUrl };
     }
 
-    // Trigger a fetch to populate cache
+    // Trigger a fetch to populate cache (deduped via inFlight)
     await getGrantKey();
 
     const refreshedCache = cache[orgName];
-    return refreshedCache?.logoUrl || null;
+    return { orgName, logoUrl: refreshedCache?.logoUrl || null };
   }
 
   return { getGrantKey, getLogoUrl, invalidateCache, getFallbackGrantKey };

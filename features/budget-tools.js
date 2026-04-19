@@ -23,6 +23,35 @@ const BudgetTools = (() => {
   // Key: row number string (e.g. "42"). Value: { cost, price, isTbd }
   const selectionMap = new Map();
 
+  // Columns we already sum elsewhere (Cost/Price in the main panel) or that
+  // aren't number-typed. Detection skips these — anything NOT in this set is
+  // a candidate for number-custom-field classification.
+  const BUILTIN_COLUMN_LABELS = new Set([
+    'Line Item',
+    'Name',
+    'Description',
+    'Cost Code',
+    'Cost Type',
+    'Quantity',
+    'Unit',
+    'Unit Cost',
+    'Unit Price',
+    'Cost',
+    'Price',
+    'Extended Cost',
+    'Extended Price',
+    'Profit',
+    'Margin',
+    'Retainage',
+    'Tax',
+    'Status',
+  ]);
+
+  // Cached number-custom-field classification. Invalidates when the set of
+  // header labels changes (user adds/removes/renames a column).
+  // Shape: { signature: string, fields: [{ name: string, colIndex: number }] }
+  let numberCustomFieldsCache = { signature: null, fields: [] };
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   function isBudgetPage() {
@@ -64,6 +93,74 @@ const BudgetTools = (() => {
   }
 
   /**
+   * Detect which non-built-in columns are number-typed custom fields.
+   *
+   * Heuristic: for each header label NOT in BUILTIN_COLUMN_LABELS,
+   * sample up to the first 3 loaded non-group rows. A column is classified
+   * as "number" when:
+   *   - ≥1 sample row has an <input> with class `text-right` whose value
+   *     parses as a finite number, AND
+   *   - no sample row has a non-empty input that fails the above check
+   *
+   * Results are cached by header-signature so repeated sync cycles don't
+   * re-scan the DOM.
+   *
+   * @param {Record<string, number>} colIndices - label → column-child-index map
+   * @returns {Array<{name: string, colIndex: number}>}
+   */
+  function detectNumberCustomFields(colIndices) {
+    const entries = Object.entries(colIndices).sort(([a], [b]) => a.localeCompare(b));
+    const signature = entries.map(([k, v]) => `${k}:${v}`).join('|');
+    if (numberCustomFieldsCache.signature === signature) {
+      return numberCustomFieldsCache.fields;
+    }
+
+    const candidates = entries.filter(([name]) => !BUILTIN_COLUMN_LABELS.has(name));
+    if (candidates.length === 0) {
+      numberCustomFieldsCache = { signature, fields: [] };
+      return [];
+    }
+
+    // Collect first 3 loaded, non-group rows for sampling
+    const allRows = Array.from(document.querySelectorAll('.flex.min-w-max'));
+    const sampleRows = [];
+    for (const row of allRows) {
+      if (sampleRows.length >= 3) break;
+      if (getRowKey(row) && !isGroupRow(row)) sampleRows.push(row);
+    }
+
+    const fields = [];
+    for (const [name, colIndex] of candidates) {
+      let voteYes = 0;
+      let disqualified = false;
+
+      for (const row of sampleRows) {
+        const cell = row.children[colIndex];
+        if (!cell) continue;
+        const input = cell.querySelector('input');
+        if (!input) continue; // abstain — cell has no input
+        const raw = input.value;
+        if (raw === '' || raw == null) continue; // empty — abstain
+        const hasTextRight = input.classList.contains('text-right');
+        const parsed = parseFloat(raw);
+        if (hasTextRight && Number.isFinite(parsed)) {
+          voteYes++;
+        } else {
+          disqualified = true;
+          break;
+        }
+      }
+
+      if (!disqualified && voteYes >= 1) {
+        fields.push({ name, colIndex });
+      }
+    }
+
+    numberCustomFieldsCache = { signature, fields };
+    return fields;
+  }
+
+  /**
    * Stable key for a line item row — the row number shown in the leftmost cell.
    * This survives lazy unload/reload since the row number is tied to data position.
    */
@@ -96,6 +193,7 @@ const BudgetTools = (() => {
    * - Not in DOM                → leave in map (lazy-unloaded, still selected)
    */
   function syncSelectionMap(colIndices) {
+    const numberCustomFields = detectNumberCustomFields(colIndices);
     const allVisibleRows = document.querySelectorAll('.flex.min-w-max');
 
     for (const row of allVisibleRows) {
@@ -116,10 +214,20 @@ const BudgetTools = (() => {
       if (isSelected) {
         const costRaw = getCellValue(row.children[colIndices['Extended Cost']]);
         const priceRaw = getCellValue(row.children[colIndices['Extended Price']]);
+
+        const custom = {};
+        for (const { name, colIndex } of numberCustomFields) {
+          const raw = getCellValue(row.children[colIndex]);
+          if (raw === '') continue;
+          const parsed = parseFloat(raw);
+          if (Number.isFinite(parsed)) custom[name] = parsed;
+        }
+
         selectionMap.set(key, {
           cost: parseCurrency(costRaw),
           price: parseCurrency(priceRaw),
-          isTbd: costRaw === 'TBD'
+          isTbd: costRaw === 'TBD',
+          custom,
         });
       } else {
         // Visible but not selected — user deselected, not a lazy unload
@@ -154,6 +262,16 @@ const BudgetTools = (() => {
     const abs = Math.abs(val);
     const formatted = abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return (val < 0 ? '-$' : '$') + formatted;
+  }
+
+  /**
+   * Format a number for display in custom-field rows. Uses locale thousands
+   * separators and caps fractional digits at 4 to avoid floating-point noise
+   * (0.1 + 0.2 = 0.30000000000000004 → "0.3").
+   */
+  function formatNumber(n) {
+    if (!Number.isFinite(n)) return String(n);
+    return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   }
 
   // ─── Theme detection ─────────────────────────────────────────────────────
@@ -305,6 +423,55 @@ const BudgetTools = (() => {
     }
 
     el.appendChild(grid);
+
+    // ─── Custom Fields section ──────────────────────────────────────────
+    // Aggregate every number custom field across the persisted selection.
+    // A field shows up only when at least one selected row had a value.
+    const customSums = Object.create(null);
+    for (const entry of selectionMap.values()) {
+      if (!entry.custom) continue;
+      for (const [name, val] of Object.entries(entry.custom)) {
+        customSums[name] = (customSums[name] ?? 0) + val;
+      }
+    }
+    const customNames = Object.keys(customSums);
+
+    if (customNames.length > 0) {
+      const section = document.createElement('div');
+      section.style.cssText =
+        `margin-top:10px;padding-top:8px;border-top:1px solid ${t.border};`;
+
+      const subheader = document.createElement('div');
+      subheader.style.cssText =
+        `font-size:11px;font-weight:700;color:${t.heading};` +
+        `text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;`;
+      subheader.textContent = 'Custom Fields';
+      section.appendChild(subheader);
+
+      const customGrid = document.createElement('div');
+      customGrid.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+
+      // Sort alphabetically for stable display order across cycles
+      for (const name of customNames.sort()) {
+        const rowEl = document.createElement('div');
+        rowEl.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;';
+
+        const label = document.createElement('span');
+        label.style.cssText = `font-size:12px;color:${t.heading};`;
+        label.textContent = name;
+
+        const value = document.createElement('span');
+        value.style.cssText = `font-size:12px;font-weight:600;color:${t.text};`;
+        value.textContent = formatNumber(customSums[name]);
+
+        rowEl.appendChild(label);
+        rowEl.appendChild(value);
+        customGrid.appendChild(rowEl);
+      }
+
+      section.appendChild(customGrid);
+      el.appendChild(section);
+    }
   }
 
   // ─── Core logic ───────────────────────────────────────────────────────────
@@ -422,6 +589,7 @@ const BudgetTools = (() => {
     if (injectedPanel && injectedPanel.parentElement) injectedPanel.remove();
     injectedPanel = null;
     selectionMap.clear();
+    numberCustomFieldsCache = { signature: null, fields: [] };
     isActive = false;
 
     console.log('BudgetTools: Cleaned up');
