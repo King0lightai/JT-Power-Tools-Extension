@@ -75,13 +75,19 @@ const BudgetTools = (() => {
 
   /**
    * Build a map of column name → child index from the budget header row.
-   * The header row is a .flex.min-w-max without any textareas that contains
-   * the column labels (Extended Cost, Extended Price, etc.).
+   * The header row is a .flex.min-w-max without any textareas whose child
+   * cells include at least one known built-in column label. We match on
+   * cell-level text (not whole-row textContent) and accept any builtin —
+   * not just "Extended Cost" — so budgets without that specific column
+   * still get column detection (and therefore custom-field detection).
    */
   function getColumnIndices() {
-    const headerRow = Array.from(document.querySelectorAll('.flex.min-w-max')).find(r =>
-      !r.querySelector('textarea') && r.textContent.includes('Extended Cost')
-    );
+    const headerRow = Array.from(document.querySelectorAll('.flex.min-w-max')).find(r => {
+      if (r.querySelector('textarea')) return false;
+      return Array.from(r.children).some(c =>
+        BUILTIN_COLUMN_LABELS.has(c.innerText?.trim())
+      );
+    });
     if (!headerRow) return {};
 
     const map = {};
@@ -376,7 +382,7 @@ const BudgetTools = (() => {
     countEl.textContent = `${count} visible item${count !== 1 ? 's' : ''} counted${tbdNote} — scroll to count more`;
     el.appendChild(countEl);
 
-    // Data rows
+    // Money rows (Extended Cost, Extended Price, Profit)
     const dataRows = [];
     if (hasCost && countWithCost > 0) {
       dataRows.push({ label: 'Extended Cost', value: formatCurrency(totalCost), color: null });
@@ -393,40 +399,9 @@ const BudgetTools = (() => {
       });
     }
 
-    if (dataRows.length === 0) {
-      const empty = document.createElement('div');
-      empty.style.cssText = `font-size:12px;color:${t.secondary};`;
-      empty.textContent = 'No cost/price data available for selected rows.';
-      el.appendChild(empty);
-      return;
-    }
-
-    const grid = document.createElement('div');
-    grid.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
-
-    for (const row of dataRows) {
-      const rowEl = document.createElement('div');
-      rowEl.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;' +
-        (row.border ? `border-top:1px solid ${t.border};padding-top:5px;margin-top:1px;` : '');
-
-      const label = document.createElement('span');
-      label.style.cssText = `font-size:12px;color:${t.heading};`;
-      label.textContent = row.label;
-
-      const value = document.createElement('span');
-      value.style.cssText = `font-size:12px;font-weight:600;color:${row.color || t.text};`;
-      value.textContent = row.value;
-
-      rowEl.appendChild(label);
-      rowEl.appendChild(value);
-      grid.appendChild(rowEl);
-    }
-
-    el.appendChild(grid);
-
-    // ─── Custom Fields section ──────────────────────────────────────────
-    // Aggregate every number custom field across the persisted selection.
-    // A field shows up only when at least one selected row had a value.
+    // Aggregate number custom fields across the persisted selection. Computed
+    // before the empty-state check so custom-field totals render even when
+    // Cost/Price columns aren't visible (or all rows are TBD).
     const customSums = Object.create(null);
     for (const entry of selectionMap.values()) {
       if (!entry.custom) continue;
@@ -436,10 +411,46 @@ const BudgetTools = (() => {
     }
     const customNames = Object.keys(customSums);
 
+    if (dataRows.length === 0 && customNames.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = `font-size:12px;color:${t.secondary};`;
+      empty.textContent = 'No cost/price data available for selected rows.';
+      el.appendChild(empty);
+      return;
+    }
+
+    if (dataRows.length > 0) {
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+
+      for (const row of dataRows) {
+        const rowEl = document.createElement('div');
+        rowEl.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;' +
+          (row.border ? `border-top:1px solid ${t.border};padding-top:5px;margin-top:1px;` : '');
+
+        const label = document.createElement('span');
+        label.style.cssText = `font-size:12px;color:${t.heading};`;
+        label.textContent = row.label;
+
+        const value = document.createElement('span');
+        value.style.cssText = `font-size:12px;font-weight:600;color:${row.color || t.text};`;
+        value.textContent = row.value;
+
+        rowEl.appendChild(label);
+        rowEl.appendChild(value);
+        grid.appendChild(rowEl);
+      }
+
+      el.appendChild(grid);
+    }
+
     if (customNames.length > 0) {
       const section = document.createElement('div');
-      section.style.cssText =
-        `margin-top:10px;padding-top:8px;border-top:1px solid ${t.border};`;
+      // Only draw the separator when there's a money-rows section above to
+      // separate from — otherwise the divider floats under the header.
+      section.style.cssText = dataRows.length > 0
+        ? `margin-top:10px;padding-top:8px;border-top:1px solid ${t.border};`
+        : '';
 
       const subheader = document.createElement('div');
       subheader.style.cssText =
