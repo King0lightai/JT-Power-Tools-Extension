@@ -1,0 +1,73 @@
+/* Design tokens — light-first with dark-mode toggle */
+
+/* Light (default) */
+:root {
+  --bg: #F5F1EA;
+  --surface: #FFFFFF;
+  --surface-inset: #EDE7DC;
+  --peach: #FDD9BE;
+  --ink: #1A1A1A;
+  --ink-muted: #5A5A5A;
+  --ink-subtle: #8A8A8A;
+  --ink-italic: #6B5E4E;
+  --border: #E3DCCF;
+  --border-strong: #1A1A1A;
+
+  /* Brand / accents (shared light+dark) */
+  --orange: #FE4C0D;
+  --orange-dark: #D94000;
+  --teal: #00C896;
+  --purple: #A855F7;
+  --navy: #14315F;
+  --navy-grid-minor: rgba(255,255,255,0.06);
+  --navy-grid-major: rgba(255,255,255,0.10);
+  --hazard: #FFC43C;
+  --blue-electric: #7AB5FF;
+
+  /* Type */
+  --font-display: 'Anton', Impact, 'Arial Black', sans-serif;
+  --font-sub: 'Oswald', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  /* Spacing & radius */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  --dur: 0.22s;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Dark */
+html[data-theme="dark"] {
+  --bg: #333333;
+  --surface: #3F3F3F;
+  --surface-inset: #2B2B2B;
+  --peach: #3F2F24;
+  --ink: #F2EDE3;
+  --ink-muted: #BEBEBE;
+  --ink-subtle: #949494;
+  --ink-italic: #CEBFA8;
+  --border: #4A4A4A;
+  --border-strong: #F2EDE3;
+}
+
+/* Respect prefers-color-scheme on first load (theme.js overrides if user chose) */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --bg: #333333;
+    --surface: #3F3F3F;
+    --surface-inset: #2B2B2B;
+    --peach: #3F2F24;
+    --ink: #F2EDE3;
+    --ink-muted: #BEBEBE;
+    --ink-subtle: #949494;
+    --ink-italic: #CEBFA8;
+    --border: #4A4A4A;
+    --border-strong: #F2EDE3;
+  }
+}
