@@ -1035,6 +1035,10 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 .s-pricing-btn--pro:hover { background: var(--orange); color: #fff; }
 .s-pricing-btn--power { border-color: var(--purple); color: var(--purple); background: transparent; }
 .s-pricing-btn--power:hover { background: var(--purple); color: #fff; }
+/* Gumroad overlay script injects a <span class="logo-full"> after the
+   button text when the href points at a gumroad.com/l/ URL. Hide it so
+   the tier-specific styling stays clean. */
+.s-pricing-btn .logo-full { display: none; }
 
 .s-pricing-trial {
   font-family: var(--font-sub);
