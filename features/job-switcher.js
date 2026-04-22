@@ -645,8 +645,11 @@ const SmartJobSwitcherFeature = (() => {
       return;
     }
 
-    // If sidebar is open and Enter is pressed, select top job and close
-    if (isSearchOpen && e.key === 'Enter') {
+    // If sidebar is open (regardless of who opened it) and Enter is pressed,
+    // select top job and close. We check DOM presence rather than isSearchOpen
+    // because the user may have opened the sidebar by clicking the job name
+    // directly — in that path our code never runs and isSearchOpen stays false.
+    if (e.key === 'Enter' && document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0')) {
       // Try multiple selectors for the search input
       const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
                          document.querySelector('div.z-30.absolute input[type="text"]') ||
@@ -671,8 +674,8 @@ const SmartJobSwitcherFeature = (() => {
       }
     }
 
-    // Close sidebar on Escape
-    if (isSearchOpen && e.key === 'Escape') {
+    // Close sidebar on Escape — same DOM-presence reasoning as Enter above
+    if (e.key === 'Escape' && document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0')) {
       // Skip if the active element is a custom field filter input
       // Let the filter handle Escape first (e.g., to cancel save input)
       const activeEl2 = document.activeElement;
@@ -758,65 +761,65 @@ const SmartJobSwitcherFeature = (() => {
    * Close the job switcher sidebar
    */
   function closeSidebar() {
-    if (!isSearchOpen) {
+    // Find the sidebar
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (!sidebar) {
+      // Nothing to close — reset our flag in case it drifted out of sync
+      isSearchOpen = false;
       return;
     }
 
-    // Find the sidebar
-    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
-    if (sidebar) {
-      // Strategy 1: Find the close button by looking for X icon or Close text
-      const allButtons = sidebar.querySelectorAll('div[role="button"]');
-      let closeButton = null;
+    // Strategy 1: Find the close button by looking for X icon or Close text
+    const allButtons = sidebar.querySelectorAll('div[role="button"]');
+    let closeButton = null;
 
-      for (const button of allButtons) {
-        const text = button.textContent.trim();
-        // Look for close button indicators
-        if (text === 'Close' || text === '×' || text === 'X') {
-          closeButton = button;
-          break;
-        }
-        // Check for X icon SVG (close icon typically has M18 6 or similar path for X shape)
-        const svg = button.querySelector('svg');
-        if (svg) {
-          const paths = svg.querySelectorAll('path');
-          for (const path of paths) {
-            const d = path.getAttribute('d') || '';
-            // Common X/close icon path patterns
-            if (d.includes('M18 6') || d.includes('m18 6') ||
-                d.includes('M6 18') || d.includes('m6 18') ||
-                (d.includes('18') && d.includes('6') && d.length < 50)) {
-              closeButton = button;
-              break;
-            }
-          }
-          if (closeButton) break;
-        }
+    for (const button of allButtons) {
+      const text = button.textContent.trim();
+      // Look for close button indicators
+      if (text === 'Close' || text === '×' || text === 'X') {
+        closeButton = button;
+        break;
       }
-
-      if (closeButton) {
-        closeButton.click();
-      } else {
-        // Strategy 2: Try clicking outside the sidebar (on the overlay)
-        const overlay = document.querySelector('div.z-30.absolute.inset-0:not(.top-0)') ||
-                       document.querySelector('div.z-20.fixed.inset-0') ||
-                       document.querySelector('[class*="backdrop"]') ||
-                       document.querySelector('[class*="overlay"]');
-        if (overlay) {
-          overlay.click();
-        } else {
-          // Strategy 3: Dispatch Escape key to close
-          const escEvent = new KeyboardEvent('keydown', {
-            key: 'Escape',
-            code: 'Escape',
-            keyCode: 27,
-            which: 27,
-            bubbles: true,
-            cancelable: true
-          });
-          sidebar.dispatchEvent(escEvent);
-          document.dispatchEvent(escEvent);
+      // Check for X icon SVG (close icon typically has M18 6 or similar path for X shape)
+      const svg = button.querySelector('svg');
+      if (svg) {
+        const paths = svg.querySelectorAll('path');
+        for (const path of paths) {
+          const d = path.getAttribute('d') || '';
+          // Common X/close icon path patterns
+          if (d.includes('M18 6') || d.includes('m18 6') ||
+              d.includes('M6 18') || d.includes('m6 18') ||
+              (d.includes('18') && d.includes('6') && d.length < 50)) {
+            closeButton = button;
+            break;
+          }
         }
+        if (closeButton) break;
+      }
+    }
+
+    if (closeButton) {
+      closeButton.click();
+    } else {
+      // Strategy 2: Try clicking outside the sidebar (on the overlay)
+      const overlay = document.querySelector('div.z-30.absolute.inset-0:not(.top-0)') ||
+                     document.querySelector('div.z-20.fixed.inset-0') ||
+                     document.querySelector('[class*="backdrop"]') ||
+                     document.querySelector('[class*="overlay"]');
+      if (overlay) {
+        overlay.click();
+      } else {
+        // Strategy 3: Dispatch Escape key to close
+        const escEvent = new KeyboardEvent('keydown', {
+          key: 'Escape',
+          code: 'Escape',
+          keyCode: 27,
+          which: 27,
+          bubbles: true,
+          cancelable: true
+        });
+        sidebar.dispatchEvent(escEvent);
+        document.dispatchEvent(escEvent);
       }
     }
 

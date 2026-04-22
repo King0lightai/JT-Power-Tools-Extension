@@ -42,6 +42,7 @@ const BudgetTools = (() => {
     'Extended Price',
     'Profit',
     'Margin',
+    'Markup',
     'Retainage',
     'Tax',
     'Status',
@@ -215,7 +216,7 @@ const BudgetTools = (() => {
       // classList.contains is safe for both HTML and SVG elements; c.className
       // on an SVG element is a SVGAnimatedString (not a string), so
       // c.className?.includes would silently skip SVG children.
-      const isSelected = Array.from(row.children).some(c => c.classList?.contains?.('bg-blue-100'));
+      const isSelected = Array.from(row.children).some(c => c.classList?.contains?.('bg-blue-50'));
 
       if (isSelected) {
         const costRaw = getCellValue(row.children[colIndices['Extended Cost']]);

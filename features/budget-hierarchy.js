@@ -252,6 +252,17 @@ const BudgetHierarchyFeature = (() => {
         background-color: transparent !important;
         z-index: 1 !important;
       }
+
+      /* Document view indents: pl-2 (display view) / pl-2.5 (edit panel) / pr-2 right indents */
+      /* These have bg-white on the spacer itself, which hides the parent row's shading */
+      [class*="jt-group-level-"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pl-2.border-r-2,
+      [class*="jt-group-level-"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pl-2\\.5.border-r-2,
+      [class*="jt-group-level-"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pr-2.border-l-2,
+      [class*="jt-item-under-level-"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pl-2.border-r-2,
+      [class*="jt-item-under-level-"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pl-2\\.5.border-r-2,
+      [class*="jt-item-under-level-"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pr-2.border-l-2 {
+        background-color: inherit !important;
+      }
     `;
 
     document.head.appendChild(styleElement);
@@ -386,7 +397,89 @@ const BudgetHierarchyFeature = (() => {
       return true;
     }
 
+    // Document pages can contain budget tables (PDA, HIA, Change Orders, etc.)
+    if (path.includes('/documents/') || path.includes('/document/')) {
+      return true;
+    }
+
     return false;
+  }
+
+  // Apply shading to document display budget tables (PDA/HIA/Change Order PDFs)
+  // Structure differs from the budget page: rows are `div.flex.min-w-max` inside
+  // `div.border-b`, main cell is 175px wide, groups are marked by `bg-gray-100`
+  // on the outer cell with a `font-bold` inner content div. Indents use
+  // `pl-2 border-r-2` (left) and `pr-2 border-l-2` (right) instead of pl-3.5.
+  function applyDocumentDisplayShading() {
+    const rows = document.querySelectorAll('div.flex.min-w-max');
+    const rowInfo = [];
+
+    rows.forEach(row => {
+      // Skip edit items panel rows — they use `select-none group` and have a
+      // different structure; the main budget-page pass handles 300px groups.
+      if (row.classList.contains('select-none')) return;
+
+      const firstCell = row.querySelector(':scope > div.shrink-0');
+      if (!firstCell) return;
+      const style = firstCell.getAttribute('style') || '';
+      if (!style.includes('width: 175px')) return;
+
+      // Count left indents — direct children with border-r-2 (pl-2 or ml-2)
+      const indentCount = firstCell.querySelectorAll(':scope > div.border-r-2').length;
+      const level = Math.min(indentCount + 1, 5);
+
+      // Group marker: outer cell has bg-gray-100 AND content cell contains font-bold
+      const contentCell = firstCell.querySelector(':scope > div.min-w-0.p-2');
+      const hasFontBold = contentCell ? contentCell.querySelector('.font-bold') !== null : false;
+      const isGroup = firstCell.classList.contains('bg-gray-100') && hasFontBold;
+
+      rowInfo.push({ row, depth: indentCount, level, isGroup });
+    });
+
+    // Shade groups only. Items keep their default background so groups stay
+    // visually distinct — otherwise every row under a group looks identical to
+    // the group itself, collapsing the hierarchy into a single flat block.
+    rowInfo.forEach(info => {
+      for (let i = 1; i <= 5; i++) {
+        info.row.classList.remove(`jt-group-level-${i}`, `jt-item-under-level-${i}`);
+      }
+      if (info.isGroup) {
+        info.row.classList.add(`jt-group-level-${info.level}`);
+      }
+    });
+  }
+
+  // Apply shading to the Add/Edit Items sidebar on document pages.
+  // Row marker: `div.flex.min-w-max.select-none.group`. The 350px name cell is
+  // the second child and carries `font-bold` on group rows. Indents are
+  // `pl-2.5 border-r-2` direct children of the name cell (the chevron button
+  // has its own nested pl-2.5 border-r-2 but we only count direct children).
+  function applyEditPanelShading() {
+    const rows = document.querySelectorAll('div.flex.min-w-max.select-none.group');
+    const rowInfo = [];
+
+    rows.forEach(row => {
+      // Find the 350px name cell — second direct child (after the 30px row-number cell)
+      const nameCell = row.querySelector(':scope > div.shrink-0[style*="width: 350px"]');
+      if (!nameCell) return;
+
+      const indentCount = nameCell.querySelectorAll(':scope > div.border-r-2').length;
+      const level = Math.min(indentCount + 1, 5);
+      const isGroup = nameCell.classList.contains('font-bold');
+
+      rowInfo.push({ row, depth: indentCount, level, isGroup });
+    });
+
+    // Shade groups only; items keep their default bg-white so the hierarchy
+    // is visible. See applyDocumentDisplayShading for rationale.
+    rowInfo.forEach(info => {
+      for (let i = 1; i <= 5; i++) {
+        info.row.classList.remove(`jt-group-level-${i}`, `jt-item-under-level-${i}`);
+      }
+      if (info.isGroup) {
+        info.row.classList.add(`jt-group-level-${info.level}`);
+      }
+    });
   }
 
   // Apply shading to all groups
@@ -431,6 +524,12 @@ const BudgetHierarchyFeature = (() => {
           row.classList.add(`jt-item-under-level-${parentGroup.level}`);
         }
       });
+
+      // Also handle document display views (PDA/HIA tables rendered on /documents/ pages)
+      applyDocumentDisplayShading();
+
+      // Also handle the Add/Edit Items sidebar on document pages (editable budget table)
+      applyEditPanelShading();
     } finally {
       // Drain any mutation records our own class changes just queued so the
       // observer callback doesn't see them and schedule another apply.
@@ -483,7 +582,12 @@ const BudgetHierarchyFeature = (() => {
               if (node.classList?.contains('font-bold') ||
                   node.classList?.contains('group/row') ||
                   node.querySelector?.('div.font-bold.flex[style*="width: 300px"]') ||
-                  node.querySelector?.('.group\\/row')) {
+                  node.querySelector?.('.group\\/row') ||
+                  // Document display budget tables (PDA/HIA rendered on /documents/ pages)
+                  node.querySelector?.('div.flex.min-w-max > div.shrink-0[style*="width: 175px"]') ||
+                  // Document Add/Edit Items sidebar rows
+                  node.classList?.contains('select-none') ||
+                  node.querySelector?.('div.flex.min-w-max.select-none.group')) {
                 shouldReapply = true;
               }
             }
