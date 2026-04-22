@@ -350,17 +350,18 @@ html[data-theme="dark"] .nav-brand-mark .nav-brand-mark--dark { display: block; 
     color: var(--ink);
   }
   .nav-sheet {
-    display: block;
+    display: none;
     position: fixed;
-    inset: 64px 0 0;
+    top: 64px;
+    left: 0;
+    right: 0;
+    height: calc(100dvh - 64px);
     background: var(--bg);
-    transform: translateY(-100%);
-    transition: transform 0.3s var(--ease);
     padding: 32px 24px;
     overflow-y: auto;
     z-index: 40;
   }
-  .nav-sheet.is-open { transform: translateY(0); }
+  .nav-sheet.is-open { display: block; }
   .nav-sheet a {
     display: block;
     padding: 16px 0;
