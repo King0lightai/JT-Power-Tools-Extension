@@ -167,16 +167,38 @@ const OrgLogoFeature = (() => {
   }
 
   /**
-   * Locate the org switcher element.
+   * Locate the JobTread top header bar.
+   *
+   * Matches the pattern used by freeze-header.js: a `div.shrink-0.sticky`
+   * that contains BOTH the JT logo SVG (viewBox "0 0 120 18" text logo or
+   * "0 0 8 8" icon variant) AND the header search input. Other
+   * `.shrink-0.sticky` elements elsewhere on the page won't have both.
+   */
+  function findTopHeader() {
+    const candidates = document.querySelectorAll('div.shrink-0.sticky');
+    for (const header of candidates) {
+      const hasLogo = header.querySelector('svg[viewBox="0 0 120 18"]') ||
+                      header.querySelector('svg[viewBox="0 0 8 8"]');
+      const hasSearch = header.querySelector('input[placeholder*="Search"]');
+      if (hasLogo && hasSearch) return header;
+    }
+    return null;
+  }
+
+  /**
+   * Locate the org switcher element — strictly inside the top header.
    *
    * The switcher is a `div.relative.rounded-sm` that contains BOTH an <svg>
-   * (the JT logo icon) AND a <select> (the org dropdown). Other
-   * `.relative.rounded-sm` elements in the JT header (Quick Notes, clock,
-   * bell, help, etc.) also have SVGs but never have a <select> — so the
-   * <select> child is the reliable discriminator.
+   * (the JT logo icon) AND a <select> (the org dropdown). The select+svg
+   * combination alone is NOT unique: plenty of form dropdowns elsewhere in
+   * the app render as `<div class="relative rounded-sm"><select/><svg/></div>`
+   * (the svg is the dropdown chevron). Scoping the search to the top header
+   * bar prevents the logo from being injected into random page dropdowns.
    */
   function findSwitcher() {
-    const candidates = document.querySelectorAll('div.relative.rounded-sm');
+    const header = findTopHeader();
+    if (!header) return null;
+    const candidates = header.querySelectorAll('div.relative.rounded-sm');
     for (const el of candidates) {
       if (el.querySelector('select') && el.querySelector('svg')) {
         return el;

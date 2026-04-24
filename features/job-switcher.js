@@ -645,43 +645,34 @@ const SmartJobSwitcherFeature = (() => {
       return;
     }
 
-    // If sidebar is open (regardless of who opened it) and Enter is pressed,
-    // select top job and close. We check DOM presence rather than isSearchOpen
-    // because the user may have opened the sidebar by clicking the job name
-    // directly — in that path our code never runs and isSearchOpen stays false.
-    if (e.key === 'Enter' && document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0')) {
-      // Try multiple selectors for the search input
-      const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
-                         document.querySelector('div.z-30.absolute input[type="text"]') ||
-                         document.querySelector('div.z-30 input');
+    // If the Job Switcher sidebar is open (regardless of who opened it) and
+    // Enter is pressed, select top job and close. We check DOM presence
+    // rather than isSearchOpen because the user may have opened the sidebar
+    // by clicking the job name directly — in that path our code never runs
+    // and isSearchOpen stays false. Scoped to the Job Switcher specifically
+    // so Enter inside other sidebars (e.g., Custom Field Filter) is unaffected.
+    if (e.key === 'Enter') {
+      const jobSwitcherSidebar = findJobSwitcherSidebar();
+      if (jobSwitcherSidebar) {
+        const searchInput = jobSwitcherSidebar.querySelector('input[placeholder*="Search"]') ||
+                           jobSwitcherSidebar.querySelector('input[type="text"]') ||
+                           jobSwitcherSidebar.querySelector('input');
 
-      // Skip if the active element is a custom field filter input (save name, etc.)
-      // These inputs need Enter to work normally for their own handlers
-      const activeEl = document.activeElement;
-      if (activeEl && activeEl.id && activeEl.id.startsWith('jt-cf-')) {
-        return; // Let the custom field filter handle this Enter key
-      }
+        const activeEl = document.activeElement;
+        const isInSidebar = jobSwitcherSidebar.contains(activeEl);
 
-      // If we're in the sidebar (search input exists and is focused, or just in the sidebar)
-      const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
-      const isInSidebar = sidebar && sidebar.contains(activeEl);
-
-      if ((searchInput && activeEl === searchInput) || isInSidebar) {
-        e.preventDefault();
-        e.stopPropagation();
-        selectTopJobAndClose();
-        return;
+        if ((searchInput && activeEl === searchInput) || isInSidebar) {
+          e.preventDefault();
+          e.stopPropagation();
+          selectTopJobAndClose();
+          return;
+        }
       }
     }
 
-    // Close sidebar on Escape — same DOM-presence reasoning as Enter above
-    if (e.key === 'Escape' && document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0')) {
-      // Skip if the active element is a custom field filter input
-      // Let the filter handle Escape first (e.g., to cancel save input)
-      const activeEl2 = document.activeElement;
-      if (activeEl2 && activeEl2.id && activeEl2.id.startsWith('jt-cf-')) {
-        return;
-      }
+    // Close sidebar on Escape — scoped to the Job Switcher sidebar only so
+    // other sidebars handle their own Escape behavior.
+    if (e.key === 'Escape' && findJobSwitcherSidebar()) {
       e.preventDefault();
       e.stopPropagation();
       closeSidebar();
