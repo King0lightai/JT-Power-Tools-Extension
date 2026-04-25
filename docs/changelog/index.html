@@ -50,11 +50,46 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.5.5 — Org Logo Scoping, Job Switcher Shortcut Scoping, Portal Subscription Link Fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.5.5</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">April 25, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Org Logo — No Longer Injected Into Random Page Dropdowns</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Scoped the org-logo injection to the JobTread top header bar only</li>
+                            <li class="sub-item">Previously could land in unrelated form dropdowns that shared the same DOM signature, visually covering or shoving them aside</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Job Switcher — Enter / Escape Stay Inside the Sidebar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Enter-to-select-top-job and Escape-to-close shortcuts now only fire when the Job Switcher sidebar is open</li>
+                            <li class="sub-item">Previously could close unrelated sidebars (Custom Field Filter, etc.) that shared the same generic selector</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Portal — "Manage Subscription" Link Fixed</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Updated the dashboard's Manage Subscription button to point at <code>gumroad.com/library</code> so customers reach their own purchases</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.5.3 — MCP Tool Consolidation, ChatGPT Compat, JWT Auth, Admin Org Logos, Catalog Formatter -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.5.3</span>
-                <span class="version-badge">Current</span>
+                <span class="version-badge"></span>
                 <span class="version-date">April 13, 2026</span>
             </div>
 
