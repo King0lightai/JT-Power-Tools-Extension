@@ -50,11 +50,119 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.7.0 — User Tweaks (Pro), MCP Permission Tiers, Inspect-for-AI -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.7.0</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">April 28, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">User Tweaks — Bring-Your-Own UI Customization (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Author small declarative customizations of the JobTread UI — CSS rules + a closed list of DOM verbs (<code>addClass</code>, <code>removeClass</code>, <code>setStyle</code>, <code>hide</code>, <code>show</code>, <code>setText</code>, <code>onEvent</code>) — that apply automatically when you visit JobTread</li>
+                            <li class="sub-item">New Tweaks tab in the popup: list, toggle, edit, and delete with one click</li>
+                            <li class="sub-item">Standalone editor at <code>chrome-extension://&lt;id&gt;/tweaks/edit.html</code> with live JSON validation, CSS warnings, and "test on active JT tab" dry-run that shows per-selector match counts</li>
+                            <li class="sub-item">Server-backed storage with full version history — every save creates an immutable version row so you can roll back anytime</li>
+                            <li class="sub-item">Defense-in-depth: server-side AST sanitizer rejects <code>@import</code>, <code>expression()</code>, unsafe <code>url()</code>, and bare <code>html</code>/<code>body</code>/<code>*</code> selectors. Auto-scopes every selector to <code>.jt-tweak-{id}</code> so a tweak's styles can't bleed outside its own elements</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Org-Required Tweaks — Push Tweaks to Your Whole Company (Admin)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Admins can mark a tweak as "Required for Org" — it gets pushed to every member of your JobTread organization automatically</li>
+                            <li class="sub-item">Members see a purple "Required" badge on org-pushed tweaks; Edit/Delete buttons hidden (admin-managed)</li>
+                            <li class="sub-item">Local-disable hatch: members can toggle off org-required tweaks on their own device only — admin sees aggregate override counts (never which specific member opted out)</li>
+                            <li class="sub-item">Portal admin page at <code>app.jtpowertools.com</code> → Tweaks tab: list, create, edit, and delete org-required tweaks. New audit panel shows "X of Y members have locally disabled this tweak" so admins can spot underused or annoying tweaks</li>
+                            <li class="sub-item">Scope flips allowed (Personal ↔ Required for Org) — admins can promote a useful personal tweak to org-wide without losing version history</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Inspect-for-AI — Right-Click Capture for AI Authoring (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Alt-click any element on JobTread (or activate Picker mode from the popup) to capture a structured markdown description of that element — CSS selector, ancestor chain, sample of nested elements, current page path, and your JobTread organization name</li>
+                            <li class="sub-item">Captured payload copied straight to your clipboard so you can paste it into your AI assistant (Claude, ChatGPT, Cursor, etc.) and get back a working tweak JSON to paste into "Paste from AI"</li>
+                            <li class="sub-item">Multi-view picker mode: switch JobTread views between captures (table → Gantt → month) and produce one combined AI prompt that covers them all</li>
+                            <li class="sub-item">Keyboard shortcuts: Alt+Shift+P to start single picker, Alt+Shift+M for multi-view</li>
+                            <li class="sub-item">Captures stay 100% local — never transmitted to our servers, only written to your clipboard for you to paste</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Permission Tiers — Admin-Controlled AI Access (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Three-tier permission model per AI grant key: <strong>Read</strong> (query data only), <strong>Read + Write</strong> (also create/update records), <strong>Read + Write + Delete</strong> (full access including destructive ops)</li>
+                            <li class="sub-item">New AI grant keys default to <strong>Read</strong> (least privilege) — admin explicitly opts each key up to write or delete via the portal</li>
+                            <li class="sub-item">Existing AI grant keys grandfathered to full access (Read + Write + Delete) so current AI clients keep working unchanged. Admin can downgrade individual keys at any time</li>
+                            <li class="sub-item">Inline Permission column on the AI Grant Keys table in the portal — change tiers per-key with one click, no modal needed</li>
+                            <li class="sub-item">License-level default picker — set what new keys inherit, never affects existing keys</li>
+                            <li class="sub-item">Op-level enforcement: <code>jt_job_write</code>'s <code>delete</code> op requires Delete tier even if the key has Read+Write — fine-grained protection without a separate tool</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">5 New MCP Tools for AI Tweak Authoring (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jt_list_tweaks</code> + <code>jt_get_tweak</code> — AI can inspect existing tweaks (Read tier)</li>
+                            <li class="sub-item"><code>jt_create_tweak</code> + <code>jt_update_tweak</code> + <code>jt_revert_tweak</code> — AI can author and roll back tweaks (Write tier)</li>
+                            <li class="sub-item">AI-authored tweaks are attributed to the admin who issued the AI key, not anonymized — so the popup shows real ownership instead of "via AI key"</li>
+                            <li class="sub-item">Same defense-in-depth as the popup: server validates DSL + sanitizes CSS on every AI-driven write</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Server-Backed Storage Replaces Local-Only</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Tweaks now sync across your devices and persist when you reinstall the extension — they live on our servers, not just in browser storage</li>
+                            <li class="sub-item">Offline-friendly: extension reads from a local cache first, refreshes from server in the background. If our servers are unreachable your tweaks still work</li>
+                            <li class="sub-item">Engine telemetry (selector match counts, last error) flushes to the server periodically so the popup can show "no matches found" warnings even if you switch devices</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Privacy Policy Refresh</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Updated to disclose User Tweaks server storage, MCP write capabilities + permission tiers, and the Inspect-for-AI clipboard flow</li>
+                            <li class="sub-item">Replaced the outdated "MCP is read-only" claim with the accurate three-tier model</li>
+                            <li class="sub-item">Made explicit that AI prompt content is never seen by our servers (we proxy structured tool calls only) and DOM captures from Inspect-for-AI never leave your clipboard</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Editor Scope Toggle Now Works for Admins</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Three independent bugs were combining to make the Personal ↔ Required for Org radio appear interactive but never actually save the change</li>
+                            <li class="sub-item">Fixed a CSS leak that left the toggle visible to non-admins, an AccountService init race that mis-marked owners as non-admins, and a save-time admin gate that compounded the race</li>
+                            <li class="sub-item">Admins can now flip an existing personal tweak to org-required (or back) without deleting and re-creating</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Re-Adding a Deleted Tweak No Longer Errors</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Deleting a tweak then pasting the same JSON back used to fail with a database constraint error</li>
+                            <li class="sub-item">Server now resurrects soft-deleted tweaks on re-create with the same id — version history preserved, no duplicate-id collision</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.5.5 — Org Logo Scoping, Job Switcher Shortcut Scoping, Portal Subscription Link Fix -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.5.5</span>
-                <span class="version-badge">Current</span>
+                <span class="version-badge"></span>
                 <span class="version-date">April 25, 2026</span>
             </div>
 
