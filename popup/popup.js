@@ -646,6 +646,33 @@ async function loadSettings() {
     setCheckbox('previewMode', hasProFeatures && settings.previewMode);
     setCheckbox('rgbTheme', hasProFeatures && settings.rgbTheme);
     setCheckbox('availabilityFilter', hasProFeatures && (settings.availabilityFilter !== undefined ? settings.availabilityFilter : false));
+    setCheckbox('tweakEngine', hasProFeatures && (settings.tweakEngine !== undefined ? settings.tweakEngine : true));
+    setCheckbox('inspectForAi', hasProFeatures && (settings.inspectForAi !== undefined ? settings.inspectForAi : false));
+
+    // Tweaks tab: show upgrade notice + lock toggles for non-Pro users
+    const tweaksUpgradeNotice = document.getElementById('tweaksUpgradeNotice');
+    const tweaksToggles = document.getElementById('tweaksToggles');
+    const tweaksSection = document.querySelector('[data-tweaks-section]');
+    if (tweaksUpgradeNotice) tweaksUpgradeNotice.hidden = !!hasProFeatures;
+    if (tweaksToggles) tweaksToggles.style.display = hasProFeatures ? '' : 'none';
+    if (tweaksSection) tweaksSection.style.display = hasProFeatures ? '' : 'none';
+
+    // Show the "Pick an element" row only when Inspect for AI is enabled,
+    // so contractors see the discoverable button right where it matters.
+    const tweaksPickRow = document.getElementById('tweaksPickRow');
+    const inspectForAiEl = document.getElementById('inspectForAi');
+    if (tweaksPickRow) {
+      const showPick = hasProFeatures && inspectForAiEl && inspectForAiEl.checked;
+      tweaksPickRow.hidden = !showPick;
+    }
+    // Live-update the pick row when the inspector toggle is flipped from
+    // inside this popup session (no full reload needed).
+    if (inspectForAiEl && tweaksPickRow && !inspectForAiEl.dataset.pickRowWired) {
+      inspectForAiEl.dataset.pickRowWired = '1';
+      inspectForAiEl.addEventListener('change', () => {
+        tweaksPickRow.hidden = !inspectForAiEl.checked;
+      });
+    }
 
     // POWER USER features - require Power User tier (API-powered)
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
@@ -663,6 +690,8 @@ async function loadSettings() {
       if (settings.previewMode) featuresToDisable.push('previewMode');
       if (settings.rgbTheme) featuresToDisable.push('rgbTheme');
       if (settings.availabilityFilter) featuresToDisable.push('availabilityFilter');
+      if (settings.tweakEngine) featuresToDisable.push('tweakEngine');
+      if (settings.inspectForAi) featuresToDisable.push('inspectForAi');
     }
     if (!hasEssentialFeatures) {
       if (settings.quickNotes) featuresToDisable.push('quickNotes');
@@ -870,6 +899,8 @@ async function getCurrentSettings() {
     reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),
     jobAccessCollapse: getCheckboxValue('jobAccessCollapse', defaultSettings.jobAccessCollapse),
     orgLogo: true,
+    tweakEngine: getCheckboxValue('tweakEngine', defaultSettings.tweakEngine !== undefined ? defaultSettings.tweakEngine : true),
+    inspectForAi: getCheckboxValue('inspectForAi', defaultSettings.inspectForAi !== undefined ? defaultSettings.inspectForAi : false),
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes
@@ -3053,4 +3084,516 @@ function showAccountError(formType, message) {
     errorEl.style.display = 'block';
   }
 }
+
+// ==================== User Tweaks Section ====================
+// Self-contained: lists tweaks scoped to the active JT org with toggle/edit/delete
+// actions, and exposes an Import dialog that validates pasted JSON and previews
+// selector match counts on the active JT tab via the engine's TWEAK_DRY_RUN
+// message handler. Active org is fetched from the JT tab via GET_ACTIVE_ORG
+// (handled by the tweak-engine content script) — avoids requiring the
+// `scripting` permission.
+(function initTweaksSection() {
+  function start() {
+    const $section = document.querySelector('[data-tweaks-section]');
+    if (!$section) return;
+    const $list = $section.querySelector('[data-tweaks-list]');
+    const $empty = $section.querySelector('[data-tweaks-empty]');
+    const $orgLabel = $section.querySelector('[data-tweaks-org]');
+    const $importBtn = $section.querySelector('[data-action="import"]');
+    const $newBtn = $section.querySelector('[data-action="new"]');
+    const $dialog = document.querySelector('[data-import-dialog]');
+    if (!$dialog) return;
+    const $importJson = $dialog.querySelector('[data-import-json]');
+    const $importPreview = $dialog.querySelector('[data-import-preview]');
+    const $cancelBtn = $dialog.querySelector('[data-action="cancel"]');
+    const $installBtn = $dialog.querySelector('[data-action="install"]');
+
+    let activeOrg = null;
+    let isJtTab = false;
+    // Cache of the caller's account info (role) used for Phase 2 UI gating
+    // — admin/owner sees Edit/Delete on org_required tweaks; members don't.
+    let callerAccount = null;
+
+    // Find a JT tab — prefer the active tab in this window, fall back to any
+    // open JT tab in any window, then ask its content script for the org name
+    // via the tweak-engine message handler. No `scripting` permission needed.
+    detectJtTab();
+    loadCallerAccount();
+
+    /**
+     * Read the caller's role from AccountService. Called once on start
+     * to seed the cache, then re-read on each render() to handle the
+     * race where AccountService.init() (async) hasn't finished by the
+     * time popup.js runs.
+     */
+    function loadCallerAccount() {
+      try {
+        if (window.AccountService && typeof window.AccountService.getCurrentUser === 'function') {
+          callerAccount = window.AccountService.getCurrentUser();
+        }
+      } catch (_e) {
+        callerAccount = null;
+      }
+    }
+
+    /**
+     * True iff the caller is an admin or owner. Re-reads AccountService
+     * each call so a slow async init doesn't leave us stuck thinking
+     * the user is unauthenticated. Defaults to false when the account
+     * isn't loaded — least-privileged fallback so a stale cached UI
+     * doesn't expose Edit/Delete to a member.
+     */
+    function isCallerAdmin() {
+      // Refresh on each call — AccountService.init() is async and may
+      // not be done when the popup first renders.
+      loadCallerAccount();
+      if (!callerAccount) return false;
+      const role = callerAccount.role;
+      return role === 'admin' || role === 'owner';
+    }
+
+    /**
+     * Best-effort server pull. Updates chrome.storage.local['jtTweaks']
+     * so render() reads fresh data. Stays silent on offline/auth errors —
+     * the cache + render path keeps working.
+     */
+    async function refreshFromServerSilent() {
+      if (!window.TweaksApi || !window.TweaksApi.isAvailable()) return;
+      if (!activeOrg) return;
+      try {
+        const { tweaks, diagnostics } = await window.TweaksApi.list(activeOrg);
+        // Same merge strategy as the engine: keep cache for OTHER orgs,
+        // overwrite for the org we just fetched.
+        const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics']);
+        const existing = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+        const otherOrgs = existing.filter(t => t && t.scope && t.scope.jtOrg && t.scope.jtOrg !== activeOrg);
+        const merged = otherOrgs.concat(tweaks);
+        const mergedDiag = { ...(stored.jtTweakDiagnostics || {}) };
+        for (const [id, d] of Object.entries(diagnostics || {})) {
+          mergedDiag[id] = {
+            lastMatchCount: d.lastMatchCount,
+            lastApplyAt: d.lastApplyAt,
+            lastErrorAt: d.lastErrorAt,
+            lastError: d.lastErrorMessage
+          };
+        }
+        await chrome.storage.local.set({ jtTweaks: merged, jtTweakDiagnostics: mergedDiag });
+      } catch (_err) {
+        // Server offline / not logged in — silent fallback, render() uses cache.
+      }
+    }
+
+    async function detectJtTab() {
+      // Pass 1: active tab in current window
+      let tab = await new Promise(r => chrome.tabs.query({ active: true, currentWindow: true }, t => r((t && t[0]) || null)));
+      if (!isJobTreadUrl(tab && tab.url)) {
+        // Pass 2: any JT tab in any window — the user may have clicked the
+        // extension icon from a non-JT window (Slack, email, etc.) but still
+        // wants to manage tweaks scoped to the JT tab they have open elsewhere
+        tab = await new Promise(r => chrome.tabs.query({ url: 'https://app.jobtread.com/*' }, t => {
+          if (!t || !t.length) return r(null);
+          // Prefer the most recently accessed JT tab
+          t.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+          r(t[0]);
+        }));
+      }
+      isJtTab = !!(tab && isJobTreadUrl(tab.url));
+      if (isJtTab) {
+        // Try up to 3 times with a small delay — content script may still be
+        // initializing on a freshly-loaded page, or OrgDetector may not have
+        // observed the JT header placeholder yet.
+        for (let attempt = 0; attempt < 3 && !activeOrg; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 250));
+          try {
+            const resp = await chrome.tabs.sendMessage(tab.id, { type: 'GET_ACTIVE_ORG' });
+            activeOrg = (resp && resp.org) || null;
+          } catch (_e) {
+            // Content script not ready yet — retry
+          }
+        }
+      }
+      // Three labels for three states (so contractors see a useful message
+      // instead of always-misleading "no JT tab"):
+      //   - org detected → show org name
+      //   - JT tab open but org not detected (rare timing edge case) → show that
+      //   - no JT tab in any window → show that
+      if (activeOrg) {
+        $orgLabel.textContent = '(' + activeOrg + ')';
+      } else if (isJtTab) {
+        $orgLabel.textContent = '(JT tab — org not detected)';
+      } else {
+        $orgLabel.textContent = '(no JT tab open)';
+      }
+      render();
+    }
+
+    function isJobTreadUrl(url) {
+      return typeof url === 'string' && url.startsWith('https://app.jobtread.com');
+    }
+
+    async function render() {
+      // Pull fresh data from the server before rendering (best-effort).
+      // Cache keeps render() fast on repeat opens; this just keeps it
+      // accurate when the user has authored on another device.
+      await refreshFromServerSilent();
+      const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics']);
+      const all = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+      const diag = stored.jtTweakDiagnostics || {};
+      const visible = activeOrg
+        ? all.filter(t => t && t.scope && t.scope.jtOrg === activeOrg)
+        : all;
+
+      $list.innerHTML = '';
+      if (!visible.length) {
+        $empty.hidden = false;
+        return;
+      }
+      $empty.hidden = true;
+      const isAdmin = isCallerAdmin();
+      for (const tweak of visible) {
+        const d = diag[tweak.id] || {};
+        const hasWarning = !!d.lastError || d.lastMatchCount === 0;
+        const isOrgRequired = tweak.storageScope === 'org_required';
+        const isLocallyDisabled = isOrgRequired && tweak.enabled === false;
+
+        const card = document.createElement('li');
+        card.className = 'tweak-card';
+        if (hasWarning) card.classList.add('has-warning');
+        if (isLocallyDisabled) card.classList.add('is-locally-disabled');
+
+        // Row 1: name + optional "Required" badge + slider toggle.
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = tweak.name || '(unnamed)';
+        if (isOrgRequired) {
+          const badge = document.createElement('span');
+          badge.className = 'jt-tweak-required-badge';
+          badge.textContent = 'Required';
+          // Authored-by attribution helps members see "this came from
+          // <admin name>" rather than guessing.
+          if (tweak.authorDisplayName) {
+            badge.title = 'Required by your company (' + tweak.authorDisplayName + ')';
+          } else {
+            badge.title = 'Required by your company';
+          }
+          name.appendChild(badge);
+        }
+        card.appendChild(name);
+
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'toggle';
+        if (isOrgRequired) {
+          // Per-account local-disable hatch. Frame copy honestly so the
+          // member knows their toggle doesn't affect coworkers.
+          toggleLabel.title = isLocallyDisabled
+            ? 'Disabled locally on this device — your admin still has this enabled for the org'
+            : 'Disable on this device only (your admin still requires it)';
+        } else {
+          toggleLabel.title = tweak.enabled !== false ? 'Disable this tweak' : 'Enable this tweak';
+        }
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.checked = tweak.enabled !== false;
+        toggleInput.addEventListener('change', () => toggleTweak(tweak.id, toggleInput.checked));
+        const toggleSlider = document.createElement('span');
+        toggleSlider.className = 'slider';
+        toggleLabel.appendChild(toggleInput);
+        toggleLabel.appendChild(toggleSlider);
+        card.appendChild(toggleLabel);
+
+        // Row 2: optional description (helps contractors recognize what
+        // each tweak does without opening the editor)
+        if (tweak.description && typeof tweak.description === 'string' && tweak.description.trim()) {
+          const desc = document.createElement('p');
+          desc.className = 'jt-tweaks-desc';
+          desc.textContent = tweak.description.trim();
+          card.appendChild(desc);
+        }
+
+        // Row 3: status chip + Edit / Delete actions on a divided footer
+        const actions = document.createElement('div');
+        actions.className = 'tweak-card-actions';
+
+        const status = document.createElement('span');
+        status.className = 'tweak-status-chip';
+        if (d.lastError) {
+          status.classList.add('error');
+          const icon = document.createElement('span');
+          icon.className = 'icon';
+          icon.textContent = '⚠';
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = 'Error';
+          status.title = d.lastError;
+          status.appendChild(icon);
+          status.appendChild(label);
+        } else if (d.lastMatchCount === 0) {
+          status.classList.add('warn');
+          const icon = document.createElement('span');
+          icon.className = 'icon';
+          icon.textContent = '⚠';
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = 'No matches found';
+          status.title = 'Selectors matched 0 elements on the last run';
+          status.appendChild(icon);
+          status.appendChild(label);
+        } else if (typeof d.lastMatchCount === 'number') {
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = d.lastMatchCount + ' match' + (d.lastMatchCount === 1 ? '' : 'es');
+          status.appendChild(label);
+        }
+        actions.appendChild(status);
+
+        // Edit + Delete are gated on role for org_required tweaks. A
+        // member can't mutate them — only locally disable via the
+        // toggle. Admin/owner sees the buttons either way.
+        const canMutate = !isOrgRequired || isAdmin;
+        if (canMutate) {
+          const editBtn = document.createElement('button');
+          editBtn.className = 'icon-btn';
+          editBtn.textContent = 'Edit';
+          editBtn.title = isOrgRequired
+            ? 'Edit this org-required tweak (admin)'
+            : 'Open in the tweak editor';
+          editBtn.addEventListener('click', () => openEditor(tweak.id));
+          actions.appendChild(editBtn);
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'icon-btn danger';
+          delBtn.textContent = 'Delete';
+          delBtn.title = isOrgRequired
+            ? 'Remove this org-required tweak for the whole company (admin)'
+            : 'Remove this tweak';
+          delBtn.addEventListener('click', () => deleteTweak(tweak.id, tweak.name));
+          actions.appendChild(delBtn);
+        }
+
+        card.appendChild(actions);
+        $list.appendChild(card);
+      }
+    }
+
+    async function toggleTweak(id, enabled) {
+      // Phase 2: route through the server's per-account state endpoint.
+      // For personal tweaks owned by the caller, this writes their state
+      // override; for org_required tweaks it's the local-disable hatch.
+      // Always also mutate the local cache — engine's storage listener
+      // picks up the change instantly.
+      if (window.TweaksApi && window.TweaksApi.isAvailable()) {
+        try {
+          await window.TweaksApi.setState(id, { enabled });
+        } catch (err) {
+          console.warn('TweaksApi.setState failed, falling back to cache only:', err.message);
+        }
+      }
+      const stored = await chrome.storage.local.get(['jtTweaks']);
+      const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+      const idx = list.findIndex(t => t.id === id);
+      if (idx >= 0) {
+        list[idx].enabled = enabled;
+        await chrome.storage.local.set({ jtTweaks: list });
+      }
+    }
+
+    async function deleteTweak(id, name) {
+      if (!confirm('Delete tweak "' + (name || '(unnamed)') + '"?')) return;
+      // Server delete first — if it rejects (e.g., member trying to
+      // delete an org_required tweak), DO NOT mutate cache. Otherwise
+      // the tweak would briefly disappear, then reappear on next refresh.
+      if (window.TweaksApi && window.TweaksApi.isAvailable()) {
+        try {
+          await window.TweaksApi.remove(id);
+        } catch (err) {
+          alert('Could not delete tweak: ' + err.message);
+          return;
+        }
+      }
+      const stored = await chrome.storage.local.get(['jtTweaks']);
+      const list = (stored.jtTweaks || []).filter(t => t.id !== id);
+      await chrome.storage.local.set({ jtTweaks: list });
+      render();
+    }
+
+    function openEditor(id) {
+      const url = chrome.runtime.getURL('tweaks/edit.html') + (id ? '?id=' + id : '?new=1');
+      chrome.tabs.create({ url });
+    }
+
+    $importBtn.addEventListener('click', () => {
+      $importJson.value = '';
+      $importPreview.textContent = '';
+      $installBtn.disabled = true;
+      $dialog.showModal();
+    });
+    $newBtn.addEventListener('click', () => openEditor(null));
+    $cancelBtn.addEventListener('click', () => $dialog.close());
+    $importJson.addEventListener('input', previewImport);
+    $installBtn.addEventListener('click', doInstall);
+
+    // "Pick an element on JobTread" buttons — single + multi-view variants.
+    // Both send a message to the JT tab to start picker mode. The multi
+    // variant lets the user switch JT views between captures and produces
+    // one combined AI prompt at the end.
+    async function findJtTab() {
+      let tab = await new Promise(r => chrome.tabs.query({ active: true, currentWindow: true }, t => r((t && t[0]) || null)));
+      if (!tab || !tab.url || !tab.url.startsWith('https://app.jobtread.com')) {
+        tab = await new Promise(r => chrome.tabs.query({ url: 'https://app.jobtread.com/*' }, t => {
+          if (!t || !t.length) return r(null);
+          t.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+          r(t[0]);
+        }));
+      }
+      return tab;
+    }
+
+    async function startPicker(messageType, btn, originalLabel) {
+      const tab = await findJtTab();
+      if (!tab) {
+        btn.textContent = 'Open JobTread first';
+        setTimeout(() => { btn.textContent = originalLabel; }, 1800);
+        return;
+      }
+      try {
+        await chrome.tabs.update(tab.id, { active: true });
+        await chrome.tabs.sendMessage(tab.id, { type: messageType });
+        window.close();
+      } catch (err) {
+        btn.textContent = 'JT tab not ready — reload it';
+        setTimeout(() => { btn.textContent = originalLabel; }, 2200);
+      }
+    }
+
+    const $pickBtn = document.querySelector('[data-action="pick"]');
+    if ($pickBtn) {
+      $pickBtn.addEventListener('click', () => startPicker('INSPECT_START_PICKER', $pickBtn, 'Pick an element on JobTread'));
+    }
+    const $pickMultiBtn = document.querySelector('[data-action="pick-multi"]');
+    if ($pickMultiBtn) {
+      // Preserve the original innerHTML (button has a <span> badge inside)
+      const originalMultiHTML = $pickMultiBtn.innerHTML;
+      $pickMultiBtn.addEventListener('click', async () => {
+        const tab = await findJtTab();
+        if (!tab) {
+          $pickMultiBtn.textContent = 'Open JobTread first';
+          setTimeout(() => { $pickMultiBtn.innerHTML = originalMultiHTML; }, 1800);
+          return;
+        }
+        try {
+          await chrome.tabs.update(tab.id, { active: true });
+          await chrome.tabs.sendMessage(tab.id, { type: 'INSPECT_START_MULTI_PICKER' });
+          window.close();
+        } catch (err) {
+          $pickMultiBtn.textContent = 'JT tab not ready — reload it';
+          setTimeout(() => { $pickMultiBtn.innerHTML = originalMultiHTML; }, 2200);
+        }
+      });
+    }
+
+    function previewImport() {
+      let parsed;
+      try {
+        parsed = JSON.parse($importJson.value);
+      } catch (err) {
+        $importPreview.innerHTML = '';
+        const span = document.createElement('span');
+        span.className = 'err';
+        span.textContent = 'Invalid JSON: ' + err.message;
+        $importPreview.appendChild(span);
+        $installBtn.disabled = true;
+        return;
+      }
+      // Generate a fresh id if missing — lets users paste tweaks without one.
+      if (!parsed.id) parsed.id = crypto.randomUUID();
+      const v = window.TweakValidator ? window.TweakValidator.validate(parsed) : null;
+      if (v && !v.ok) {
+        $importPreview.innerHTML = '';
+        const span = document.createElement('span');
+        span.className = 'err';
+        span.textContent = 'Validation: ' + v.errors.map(e => (e.field ? e.field + ': ' : '') + e.reason).join('; ');
+        $importPreview.appendChild(span);
+        $installBtn.disabled = true;
+        return;
+      }
+      // Preview action match counts on the active JT tab.
+      chrome.tabs.query({ url: 'https://app.jobtread.com/*' }, async (tabs) => {
+        if (!tabs.length) {
+          renderPreviewOk('Looks valid. No JT tab open to preview match counts.', null);
+          return;
+        }
+        try {
+          const resp = await chrome.tabs.sendMessage(tabs[0].id, { type: 'TWEAK_DRY_RUN', tweak: parsed });
+          const counts = resp && resp.matchCounts ? Object.entries(resp.matchCounts) : [];
+          renderPreviewOk('Looks valid.', counts);
+        } catch (_e) {
+          renderPreviewOk('Looks valid (could not preview matches).', null);
+        }
+      });
+    }
+
+    function renderPreviewOk(msg, counts) {
+      $importPreview.innerHTML = '';
+      const ok = document.createElement('span');
+      ok.className = 'ok';
+      ok.textContent = msg;
+      $importPreview.appendChild(ok);
+      if (Array.isArray(counts)) {
+        for (const [sel, n] of counts) {
+          const row = document.createElement('div');
+          row.textContent = sel + ' \u2192 ' + n + ' matches';
+          $importPreview.appendChild(row);
+        }
+      }
+      $installBtn.disabled = false;
+    }
+
+    async function doInstall() {
+      const parsed = JSON.parse($importJson.value);
+      if (!parsed.id) parsed.id = crypto.randomUUID();
+      parsed.enabled = parsed.enabled !== false;
+
+      // Decide whether this is a fresh create or an update of an existing
+      // tweak — the editor / popup share the same import flow for both.
+      const stored = await chrome.storage.local.get(['jtTweaks']);
+      const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+      const existingIdx = list.findIndex(t => t.id === parsed.id);
+      const isUpdate = existingIdx >= 0;
+
+      // Server-first. If we're online + logged in, send to the server
+      // and use the canonical (sanitized) shape it returns. The server
+      // also enforces auth (e.g., 403 if a member tried to import an
+      // org_required tweak). Fall through to local-only on failure.
+      let canonical = parsed;
+      if (window.TweaksApi && window.TweaksApi.isAvailable()) {
+        try {
+          const result = isUpdate
+            ? await window.TweaksApi.update(parsed)
+            : await window.TweaksApi.create(parsed);
+          if (result && result.tweak) canonical = result.tweak;
+        } catch (err) {
+          $importPreview.innerHTML = '';
+          const span = document.createElement('span');
+          span.className = 'err';
+          span.textContent = 'Server rejected: ' + err.message;
+          $importPreview.appendChild(span);
+          return;
+        }
+      }
+
+      if (existingIdx >= 0) list[existingIdx] = canonical; else list.push(canonical);
+      await chrome.storage.local.set({ jtTweaks: list });
+      $dialog.close();
+      render();
+    }
+  }
+
+  // popup.js is loaded at the end of <body>, so the DOM is ready by now.
+  // Guard for paranoia in case load order ever changes.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+})();
 

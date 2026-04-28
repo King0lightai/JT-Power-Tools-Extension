@@ -1,0 +1,216 @@
+/* Tweak Editor — Dark mode neutral grey palette
+   (per project rules: NO blues for backgrounds/borders;
+   accent #3B82F6 is allowed for primary action only) */
+
+:root {
+  --bg-primary: #2c2c2c;
+  --bg-secondary: #252525;
+  --bg-elevated: #333333;
+  --bg-hover: #3a3a3a;
+  --border-primary: #404040;
+  --border-secondary: #505050;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #a0a0a0;
+  --accent: #3B82F6;
+  --error: #ff6b6b;
+  --warn: #ffb84a;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: 14px/1.4 system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.jt-tweak-edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+}
+.jt-tweak-edit-header h1 { margin: 0; font-size: 16px; font-weight: 600; }
+.jt-tweak-edit-actions { display: flex; gap: 8px; }
+
+/* Buttons */
+.jt-tweak-edit-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.jt-tweak-edit-btn:hover { background: var(--bg-hover); }
+.jt-tweak-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.jt-tweak-edit-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.jt-tweak-edit-btn-primary:hover { background: #2563eb; }
+.jt-tweak-edit-btn-secondary { color: var(--text-muted); }
+
+/* Layout */
+.jt-tweak-edit-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+.jt-tweak-edit-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-right: 1px solid var(--border-primary);
+}
+.jt-tweak-edit-editor label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.jt-tweak-edit-editor textarea {
+  flex: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: 4px;
+  font: 13px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
+  resize: none;
+  outline: none;
+}
+.jt-tweak-edit-editor textarea:focus { border-color: var(--accent); }
+
+/* Diagnostics panel */
+.jt-tweak-edit-diagnostics {
+  width: 380px;
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+}
+.jt-tweak-edit-diagnostics h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.jt-tweak-edit-diagnostics h3 {
+  margin: 16px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.jt-tweak-edit-status {
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.jt-tweak-edit-status[data-state="error"] { color: var(--error); }
+.jt-tweak-edit-status[data-state="warn"] { color: var(--warn); }
+.jt-tweak-edit-status[data-state="ok"] { color: #6dd; }
+
+.jt-tweak-edit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+}
+.jt-tweak-edit-list li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+}
+.jt-tweak-edit-list li:last-child { border-bottom: none; }
+.jt-tweak-edit-list li.error { color: var(--error); }
+.jt-tweak-edit-list li.warn { color: var(--warn); }
+
+/* Scope toggle (admin/owner only) */
+.jt-tweak-edit-scope-row {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Spacing */
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  /* Colors */
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}
+/* Critical: respect the [hidden] attribute. Without this, the .row's
+   `display: flex` overrides the user-agent stylesheet's
+   `[hidden] { display: none }`, leaving the toggle visible to non-admins
+   even when setupScopeToggle decided not to expose it. */
+.jt-tweak-edit-scope-row[hidden] {
+  display: none;
+}
+.jt-tweak-edit-scope-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+.jt-tweak-edit-scope-control {
+  display: flex;
+  gap: 8px;
+}
+.jt-tweak-edit-scope-option {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.jt-tweak-edit-scope-option:hover { background: var(--bg-hover); }
+.jt-tweak-edit-scope-option input[type="radio"] {
+  margin: 2px 0 0 0;
+  accent-color: var(--accent);
+}
+.jt-tweak-edit-scope-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.jt-tweak-edit-scope-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.jt-tweak-edit-scope-help {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.jt-tweak-edit-scope-option input[type="radio"]:disabled ~ .jt-tweak-edit-scope-text {
+  opacity: 0.6;
+}
+.jt-tweak-edit-scope-locked-note {
+  margin: 0;
+  padding: 6px 10px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: italic;
+}

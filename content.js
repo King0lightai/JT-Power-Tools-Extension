@@ -156,6 +156,16 @@ const featureModules = {
     feature: () => window.OrgLogoFeature,
     instance: null
   },
+  inspectForAi: {
+    name: 'Inspect for AI',
+    feature: () => window.InspectForAiFeature,
+    instance: null
+  },
+  tweakEngine: {
+    name: 'User Tweaks',
+    feature: () => window.TweakEngineFeature,
+    instance: null
+  },
   // fileDragToFolder: {
   //   name: 'Files Drag to Folder',
   //   feature: () => window.FileDragToFolderFeature,
@@ -175,6 +185,7 @@ let currentSettings = window.JTDefaults
       pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
       budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
       jobAccessCollapse: false, orgLogo: false,
+      inspectForAi: false, tweakEngine: true,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };
@@ -455,16 +466,18 @@ async function handleSettingsChange(newSettings) {
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   try {
-    console.log('JT-Tools: Message received:', message);
-
     if (!message || !message.type) {
-      console.warn('JT-Tools: Invalid message format');
-      sendResponse({ success: false, error: 'Invalid message format' });
+      // Ignore — let other listeners (or the runtime default) respond.
       return false;
     }
 
+    // Only respond to message types this listener actually owns. Other
+    // listeners (e.g., tweak-engine, formatter) handle their own types
+    // and we MUST NOT pre-empt them — Chrome's first synchronous
+    // sendResponse() wins, locking out async responders.
     switch (message.type) {
       case 'SETTINGS_CHANGED':
+        console.log('JT-Tools: Message received:', message);
         if (message.settings) {
           handleSettingsChange(message.settings);
           sendResponse({ success: true });
@@ -475,8 +488,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
 
       default:
-        console.warn('JT-Tools: Unknown message type:', message.type);
-        sendResponse({ success: false, error: 'Unknown message type' });
+        // Not ours — return false WITHOUT calling sendResponse so other
+        // listeners (tweak-engine's GET_ACTIVE_ORG / TWEAK_DRY_RUN handler,
+        // for example) get a turn.
+        return false;
     }
   } catch (error) {
     console.error('JT-Tools: Error handling message:', error);

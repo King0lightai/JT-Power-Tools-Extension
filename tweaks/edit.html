@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit Tweak — JT Power Tools</title>
+<link rel="stylesheet" href="edit.css">
+</head>
+<body>
+<header class="jt-tweak-edit-header">
+  <h1 id="title">Edit Tweak</h1>
+  <div class="jt-tweak-edit-actions">
+    <button id="btn-test" class="jt-tweak-edit-btn">Test on active JT tab</button>
+    <button id="btn-revert" class="jt-tweak-edit-btn jt-tweak-edit-btn-secondary">Revert</button>
+    <button id="btn-save" class="jt-tweak-edit-btn jt-tweak-edit-btn-primary">Save</button>
+  </div>
+</header>
+<main class="jt-tweak-edit-main">
+  <section class="jt-tweak-edit-editor">
+    <!-- Scope toggle (admin / owner only — initially hidden) -->
+    <div id="scope-toggle-row" class="jt-tweak-edit-scope-row" hidden>
+      <label class="jt-tweak-edit-scope-label">Tweak scope</label>
+      <div class="jt-tweak-edit-scope-control">
+        <label class="jt-tweak-edit-scope-option">
+          <input type="radio" name="storage-scope" value="personal" checked>
+          <span class="jt-tweak-edit-scope-text">
+            <strong>Personal</strong>
+            <span class="jt-tweak-edit-scope-help">Just for you</span>
+          </span>
+        </label>
+        <label class="jt-tweak-edit-scope-option">
+          <input type="radio" name="storage-scope" value="org_required">
+          <span class="jt-tweak-edit-scope-text">
+            <strong>Required for org</strong>
+            <span class="jt-tweak-edit-scope-help">All members of your company get this</span>
+          </span>
+        </label>
+      </div>
+      <p id="scope-locked-note" class="jt-tweak-edit-scope-locked-note" hidden>
+        Scope can't be changed after creation. To migrate, delete and re-create.
+      </p>
+    </div>
+    <label for="json">Tweak JSON</label>
+    <textarea id="json" spellcheck="false" placeholder='{
+  "id": "...",
+  "name": "...",
+  "version": 1,
+  "scope": { "jtOrg": "Your Org Name" },
+  "css": ".gantt-bar { height: 6px !important; }",
+  "actions": []
+}'></textarea>
+  </section>
+  <aside class="jt-tweak-edit-diagnostics">
+    <h2>Diagnostics</h2>
+    <div id="status" class="jt-tweak-edit-status">Ready.</div>
+    <h3>Validation</h3>
+    <ul id="validation-errors" class="jt-tweak-edit-list"></ul>
+    <h3>CSS warnings</h3>
+    <ul id="css-warnings" class="jt-tweak-edit-list"></ul>
+    <h3>Selector match counts (last test run)</h3>
+    <ul id="match-counts" class="jt-tweak-edit-list"></ul>
+  </aside>
+</main>
+<script src="../utils/browser-polyfill.js"></script>
+<script src="../utils/sanitizer.js"></script>
+<script src="../vendor/css-tree.js"></script>
+<script src="../utils/css-sanitizer.js"></script>
+<script src="../utils/tweak-validator.js"></script>
+<script src="../services/account-service.js"></script>
+<script src="../services/tweaks-api.js"></script>
+<script src="edit.js"></script>
+</body>
+</html>

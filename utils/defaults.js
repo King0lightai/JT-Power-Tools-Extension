@@ -29,6 +29,8 @@ const JTDefaults = (() => {
     pdfMarkupTools: true,
     reverseThreadOrder: false,
     budgetTools: false,
+    inspectForAi: false,    // off by default — most users won't author tweaks
+    tweakEngine: true,      // on by default — installed tweaks should "just work"
 
     // Free Features - Appearance & Themes
     darkMode: false,
@@ -69,7 +71,7 @@ const JTDefaults = (() => {
    */
   const FEATURE_CATEGORIES = {
     scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter', 'ganttLines'],
-    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder'],
+    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder', 'inspectForAi', 'tweakEngine'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],
     powerUser: ['budgetChangelog', 'taskTypeFilter']

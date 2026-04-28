@@ -60,7 +60,9 @@ const LicenseService = (() => {
     'rgbTheme',         // Custom color theming
     'previewMode',      // Live markdown preview
     'reverseThreadOrder', // Reverse message thread order
-    'availabilityFilter'  // Team availability filtering
+    'availabilityFilter', // Team availability filtering
+    'tweakEngine',      // User Tweaks engine (CSS + DOM verbs)
+    'inspectForAi'      // Alt-click DOM inspector for AI-authored tweaks
   ];
 
   // POWER USER tier features ($30) - "I want everything + AI"

@@ -3634,3 +3634,447 @@ body.dark-theme .cta-content strong {
 body.dark-theme .cta-content p {
   color: var(--text-secondary);
 }
+
+/* ==================== User Tweaks — Popup Section ==================== */
+/* All styles use semantic theme tokens (--text-*, --bg-*, --border-*) so
+   the section renders correctly in both light and dark themes. Brand
+   accent uses --brand-orange (matches the rest of the popup). */
+
+/* Pro upgrade notice — shown to non-Pro users */
+.tweaks-upgrade-notice {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.tweaks-upgrade-notice p { margin: 0 0 10px; }
+.tweaks-upgrade-notice strong { color: var(--text-primary); font-weight: 600; }
+.tweaks-upgrade-notice .ph-lightbulb {
+  color: var(--brand-orange);
+  margin-right: 4px;
+  font-size: 14px;
+}
+
+/* Toggles row — uses the popup's existing .feature-item pattern */
+.tweaks-toggles { margin-bottom: 16px; }
+
+/* Pick-element row — visible only when Inspect for AI is enabled */
+.tweaks-pick-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin: 0 16px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.tweaks-pick-row[hidden] { display: none; }
+.tweaks-pick-row .jt-tweaks-action {
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tweaks-pick-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  background: var(--brand-orange-glow);
+  color: var(--brand-orange);
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 35%, transparent);
+  border-radius: var(--radius-xs);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tweaks-pick-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 4px;
+}
+.tweaks-pick-hint kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  font: 10px ui-monospace, "Cascadia Code", Consolas, monospace;
+  color: var(--text-secondary);
+  vertical-align: 1px;
+}
+
+/* Tweaks list section — header (org chip + actions) + cards */
+.jt-tweaks-section {
+  padding: 0 16px 16px;
+}
+.jt-tweaks-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.jt-tweaks-org {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  /* Truncate very long org names so the action buttons stay aligned */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.jt-tweaks-action {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+  white-space: nowrap;
+}
+.jt-tweaks-action:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.jt-tweaks-action-primary {
+  background: var(--brand-orange);
+  color: #fff;
+  border-color: var(--brand-orange);
+  box-shadow: 0 1px 2px var(--brand-orange-glow);
+}
+.jt-tweaks-action-primary:hover {
+  background: var(--brand-orange-dark);
+  border-color: var(--brand-orange-dark);
+  color: #fff;
+}
+
+/* The list itself: stack of compact cards, no flat divider lines */
+.jt-tweaks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Each tweak = a card with three rows:
+     [name + slider toggle]
+     [optional description]
+     [optional status chip + edit/delete actions]                      */
+.jt-tweaks-list .tweak-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration) var(--ease),
+              background var(--duration) var(--ease);
+}
+.jt-tweaks-list .tweak-card:hover {
+  border-color: var(--border-default);
+  background: var(--bg-secondary);
+}
+.jt-tweaks-list .tweak-card.has-warning {
+  border-color: color-mix(in srgb, #f59e0b 25%, var(--border-subtle));
+  background: color-mix(in srgb, #f59e0b 4%, var(--bg-elevated));
+}
+
+.jt-tweaks-list .tweak-card .name {
+  grid-column: 1;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  /* Wrap long names instead of truncating — names are user-authored */
+  word-break: break-word;
+  /* Allow inline badges (e.g. "Required") to flow next to the name */
+  display: inline;
+}
+
+/* "Required by org" badge — Phase 2 org_required tweaks. Distinct from
+   the brand-orange chips (which signal the user's own actions); this
+   uses a calmer accent so members see "company-managed" at a glance
+   without the row screaming for attention. */
+.jt-tweak-required-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  background: color-mix(in srgb, #6366f1 14%, transparent);
+  border: 1px solid color-mix(in srgb, #6366f1 32%, transparent);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #4338ca;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+body.dark-theme .jt-tweak-required-badge {
+  color: #a5b4fc;
+  background: color-mix(in srgb, #6366f1 18%, transparent);
+  border-color: color-mix(in srgb, #6366f1 40%, transparent);
+}
+/* When a member has locally disabled an org_required tweak, give the
+   slider a subtle warning ring so they know it's overridden. */
+.jt-tweaks-list .tweak-card.is-locally-disabled > .toggle .slider {
+  box-shadow: 0 0 0 2px color-mix(in srgb, #f59e0b 28%, transparent);
+}
+
+/* The slider switch (shared with .toggle / .slider above) lives in col 2 */
+.jt-tweaks-list .tweak-card > .toggle {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.jt-tweaks-desc {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+  margin: 0;
+  /* Limit very long descriptions to ~2 lines so cards stay compact */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tweak-card-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.tweak-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  min-width: 0;
+}
+.tweak-status-chip.warn {
+  color: #b06a04;
+}
+body.dark-theme .tweak-status-chip.warn {
+  color: #fbbf24;
+}
+.tweak-status-chip.error {
+  color: #b91c1c;
+}
+body.dark-theme .tweak-status-chip.error {
+  color: #f87171;
+}
+.tweak-status-chip .icon {
+  font-size: 12px;
+  line-height: 1;
+}
+.tweak-status-chip .label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.tweak-card-actions .icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration) var(--ease);
+}
+.tweak-card-actions .icon-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+.tweak-card-actions .icon-btn.danger:hover {
+  color: #b91c1c;
+  border-color: color-mix(in srgb, #b91c1c 30%, transparent);
+  background: color-mix(in srgb, #b91c1c 6%, transparent);
+}
+body.dark-theme .tweak-card-actions .icon-btn.danger:hover {
+  color: #f87171;
+  border-color: color-mix(in srgb, #f87171 30%, transparent);
+  background: color-mix(in srgb, #f87171 8%, transparent);
+}
+
+/* Empty state — shown when no tweaks for current org. The numbered
+   walkthrough is the contractor's path-of-discovery, not a placeholder. */
+.jt-tweaks-empty {
+  padding: 16px;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.jt-tweaks-empty p {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13px;
+}
+.jt-tweaks-empty ol {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.7;
+}
+.jt-tweaks-empty li + li { margin-top: 4px; }
+.jt-tweaks-empty kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  font: 11px ui-monospace, "Cascadia Code", Consolas, monospace;
+  color: var(--text-secondary);
+}
+.jt-tweaks-empty em {
+  color: var(--text-primary);
+  font-style: normal;
+  font-weight: 600;
+}
+.jt-tweaks-empty strong {
+  color: var(--text-primary);
+}
+
+/* Import dialog */
+.jt-tweaks-import-dialog {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-md);
+}
+.jt-tweaks-import-dialog::backdrop {
+  background: rgba(15, 15, 15, 0.55);
+  backdrop-filter: blur(2px);
+}
+.jt-tweaks-import-dialog h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.jt-tweaks-import-dialog p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.jt-tweaks-import-dialog textarea {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: 10px;
+  font: 12px ui-monospace, "Cascadia Code", Consolas, monospace;
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color var(--duration) var(--ease);
+}
+.jt-tweaks-import-dialog textarea:focus {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px var(--brand-orange-glow);
+}
+.jt-tweaks-import-preview {
+  margin-top: 10px;
+  font-size: 12px;
+  min-height: 40px;
+  line-height: 1.5;
+}
+.jt-tweaks-import-preview .ok { color: #057a55; }
+body.dark-theme .jt-tweaks-import-preview .ok { color: #34d399; }
+.jt-tweaks-import-preview .err { color: #b91c1c; }
+body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
+.jt-tweaks-import-preview div { margin-top: 4px; color: var(--text-tertiary); font: 11px ui-monospace, monospace; }
+
+.jt-tweaks-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.jt-tweaks-import-actions button {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  padding: 7px 16px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+.jt-tweaks-import-actions button:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+.jt-tweaks-import-actions button[data-action="install"] {
+  background: var(--brand-orange);
+  color: #fff;
+  border-color: var(--brand-orange);
+  box-shadow: 0 1px 2px var(--brand-orange-glow);
+}
+.jt-tweaks-import-actions button[data-action="install"]:hover:not(:disabled) {
+  background: var(--brand-orange-dark);
+  border-color: var(--brand-orange-dark);
+  color: #fff;
+}
+.jt-tweaks-import-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
