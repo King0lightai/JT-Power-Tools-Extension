@@ -41,7 +41,7 @@
     <div class="guide-container">
         <div class="guide-header">
             <h1>Privacy Policy</h1>
-            <p class="guide-meta">Last Updated: March 4, 2026</p>
+            <p class="guide-meta">Last Updated: April 28, 2026</p>
         </div>
 
         <div class="guide-content">
@@ -164,16 +164,42 @@
             <h3>MCP Server (Power User Tier Only)</h3>
             <p>Power User subscribers can connect AI assistants (such as Claude, ChatGPT, or Cursor) to their JobTread data through our Model Context Protocol (MCP) server:</p>
             <ul>
-                <li><strong>Authentication:</strong> Requires both your license key and JobTread grant key (combined as a Bearer token)</li>
-                <li><strong>Access type:</strong> Read-only — AI assistants cannot modify your JobTread data</li>
-                <li><strong>Data accessible to AI:</strong> Job names/IDs, customer/account info, vendor/subcontractor info, tasks/to-dos, job budgets, and schedule data</li>
-                <li><strong>Data NOT accessible:</strong> Files, attachments, documents, or raw financial data beyond budget line items</li>
-                <li><strong>How it works:</strong> When you query an AI assistant, it sends requests to our MCP server, which proxies read-only API calls to JobTread on your behalf</li>
-                <li><strong>Data storage:</strong> The MCP server does not persist your JobTread data. Query results are returned to the AI client in real-time and not stored on our servers</li>
-                <li><strong>Third-party AI platforms:</strong> When you use MCP with an AI assistant, your JobTread data is sent to that AI platform (e.g., Anthropic for Claude, OpenAI for ChatGPT). These platforms have their own privacy policies governing how they handle your data</li>
+                <li><strong>Authentication:</strong> Requires either an OAuth login (Claude.ai, ChatGPT) or a Bearer token combining your license key and a JobTread grant key (Claude Code, Cursor, etc.)</li>
+                <li><strong>Access type:</strong> Configurable per AI grant key. Admins choose one of three tiers:
+                    <ul>
+                        <li><strong>Read</strong> — AI can query data only (job lookups, schedule views, budget reports, search). No mutations.</li>
+                        <li><strong>Read + Write</strong> — AI can also create or update records (new tasks, comments, time entries, daily logs, budget items, contacts, dashboards, workflows, etc.).</li>
+                        <li><strong>Read + Write + Delete</strong> — full access including destructive operations (delete jobs/tasks/comments/entries, revoke access grants, reject vendor bills, cancel workflow runs).</li>
+                    </ul>
+                </li>
+                <li><strong>Default for new AI keys:</strong> <code>Read</code> (least-privileged). Admins explicitly opt up via the portal at app.jtpowertools.com.</li>
+                <li><strong>Existing keys at the time of this policy update:</strong> Grandfathered to <code>Read + Write + Delete</code> so existing AI clients keep working unchanged. Admins can downgrade individual keys at any time via the portal.</li>
+                <li><strong>Data accessible to AI:</strong> Job records, customer/account info, vendor/subcontractor info, tasks/to-dos, schedule items, daily logs, time entries, comments, documents (invoices/POs/change orders/bills), budget line items + cost groups, dashboards, workflows, files metadata, location data, contact info, custom field definitions, and User Tweaks the AI key's account is allowed to see. Write/Delete tiers extend this to mutations on those records.</li>
+                <li><strong>Data storage:</strong> The MCP server does not persist JobTread query results. Tool calls are proxied to JobTread's Pave API in real-time and the response flows back to the AI client. The server only persists per-tool usage telemetry (which tool was called, success/failure, duration) for rate-limiting and debugging — never the actual returned data.</li>
+                <li><strong>Optional per-tool indexing (context-mode):</strong> When AI clients use the <code>ctx_index</code> tool to cache large JobTread responses for follow-up search, that cached content is stored in a per-license knowledge base and auto-expires.</li>
+                <li><strong>AI grant key attribution:</strong> When an admin issues an AI grant key, the portal records which admin issued it. If that AI key creates a User Tweak via Phase 3 MCP tools, the tweak is attributed to the issuing admin.</li>
+                <li><strong>Third-party AI platforms:</strong> When you use MCP with an AI assistant, your JobTread data is sent to that AI platform (e.g., Anthropic for Claude, OpenAI for ChatGPT). These platforms have their own privacy policies governing how they handle your data.</li>
                 <li><strong>Rate limits:</strong> 60 requests per minute, 5 concurrent connections</li>
-                <li><strong>Opt-in only:</strong> MCP is entirely optional and requires manual setup by the user</li>
+                <li><strong>Opt-in only:</strong> MCP is entirely optional and requires admin setup. No data leaves your organization without an admin explicitly issuing an AI grant key.</li>
             </ul>
+
+            <h3>User Tweaks (Pro Tier and Above)</h3>
+            <p>User Tweaks let you author small declarative customizations of the JobTread UI (CSS styling rules and DOM action declarations) and apply them automatically when you visit JobTread. They come in two flavors:</p>
+            <ul>
+                <li><strong>Personal tweaks</strong> — visible only to you. The data is stored on our servers scoped to your account.</li>
+                <li><strong>Org-required tweaks</strong> — created by your organization's admin and pushed to every member of your JobTread org/license. As a member, you can locally disable an org-required tweak on your specific device — your admin sees the aggregate count of disables but never which specific member is disabling.</li>
+            </ul>
+            <p><strong>What's stored on our servers:</strong></p>
+            <ul>
+                <li>The tweak's name, description, CSS rules, and DOM actions (<code>addClass</code>, <code>removeClass</code>, <code>setStyle</code>, <code>hide</code>, <code>show</code>, <code>setText</code>, <code>onEvent</code>)</li>
+                <li>The author's display name (the user who created the tweak)</li>
+                <li>Version history (every save creates a new immutable version row; old versions are retained so you can revert)</li>
+                <li>For org-required tweaks: which JobTread organization the tweak applies to</li>
+                <li>Your per-account override state (which org-required tweaks you've locally disabled)</li>
+                <li>Per-account engine telemetry — selector match counts and last-error timestamps (debounced uploads, used in the popup to show "no matches found" warnings)</li>
+            </ul>
+            <p><strong>Defense in depth:</strong> Every CSS rule and action submitted to our server passes through a server-side sanitizer (rejects <code>@import</code>, <code>expression()</code>, unsafe <code>url()</code>, extension-UI selectors, and bare <code>html</code>/<code>body</code>/<code>*</code> selectors) before storage. Even if the extension's client-side validation is bypassed, the server enforces the same allowlist.</p>
+            <p><strong>Inspect-for-AI:</strong> The Inspect-for-AI feature lets you alt-click any element on JobTread (or activate Picker mode) to capture a structured markdown description of the clicked element — CSS selector, ancestor chain, sample of nested elements, current page path, and the JobTread organization name. The captured description is <strong>written to your clipboard via the <code>clipboardWrite</code> permission and never transmitted to our servers</strong>. You then paste it into your AI assistant of choice (Claude, ChatGPT, etc.) so the AI has enough context to write a tweak for you. The extension never reads from the clipboard.</p>
 
             <h2>Permissions Explained</h2>
             <p>The Extension requests the following Chrome permissions:</p>
@@ -192,6 +218,14 @@
                 <li><strong>Data:</strong> No data is read, only features are applied</li>
             </ul>
 
+            <h3>clipboardWrite</h3>
+            <ul>
+                <li><strong>Purpose:</strong> Used exclusively by the Inspect-for-AI feature to copy captured DOM context (CSS selectors + ancestor/descendant tree + page path + JT org name) to your clipboard so you can paste it into your AI assistant.</li>
+                <li><strong>Access:</strong> Only triggered by your explicit alt-click on a JobTread element or activation of Picker mode.</li>
+                <li><strong>Data:</strong> A markdown payload describing the clicked element. Never transmitted to our servers — only written to your clipboard for you to paste into the AI assistant of your choice.</li>
+                <li><strong>We do NOT request <code>clipboardRead</code></strong> — the extension never reads from your clipboard.</li>
+            </ul>
+
             <h3>Host Permission: https://*.jobtread.com/*</h3>
             <ul>
                 <li><strong>Purpose:</strong> Enable features on JobTread pages</li>
@@ -199,11 +233,32 @@
                 <li><strong>Data:</strong> Modifies display and behavior, does not read private data</li>
             </ul>
 
-            <h3>Host Permission: https://*.workers.dev/*</h3>
+            <h3>Host Permission: https://api.jobtread.com/*</h3>
             <ul>
-                <li><strong>Purpose:</strong> Communicate with our Cloudflare Workers for license validation, notes sync, and API proxy</li>
-                <li><strong>Access:</strong> Only when verifying license, syncing notes, or using API features</li>
-                <li><strong>Data:</strong> License key, device ID; for sync: notes content, account credentials; for API features: JobTread grant key and organization info</li>
+                <li><strong>Purpose:</strong> The Pro features (Drag &amp; Drop, Preview Mode, Custom Theme) call JobTread's Pave API to read schedule/budget data when needed for in-page interactions.</li>
+                <li><strong>Access:</strong> Only when those features are active and you've provided a JobTread API grant key.</li>
+                <li><strong>Data:</strong> API requests are signed with the grant key you provided.</li>
+            </ul>
+
+            <h3>Host Permission: https://jobtread-mcp-server.king0light-ai.workers.dev/*</h3>
+            <ul>
+                <li><strong>Purpose:</strong> Our primary backend Worker. Handles license validation, account auth, notes sync, team notes, User Tweaks storage, and the MCP server.</li>
+                <li><strong>Access:</strong> Only when authenticated (signed-in or with a valid license key).</li>
+                <li><strong>Data:</strong> Whatever data the feature you're using requires (e.g., notes content for notes sync; tweak DSL for tweaks).</li>
+            </ul>
+
+            <h3>Host Permission: https://jt-tools-license-proxy.king0light-ai.workers.dev/*</h3>
+            <ul>
+                <li><strong>Purpose:</strong> Legacy license-validation proxy (retained for backwards compatibility with extension versions before 4.5).</li>
+                <li><strong>Access:</strong> Only used by the legacy auth path — current installs go through the primary MCP server.</li>
+                <li><strong>Data:</strong> License key for verification.</li>
+            </ul>
+
+            <h3>Host Permission: https://jobtread-tools-pro.king0light-ai.workers.dev/*</h3>
+            <ul>
+                <li><strong>Purpose:</strong> Pro-tier feature gate Worker (verifies premium entitlements before unlocking Drag &amp; Drop, Preview Mode, Custom Theme).</li>
+                <li><strong>Access:</strong> Only when you activate a premium license.</li>
+                <li><strong>Data:</strong> License key, device ID for entitlement verification.</li>
             </ul>
 
             <h2>Third-Party Services</h2>
@@ -235,8 +290,8 @@
 
             <h3>AI Platforms (via MCP, Power User Tier Only)</h3>
             <ul>
-                <li><strong>Used for:</strong> AI-assisted access to your JobTread data through the MCP server</li>
-                <li><strong>Data shared:</strong> JobTread data returned by MCP queries (jobs, customers, vendors, tasks, budgets) is sent to the AI platform you choose to use</li>
+                <li><strong>Used for:</strong> AI-assisted access to your JobTread data through the MCP server. Capability scope (read vs. write vs. delete) is controlled by the per-key permission tier you assigned in the portal.</li>
+                <li><strong>Data shared:</strong> JobTread tool-call results (jobs, customers, vendors, tasks, schedule items, daily logs, time entries, comments, documents, budgets, dashboards, workflows, files metadata, locations, custom field definitions, and User Tweaks the AI key's account is allowed to see) are sent to the AI platform you choose. Write/Delete tiers extend this to the same scope of mutations.</li>
                 <li><strong>Supported platforms:</strong> Claude (Anthropic), ChatGPT (OpenAI), Cursor, and other MCP-compatible AI clients</li>
                 <li><strong>Privacy policies:</strong>
                     <ul>
@@ -406,16 +461,64 @@
                         <td>No one</td>
                     </tr>
                     <tr>
-                        <td>MCP Query Results</td>
+                        <td>MCP Tool-Call Results</td>
                         <td>Yes (Power User MCP only)</td>
-                        <td>Not stored (real-time)</td>
-                        <td>Your chosen AI platform</td>
+                        <td>Not stored (real-time proxy)</td>
+                        <td>Your chosen AI platform (per its permission tier)</td>
+                    </tr>
+                    <tr>
+                        <td>MCP Per-Tool Telemetry</td>
+                        <td>Yes (Power User MCP only)</td>
+                        <td>Cloudflare D1 (which tool, success/failure, duration)</td>
+                        <td>No one — internal rate-limiting + debugging</td>
+                    </tr>
+                    <tr>
+                        <td>Personal Tweaks (Pro)</td>
+                        <td>Yes (Pro tier)</td>
+                        <td>Cloudflare D1 + local cache</td>
+                        <td>Only you</td>
+                    </tr>
+                    <tr>
+                        <td>Org-Required Tweaks (Pro)</td>
+                        <td>Yes (Pro tier)</td>
+                        <td>Cloudflare D1 + local cache</td>
+                        <td>All members of your JT organization</td>
+                    </tr>
+                    <tr>
+                        <td>Tweak Override State (per device)</td>
+                        <td>Yes (Pro tier)</td>
+                        <td>Cloudflare D1</td>
+                        <td>Only you (admins see aggregate counts)</td>
+                    </tr>
+                    <tr>
+                        <td>Tweak Engine Diagnostics</td>
+                        <td>Yes (Pro tier)</td>
+                        <td>Cloudflare D1 (per-tweak match counts, last error)</td>
+                        <td>Only you (admins see aggregate per-tweak summaries)</td>
+                    </tr>
+                    <tr>
+                        <td>AI Grant Keys + permission tiers</td>
+                        <td>Yes (Power User MCP only)</td>
+                        <td>Cloudflare D1</td>
+                        <td>Your admins; provided to AI clients you connect</td>
+                    </tr>
+                    <tr>
+                        <td>Inspect-for-AI DOM Captures</td>
+                        <td>No (clipboard only)</td>
+                        <td>Your clipboard (never our servers)</td>
+                        <td>Whoever you paste into (an AI assistant of your choice)</td>
                     </tr>
                     <tr>
                         <td>JobTread Project/Client Data</td>
                         <td>No (not stored by us)</td>
                         <td>N/A</td>
                         <td>AI platform via MCP (if enabled)</td>
+                    </tr>
+                    <tr>
+                        <td>AI Prompt Content</td>
+                        <td>No</td>
+                        <td>N/A</td>
+                        <td>Only your AI platform — we never see prompts</td>
                     </tr>
                     <tr>
                         <td>Usage Analytics</td>
