@@ -68,6 +68,13 @@ const CssSanitizer = (() => {
 
   // Apply blocklist + auto-scope to a single Selector node.
   function scopeSelector(node, scopeClass, errors) {
+    // Strip any pre-existing `.jt-tweak-{id} ` scope prefixes first.
+    // Makes the sanitizer idempotent — saving / updating / reverting
+    // already-scoped CSS no longer double-scopes selectors. Also lets a
+    // tweak cloned under a fresh id re-scope cleanly to its new id
+    // instead of carrying the old one forward.
+    stripLeadingScopePrefixes(node);
+
     const selectorText = csstree.generate(node).trim();
 
     // Reject extension UI prefixes
@@ -94,6 +101,33 @@ const CssSanitizer = (() => {
     newChildren.appendData({ type: 'Combinator', name: ' ' });
     node.children.forEach(child => newChildren.appendData(child));
     node.children = newChildren;
+  }
+
+  // Strip any leading `.jt-tweak-{anyId} ` (descendant combinator)
+  // prefixes from a Selector's children. Loops so doubly/triply-scoped
+  // input collapses to its bare form. Conservative — only strips when
+  // the class is followed by a descendant combinator AND further content
+  // (so a lone `.jt-tweak-x` selector isn't reduced to empty), and
+  // explicitly skips `.jt-tweak-edit-*` so the EXTENSION_UI_PREFIXES
+  // rejection still fires on hostile input.
+  function stripLeadingScopePrefixes(node) {
+    if (!node.children || !node.children.head) return;
+    while (node.children.head) {
+      const firstItem = node.children.head;
+      const firstNode = firstItem.data;
+      if (!firstNode || firstNode.type !== 'ClassSelector') break;
+      const name = firstNode.name;
+      if (typeof name !== 'string') break;
+      if (!name.startsWith('jt-tweak-')) break;
+      if (name.startsWith('jt-tweak-edit-')) break;
+      const secondItem = firstItem.next;
+      if (!secondItem) break;
+      const secondNode = secondItem.data;
+      if (!secondNode || secondNode.type !== 'Combinator' || secondNode.name !== ' ') break;
+      if (!secondItem.next) break;
+      node.children.remove(firstItem);
+      node.children.remove(secondItem);
+    }
   }
 
   function sanitize(rawCss, options = {}) {

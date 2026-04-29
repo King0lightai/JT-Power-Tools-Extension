@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security - JT Power Tools</title>
+    <meta name="description" content="JT Power Tools security model: what the extension can and cannot do, our threat model, defense-in-depth measures, and how to report a vulnerability.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/security/">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jtpowertools.com/security/">
+    <meta property="og:title" content="Security - JT Power Tools">
+    <meta property="og:description" content="Threat model and defense-in-depth measures for JT Power Tools.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.v3.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><img src="/850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
+                <p>Documentation &amp; Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/documentation/">Docs</a>
+                <a href="/#install">Install</a>
+                <a href="/#pricing">Pricing</a>
+                <a href="/changelog/">Changelog</a>
+                <a href="/roadmap/">Roadmap</a>
+                <a href="/about/">About</a>
+                <a href="/support/">Support</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1>Security</h1>
+            <p class="guide-meta">Last Reviewed: April 29, 2026</p>
+        </div>
+
+        <div class="guide-content">
+            <div class="info-box tip">
+                <strong>TL;DR</strong>
+                <p>JT Power Tools has two systems with very different threat models. <strong>Tweaks</strong> are DOM-only — no JS execution, no data exfiltration, no synthetic clicks on JT buttons. The worst-case attack is UI-redress (relabeling a button to deceive a user), and we've added an explicit clickjacking guard against that. <strong>MCP</strong> talks to JobTread's API and can write or delete data, so it's gated by an admin-controlled three-tier permission model with a default of read-only on every new key.</p>
+            </div>
+
+            <h2>Why this page exists</h2>
+            <p>If you're an admin or IT lead deciding whether to allow JT Power Tools in your org, or a contractor wondering what an extension that modifies JobTread can actually do, this page lays out our threat model honestly. We'd rather you read this and decide it's acceptable than wonder.</p>
+
+            <h2>Two systems, two threat models</h2>
+            <p>The extension ships two largely independent capabilities, each with its own boundaries:</p>
+            <ul>
+                <li><strong>Tweaks</strong> — user- or admin-authored DOM and CSS modifications applied client-side inside <code>app.jobtread.com</code>. Closed verb allowlist, hard-blocked from running scripts or reaching the network.</li>
+                <li><strong>MCP server</strong> — a Cloudflare Worker that brokers AI tool calls (Claude, ChatGPT, Cursor, etc.) to JobTread's Pave API. Three-tier permission model (read / write / delete), org-scoped grant keys, server-side enforcement.</li>
+            </ul>
+            <p>The two systems do not share a process, a DOM, or an auth surface. A compromise in one does not propagate to the other.</p>
+
+            <h2>Tweaks — what they can and cannot do</h2>
+
+            <h3>What a malicious tweak <em>can</em> do</h3>
+            <ul>
+                <li><strong>UI redress (clickjacking)</strong> — relabel a visible button (e.g. "Approve" → "Cancel") so a user clicks expecting one outcome and triggers another. <strong>Mitigated:</strong> the engine now refuses <code>setText</code> on primary-action buttons whose current text matches a destructive or financial action word (Approve, Confirm, Delete, Pay, Submit, Send, Sign, etc.). The guard checks <code>&lt;button&gt;</code>, <code>&lt;input type="submit|button"&gt;</code>, and <code>role="button"</code> elements at runtime before applying.</li>
+                <li><strong>Hide elements</strong> — remove confirmation dialogs or warning banners. The local-disable hatch in the popup gives members a way to opt out of any <code>org_required</code> tweak per-device.</li>
+                <li><strong>Visually disrupt the page</strong> — restyle aggressively, scramble row order. Disruptive but not destructive — page reload restores everything.</li>
+                <li><strong>Push tweaks to org members (admin only)</strong> — admins with <code>org_required</code> scope can deliver tweaks to every member of their license. Members cannot edit or delete those tweaks but can locally disable them on their device, and the extension shows a one-time transparency banner the first time a new <code>org_required</code> tweak appears so members are never silently managed.</li>
+            </ul>
+
+            <h3>What a malicious tweak <em>cannot</em> do</h3>
+            <ul>
+                <li><strong>Execute JavaScript.</strong> No <code>eval</code>, no <code>expression()</code>, no inline <code>&lt;script&gt;</code>, no <code>javascript:</code> URIs. The CSS sanitizer parses every stylesheet via an AST and hard-rejects all of these.</li>
+                <li><strong>Inject HTML.</strong> All text content goes through <code>textContent</code>. There is no <code>innerHTML</code>, <code>insertHTML</code>, or <code>insertElement</code> verb, and the validator refuses any verb outside the closed allowlist.</li>
+                <li><strong>Load external resources.</strong> The CSS sanitizer restricts <code>url(...)</code> to <code>https://</code> or <code>data:image/</code> only. <code>@import</code> is forbidden. There is no fetch / XHR verb. This blocks the classic exfil-via-background-image trick.</li>
+                <li><strong>Exfiltrate data.</strong> Nothing in the verb set can take DOM contents and transmit them. Even if a tweak reads visible information from the page, there is no transport.</li>
+                <li><strong>Click JT's own buttons synthetically.</strong> The <code>onEvent</code> verb only intercepts user interactions; it cannot dispatch them. A tweak cannot click "Delete" on the user's behalf.</li>
+                <li><strong>Touch other tabs or origins.</strong> Content scripts are scoped to <code>app.jobtread.com</code> via <code>host_permissions</code>. Tweaks have no access to <code>chrome.*</code> APIs or to other tabs.</li>
+            </ul>
+
+            <p class="info-box note">
+                <strong>Blast radius.</strong> Tweaks act inside one user's browser and only on JobTread pages. They can modify what that user sees and clicks but cannot reach JobTread's servers, your data, or any other tab. A tweak's effects on a user's view do not propagate back to JobTread. Other users see vanilla JT until they install or accept the same tweak.
+            </p>
+
+            <h3>Defense-in-depth on tweaks</h3>
+            <ul>
+                <li><strong>Closed verb allowlist.</strong> <code>addClass</code>, <code>removeClass</code>, <code>setStyle</code>, <code>hide</code>, <code>show</code>, <code>setText</code>, <code>onEvent</code>, <code>moveBefore</code>, <code>moveAfter</code>, <code>sortChildren</code>. Anything not on this list is rejected.</li>
+                <li><strong>CSS sanitizer with AST parsing.</strong> Rejects dangerous at-rules (<code>@import</code>, <code>@charset</code>, <code>@namespace</code>), dangerous values (<code>expression(...)</code>, <code>behavior:</code>, <code>-moz-binding:</code>, non-allowlist <code>url()</code>), and bare <code>html</code> / <code>body</code> / <code>:root</code> / <code>*</code> selectors. Auto-scopes every selector to <code>.jt-tweak-{id}</code> so a tweak's styles cannot bleed outside its own elements. Idempotent — re-running the sanitizer on already-scoped CSS does not double-scope it.</li>
+                <li><strong>Selector blocklist.</strong> No tweak selector can include <code>.jt-tools-</code>, <code>.jt-popup-</code>, or <code>.jt-tweak-edit-</code> prefixes — keeps tweaks from targeting the extension's own UI.</li>
+                <li><strong>Server-side re-validation and re-sanitization.</strong> Every tweak written to the server runs through both the DSL validator and the CSS sanitizer again, server-side. The server never trusts the extension's claim that content has already been validated.</li>
+                <li><strong>Engine re-validates before applying.</strong> Even after the server returns a tweak, the engine validates again before applying — defense in depth in case storage was modified outside the editor.</li>
+                <li><strong>Auto-disable on breakage.</strong> If a tweak's selectors stop matching after JT ships a UI change (consecutive zero-match applies after the tweak previously worked), the engine auto-disables it and surfaces a clear "Auto-disabled (UI moved)" chip in the popup with a Re-enable button. Prevents tweaks from sitting silently broken.</li>
+                <li><strong>Audit trail.</strong> Every tweak version is preserved immutably in <code>tweak_versions</code>. AI-authored tweaks attribute back to the human admin who issued the AI grant key via <code>issued_for_account_id</code>.</li>
+            </ul>
+
+            <h2>MCP — permission tiers and what each tier can do</h2>
+
+            <p>The MCP server is the more sensitive surface — it talks to JobTread's authoritative API on behalf of an AI client. Three-tier permission model, admin-controlled per AI grant key. Default for new keys: <strong>read</strong>.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Can call</th>
+                        <th>Cannot call</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>read</strong> (default)</td>
+                        <td>Context bundles (jobs, schedule, financial, CRM, catalog, workflow, bills), search, knowledge lookup, list/get tweaks, ctx_* helpers</td>
+                        <td>Anything that creates, modifies, or deletes JT data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>write</strong></td>
+                        <td>Read tier + create/update jobs, tasks, budgets, contacts, comments, time entries, daily logs, dashboards, workflows, catalog items, files, tweaks. Send/post operations (notes, bills approval, sender allowlist).</td>
+                        <td>Destructive ops (delete*, remove*, revoke*, reject*, cancelRun)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>delete</strong></td>
+                        <td>Write tier + destructive operations on every entity (delete a job, delete budget items, delete a workflow, reject a bill, cancel a running workflow, delete files / plans, etc.)</td>
+                        <td>Nothing — full access within the org locked to the key</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Two-layer enforcement</h3>
+            <ul>
+                <li><strong>Tool-level gate.</strong> Every MCP tool declares a category in <code>TOOL_PERMISSIONS</code>. The wrapper checks the calling key's tier against the tool's category before dispatch.</li>
+                <li><strong>Op-level gate.</strong> Tools like <code>jt_job_write</code> accept an <code>op</code> enum that includes both non-destructive ops (<code>create</code>, <code>update</code>) and destructive ops (<code>delete</code>, <code>deleteArea</code>). For these tools, the wrapper escalates the required tier to <code>delete</code> when <code>args.op</code> is in the destructive set.</li>
+                <li><strong>Single source of truth.</strong> The same <code>canCall(permission, toolName, op)</code> helper gates both the MCP wrapper and the REST handler — they cannot drift.</li>
+            </ul>
+
+            <h3>Defense-in-depth on MCP</h3>
+            <ul>
+                <li><strong>Org locking.</strong> A grant key is bound to a specific JobTread org. Calls against any other org are rejected at validation time.</li>
+                <li><strong>Permission refresh on every request.</strong> All three auth paths (legacy <code>Bearer license:grant</code>, session token, OAuth) re-resolve the calling key's tier from the database on every MCP call. Portal-driven permission changes take effect on the user's next tool call — no disconnect / reconnect required.</li>
+                <li><strong>Per-tool usage telemetry.</strong> Every tool call is logged with success / failure, error reason, and duration in <code>mcp_usage_log</code>. Permission denials are explicitly tracked.</li>
+                <li><strong>Audit attribution.</strong> Each AI grant key records <code>issued_for_account_id</code> — the portal account that created it. Tweaks (and other artifacts authored by AI clients) attribute back to the human admin, not just "the license."</li>
+                <li><strong>Rate limiting.</strong> Brute-force attempts against the auth endpoints are rate-limited per IP via Cloudflare KV with exponential backoff.</li>
+                <li><strong>Server-side validation of ALL inputs.</strong> The Worker never trusts the AI client. Schema validation, parameter typing, and the same CSS / DSL sanitizers used in the extension run again server-side for tweak writes.</li>
+            </ul>
+
+            <h3>What the MCP server stores</h3>
+            <p>Operationally, the MCP server stores: license keys, account credentials (password hashes, never plaintext), encrypted JobTread grant keys, AI grant keys, MCP usage telemetry (tool name, success/failure, duration), and tweak content. It does <strong>not</strong> store JobTread project data, financials, or client information — those flow through the Worker and back to the AI client without persistence. See <a href="/privacy/">Privacy Policy</a> for the full data inventory.</p>
+
+            <h2>What we ask admins to do</h2>
+            <ul>
+                <li><strong>Use the least-privileged MCP tier that works.</strong> Default new keys to <code>read</code>. Promote to <code>write</code> only for AI workflows that genuinely need to author content. Promote to <code>delete</code> only for trusted automations or one-off cleanup tasks, and consider rotating the key back down afterward.</li>
+                <li><strong>Review your <code>org_required</code> tweaks before pushing.</strong> Members will see a transparency banner the first time a new <code>org_required</code> tweak lands on their device, but you should still socialize what you're pushing and why.</li>
+                <li><strong>Rotate AI grant keys when an admin leaves the team.</strong> The portal's AI Keys page lets you rotate or remove keys without losing the audit trail.</li>
+                <li><strong>Audit AI activity.</strong> The portal exposes per-tool usage so you can see what each AI key has actually called.</li>
+            </ul>
+
+            <h2>Reporting a security issue</h2>
+            <p>If you've found a vulnerability or have a security concern, please email <a href="mailto:support@jtpowertools.com?subject=Security%20Report">support@jtpowertools.com</a> with "Security Report" in the subject line. We aim to acknowledge reports within two business days. Please include:</p>
+            <ul>
+                <li>A description of the issue and its potential impact</li>
+                <li>Steps to reproduce, ideally with a minimal proof of concept</li>
+                <li>The version of the extension or MCP server (the Worker version is in the <code>X-MCP-Version</code> response header)</li>
+            </ul>
+            <p>We don't currently run a paid bug bounty, but we'll credit reporters publicly with permission and we will not pursue legal action against good-faith research.</p>
+
+            <h2>Changelog of security-relevant changes</h2>
+            <p>Major security changes are flagged in the <a href="/changelog/">main changelog</a> under the <code>Security</code> heading. Recent highlights:</p>
+            <ul>
+                <li><strong>setText clickjacking guard</strong> — engine refuses to relabel primary-action buttons whose current text matches a destructive / financial action word.</li>
+                <li><strong>CSS sanitizer is idempotent</strong> — already-scoped CSS no longer double-scopes on re-save, eliminating a silent-failure mode.</li>
+                <li><strong>OAuth permission tier refresh on every request</strong> — admin-driven permission changes take effect on the user's next tool call across all auth paths.</li>
+                <li><strong>Auto-disable on tweak breakage</strong> — the engine surfaces silent failures instead of letting broken tweaks sit unnoticed after a JT UI change.</li>
+                <li><strong>One-time transparency banner</strong> — members see a banner the first time a new <code>org_required</code> tweak appears on their device.</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="/privacy/">Privacy Policy</a>
+                <a href="/security/">Security</a>
+                <a href="/documentation/">Documentation</a>
+                <a href="/about/">About</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
+                <a href="/support/">Support</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

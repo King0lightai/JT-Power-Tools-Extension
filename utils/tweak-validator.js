@@ -13,19 +13,25 @@
  *     originalDomContext?: string
  *   }
  *
- * Actions (V1.5 closed list):
- *   { type: 'addClass',    selector: string, class: string }
- *   { type: 'removeClass', selector: string, class: string }
- *   { type: 'setStyle',    selector: string, style: { [prop]: value } }
- *   { type: 'hide',        selector: string }
- *   { type: 'show',        selector: string }
- *   { type: 'setText',     selector: string, text: string }
- *   { type: 'onEvent',     selector: string, event: 'click'|'dblclick'|'mousedown'|'dragstart',
- *                          preventDefault?: boolean, stopPropagation?: boolean,
- *                          alert?: { title?: string, body: string, confirmLabel?: string } }
+ * Actions (V1.6 closed list):
+ *   { type: 'addClass',     selector: string, class: string }
+ *   { type: 'removeClass',  selector: string, class: string }
+ *   { type: 'setStyle',     selector: string, style: { [prop]: value } }
+ *   { type: 'hide',         selector: string }
+ *   { type: 'show',         selector: string }
+ *   { type: 'setText',      selector: string, text: string }
+ *   { type: 'onEvent',      selector: string, event: 'click'|'dblclick'|'mousedown'|'dragstart',
+ *                           preventDefault?: boolean, stopPropagation?: boolean,
+ *                           alert?: { title?: string, body: string, confirmLabel?: string } }
+ *   { type: 'moveBefore',   selector: string, referenceSelector: string }
+ *   { type: 'moveAfter',    selector: string, referenceSelector: string }
+ *   { type: 'sortChildren', selector: string, childSelector?: string, keySelector?: string,
+ *                           key?: 'text'|'number'|'date', direction?: 'asc'|'desc' }
  *
  * Refused: insertHTML, insertElement, removeElement, eval-style verbs.
  * onEvent requires at least one side effect (preventDefault, stopPropagation, or alert).
+ * Move/sort verbs are not undone on tweak disable — same model as setText/addClass;
+ * a page reload restores original DOM order.
  *
  * Selectors are checked for the same extension-UI blocklist as the CSS
  * sanitizer. setStyle values pass through Sanitizer.sanitizeCSSValue and
@@ -34,8 +40,10 @@
  * Returns: { ok: true } or { ok: false, errors: [{ field, reason }, ...] }
  */
 const TweakValidator = (() => {
-  const ALLOWED_VERBS = new Set(['addClass', 'removeClass', 'setStyle', 'hide', 'show', 'setText', 'onEvent']);
+  const ALLOWED_VERBS = new Set(['addClass', 'removeClass', 'setStyle', 'hide', 'show', 'setText', 'onEvent', 'moveBefore', 'moveAfter', 'sortChildren']);
   const ALLOWED_EVENTS = new Set(['click', 'dblclick', 'mousedown', 'dragstart']);
+  const ALLOWED_SORT_KEYS = new Set(['text', 'number', 'date']);
+  const ALLOWED_SORT_DIRECTIONS = new Set(['asc', 'desc']);
   const EXTENSION_UI_PREFIXES = ['.jt-tools-', '.jt-popup-', '.jt-tweak-edit-'];
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -154,6 +162,25 @@ const TweakValidator = (() => {
       const hasSideEffect = action.preventDefault === true || action.stopPropagation === true || action.alert !== undefined;
       if (!hasSideEffect) {
         errors.push({ field: `actions[${i}]`, reason: 'onEvent must have at least one side effect (preventDefault, stopPropagation, or alert)' });
+      }
+    }
+    if (action.type === 'moveBefore' || action.type === 'moveAfter') {
+      if (!isSafeSelector(action.referenceSelector)) {
+        errors.push({ field: `actions[${i}].referenceSelector`, reason: 'referenceSelector is invalid or targets extension UI' });
+      }
+    }
+    if (action.type === 'sortChildren') {
+      if (action.childSelector !== undefined && !isSafeSelector(action.childSelector)) {
+        errors.push({ field: `actions[${i}].childSelector`, reason: 'childSelector is invalid or targets extension UI' });
+      }
+      if (action.keySelector !== undefined && !isSafeSelector(action.keySelector)) {
+        errors.push({ field: `actions[${i}].keySelector`, reason: 'keySelector is invalid or targets extension UI' });
+      }
+      if (action.key !== undefined && !ALLOWED_SORT_KEYS.has(action.key)) {
+        errors.push({ field: `actions[${i}].key`, reason: `key must be one of: ${[...ALLOWED_SORT_KEYS].join(', ')}` });
+      }
+      if (action.direction !== undefined && !ALLOWED_SORT_DIRECTIONS.has(action.direction)) {
+        errors.push({ field: `actions[${i}].direction`, reason: `direction must be one of: ${[...ALLOWED_SORT_DIRECTIONS].join(', ')}` });
       }
     }
   }

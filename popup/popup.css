@@ -3740,6 +3740,35 @@ body.dark-theme .cta-content p {
   min-width: 0;
 }
 
+/* At-a-glance status line above the tweak list — visible to all users
+   so support / CS can ask "do you have any active Power Tools tweaks?"
+   and the user can read the answer right off this line. */
+.jt-tweaks-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.jt-tweaks-summary[hidden] {
+  display: none;
+}
+.jt-tweaks-summary-stats {
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+.jt-tweaks-summary-copy {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
 .jt-tweaks-action {
   background: var(--bg-elevated);
   border: 1px solid var(--border-default);
@@ -3902,6 +3931,15 @@ body.dark-theme .tweak-status-chip.warn {
 }
 body.dark-theme .tweak-status-chip.error {
   color: #f87171;
+}
+/* Engine auto-disable — distinct from user-disable (slider) and from
+   author-error states. Indicates "I, the engine, turned this off
+   because the selectors stopped matching after JT shipped a UI change." */
+.tweak-status-chip.auto-disabled {
+  color: #6b21a8;
+}
+body.dark-theme .tweak-status-chip.auto-disabled {
+  color: #c084fc;
 }
 .tweak-status-chip .icon {
   font-size: 12px;

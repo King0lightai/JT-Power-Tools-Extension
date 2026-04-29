@@ -3101,6 +3101,9 @@ function showAccountError(formType, message) {
     const $orgLabel = $section.querySelector('[data-tweaks-org]');
     const $importBtn = $section.querySelector('[data-action="import"]');
     const $newBtn = $section.querySelector('[data-action="new"]');
+    const $summary = $section.querySelector('[data-tweaks-summary]');
+    const $summaryStats = $section.querySelector('[data-tweaks-summary-stats]');
+    const $summaryCopy = $section.querySelector('[data-action="copy-diagnostic"]');
     const $dialog = document.querySelector('[data-import-dialog]');
     if (!$dialog) return;
     const $importJson = $dialog.querySelector('[data-import-json]');
@@ -3231,19 +3234,106 @@ function showAccountError(formType, message) {
       return typeof url === 'string' && url.startsWith('https://app.jobtread.com');
     }
 
+    /**
+     * Update the at-a-glance summary line above the tweak list. Visible
+     * for any user (admin or member) so support / CS can ask "do you
+     * have any active Power Tools tweaks?" and the user can read the
+     * answer right off this line.
+     */
+    function renderSummary(visible, diag) {
+      if (!$summary || !$summaryStats) return;
+      if (!visible.length) {
+        $summary.hidden = true;
+        return;
+      }
+      let active = 0, errored = 0, noMatches = 0;
+      for (const t of visible) {
+        if (t.enabled === false) continue;
+        active++;
+        const d = diag[t.id] || {};
+        if (d.lastError) errored++;
+        else if (d.lastMatchCount === 0) noMatches++;
+      }
+      const parts = [active + ' active'];
+      if (errored) parts.push(errored + ' with errors');
+      if (noMatches) parts.push(noMatches + ' with no matches');
+      $summaryStats.textContent = parts.join(' · ');
+      $summary.hidden = false;
+    }
+
+    /**
+     * Build a multi-line plain-text dump of the current tweak state for
+     * the user to paste into a support email. Includes per-tweak status
+     * (enabled, last apply, last error) but never the tweak's CSS / DSL
+     * body — that may be sensitive (e.g. selectors revealing internal
+     * org structure). The user controls what they paste; we just hand
+     * them a clean summary.
+     */
+    function buildSupportDiagnostic(visible, diag) {
+      const lines = [];
+      const ts = new Date().toISOString();
+      lines.push('JT Power Tools — Tweak Diagnostic');
+      lines.push('Captured: ' + ts);
+      lines.push('Active org: ' + (activeOrg || '(none)'));
+      lines.push('Total tweaks: ' + visible.length);
+      lines.push('');
+      for (const t of visible) {
+        const d = diag[t.id] || {};
+        const enabled = t.enabled === false ? 'disabled' : 'enabled';
+        const scope = t.storageScope === 'org_required' ? 'org_required' : 'personal';
+        lines.push('— ' + (t.name || '(unnamed)'));
+        lines.push('   id: ' + t.id);
+        lines.push('   state: ' + enabled + ' (' + scope + ')');
+        if (typeof d.lastMatchCount === 'number') {
+          lines.push('   last match count: ' + d.lastMatchCount);
+        }
+        if (d.lastApplyAt) {
+          lines.push('   last applied: ' + new Date(d.lastApplyAt).toISOString());
+        }
+        if (d.lastError) {
+          lines.push('   last error: ' + d.lastError);
+          if (d.lastErrorAt) {
+            lines.push('   last error at: ' + new Date(d.lastErrorAt).toISOString());
+          }
+        }
+        lines.push('');
+      }
+      return lines.join('\n');
+    }
+
+    if ($summaryCopy) {
+      $summaryCopy.addEventListener('click', async () => {
+        const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics']);
+        const all = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+        const diag = stored.jtTweakDiagnostics || {};
+        const visible = activeOrg ? all.filter(t => t && t.scope && t.scope.jtOrg === activeOrg) : all;
+        const text = buildSupportDiagnostic(visible, diag);
+        try {
+          await navigator.clipboard.writeText(text);
+          const original = $summaryCopy.textContent;
+          $summaryCopy.textContent = 'Copied!';
+          setTimeout(() => { $summaryCopy.textContent = original; }, 1500);
+        } catch (err) {
+          console.warn('Clipboard write failed:', err);
+        }
+      });
+    }
+
     async function render() {
       // Pull fresh data from the server before rendering (best-effort).
       // Cache keeps render() fast on repeat opens; this just keeps it
       // accurate when the user has authored on another device.
       await refreshFromServerSilent();
-      const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics']);
+      const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics', 'jtTweakAutoDisabled']);
       const all = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
       const diag = stored.jtTweakDiagnostics || {};
+      const autoDisabledMap = stored.jtTweakAutoDisabled || {};
       const visible = activeOrg
         ? all.filter(t => t && t.scope && t.scope.jtOrg === activeOrg)
         : all;
 
       $list.innerHTML = '';
+      renderSummary(visible, diag);
       if (!visible.length) {
         $empty.hidden = false;
         return;
@@ -3252,7 +3342,9 @@ function showAccountError(formType, message) {
       const isAdmin = isCallerAdmin();
       for (const tweak of visible) {
         const d = diag[tweak.id] || {};
-        const hasWarning = !!d.lastError || d.lastMatchCount === 0;
+        const autoDisabledEntry = autoDisabledMap[tweak.id];
+        const isAutoDisabled = !!autoDisabledEntry;
+        const hasWarning = !!d.lastError || d.lastMatchCount === 0 || isAutoDisabled;
         const isOrgRequired = tweak.storageScope === 'org_required';
         const isLocallyDisabled = isOrgRequired && tweak.enabled === false;
 
@@ -3316,7 +3408,28 @@ function showAccountError(formType, message) {
 
         const status = document.createElement('span');
         status.className = 'tweak-status-chip';
-        if (d.lastError) {
+        if (isAutoDisabled) {
+          // Engine auto-disabled this tweak after consecutive zero-match
+          // applies — JT likely shipped a UI change that broke the
+          // selector. Distinct chip so the user knows it's not their
+          // own toggle and there's a Re-enable path below.
+          status.classList.add('auto-disabled');
+          const icon = document.createElement('span');
+          icon.className = 'icon';
+          icon.textContent = '⏻';
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = 'Auto-disabled (UI moved)';
+          const since = autoDisabledEntry.since
+            ? new Date(autoDisabledEntry.since).toLocaleString()
+            : 'recently';
+          const lastCount = autoDisabledEntry.lastSuccessfulMatchCount;
+          status.title = 'Auto-disabled ' + since +
+            (lastCount ? ' (used to match ' + lastCount + ' element' + (lastCount === 1 ? '' : 's') + ')' : '') +
+            '. JT likely shipped a UI change. Edit the tweak\'s selector or click Re-enable to retry.';
+          status.appendChild(icon);
+          status.appendChild(label);
+        } else if (d.lastError) {
           status.classList.add('error');
           const icon = document.createElement('span');
           icon.className = 'icon';
@@ -3346,6 +3459,19 @@ function showAccountError(formType, message) {
         }
         actions.appendChild(status);
 
+        // Re-enable button when the engine auto-disabled this tweak.
+        // Visible to anyone who could have authored or accepted it
+        // (auto-disable applies regardless of admin/member role since
+        // the breakage is per-device, not per-permission).
+        if (isAutoDisabled) {
+          const reBtn = document.createElement('button');
+          reBtn.className = 'icon-btn';
+          reBtn.textContent = 'Re-enable';
+          reBtn.title = 'Clear the auto-disable and retry. If the selector still doesn\'t match, the engine will auto-disable again.';
+          reBtn.addEventListener('click', () => clearAutoDisable(tweak.id));
+          actions.appendChild(reBtn);
+        }
+
         // Edit + Delete are gated on role for org_required tweaks. A
         // member can't mutate them — only locally disable via the
         // toggle. Admin/owner sees the buttons either way.
@@ -3373,6 +3499,35 @@ function showAccountError(formType, message) {
         card.appendChild(actions);
         $list.appendChild(card);
       }
+    }
+
+    /**
+     * Clear an engine-issued auto-disable for this tweak so it gets
+     * retried on the next apply pass. The engine listens on
+     * jtTweakAutoDisabled storage changes and re-runs loadAndApply
+     * when the map changes. If the selector still doesn't match
+     * after re-applying, the engine will auto-disable again.
+     */
+    async function clearAutoDisable(id) {
+      try {
+        const stored = await chrome.storage.local.get(['jtTweakAutoDisabled']);
+        const map = (stored.jtTweakAutoDisabled && typeof stored.jtTweakAutoDisabled === 'object')
+          ? { ...stored.jtTweakAutoDisabled }
+          : {};
+        delete map[id];
+        await chrome.storage.local.set({ jtTweakAutoDisabled: map });
+        // Also clear any "auto-disabled: ..." lastError so the chip flips
+        // back to a neutral state until the next apply records fresh data.
+        const diagStored = await chrome.storage.local.get(['jtTweakDiagnostics']);
+        const diagMap = { ...(diagStored.jtTweakDiagnostics || {}) };
+        if (diagMap[id] && typeof diagMap[id].lastError === 'string' && diagMap[id].lastError.startsWith('auto-disabled:')) {
+          diagMap[id] = { ...diagMap[id], lastError: null, lastErrorAt: null };
+          await chrome.storage.local.set({ jtTweakDiagnostics: diagMap });
+        }
+      } catch (e) {
+        console.warn('clearAutoDisable failed:', e);
+      }
+      render();
     }
 
     async function toggleTweak(id, enabled) {

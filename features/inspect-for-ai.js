@@ -615,9 +615,10 @@ const InspectForAiFeature = (() => {
     lines.push('  ]');
     lines.push('}');
     lines.push('');
-    lines.push('Allowed action verbs: addClass, removeClass, setStyle, hide, show, setText, onEvent.');
+    lines.push('Allowed action verbs: addClass, removeClass, setStyle, hide, show, setText, onEvent, moveBefore, moveAfter, sortChildren.');
     lines.push('Do NOT use innerHTML, insertHTML, insertElement, or any verb not in that list.');
     lines.push('Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.');
+    lines.push('setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.');
     lines.push('```');
     lines.push('');
     lines.push('_Copied by JT Power Tools — Inspect for AI (multi-view)_');
@@ -688,8 +689,15 @@ const InspectForAiFeature = (() => {
       '  { "type": "onEvent",     "selector": "...", "event": "click|dblclick|mousedown|dragstart",',
       '                           "preventDefault": true, "stopPropagation": false,',
       '                           "alert": { "title": "...", "body": "...", "confirmLabel": "OK" } }',
+      '  { "type": "moveBefore",  "selector": "...", "referenceSelector": "..." }   // move target to be the previous sibling of reference',
+      '  { "type": "moveAfter",   "selector": "...", "referenceSelector": "..." }   // move target to be the next sibling of reference',
+      '  { "type": "sortChildren", "selector": "<parent>", "childSelector": "<row>",',
+      '                            "keySelector": "<inside row>", "key": "text|number|date",',
+      '                            "direction": "asc|desc" }   // bulk-sort children of <parent>',
       '',
       'For "warn before action" patterns use onEvent with preventDefault: true + an alert.',
+      'For "JT table has no sort" use sortChildren on the tbody — keySelector picks the column to sort by.',
+      'setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.',
       'Do NOT use innerHTML, insertHTML, insertElement, or any verb not on the list above.',
       'Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.',
       'CSS values via setStyle must be simple (alphanumeric + space + - % .). For complex',

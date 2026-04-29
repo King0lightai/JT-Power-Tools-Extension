@@ -746,6 +746,13 @@
               <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="import" title="Paste a tweak you got from an AI chat">Paste from AI</button>
               <button class="jt-tweaks-action" data-action="new" title="For advanced users — write the JSON yourself">Blank</button>
             </div>
+            <!-- Tweaks status summary — visible at-a-glance for CS triage.
+                 First triage question becomes "do you have any active
+                 Power Tools tweaks?" and the user can read this line. -->
+            <div class="jt-tweaks-summary" data-tweaks-summary hidden>
+              <span class="jt-tweaks-summary-stats" data-tweaks-summary-stats></span>
+              <button class="jt-tweaks-action jt-tweaks-summary-copy" data-action="copy-diagnostic" title="Copy a support-friendly diagnostic summary to your clipboard">Copy for support</button>
+            </div>
             <ul class="jt-tweaks-list" data-tweaks-list>
               <!-- rendered by popup.js -->
             </ul>

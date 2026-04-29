@@ -34,6 +34,41 @@ const TweakEngineFeature = (() => {
   let eventListeners = [];           // {target, event, handler}
   let tweakEventListeners = [];      // [{ tweakId, target, event, handler, useCapture }]
 
+  // ─── Clickjacking guard for setText ──────────────────────────────
+  // setText refuses to overwrite a button-like element whose CURRENT
+  // textContent matches a destructive/financial action word. Blocks the
+  // most plausible UI-redress attack — e.g. relabel "Approve" to "Cancel"
+  // so the user clicks thinking they're cancelling but actually approves.
+  // Conservative: catches both English variants and JT's common verbiage
+  // (Submit, Send, Post Bill, Pay, Sign, etc.). False positives (refuses
+  // a legitimate relabel of a primary action button) are acceptable;
+  // false negatives are not. Authors who genuinely need to restyle a
+  // primary button can use CSS or addClass to change appearance without
+  // changing the click target's label.
+  const PROTECTED_ACTION_WORDS_RE = /\b(approve|approval|approves|approved|approving|confirm|confirms|confirmed|confirming|confirmation|delete|deletes|deleted|deleting|remove|removes|removed|removing|discard|discards|discarded|discarding|archive|archives|archived|archiving|reject|rejects|rejected|rejecting|submit|submits|submitted|submitting|send|sends|sent|sending|resend|pay|paid|paying|payment|payments|charge|charges|charged|charging|refund|refunds|refunded|refunding|sign|signs|signed|signing|signature|post|posts|posted|posting|publish|publishes|published|publishing)\b/i;
+
+  function isButtonLike(el) {
+    if (!el || !el.tagName) return false;
+    const tag = el.tagName;
+    if (tag === 'BUTTON') return true;
+    if (tag === 'INPUT') {
+      const t = (el.type || '').toLowerCase();
+      if (t === 'submit' || t === 'button') return true;
+    }
+    if (el.getAttribute && el.getAttribute('role') === 'button') return true;
+    return false;
+  }
+
+  function isProtectedPrimaryAction(el) {
+    if (!isButtonLike(el)) return false;
+    const text = (el.textContent || '').trim();
+    // Long blocks of text aren't button labels — primary action buttons
+    // are short. Cap protects against e.g. a <div role="button"> that
+    // wraps a whole card with accidental "delete" inside the body copy.
+    if (!text || text.length > 60) return false;
+    return PROTECTED_ACTION_WORDS_RE.test(text);
+  }
+
   function init() {
     if (isActive) return;
     isActive = true;
@@ -99,6 +134,10 @@ const TweakEngineFeature = (() => {
   }
 
   async function loadAndApply() {
+    // Hydrate auto-disabled state before filtering so a tweak that was
+    // auto-disabled in a previous session stays disabled until the user
+    // explicitly clicks Re-enable in the popup.
+    await hydrateAutoDisabled();
     try {
       const stored = await chrome.storage.local.get(['jtTweaks']);
       const tweaks = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
@@ -107,6 +146,13 @@ const TweakEngineFeature = (() => {
       activeTweakIds = new Set();
       for (const tweak of matching) {
         applyTweak(tweak);
+      }
+      // Transparency: if the active org has org_required tweaks the user
+      // hasn't acknowledged on this device, surface a one-time banner.
+      // Banner module is best-effort — silently skip if it failed to
+      // load (defense in depth so engine still applies tweaks).
+      if (window.JTTweakSystemBanner && matching.length) {
+        window.JTTweakSystemBanner.maybeShowFor(matching);
       }
     } catch (err) {
       console.error('TweakEngine: Failed to load tweaks:', err);
@@ -302,6 +348,90 @@ const TweakEngineFeature = (() => {
     if (diagnosticsFlushTimer) clearTimeout(diagnosticsFlushTimer);
     diagnosticsFlushTimer = setTimeout(flushDiagnostics, 2000);
   }
+
+  // ─── Auto-disable on suspected breakage ──────────────────────────
+  // A tweak that previously matched elements and now consistently
+  // matches zero is likely broken because JT shipped a UI change
+  // and the tweak's selector no longer resolves. Auto-disable it
+  // and surface a "Re-enable" path in the popup so the user knows
+  // why their tweak stopped working instead of silently failing.
+  //
+  // Hysteresis: must hit zero on N consecutive applies AND the tweak
+  // must have had a successful match at least M ms ago. The first
+  // condition prevents false positives from React mid-render. The
+  // second prevents auto-disabling tweaks that NEVER matched (those
+  // are author bugs, surfaced via the existing "No matches" chip,
+  // not auto-disabled).
+  const ZERO_MATCH_THRESHOLD = 5;
+  const MIN_SUCCESS_AGE_MS = 30_000;
+  const consecutiveZeroMatches = new Map();   // tweakId -> count
+  const autoDisabled = new Map();              // tweakId -> { reason, since, lastSuccessfulMatchCount }
+
+  /**
+   * Hydrate the in-memory autoDisabled map from chrome.storage.local
+   * so an auto-disable persists across page navigations within the
+   * same browser session AND across browser restarts. Called from
+   * loadAndApply on every fresh apply pass.
+   */
+  async function hydrateAutoDisabled() {
+    try {
+      const stored = await chrome.storage.local.get(['jtTweakAutoDisabled']);
+      const map = (stored.jtTweakAutoDisabled && typeof stored.jtTweakAutoDisabled === 'object')
+        ? stored.jtTweakAutoDisabled
+        : {};
+      autoDisabled.clear();
+      for (const [id, entry] of Object.entries(map)) {
+        if (entry && typeof entry === 'object' && entry.reason) {
+          autoDisabled.set(id, entry);
+        }
+      }
+    } catch (e) {
+      console.warn('TweakEngine: failed to hydrate auto-disabled map:', e);
+    }
+  }
+
+  /**
+   * Persist the autoDisabled map to chrome.storage.local so the
+   * popup can read it (popup runs in its own context, no in-memory
+   * sharing). Fire-and-forget — caller doesn't await.
+   */
+  function persistAutoDisabled() {
+    const obj = Object.fromEntries(autoDisabled.entries());
+    chrome.storage.local.set({ jtTweakAutoDisabled: obj }).catch((e) => {
+      console.warn('TweakEngine: failed to persist auto-disabled map:', e);
+    });
+  }
+
+  /**
+   * Mark a tweak as auto-disabled and tear down its applied effects.
+   * The tweak's own `enabled` flag is intentionally NOT touched —
+   * auto-disable is a separate engine-level signal, distinguishable
+   * in the popup so the user can tell "I turned this off" from
+   * "the engine turned this off because it stopped matching."
+   */
+  function autoDisableTweak(tweakId, reason, lastSuccessfulMatchCount) {
+    if (autoDisabled.has(tweakId)) return;
+    autoDisabled.set(tweakId, {
+      reason,
+      since: Date.now(),
+      lastSuccessfulMatchCount: lastSuccessfulMatchCount || 0,
+    });
+    persistAutoDisabled();
+    console.warn('TweakEngine: auto-disabled tweak', tweakId, 'reason:', reason);
+    // Tear down injected styles + observers for this specific tweak.
+    const styleEl = injectedStyles.get(tweakId);
+    if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+    injectedStyles.delete(tweakId);
+    document.documentElement.classList.remove('jt-tweak-' + tweakId);
+    activeTweakIds.delete(tweakId);
+    consecutiveZeroMatches.delete(tweakId);
+    // Surface the auto-disable in diagnostics so the popup chip can show
+    // a clear reason. Does NOT clear lastError (preserves any prior info).
+    recordDiagnostic(tweakId, {
+      lastError: 'auto-disabled: ' + reason + ' — selectors stopped matching after JT UI change. Click Re-enable in the popup if you fixed the tweak.',
+      lastErrorAt: Date.now(),
+    });
+  }
   async function flushDiagnostics() {
     if (diagnosticsBuffer.size === 0) return;
     // Snapshot before mutating so server pushes use the same data even if
@@ -373,7 +503,35 @@ const TweakEngineFeature = (() => {
           }
         }
       });
-      recordDiagnostic(tweak.id, { lastMatchCount: totalMatches, lastApplyAt: Date.now() });
+      const now = Date.now();
+      const partial = { lastMatchCount: totalMatches, lastApplyAt: now };
+      if (totalMatches > 0) {
+        // Successful match — reset hysteresis counter and stamp the
+        // last-success timestamp / count on the diagnostic record.
+        consecutiveZeroMatches.delete(tweak.id);
+        partial.lastSuccessfulMatchAt = now;
+        partial.lastSuccessfulMatchCount = totalMatches;
+      } else {
+        // Zero matches. Increment counter; if we've crossed the
+        // threshold AND the tweak previously worked AND enough time
+        // has passed since it last worked, auto-disable.
+        const zeros = (consecutiveZeroMatches.get(tweak.id) || 0) + 1;
+        consecutiveZeroMatches.set(tweak.id, zeros);
+        if (zeros >= ZERO_MATCH_THRESHOLD) {
+          // Pull last-success info from the persisted diagnostic
+          // (in-memory buffer might not have the historical timestamp
+          // if it was flushed already).
+          chrome.storage.local.get(['jtTweakDiagnostics']).then((stored) => {
+            const d = (stored.jtTweakDiagnostics || {})[tweak.id] || {};
+            const lastSuccessAt = d.lastSuccessfulMatchAt;
+            const lastSuccessCount = d.lastSuccessfulMatchCount || 0;
+            if (lastSuccessAt && (Date.now() - lastSuccessAt) >= MIN_SUCCESS_AGE_MS) {
+              autoDisableTweak(tweak.id, 'dom_changed', lastSuccessCount);
+            }
+          }).catch(() => {});
+        }
+      }
+      recordDiagnostic(tweak.id, partial);
     };
   }
 
@@ -403,9 +561,107 @@ const TweakEngineFeature = (() => {
         }
         break;
       case 'setText':
+        // Clickjacking guard: refuse to overwrite a button-like element
+        // whose current text is a destructive/financial action word.
+        // See PROTECTED_ACTION_WORDS_RE. Throw is caught by the
+        // try/catch in applyActions and recorded in tweak_diagnostics.
+        if (isProtectedPrimaryAction(el)) {
+          throw new Error('setText refused: target is a primary-action button (text matches a protected pattern — likely clickjacking)');
+        }
         // Use textContent to avoid HTML injection. Existing children are wiped.
         el.textContent = action.text;
         break;
+      case 'moveBefore':
+      case 'moveAfter': {
+        // Move target (`el`) so it's the previous/next sibling of the first
+        // element matching action.referenceSelector. Cross-parent moves work
+        // — target gets reparented onto the reference's parent. Idempotent:
+        // skip if already in the requested position. If the reference isn't
+        // in the DOM yet, this is a no-op — the MutationObserver will retry
+        // on the next DOM tick.
+        const reference = document.querySelector(action.referenceSelector);
+        if (!reference) return;
+        if (el === reference) return;
+        if (el.contains(reference)) {
+          throw new Error('referenceSelector resolves to a descendant of the target — would create a cycle');
+        }
+        const sameParent = el.parentNode === reference.parentNode;
+        if (action.type === 'moveBefore') {
+          if (sameParent && el.nextSibling === reference) return;
+          reference.parentNode.insertBefore(el, reference);
+        } else {
+          if (sameParent && el.previousSibling === reference) return;
+          reference.parentNode.insertBefore(el, reference.nextSibling);
+        }
+        break;
+      }
+      case 'sortChildren': {
+        // Sort the matched parent's element children by a key derived from
+        // each child. childSelector (optional) filters which children
+        // participate — non-matching siblings keep their original positions.
+        // keySelector (optional) extracts the sort key from inside each
+        // child; without it, the child's own textContent is used.
+        // Idempotent: bail if the children are already in the desired order.
+        const currentOrder = Array.from(el.children);
+        const matching = action.childSelector
+          ? currentOrder.filter((c) => c.matches(action.childSelector))
+          : currentOrder.slice();
+        if (matching.length < 2) return;
+
+        const direction = action.direction === 'desc' ? -1 : 1;
+        const keyType = action.key || 'text';
+
+        const getKey = (child) => {
+          let raw;
+          if (action.keySelector) {
+            const target = child.querySelector(action.keySelector);
+            raw = target ? (target.textContent || '').trim() : '';
+          } else {
+            raw = (child.textContent || '').trim();
+          }
+          if (keyType === 'number') {
+            const n = parseFloat(raw);
+            return Number.isNaN(n) ? Infinity : n;
+          }
+          if (keyType === 'date') {
+            const t = Date.parse(raw);
+            return Number.isNaN(t) ? Infinity : t;
+          }
+          return raw.toLowerCase();
+        };
+
+        const keyed = matching.map((c) => ({ child: c, key: getKey(c) }));
+        const sorted = keyed.slice().sort((a, b) => {
+          if (a.key < b.key) return -1 * direction;
+          if (a.key > b.key) return  1 * direction;
+          return 0;
+        }).map((k) => k.child);
+
+        let alreadySorted = true;
+        for (let i = 0; i < matching.length; i++) {
+          if (matching[i] !== sorted[i]) { alreadySorted = false; break; }
+        }
+        if (alreadySorted) return;
+
+        // Compute the final children order, preserving non-matching siblings
+        // in place. appendChild on an already-attached node moves it, so
+        // appending in the desired final order produces the correct final
+        // children list (intermediate states are transient).
+        const matchingSet = new Set(matching);
+        let k = 0;
+        const finalOrder = [];
+        for (const child of currentOrder) {
+          if (matchingSet.has(child)) {
+            finalOrder.push(sorted[k++]);
+          } else {
+            finalOrder.push(child);
+          }
+        }
+        for (const node of finalOrder) {
+          el.appendChild(node);
+        }
+        break;
+      }
       default:
         // Unknown verb — validator should have caught this, but storage
         // tampering or future-version data could slip through.
@@ -423,6 +679,11 @@ const TweakEngineFeature = (() => {
 
   function matchesContext(tweak) {
     if (!tweak.enabled) return false;
+    // Auto-disabled by the engine after consecutive zero-match applies
+    // — see autoDisableTweak. User must explicitly re-enable via the
+    // popup. Distinguishable from `tweak.enabled` so the popup can
+    // surface the reason.
+    if (autoDisabled.has(tweak.id)) return false;
     if (!tweak.scope || !tweak.scope.jtOrg) return false;
     const activeOrg = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
     if (!activeOrg) return false;
@@ -436,8 +697,12 @@ const TweakEngineFeature = (() => {
   function listenForStorageChanges() {
     const handler = (changes, areaName) => {
       if (areaName !== 'local') return;
-      if (!changes.jtTweaks) return;
-      console.log('TweakEngine: Tweak set changed, re-applying');
+      // Re-apply on either tweak-set changes OR auto-disable map changes
+      // (popup writes to jtTweakAutoDisabled when the user clicks
+      // Re-enable, and we want the engine to retry that tweak).
+      if (!changes.jtTweaks && !changes.jtTweakAutoDisabled) return;
+      console.log('TweakEngine: storage changed, re-applying',
+        changes.jtTweaks ? '(tweaks)' : '(auto-disable map)');
       removeAllAppliedTweaks();
       loadAndApply();
     };
