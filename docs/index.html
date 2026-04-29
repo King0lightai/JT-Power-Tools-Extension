@@ -115,8 +115,196 @@
       </div>
     </section>
 
-    <section class="s-showcase" aria-label="JT Power Tools in JobTread">
-      <img src="hero-marquee.png" alt="JT Power Tools running inside a JobTread budget view on a desktop workstation." loading="lazy" width="1400" height="560">
+    <!-- ══ Tweaks Engine announcement (v4.7.0 flagship feature) ══ -->
+    <section class="s-tweaks" aria-labelledby="tweaks-headline">
+      <div class="s-tweaks-tape" aria-hidden="true"></div>
+
+      <div class="container s-tweaks-inner">
+        <!-- Top metadata strip -->
+        <div class="s-tweaks-meta">
+          <span class="s-tweaks-shipped">
+            <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
+            Just shipped · v4.7.0
+          </span>
+          <span class="s-tweaks-meta-label">The Tweaks Engine</span>
+          <span class="s-tweaks-live">
+            <span class="s-tweaks-dot" aria-hidden="true"></span>
+            Live in Pro
+          </span>
+        </div>
+
+        <!-- Headline + demo grid -->
+        <div class="s-tweaks-grid">
+          <div>
+            <h2 id="tweaks-headline" class="s-tweaks-headline">
+              JOBTREAD,<br>
+              <span class="accent">YOUR WAY.</span>
+            </h2>
+            <p class="s-tweaks-lede">
+              Tweaks is a CSS &amp; DOM feature builder. Pick an element, hand it
+              to your AI, paste back the code &mdash; instant custom feature.
+            </p>
+            <p class="s-tweaks-sublede">
+              Then push it across your whole company so everyone gets the same view of the world.
+              No browser-extension dev experience required.
+            </p>
+
+            <div class="s-tweaks-ctas">
+              <a href="#install" class="btn btn--primary">
+                <i class="ph ph-magic-wand" aria-hidden="true"></i>
+                Try the Tweaks Engine
+              </a>
+            </div>
+
+            <div class="s-tweaks-shortcuts">
+              <span><kbd class="s-tweaks-kbd">Alt</kbd> + click an element</span>
+              <span><kbd class="s-tweaks-kbd">Alt</kbd> + <kbd class="s-tweaks-kbd">Shift</kbd> + <kbd class="s-tweaks-kbd">P</kbd> picker</span>
+              <span><kbd class="s-tweaks-kbd">Alt</kbd> + <kbd class="s-tweaks-kbd">Shift</kbd> + <kbd class="s-tweaks-kbd">M</kbd> multi-view</span>
+            </div>
+          </div>
+
+          <!-- Demo mockup -->
+          <div class="s-tweaks-demo" aria-hidden="true">
+            <div class="s-tweaks-demo-chrome">
+              <div class="s-tweaks-demo-traffic">
+                <span style="background:#FF5F57"></span>
+                <span style="background:#FEBC2E"></span>
+                <span style="background:#28C840"></span>
+              </div>
+              <div class="s-tweaks-demo-url">app.jobtread.com / Home</div>
+            </div>
+
+            <div class="s-tweaks-demo-page">
+              <div class="s-tweaks-demo-eyebrow">HOME</div>
+              <div class="s-tweaks-demo-title">JT POWER TOOLS</div>
+
+              <div class="s-tweaks-demo-cards">
+                <!-- Picked card -->
+                <div class="s-tweaks-demo-card s-tweaks-demo-card--picked">
+                  <div class="s-tweaks-demo-tag">
+                    <span class="s-tweaks-demo-tag-tag">&lt;div</span>
+                    <span class="s-tweaks-demo-tag-classes">.stat-card.flex</span>
+                    <span class="s-tweaks-demo-tag-meta">· 2 ancestors</span>
+                  </div>
+                  <div class="s-tweaks-demo-card-label">Incomplete tasks</div>
+                  <div class="s-tweaks-demo-card-num">80</div>
+                  <i class="ph ph-crosshair s-tweaks-demo-crosshair" aria-hidden="true"></i>
+                </div>
+
+                <!-- Faded card -->
+                <div class="s-tweaks-demo-card s-tweaks-demo-card--faded">
+                  <div class="s-tweaks-demo-card-label">Overdue tasks</div>
+                  <div class="s-tweaks-demo-card-num">53</div>
+                </div>
+              </div>
+
+              <!-- Faint table -->
+              <div class="s-tweaks-demo-table">
+                <div class="s-tweaks-demo-table-head">
+                  <span>Task</span><span>Start</span><span>End</span><span>Job</span>
+                </div>
+                <div class="s-tweaks-demo-table-row">
+                  <span>Project Planning</span><span class="muted">Mar 15</span><span class="muted">Mar 17</span><span class="muted">Thompson Remodel</span>
+                </div>
+                <div class="s-tweaks-demo-table-row">
+                  <span>Needs Assessment</span><span class="muted">Mar 15</span><span class="muted">Mar 17</span><span class="muted">Thompson Remodel</span>
+                </div>
+                <div class="s-tweaks-demo-table-row">
+                  <span>Site Visit</span><span class="muted">Mar 15</span><span class="muted">Mar 17</span><span class="muted">Thompson Remodel</span>
+                </div>
+              </div>
+
+              <!-- AI prompt floating panel -->
+              <div class="s-tweaks-demo-ai">
+                <div class="s-tweaks-demo-ai-head">
+                  <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
+                  <span>Ask AI to tweak</span>
+                  <span class="s-tweaks-demo-ai-count">1 element</span>
+                </div>
+                <div class="s-tweaks-demo-ai-body">
+                  &ldquo;Make incomplete tasks turn red when count is over 50, and pulse gently.&rdquo;
+                </div>
+                <div class="s-tweaks-demo-ai-foot">
+                  <span class="s-tweaks-demo-ai-pill">CLAUDE</span>
+                  <span>·</span>
+                  <span>14 lines CSS</span>
+                  <span class="s-tweaks-demo-ai-ready">
+                    <span class="s-tweaks-demo-ai-ready-dot"></span>
+                    Ready
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Three-step flow -->
+        <div class="s-tweaks-flow">
+          <div class="s-tweaks-flow-step">
+            <div class="s-tweaks-flow-head">
+              <span class="s-tweaks-flow-icon"><i class="ph ph-crosshair" aria-hidden="true"></i></span>
+              <span class="s-tweaks-flow-num">01</span>
+            </div>
+            <h4 class="s-tweaks-flow-title">PICK</h4>
+            <p>Alt+click any element on JobTread. The picker captures the exact selector, ancestry, and what it does.</p>
+            <i class="ph ph-arrow-right s-tweaks-flow-arrow" aria-hidden="true"></i>
+          </div>
+          <div class="s-tweaks-flow-step">
+            <div class="s-tweaks-flow-head">
+              <span class="s-tweaks-flow-icon"><i class="ph ph-sparkle" aria-hidden="true"></i></span>
+              <span class="s-tweaks-flow-num">02</span>
+            </div>
+            <h4 class="s-tweaks-flow-title">ASK YOUR AI</h4>
+            <p>One click sends the element + your prompt to ChatGPT, Claude, or your own model. You get back CSS or JS that just works.</p>
+            <i class="ph ph-arrow-right s-tweaks-flow-arrow" aria-hidden="true"></i>
+          </div>
+          <div class="s-tweaks-flow-step s-tweaks-flow-step--last">
+            <div class="s-tweaks-flow-head">
+              <span class="s-tweaks-flow-icon"><i class="ph ph-broadcast" aria-hidden="true"></i></span>
+              <span class="s-tweaks-flow-num">03</span>
+            </div>
+            <h4 class="s-tweaks-flow-title">SHIP IT</h4>
+            <p>Save the tweak personally, or push it org-wide so every estimator and PM in your company runs the same version of JobTread.</p>
+          </div>
+        </div>
+
+        <!-- Mini feature row -->
+        <div class="s-tweaks-mini">
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-target" aria-hidden="true"></i></div>
+            <h5>ELEMENT PICKER</h5>
+            <p>Highlights the exact node. Shows tag, classes, and how many ancestors / descendants you'll capture.</p>
+          </div>
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-stack" aria-hidden="true"></i></div>
+            <h5>MULTI-VIEW CAPTURE</h5>
+            <p>Pick across multiple JobTread views at once and bundle them into a single tweak request.</p>
+          </div>
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-buildings" aria-hidden="true"></i></div>
+            <h5>ORG-WIDE PUSH</h5>
+            <p>Roll out an approved tweak to every device on your account. One install, everyone benefits.</p>
+          </div>
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-arrows-counter-clockwise" aria-hidden="true"></i></div>
+            <h5>TOGGLE ANYWHERE</h5>
+            <p>One master switch disables every tweak on this device. Perfect for screen-sharing with support.</p>
+          </div>
+        </div>
+
+        <!-- Pull quote -->
+        <div class="s-tweaks-pull">
+          <div class="s-tweaks-pull-label">Why it matters</div>
+          <p class="s-tweaks-pull-quote">
+            Every contractor runs JobTread differently. Now the software actually
+            bends to match &mdash; without waiting for the next release.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="s-showcase" aria-label="JT Power Tools — the missing piece of your JobTread workflow">
+      <img src="hero-marquee.png" alt="JT Power Tools — the missing piece of your JobTread workflow. Adds Schedule &amp; Task Checkboxes, Budget Changelog, Job Switcher Filter, Budget Hierarchy Shading, Dark Mode, Freeze Header, Text Formatter, and more — shown running inside a JobTread budget view on a desktop monitor." loading="lazy" width="1900" height="750">
     </section>
 
     <section class="s-diff">
