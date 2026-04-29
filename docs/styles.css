@@ -2052,3 +2052,98 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
     margin: 12px;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Pro pricing card — Tweaks Engine flagship callout (v4.7.0)
+   Layered visual hooks (in priority order):
+     1. Orange "New in v4.7.0" badge pinned to the top edge
+        — same anatomy as the Power User "Most Popular" badge but in
+          brand orange so it doesn't compete with the purple
+     2. Flagship callout block describing Tweaks, sitting above the
+        Get Pro CTA so it's the last thing read before deciding
+     3. Inline highlight on the Tweaks bullet inside the feature list
+        with a magic-wand icon instead of a checkmark
+   ════════════════════════════════════════════════════════════════ */
+
+.s-pricing-card--new {
+  border: 2px solid var(--orange);
+  position: relative;
+}
+.s-pricing-new-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--orange);
+  color: #fff;
+  font-family: var(--font-sub);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--orange) 35%, transparent);
+}
+.s-pricing-new-badge i { font-size: 12px; }
+
+/* Flagship callout block — sits between the desc and the CTA so it's
+   the last thing a visitor reads before clicking Get Pro. */
+.s-pricing-flagship {
+  margin: 14px 0 18px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--orange) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--orange) 30%, transparent);
+  border-radius: var(--r-md);
+  text-align: left;
+}
+.s-pricing-flagship-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sub);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--orange);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.s-pricing-flagship-head i { font-size: 16px; }
+.s-pricing-flagship p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.s-pricing-flagship-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--dur) var(--ease);
+}
+.s-pricing-flagship-link:hover {
+  border-bottom-color: var(--orange);
+}
+.s-pricing-flagship-link i { font-size: 13px; }
+
+/* Highlighted feature row inside the Pro feature list. The wand icon
+   replaces the standard checkmark to draw the eye to the new feature
+   without needing a separate badge. */
+.s-pricing-features--pro .s-pricing-feature--highlight {
+  font-weight: 600;
+  color: var(--ink);
+}
+.s-pricing-features--pro .s-pricing-feature--highlight i {
+  color: var(--orange);
+  font-size: 16px;
+}
