@@ -1,267 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Availability Filter - JT Power Tools</title>
-    <meta name="description" content="Filter JobTread schedule by team member availability. Quickly see who is free and manage workload across your construction crew.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/availability-filter.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/availability-filter.html">
-    <meta property="og:title" content="Availability Filter - JT Power Tools">
-    <meta property="og:description" content="Filter JobTread schedule by team member availability. Quickly see who is free and manage workload across your construction crew.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Availability Filter — JT Power Tools</title>
+  <meta name="description" content="Filter JobTread's Schedule Availability view by role, department, or assignee. Save filter views. Pro.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/availability-filter.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/availability-filter.html">
+  <meta property="og:title" content="Availability Filter — JT Power Tools">
+  <meta property="og:description" content="Filter JobTread's Schedule Availability view by role, department, or assignee. Save filter views. Pro.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">🔍</span> Availability Filter</h1>
-            <p class="guide-meta">Pro Feature - Filter Assignees in Schedule Availability View</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Availability Filter lets you filter assignees in JobTread's Schedule Availability view by role, department, or category. Instead of scrolling through every person in your organization, quickly narrow down the view to just the crew members, vendors, or roles you need to see. Save your favorite filter configurations as reusable views for instant recall.</p>
-
-            <div class="info-box premium">
-                <strong>Pro Feature</strong>
-                <p>Availability Filter requires a Pro or Power User subscription. <a href="premium.html">Learn about pricing tiers</a>.</p>
-            </div>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Hierarchical Filtering</strong> - Expandable category dropdowns with individual assignee toggles</li>
-                <li><strong>Category Detection</strong> - Automatically detects INTERNAL, VENDOR, and other categories from your schedule</li>
-                <li><strong>Role-Based Filtering</strong> - Filter INTERNAL staff by role (e.g., "01 Field", "02 Project Supervisor")</li>
-                <li><strong>Vendor Filtering</strong> - Filter vendors by company name</li>
-                <li><strong>Saved Views</strong> - Save and load filter configurations with custom names</li>
-                <li><strong>Partial State Indicator</strong> - Dashed border shows when some but not all children in a category are selected</li>
-                <li><strong>Count Badges</strong> - See at a glance how many assignees are visible per category (e.g., "3/12")</li>
-                <li><strong>Quick Actions</strong> - "Show All" and "Hide All" buttons for fast toggling</li>
-                <li><strong>Persistent Selections</strong> - Filter choices sync across sessions via Chrome storage</li>
-                <li><strong>Smooth Animations</strong> - Filtered rows collapse smoothly instead of disappearing abruptly</li>
-                <li><strong>Dark Mode & Custom Theme Support</strong> - Full compatibility with all JT Power Tools themes</li>
-            </ul>
-
-            <h2>How It Works</h2>
-
-            <h3>Category Detection</h3>
-            <p>When you navigate to the Schedule Availability view, the filter automatically scans for category headers (displayed in orange text) and builds a hierarchical filter panel:</p>
-            <ul>
-                <li><strong>INTERNAL</strong> - Groups staff by their assigned role (e.g., "01 Field", "02 Project Supervisor")</li>
-                <li><strong>VENDOR</strong> - Groups by vendor company name</li>
-                <li><strong>Other Categories</strong> - Groups by individual assignee name</li>
-            </ul>
-
-            <h3>Hierarchical Structure</h3>
-            <p>Each category acts as a parent toggle with expandable children:</p>
-            <ul>
-                <li>Clicking a <strong>category chip</strong> toggles all assignees within that category on or off</li>
-                <li>Clicking an <strong>individual assignee chip</strong> toggles just that one person or role</li>
-                <li>The category chip shows a <strong>partial state</strong> (dashed border) when only some children are selected</li>
-                <li>A <strong>count badge</strong> (e.g., "3/12") shows how many are visible out of total</li>
-            </ul>
-
-            <h3>Filtering Behavior</h3>
-            <ul>
-                <li>Filtered-out rows collapse with a smooth animation rather than disappearing instantly</li>
-                <li>Visible rows get a blue left border highlight so you can see what's actively filtered</li>
-                <li>The filter re-applies automatically when the page updates (e.g., when schedule data loads)</li>
-            </ul>
-
-            <h2>Supported Pages</h2>
-
-            <p>Availability Filter works exclusively on the <strong>Schedule Availability view</strong> in JobTread:</p>
-            <ul>
-                <li><strong>Schedule page</strong> with the "Availability" view selected</li>
-                <li>The filter panel automatically hides when you navigate away from the Availability view</li>
-                <li>It reappears when you return to Availability</li>
-            </ul>
-
-            <div class="info-box tip">
-                <strong>Note</strong>
-                <p>This feature only appears when you're on the Schedule page with "Availability" selected as the view mode. It will not show on other views like Month, Week, or Gantt.</p>
-            </div>
-
-            <h2>Getting Started</h2>
-
-            <ol class="steps">
-                <li>
-                    <strong>Enable the Feature</strong><br>
-                    Open the JT Power Tools popup and enable "Availability Filter" under the Schedule & Calendar category
-                </li>
-                <li>
-                    <strong>Navigate to Schedule Availability</strong><br>
-                    Go to any job's Schedule page and switch to the Availability view
-                </li>
-                <li>
-                    <strong>Open the Filter Panel</strong><br>
-                    Click the "Filter Assignees" header bar that appears above the availability grid to expand it (it starts collapsed by default)
-                </li>
-                <li>
-                    <strong>Toggle Categories or Individuals</strong><br>
-                    Click category chips (like INTERNAL or VENDOR) to toggle entire groups, or expand a category and click individual assignee chips
-                </li>
-                <li>
-                    <strong>Save Your View (Optional)</strong><br>
-                    Click the "Views" button, then "Save Current View" to save your filter configuration with a custom name for quick recall later
-                </li>
-            </ol>
-
-            <h2>Saved Views</h2>
-
-            <p>Saved Views let you store and quickly switch between different filter configurations:</p>
-
-            <h3>Saving a View</h3>
-            <ol class="steps">
-                <li>Set up your desired filter (toggle categories and assignees on/off)</li>
-                <li>Click the <strong>"Views"</strong> button in the filter header</li>
-                <li>Click <strong>"Save Current View"</strong> at the bottom of the dropdown</li>
-                <li>Enter a name (e.g., "Field Crew Only", "Vendors", "Project Leads")</li>
-            </ol>
-
-            <h3>Loading a Saved View</h3>
-            <ol class="steps">
-                <li>Click the <strong>"Views"</strong> button</li>
-                <li>Click any saved view name to instantly apply that filter configuration</li>
-            </ol>
-
-            <h3>Deleting a Saved View</h3>
-            <ul>
-                <li>Click the <strong>X</strong> button next to any saved view to remove it</li>
-                <li>A confirmation dialog will appear before deletion</li>
-            </ul>
-
-            <div class="info-box tip">
-                <strong>Tip</strong>
-                <p>Saved views persist across browser sessions via Chrome storage and sync across devices signed into the same Chrome profile.</p>
-            </div>
-
-            <h2>Common Use Cases</h2>
-
-            <h3>Field Crew Scheduling</h3>
-            <p>Filter to show only INTERNAL staff with field roles to quickly check crew availability without vendor clutter.</p>
-
-            <h3>Vendor Coordination</h3>
-            <p>Toggle on only the VENDOR category to see subcontractor availability at a glance when planning upcoming work.</p>
-
-            <h3>Project Supervisor View</h3>
-            <p>Create a saved view that shows only project supervisors and leads, perfect for management meetings.</p>
-
-            <h3>Department-Specific Views</h3>
-            <p>Save views per department or trade (e.g., "Electricians", "Plumbers") for quick switching during scheduling sessions.</p>
-
-            <h2>Tips & Best Practices</h2>
-
-            <h3>Workflow Benefits</h3>
-            <ul>
-                <li>Use <strong>saved views</strong> for recurring scheduling meetings to instantly filter to the relevant crew</li>
-                <li>Use <strong>"Hide All"</strong> first, then selectively enable just the people you need</li>
-                <li>The <strong>count badges</strong> help you quickly see how many people are visible per category</li>
-                <li>The <strong>partial state indicator</strong> (dashed border) tells you at a glance if a category has mixed selections</li>
-            </ul>
-
-            <h3>Works Well With</h3>
-            <ul>
-                <li><a href="dark-mode.html"><strong>Dark Mode</strong></a> - Filter panel fully supports dark theme</li>
-                <li><a href="custom-theme.html"><strong>Custom Theme</strong></a> - Filter respects your RGB custom theme colors</li>
-                <li><a href="freeze-header.html"><strong>Freeze Header</strong></a> - Keep headers visible while scrolling the filtered availability grid</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Filter Panel Not Appearing?</h3>
-            <ul>
-                <li>Make sure the feature is enabled in the JT Power Tools popup</li>
-                <li>Verify you're on the <strong>Schedule page</strong> with <strong>Availability view</strong> selected</li>
-                <li>Try refreshing the page &mdash; the filter needs the availability grid to load first</li>
-                <li>Check that you have a Pro or Power User subscription active</li>
-            </ul>
-
-            <h3>Categories Not Detected?</h3>
-            <ul>
-                <li>The filter detects categories from the orange text headers in the availability grid</li>
-                <li>If your schedule doesn't have category groupings, there may be nothing to filter</li>
-                <li>Wait for the page to fully load before expanding the filter panel</li>
-            </ul>
-
-            <h3>Filters Not Persisting?</h3>
-            <ul>
-                <li>Filter selections are saved to Chrome sync storage automatically</li>
-                <li>Make sure you're signed into Chrome for cross-device sync</li>
-                <li>If storage is full, try clearing old saved views you no longer need</li>
-            </ul>
-
-            <h3>Want to Reset Everything?</h3>
-            <ul>
-                <li>Click <strong>"Show All"</strong> to make all assignees visible again</li>
-                <li>Or disable and re-enable the feature in the popup to reset completely</li>
-            </ul>
-
-            <h2>Technical Details</h2>
-
-            <h3>Performance</h3>
-            <ul>
-                <li>Uses debounced updates (300ms) to prevent excessive re-processing</li>
-                <li>MutationObserver watches for DOM changes efficiently</li>
-                <li>Collapse animation via CSS for smooth, GPU-accelerated transitions</li>
-                <li>URL change detection for SPA navigation support</li>
-            </ul>
-
-            <h3>Compatibility</h3>
-            <ul>
-                <li><strong>Dark Mode</strong> - Full dark theme support with proper grey palette</li>
-                <li><strong>Custom Themes</strong> - Respects CSS custom properties for RGB themes</li>
-                <li><strong>Chrome & Edge</strong> - Works on both supported browsers</li>
-                <li><strong>Mobile Edge</strong> - Compatible with Edge mobile extension support</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="kanban-filter.html">Kanban Filtering</a> - Hide empty columns in Kanban views</li>
-                <li><a href="custom-field-filter.html">Job Switcher Filter</a> - Filter jobs by custom field values</li>
-                <li><a href="auto-collapse.html">Auto Collapse Completed</a> - Collapse finished schedule groups</li>
-                <li><a href="freeze-header.html">Freeze Header</a> - Keep headers visible while scrolling</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>JT Power Tools — Made with love for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-funnel"></i></span>
+          <span class="tier pro">Pro</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Availability</span> <span class="serif">filter.</span></h1>
+        <p class="g-lede">Show only the crew, roles, or departments you actually care about in Schedule Availability. Save filter combos and reload them with one click.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>The Availability view shows your whole team. On a big crew that's a lot of scrolling. Availability Filter adds a panel where you can hide entire categories (INTERNAL, VENDOR) or drill down to individual people. Set up your favorite views — "Field crew only", "Project leads" — and save them so they're a single click to load next time.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Availability Filter</strong> under <em>Schedule &amp; Calendar</em>.</li>
+            <li>Flip it on.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to use it</h2>
+          <ol class="g-steps">
+            <li>Go to Schedule and switch to the <strong>Availability</strong> view.</li>
+            <li>Click <strong>Filter Assignees</strong> to expand the filter panel.</li>
+            <li>Click a category chip (like INTERNAL) to hide that whole group, or expand it and toggle individuals.</li>
+            <li>Click <strong>Views</strong> to save your current filter combo. Give it a name.</li>
+            <li>Load a saved view anytime from the same Views menu.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Click <strong>Hide All</strong> first, then enable just who you need — usually faster than turning a long list off.</li>
+            <li>Counts like "3/12" tell you at a glance how many in a category are showing.</li>
+            <li>Saved views sync across your devices.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/kanban-filter.html">Kanban Filter</a> — hide empty columns</li>
+            <li><a href="/guides/freeze-header.html">Freeze Header</a> — pin headers while scrolling (Essential)</li>
+            <li><a href="/guides/unassigned-availability.html">Unassigned Availability</a> — see unassigned tasks too (Power User)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

@@ -1,307 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Hierarchy Shading - JT Power Tools</title>
-    <meta name="description" content="Add progressive visual shading to nested budget groups in JobTread. Instantly see parent-child relationships with up to 5 levels of depth.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/budget-hierarchy.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/budget-hierarchy.html">
-    <meta property="og:title" content="Budget Hierarchy Shading - JT Power Tools">
-    <meta property="og:description" content="Add progressive visual shading to nested budget groups in JobTread. Instantly see parent-child relationships with up to 5 levels of depth.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Hierarchy Shading — JT Power Tools</title>
+  <meta name="description" content="Nested budget groups in JobTread get progressive shading so the structure jumps out at a glance. Free.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/budget-hierarchy.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/budget-hierarchy.html">
+  <meta property="og:title" content="Budget Hierarchy Shading — JT Power Tools">
+  <meta property="og:description" content="Nested budget groups in JobTread get progressive shading so the structure jumps out at a glance. Free.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">📊</span> Budget Hierarchy Shading</h1>
-            <p class="guide-meta">Free Feature - Visual Budget Organization</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Budget Hierarchy Shading adds progressive visual shading to nested budget groups, making it instantly clear how deeply nested each group is. Level 1 groups are lightest, and Level 5 groups are darkest, with line items automatically matching their parent group's shade.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>5 Shading Levels</strong> - Progressive darkening up to 5 levels deep</li>
-                <li><strong>Automatic Inheritance</strong> - Line items match parent group shading</li>
-                <li><strong>Dark Mode Adaptive</strong> - Intelligently adapts to Dark Mode and Custom Theme</li>
-                <li><strong>Yellow Highlight Preservation</strong> - Unsaved changes stay highlighted</li>
-                <li><strong>Smooth Hover States</strong> - Better visual feedback on interactions</li>
-                <li><strong>Real-Time Updates</strong> - Updates when expanding/collapsing groups</li>
-                <li><strong>At-a-Glance Clarity</strong> - Quickly identify group hierarchy and relationships</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <h3>Enabling the Feature</h3>
-            <ol class="steps">
-                <li>Click the JT Power Tools extension icon</li>
-                <li>Find "Budget Hierarchy Shading" toggle</li>
-                <li>Toggle it ON</li>
-                <li>Navigate to any JobTread budget page</li>
-                <li>Budget groups now show progressive shading</li>
-            </ol>
-
-            <h2>How It Works</h2>
-
-            <h3>Shading Levels</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Level</th>
-                        <th>Description</th>
-                        <th>Visual Appearance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Level 1</td>
-                        <td>Top-level groups</td>
-                        <td>Lightest shade (nearly white in light mode)</td>
-                    </tr>
-                    <tr>
-                        <td>Level 2</td>
-                        <td>Groups nested 1 level deep</td>
-                        <td>Light gray</td>
-                    </tr>
-                    <tr>
-                        <td>Level 3</td>
-                        <td>Groups nested 2 levels deep</td>
-                        <td>Medium gray</td>
-                    </tr>
-                    <tr>
-                        <td>Level 4</td>
-                        <td>Groups nested 3 levels deep</td>
-                        <td>Dark gray</td>
-                    </tr>
-                    <tr>
-                        <td>Level 5</td>
-                        <td>Groups nested 4+ levels deep</td>
-                        <td>Darkest shade</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>Line Item Inheritance</h3>
-            <p>Line items automatically inherit their parent group's shading:</p>
-            <ul>
-                <li>Line item in Level 1 group → Uses Level 1 shading</li>
-                <li>Line item in Level 3 group → Uses Level 3 shading</li>
-                <li>Makes it clear which group a line item belongs to</li>
-                <li>Maintains visual consistency throughout budget</li>
-            </ul>
-
-            <h2>Visual Examples</h2>
-
-            <h3>Budget Structure Example</h3>
-            <pre>
-Budget Overview (Level 1 - Lightest)
-├── Site Work (Level 2)
-│   ├── Excavation (Level 3)
-│   │   └── Line Item: Backhoe Rental (Level 3)
-│   └── Grading (Level 3)
-│       └── Line Item: Grading Labor (Level 3)
-├── Foundation (Level 2)
-│   ├── Concrete (Level 3)
-│   │   ├── Footings (Level 4)
-│   │   │   └── Line Item: Concrete Mix (Level 4)
-│   │   └── Slab (Level 4)
-│   │       └── Line Item: Slab Pour (Level 4)
-│   └── Rebar (Level 3)
-└── Framing (Level 2 - Darkest of this example)
-            </pre>
-
-            <h2>Benefits</h2>
-
-            <h3>Improved Organization</h3>
-            <ul>
-                <li><strong>Visual Hierarchy</strong> - Instantly see budget structure</li>
-                <li><strong>Faster Navigation</strong> - Find groups and items quickly</li>
-                <li><strong>Reduced Errors</strong> - Clear which group items belong to</li>
-                <li><strong>Better Planning</strong> - Understand budget breakdown at a glance</li>
-            </ul>
-
-            <h3>Enhanced Collaboration</h3>
-            <ul>
-                <li><strong>Team Understanding</strong> - New team members grasp structure faster</li>
-                <li><strong>Client Presentations</strong> - More professional-looking budgets</li>
-                <li><strong>Cross-Department</strong> - Accounting and field teams aligned on structure</li>
-            </ul>
-
-            <h2>Working with Other Features</h2>
-
-            <h3>Dark Mode Integration</h3>
-            <p>When Dark Mode is enabled:</p>
-            <ul>
-                <li>Shading levels adapt to dark background</li>
-                <li>Level 1 uses darkest shade</li>
-                <li>Level 5 uses lightest shade (inverted)</li>
-                <li>Maintains clear visual hierarchy in dark theme</li>
-            </ul>
-
-            <h3>Custom Theme Integration</h3>
-            <p>With Custom Theme (Premium):</p>
-            <ul>
-                <li>Shading adapts to your custom background color</li>
-                <li>Progressive shading maintained regardless of theme</li>
-                <li>Works seamlessly with any color palette</li>
-            </ul>
-
-            <h3>Yellow Highlight Preservation</h3>
-            <p>Edited budget cells:</p>
-            <ul>
-                <li>Yellow highlighting always visible</li>
-                <li>Shows unsaved changes clearly</li>
-                <li>Works on top of hierarchy shading</li>
-                <li>Never lose track of pending edits</li>
-            </ul>
-
-            <h2>Common Use Cases</h2>
-
-            <h3>Complex Commercial Projects</h3>
-            <p>Large projects with many nested groups:</p>
-            <ul>
-                <li>Multi-phase construction projects</li>
-                <li>Projects with multiple buildings</li>
-                <li>Detailed trade breakdowns</li>
-            </ul>
-
-            <h3>Estimating & Bidding</h3>
-            <p>Creating detailed estimates:</p>
-            <ul>
-                <li>Organize costs by phase, trade, and subtask</li>
-                <li>Clear visual structure for client presentation</li>
-                <li>Easy to spot missing categories</li>
-            </ul>
-
-            <h3>Budget Reviews</h3>
-            <p>Reviewing budgets with stakeholders:</p>
-            <ul>
-                <li>Quickly navigate to specific sections</li>
-                <li>Understand relationships between groups</li>
-                <li>Identify areas for cost reduction</li>
-            </ul>
-
-            <h2>Best Practices</h2>
-
-            <h3>Budget Organization</h3>
-            <ol>
-                <li><strong>Limit Depth</strong> - Try to stay within 3-4 levels for clarity</li>
-                <li><strong>Logical Grouping</strong> - Group by phase, trade, or location</li>
-                <li><strong>Consistent Naming</strong> - Use clear, descriptive group names</li>
-                <li><strong>Balanced Structure</strong> - Avoid having some branches much deeper than others</li>
-            </ol>
-
-            <h3>Visual Clarity</h3>
-            <ul>
-                <li>Collapse deep groups when not actively editing them</li>
-                <li>Use the shading to verify item placement</li>
-                <li>Review structure in both light and dark modes</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Shading Not Appearing</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify Budget Hierarchy Shading is enabled</li>
-                <li>Refresh the budget page</li>
-                <li>Make sure you're viewing a budget page (not schedule or dashboard)</li>
-                <li>Check browser console for errors</li>
-            </ul>
-
-            <h3>Colors Look Wrong</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Check if Dark Mode or Custom Theme is affecting shading</li>
-                <li>Adjust monitor brightness for better visibility</li>
-                <li>The shading is intentionally subtle for professional appearance</li>
-            </ul>
-
-            <h3>Shading Not Updating</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Expand/collapse groups to trigger re-rendering</li>
-                <li>Refresh the page</li>
-                <li>Disable and re-enable the feature</li>
-            </ul>
-
-            <h3>Line Items Wrong Shade</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Line items should match their immediate parent group</li>
-                <li>Check if line item is actually nested under the group you think it is</li>
-                <li>Expand parent group to verify structure</li>
-            </ul>
-
-            <h2>Technical Details</h2>
-
-            <h3>Shading Algorithm</h3>
-            <p>The feature calculates shading based on:</p>
-            <ol>
-                <li>DOM structure analysis to determine nesting depth</li>
-                <li>Progressive alpha values for transparency</li>
-                <li>Adaptive color selection based on theme mode</li>
-                <li>Real-time mutation observation for dynamic updates</li>
-            </ol>
-
-            <h3>Performance</h3>
-            <ul>
-                <li>Lightweight CSS-based implementation</li>
-                <li>No impact on JobTread's native functionality</li>
-                <li>Minimal browser resource usage</li>
-                <li>Smooth updates when expanding/collapsing</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="text-formatter.html">Text Formatter</a> - Format budget descriptions</li>
-                <li><a href="dark-mode.html">Dark Mode</a> - Works seamlessly with shading</li>
-                <li><a href="custom-theme.html">Custom Theme</a> - Shading adapts to your theme</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-tree-structure"></i></span>
+          <span class="tier free">Free</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Budget</span> <span class="serif">hierarchy.</span></h1>
+        <p class="g-lede">Nested budget groups get progressively darker shading. One look and you see exactly which line items belong to which group, even on big multi-phase projects.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Top-level budget groups stay light. Each level deeper gets a slightly darker shade — five levels in total. Line items inherit the shade of their parent group. The whole budget reads like a clean outline instead of a flat list.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Budget Hierarchy Shading</strong> under <em>Appearance</em>.</li>
+            <li>Flip it on. Open any job budget.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Especially helpful for projects with multiple phases or trades stacked into one budget.</li>
+            <li>Pair with <strong>Freeze Header</strong> so your toolbar stays put while you scroll deep budgets.</li>
+            <li>Shading inverts under Dark Mode so contrast stays sharp.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/auto-sum.html">Auto Sum</a> — live totals when selecting line items</li>
+            <li><a href="/guides/freeze-header.html">Freeze Header</a> — pin the header while you scroll (Essential)</li>
+            <li><a href="/guides/dark-mode.html">Dark Mode</a> — full dark theme</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

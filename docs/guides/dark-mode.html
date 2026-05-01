@@ -1,216 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Mode - JT Power Tools</title>
-    <meta name="description" content="Enable a full dark theme for JobTread. Reduces eye strain during late-night work with neutral grey tones and current-date highlighting on the schedule.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/dark-mode.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/dark-mode.html">
-    <meta property="og:title" content="Dark Mode - JT Power Tools">
-    <meta property="og:description" content="Enable a full dark theme for JobTread. Reduces eye strain during late-night work with neutral grey tones and current-date highlighting on the schedule.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mode — JT Power Tools</title>
+  <meta name="description" content="A full dark theme for JobTread. Easier on your eyes during long days, late nights, and field work in low light. Free.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/dark-mode.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/dark-mode.html">
+  <meta property="og:title" content="Dark Mode — JT Power Tools">
+  <meta property="og:description" content="A full dark theme for JobTread. Easier on your eyes day or night.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">🌙</span> Dark Mode</h1>
-            <p class="guide-meta">Free Feature - Easy on the Eyes</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Dark Mode transforms JobTread's bright interface into a beautiful dark theme that reduces eye strain during long work sessions. Perfect for late-night project planning or bright office environments.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Full Interface Coverage</strong> - Darkens all JobTread pages consistently</li>
-                <li><strong>Eye Strain Reduction</strong> - Easier on your eyes in low-light environments</li>
-                <li><strong>Customized for Construction</strong> - Optimized for construction management workflows</li>
-                <li><strong>Instant Toggle</strong> - Turn on/off without page reload</li>
-                <li><strong>Syncs Across Devices</strong> - Preference saves to your Chrome account</li>
-                <li><strong>Mutually Exclusive</strong> - Auto-disables Contrast Fix and Custom Theme</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <h3>Enabling Dark Mode</h3>
-            <ol class="steps">
-                <li>Click the JT Power Tools extension icon</li>
-                <li>Find the "Dark Mode" toggle</li>
-                <li>Toggle it ON</li>
-                <li>JobTread instantly switches to dark theme</li>
-            </ol>
-
-            <h2>Benefits</h2>
-
-            <h3>Health & Comfort</h3>
-            <ul>
-                <li><strong>Reduced Eye Strain</strong> - Less harsh light emission</li>
-                <li><strong>Better Sleep</strong> - Less blue light exposure before bed</li>
-                <li><strong>Reduced Headaches</strong> - Easier on sensitive eyes</li>
-                <li><strong>OLED Battery Savings</strong> - Uses less power on OLED screens</li>
-            </ul>
-
-            <h3>Work Environment</h3>
-            <ul>
-                <li><strong>Dim Offices</strong> - Screen won't light up the room</li>
-                <li><strong>Shared Spaces</strong> - Less distracting to nearby coworkers</li>
-                <li><strong>Field Work</strong> - Easier to read in vehicle cabs at dusk/dawn</li>
-                <li><strong>Late Hours</strong> - Comfortable for evening project reviews</li>
-            </ul>
-
-            <h2>Color Scheme</h2>
-
-            <h3>Background Colors</h3>
-            <ul>
-                <li><strong>Main Background</strong> - Dark charcoal (#1a1a1a)</li>
-                <li><strong>Cards & Panels</strong> - Slightly lighter dark gray (#2d2d2d)</li>
-                <li><strong>Hover States</strong> - Subtle brightening for feedback</li>
-            </ul>
-
-            <h3>Text Colors</h3>
-            <ul>
-                <li><strong>Primary Text</strong> - Off-white for readability (#e0e0e0)</li>
-                <li><strong>Secondary Text</strong> - Dimmed gray for less important info (#a0a0a0)</li>
-                <li><strong>Links</strong> - Bright blue that pops on dark background</li>
-            </ul>
-
-            <h3>Accent Colors</h3>
-            <ul>
-                <li><strong>Success States</strong> - Muted greens</li>
-                <li><strong>Warnings</strong> - Softer oranges</li>
-                <li><strong>Errors</strong> - Dimmed reds</li>
-                <li><strong>Info</strong> - Subdued blues</li>
-            </ul>
-
-            <h2>Feature-Specific Adaptations</h2>
-
-            <h3>Schedule View</h3>
-            <ul>
-                <li>Task cards have darkened backgrounds with preserved color accents</li>
-                <li>Date headers are clearly visible with light text</li>
-                <li>Task checkboxes and completion states adapt to dark theme</li>
-                <li>Current date highlighting adapts to dark theme</li>
-            </ul>
-
-            <h3>Budget View</h3>
-            <ul>
-                <li>Budget groups maintain hierarchy with dark shading</li>
-                <li>Line items are clearly separated</li>
-                <li>Number columns remain easy to scan</li>
-                <li>Yellow edit highlighting adjusted for dark background</li>
-            </ul>
-
-            <h3>Text Formatter</h3>
-            <ul>
-                <li>Formatting toolbar adopts dark theme</li>
-                <li>Button hover states work in dark context</li>
-                <li>Active formatting buttons clearly highlighted</li>
-                <li>Color preview adapts to dark background</li>
-            </ul>
-
-            <h2>Compatibility</h2>
-
-            <h3>Works With</h3>
-            <ul>
-                <li>Schedule Task Checkboxes (Premium)</li>
-                <li>Text Formatter</li>
-                <li>Smart Job Switcher</li>
-                <li>Budget Hierarchy Shading</li>
-            </ul>
-
-            <h3>Mutually Exclusive With</h3>
-            <ul>
-                <li>Contrast Fix (has its own contrast rules)</li>
-                <li>Custom Theme (Premium - for personalized themes)</li>
-            </ul>
-
-            <div class="info-box warning">
-                <strong>Theme Exclusivity</strong>
-                <p>Enabling Dark Mode automatically disables Contrast Fix and Custom Theme. You can only use one appearance mode at a time.</p>
-            </div>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Some Elements Still Light</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Some JobTread elements may not be covered by the theme</li>
-                <li>Refresh the page to ensure all CSS is loaded</li>
-                <li>Report specific elements on GitHub for future updates</li>
-            </ul>
-
-            <h3>Colors Look Washed Out</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Adjust your monitor's brightness and contrast settings</li>
-                <li>Some color muting is intentional to reduce eye strain</li>
-                <li>Try Custom Theme (Premium) for brighter color options</li>
-            </ul>
-
-            <h3>Text Hard to Read</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Increase browser zoom level (Ctrl/Cmd +)</li>
-                <li>Adjust monitor brightness</li>
-                <li>Check if your monitor has a "reading mode" setting</li>
-            </ul>
-
-            <h2>Best Practices</h2>
-            <ul>
-                <li>Use Dark Mode consistently (switching back and forth can strain eyes)</li>
-                <li>Combine with reduced monitor brightness for maximum comfort</li>
-                <li>Enable Night Light/Night Shift on your OS for evening work</li>
-                <li>Take regular breaks to look away from screen</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="custom-theme.html">Custom Theme</a> - Premium alternative with color customization</li>
-                <li><a href="contrast-fix.html">Contrast Fix</a> - Different approach to readability</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-moon"></i></span>
+          <span class="tier free">Free</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Dark</span> <span class="serif">mode.</span></h1>
+        <p class="g-lede">Flip the lights off in JobTread. Easier on the eyes for late-night project planning, dim trailer offices, and field work at dawn or dusk.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Turns the entire JobTread interface dark — schedule, budget, messages, all of it. Text stays sharp, your existing color tags (priorities, types, statuses) still pop, and the current date keeps a clear highlight so you never lose your place.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Dark Mode</strong> under <em>Appearance</em>.</li>
+            <li>Flip it on. JobTread switches instantly — no reload needed.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>If you turn on Dark Mode, Contrast Fix and Custom Theme turn off automatically. You can only run one appearance mode at a time.</li>
+            <li>Your preference syncs across browsers signed into the same Chrome profile.</li>
+            <li>Save battery on OLED screens and skip blue-light strain in the evening.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/custom-theme.html">Custom Theme</a> — pick your own colors (Pro)</li>
+            <li><a href="/guides/contrast-fix.html">Contrast Fix</a> — fix only the unreadable colored cards</li>
+            <li><a href="/guides/installation.html">Install &amp; Setup</a> — start here if you're new</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

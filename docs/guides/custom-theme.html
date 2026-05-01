@@ -1,305 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Theme - JT Power Tools</title>
-    <meta name="description" content="Create personalized color themes for JobTread with HSL-based palette generation. Save up to 3 custom themes and switch between them instantly.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/custom-theme.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/custom-theme.html">
-    <meta property="og:title" content="Custom Theme - JT Power Tools">
-    <meta property="og:description" content="Create personalized color themes for JobTread with HSL-based palette generation. Save up to 3 custom themes and switch between them instantly.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Theme — JT Power Tools</title>
+  <meta name="description" content="Pick your own JobTread colors. Save up to three custom themes you can swap between. Pro.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/custom-theme.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/custom-theme.html">
+  <meta property="og:title" content="Custom Theme — JT Power Tools">
+  <meta property="og:description" content="Pick your own JobTread colors. Save up to three custom themes you can swap between. Pro.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">🎨</span> Custom Theme</h1>
-            <p class="guide-meta">Pro Feature - Personalize Your JobTread Experience</p>
-        </div>
-
-        <div class="guide-content">
-            <div class="info-box premium">
-                <strong>Pro Feature</strong>
-                <p>This feature requires a Pro license. <a href="premium.html">Learn how to activate your license</a>.</p>
-            </div>
-
-            <h2>Overview</h2>
-            <p>Custom Theme lets you personalize JobTread with your own color palette. Create themes that match your brand, reduce eye strain, or simply reflect your personal style. Save up to 3 custom themes for quick switching.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Full Color Control</strong> - Choose primary, background, and text colors</li>
-                <li><strong>Inline Previews</strong> - See colors before applying</li>
-                <li><strong>Intelligent Coordination</strong> - Colors coordinate across entire interface</li>
-                <li><strong>Task Color Preservation</strong> - Maintains task type colors with enhanced visibility</li>
-                <li><strong>5px Colored Borders</strong> - Clear task identification</li>
-                <li><strong>Save 3 Themes</strong> - Quick switching between favorite palettes</li>
-                <li><strong>Yellow Highlight Preservation</strong> - Edited budget cells stay highlighted</li>
-                <li><strong>Seamless Task Cards</strong> - Blend with custom background</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>JT Power Tools extension installed</li>
-                <li>Active premium license</li>
-                <li>Custom Theme enabled in popup</li>
-            </ul>
-
-            <h3>Accessing Theme Customization</h3>
-            <ol class="steps">
-                <li>Click the JT Power Tools extension icon</li>
-                <li>Find "Custom Theme" (marked with Premium badge)</li>
-                <li>Toggle it ON</li>
-                <li>Click "Customize Theme" button to open color picker panel</li>
-            </ol>
-
-            <h2>Creating Your Theme</h2>
-
-            <h3>Color Options</h3>
-
-            <h4>Primary Color</h4>
-            <p>Used for:</p>
-            <ul>
-                <li>Buttons and call-to-action elements</li>
-                <li>Links and interactive elements</li>
-                <li>Accent colors throughout interface</li>
-                <li>Task card borders</li>
-            </ul>
-
-            <h4>Background Color</h4>
-            <p>Used for:</p>
-            <ul>
-                <li>Main page backgrounds</li>
-                <li>Card backgrounds</li>
-                <li>Panel backgrounds</li>
-                <li>Task card backgrounds</li>
-            </ul>
-
-            <h4>Text Color</h4>
-            <p>Used for:</p>
-            <ul>
-                <li>All text content</li>
-                <li>Labels and headings</li>
-                <li>Form inputs</li>
-                <li>Navigation</li>
-            </ul>
-
-            <h3>Choosing Colors</h3>
-            <ol class="steps">
-                <li><strong>Open Color Picker</strong><br>Click the color preview box next to each color option</li>
-                <li><strong>Select Your Color</strong><br>Use the color picker to choose your preferred color. You'll see an inline preview.</li>
-                <li><strong>Verify Contrast</strong><br>Ensure text is readable against your chosen background</li>
-                <li><strong>Apply Theme</strong><br>Click "Apply" to see your theme across JobTread</li>
-            </ol>
-
-            <div class="info-box tip">
-                <strong>Contrast Tip</strong>
-                <p>Ensure your text color has good contrast with your background color. Dark text on light backgrounds, or light text on dark backgrounds work best.</p>
-            </div>
-
-            <h2>Saving & Managing Themes</h2>
-
-            <h3>Saving a Theme</h3>
-            <ol class="steps">
-                <li>Create your custom color palette</li>
-                <li>Click "Save Theme" button</li>
-                <li>Give your theme a name (e.g., "Ocean Blue", "Forest Green")</li>
-                <li>Theme is saved to one of your 3 available slots</li>
-            </ol>
-
-            <h3>Loading a Saved Theme</h3>
-            <ol class="steps">
-                <li>Open the theme customization panel</li>
-                <li>View your saved themes in the "Saved Themes" section</li>
-                <li>Click on a saved theme to apply it instantly</li>
-            </ol>
-
-            <h3>Deleting a Theme</h3>
-            <ol class="steps">
-                <li>Find the theme you want to delete in "Saved Themes"</li>
-                <li>Click the "Delete" or "×" button next to it</li>
-                <li>Confirm deletion</li>
-                <li>Slot is now available for a new theme</li>
-            </ol>
-
-            <h2>Theme Ideas & Examples</h2>
-
-            <h3>Professional Themes</h3>
-
-            <h4>Corporate Blue</h4>
-            <ul>
-                <li>Primary: Navy Blue (#003366)</li>
-                <li>Background: Light Gray (#f5f5f5)</li>
-                <li>Text: Dark Gray (#333333)</li>
-            </ul>
-
-            <h4>Construction Orange</h4>
-            <ul>
-                <li>Primary: Safety Orange (#ff6600)</li>
-                <li>Background: Off-white (#fafafa)</li>
-                <li>Text: Charcoal (#2d2d2d)</li>
-            </ul>
-
-            <h3>Comfort Themes</h3>
-
-            <h4>Forest Green</h4>
-            <ul>
-                <li>Primary: Forest Green (#228b22)</li>
-                <li>Background: Light Sage (#f0f4f0)</li>
-                <li>Text: Dark Green (#1a4d1a)</li>
-            </ul>
-
-            <h4>Warm Sunset</h4>
-            <ul>
-                <li>Primary: Burnt Orange (#cc5500)</li>
-                <li>Background: Warm Cream (#fff8f0)</li>
-                <li>Text: Deep Brown (#4a3020)</li>
-            </ul>
-
-            <h3>High Contrast Themes</h3>
-
-            <h4>High Contrast Dark</h4>
-            <ul>
-                <li>Primary: Bright Blue (#00aaff)</li>
-                <li>Background: Near Black (#1a1a1a)</li>
-                <li>Text: Pure White (#ffffff)</li>
-            </ul>
-
-            <h4>High Contrast Light</h4>
-            <ul>
-                <li>Primary: Deep Purple (#6600cc)</li>
-                <li>Background: Pure White (#ffffff)</li>
-                <li>Text: Pure Black (#000000)</li>
-            </ul>
-
-            <h2>Advanced Customization</h2>
-
-            <h3>Task Type Colors</h3>
-            <p>Custom Theme preserves JobTread's task type colors while enhancing visibility:</p>
-            <ul>
-                <li>Task cards use your custom background</li>
-                <li>5px thick colored border shows task type</li>
-                <li>Colored border is always visible and distinct</li>
-                <li>Hover effects apply your primary color</li>
-            </ul>
-
-            <h3>Budget Cell Highlighting</h3>
-            <ul>
-                <li>Yellow highlighting preserved on edited cells</li>
-                <li>Ensures you never lose unsaved changes</li>
-                <li>Works seamlessly with any background color</li>
-            </ul>
-
-            <h3>Formatter Toolbar Theming</h3>
-            <ul>
-                <li>Formatting toolbar adopts your theme colors</li>
-                <li>Buttons use your primary color when active</li>
-                <li>Toolbar background matches your background choice</li>
-            </ul>
-
-            <h2>Compatibility</h2>
-
-            <h3>Works With</h3>
-            <ul>
-                <li>Schedule Task Checkboxes (Premium)</li>
-                <li>Text Formatter</li>
-                <li>Smart Job Switcher</li>
-                <li>Budget Hierarchy Shading</li>
-            </ul>
-
-            <h3>Mutually Exclusive With</h3>
-            <ul>
-                <li>Contrast Fix (theme has its own contrast handling)</li>
-                <li>Dark Mode (theme replaces dark mode)</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Colors Not Applying</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify Custom Theme is enabled</li>
-                <li>Check that Contrast Fix and Dark Mode are disabled</li>
-                <li>Click "Apply" after choosing colors</li>
-                <li>Refresh the page</li>
-            </ul>
-
-            <h3>Text Hard to Read</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Adjust text color for better contrast with background</li>
-                <li>Use darker text on light backgrounds, lighter text on dark backgrounds</li>
-                <li>Try a different background color</li>
-            </ul>
-
-            <h3>Saved Themes Won't Load</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Check that you have premium license activated</li>
-                <li>Verify themes were saved successfully</li>
-                <li>Try re-saving the theme</li>
-                <li>Clear browser cache and reload extension</li>
-            </ul>
-
-            <h2>Best Practices</h2>
-            <ul>
-                <li><strong>Test Readability</strong> - View different JobTread pages before finalizing</li>
-                <li><strong>Save Variations</strong> - Use your 3 slots for different moods/times of day</li>
-                <li><strong>Brand Consistency</strong> - Match your company colors for professional look</li>
-                <li><strong>Consider Team</strong> - If sharing themes, choose universally readable colors</li>
-                <li><strong>Seasonal Themes</strong> - Switch themes seasonally for variety</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="premium.html">Premium Features & Licensing</a> - Activate your license</li>
-                <li><a href="dark-mode.html">Dark Mode</a> - Alternative free theme option</li>
-                <li><a href="contrast-fix.html">Contrast Fix</a> - Automatic contrast adjustment</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-palette"></i></span>
+          <span class="tier pro">Pro</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Custom</span> <span class="serif">theme.</span></h1>
+        <p class="g-lede">Pick your own colors for JobTread's interface — primary, background, and text. Save up to three full themes and swap between them whenever you want.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Three colors to choose: primary (the accent color), background (the main canvas), and text. Pick them in a color picker, click Apply, and JobTread takes on the look. Save themes by name — "Office", "Field", "Night Shift" — and switch with one click.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Custom Theme</strong> under <em>Appearance</em>.</li>
+            <li>Flip it on. The Theme tab in the popup unlocks.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to make a theme</h2>
+          <ol class="g-steps">
+            <li>Open the <strong>Theme</strong> tab in the popup.</li>
+            <li>Click each color box and pick your color (or pick a Quick Theme as a starting point).</li>
+            <li>Click <strong>Apply Theme</strong> to see it on JobTread live.</li>
+            <li>Like it? Click a Save slot, give it a name, save.</li>
+            <li>Switch themes anytime by clicking <strong>Load</strong> on a saved slot.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Make sure your text color contrasts with your background or things become hard to read.</li>
+            <li>Yellow edit highlights and task status colors stay visible on top of any custom theme.</li>
+            <li>Turning on Custom Theme automatically turns off Dark Mode and Contrast Fix — only one appearance mode at a time.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/dark-mode.html">Dark Mode</a> — full dark theme without picking colors</li>
+            <li><a href="/guides/contrast-fix.html">Contrast Fix</a> — fix only the unreadable colored cards</li>
+            <li><a href="/guides/premium.html">Plans &amp; Licensing</a> — what's in each tier</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

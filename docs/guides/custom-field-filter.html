@@ -1,182 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Switcher Filter - JT Power Tools</title>
-    <meta name="description" content="Filter JobTread jobs by custom field values in the Job Switcher. Quickly find jobs matching specific criteria using multi-field filtering with AND/OR logic.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/custom-field-filter.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/custom-field-filter.html">
-    <meta property="og:title" content="Job Switcher Filter - JT Power Tools">
-    <meta property="og:description" content="Filter JobTread jobs by custom field values in the Job Switcher. Quickly find jobs matching specific criteria using multi-field filtering with AND/OR logic.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Switcher Filter — JT Power Tools</title>
+  <meta name="description" content="Filter the JobTread Job Switcher by your custom fields — PM, region, job type, status, anything. Power User.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/custom-field-filter.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/custom-field-filter.html">
+  <meta property="og:title" content="Job Switcher Filter — JT Power Tools">
+  <meta property="og:description" content="Filter the JobTread Job Switcher by your custom fields — PM, region, job type, status, anything. Power User.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">🔍</span> Job Switcher Filter</h1>
-            <p class="guide-meta">Power User Feature - Filter Jobs by Custom Fields</p>
-        </div>
-
-        <div class="guide-content">
-            <div class="info-box premium">
-                <strong>Power User Feature</strong>
-                <p>This feature requires a Power User license and API configuration. <a href="premium.html">Learn how to activate your license</a>.</p>
-            </div>
-
-            <h2>Overview</h2>
-            <p>Job Switcher Filter enhances the Quick Job Switcher by allowing you to filter jobs based on your organization's custom fields. Search and filter jobs by project manager, job type, status, or any other custom field you've set up in JobTread.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Custom Field Search</strong> - Filter jobs by any custom field values</li>
-                <li><strong>Enhanced Job Switcher</strong> - Integrates with Quick Job Switcher sidebar</li>
-                <li><strong>Real-Time Filtering</strong> - Results update as you type</li>
-                <li><strong>Multiple Field Support</strong> - Search across multiple custom fields simultaneously</li>
-            </ul>
-
-            <h2>Requirements</h2>
-
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>JT Power Tools extension installed</li>
-                <li>Active Power User license</li>
-                <li><strong>Quick Job Switcher enabled</strong> (required)</li>
-                <li><strong>JobTread API Grant Key configured</strong> (required)</li>
-            </ul>
-
-            <div class="info-box tip">
-                <strong>API Configuration Required</strong>
-                <p>Job Switcher Filter requires access to the JobTread API to retrieve custom field data. You must configure your Grant Key in the extension settings before this feature will work.</p>
-            </div>
-
-            <h2>Setting Up</h2>
-
-            <h3>Step 1: Configure API Access</h3>
-            <ol class="steps">
-                <li>Open the JT Power Tools popup</li>
-                <li>Go to the "License" tab</li>
-                <li>Scroll to the API Configuration section</li>
-                <li>Enter your JobTread Grant Key</li>
-                <li>Click "Test Connection" to verify</li>
-            </ol>
-
-            <h3>Step 2: Enable the Features</h3>
-            <ol class="steps">
-                <li>Enable "Quick Job Switcher" (Essential feature)</li>
-                <li>Enable "Job Switcher Filter" (Power User feature)</li>
-                <li>Refresh JobTread to apply changes</li>
-            </ol>
-
-            <h2>Using Job Switcher Filter</h2>
-
-            <h3>Filtering Jobs</h3>
-            <ol class="steps">
-                <li>Press <span class="kbd">J</span> + <span class="kbd">S</span> to open the Job Switcher</li>
-                <li>Use the filter options to select custom field criteria</li>
-                <li>Type in the search to further narrow results</li>
-                <li>Press <span class="kbd">Enter</span> to select a job</li>
-            </ol>
-
-            <h3>Common Filter Examples</h3>
-            <ul>
-                <li><strong>By Project Manager</strong> - Filter to see only your assigned jobs</li>
-                <li><strong>By Job Type</strong> - Show only residential, commercial, or specific project types</li>
-                <li><strong>By Status</strong> - Filter by custom status fields</li>
-                <li><strong>By Region/Territory</strong> - Filter jobs by geographic area</li>
-            </ul>
-
-            <h2>Best Practices</h2>
-
-            <h3>Effective Filtering</h3>
-            <ul>
-                <li>Set up meaningful custom fields in JobTread first</li>
-                <li>Use consistent naming conventions for custom field values</li>
-                <li>Combine filters with text search for precise results</li>
-            </ul>
-
-            <h3>Performance Tips</h3>
-            <ul>
-                <li>The feature caches custom field data for faster searches</li>
-                <li>Initial load may take a moment to fetch field data</li>
-                <li>Filters update automatically when job data changes</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Filters Not Appearing</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify your API Grant Key is configured and tested</li>
-                <li>Check that Quick Job Switcher is enabled</li>
-                <li>Ensure Job Switcher Filter is enabled</li>
-                <li>Refresh the JobTread page</li>
-            </ul>
-
-            <h3>No Custom Fields Showing</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify your organization has custom fields set up in JobTread</li>
-                <li>Check that your API key has permission to read custom fields</li>
-                <li>Try the "Test Connection" button to verify API access</li>
-            </ul>
-
-            <h3>API Connection Failed</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Double-check your Grant Key is entered correctly</li>
-                <li>Ensure the Grant Key has not expired</li>
-                <li>Verify you have the correct permissions in JobTread</li>
-                <li>Contact your JobTread administrator if issues persist</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="job-switcher.html">Quick Job Switcher</a> - Required for Job Switcher Filter</li>
-                <li><a href="budget-changelog.html">Budget Changelog</a> - Another Power User feature</li>
-                <li><a href="premium.html">Premium Features</a> - License activation and API setup</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>JT Power Tools - Made with love for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-funnel-simple"></i></span>
+          <span class="tier power">Power User</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Job switcher</span> <span class="serif">filter.</span></h1>
+        <p class="g-lede">Filter the Job Switcher by any custom field you've set up — project manager, region, job type, status. Find the right job in seconds, even with hundreds active.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Press J+S to open the Job Switcher. Now there's a filter dropdown that pulls in your custom field values from JobTread. Pick "PM = Sarah" or "Type = Remodel" and the list narrows. Type to search inside that filtered list. The data is cached so it stays fast.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>You need a JobTread Grant Key — set this up under Account on the popup first.</li>
+            <li>Make sure <strong>Smart Resize</strong> (Job Switcher) is on.</li>
+            <li>Find <strong>Job Switcher Filter</strong> under <em>Productivity Tools</em> and flip it on.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to use it</h2>
+          <ol class="g-steps">
+            <li>Press <kbd>J</kbd> then <kbd>S</kbd> to open the Job Switcher.</li>
+            <li>Use the filter dropdowns to pick your custom field criteria.</li>
+            <li>Type in the search box to narrow further.</li>
+            <li>Press <kbd>Enter</kbd> to jump to the highlighted job.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Set up meaningful custom fields in JobTread before turning this on — there's nothing to filter without them.</li>
+            <li>Common setups: filter by PM, by region, by job stage, by job type.</li>
+            <li>Filters reset when you close the switcher; saved searches are on the roadmap.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/job-switcher.html">Smart Resize</a> — the underlying Job Switcher (Essential)</li>
+            <li><a href="/guides/budget-changelog.html">Budget Changelog</a> — compare budget backups (Power User)</li>
+            <li><a href="/guides/premium.html">Plans &amp; Licensing</a> — Power User tier</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

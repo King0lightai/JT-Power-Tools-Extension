@@ -1,211 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule Task Checkboxes - JT Power Tools</title>
-    <meta name="description" content="Mark schedule tasks complete with one-click checkboxes in JobTread. Checkboxes appear on task cards in month view and Action Items for instant task completion.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/drag-drop.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/drag-drop.html">
-    <meta property="og:title" content="Schedule Task Checkboxes - JT Power Tools">
-    <meta property="og:description" content="Mark schedule tasks complete with one-click checkboxes in JobTread. Checkboxes appear on task cards in month view and Action Items for instant task completion.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule Task Checkboxes — JT Power Tools</title>
+  <meta name="description" content="One-click checkboxes on JobTread schedule cards to mark tasks complete from the month view. Pro.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/drag-drop.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/drag-drop.html">
+  <meta property="og:title" content="Schedule Task Checkboxes — JT Power Tools">
+  <meta property="og:description" content="One-click checkboxes on JobTread schedule cards to mark tasks complete from the month view. Pro.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">✅</span> Schedule Task Checkboxes</h1>
-            <p class="guide-meta">Pro Feature - Requires License Activation</p>
-        </div>
-
-        <div class="guide-content">
-            <div class="info-box premium">
-                <strong>Pro Feature</strong>
-                <p>This feature requires a Pro license. <a href="premium.html">Learn how to activate your license</a>.</p>
-            </div>
-
-            <h2>Overview</h2>
-            <p>The Schedule Task Checkboxes feature adds convenient checkboxes to your schedule task cards, allowing you to quickly mark tasks as complete directly from the month view. No more clicking into each task to update its status - just check the box and move on!</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>One-Click Completion</strong> - Mark tasks complete instantly with a single click</li>
-                <li><strong>Visual Feedback</strong> - Completed tasks show a checkmark and visual strike-through</li>
-                <li><strong>Works in Month View</strong> - Checkboxes appear on task cards in the schedule month view</li>
-                <li><strong>Syncs with JobTread</strong> - Status updates are saved to JobTread automatically</li>
-                <li><strong>Undo Support</strong> - Uncheck to mark a task as incomplete again</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>JT Power Tools extension installed in Chrome</li>
-                <li>Active Pro license</li>
-                <li>Schedule Task Checkboxes feature enabled in extension popup</li>
-                <li>Access to JobTread schedule view</li>
-            </ul>
-
-            <h3>Enabling the Feature</h3>
-            <ol class="steps">
-                <li>Click the JT Power Tools extension icon in your Chrome toolbar</li>
-                <li>Locate the "Schedule Task Checkboxes" toggle (marked with Pro badge)</li>
-                <li>Toggle it ON - the switch will turn blue</li>
-                <li>Navigate to your JobTread schedule page</li>
-                <li>The checkboxes will now appear on your task cards</li>
-            </ol>
-
-            <h2>How to Use</h2>
-
-            <h3>Marking Tasks Complete</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Navigate to Schedule Month View</strong><br>
-                    Go to your schedule and ensure you're in the month view
-                </li>
-                <li>
-                    <strong>Find the Task Card</strong><br>
-                    Locate the task you want to mark as complete
-                </li>
-                <li>
-                    <strong>Click the Checkbox</strong><br>
-                    Click the checkbox on the task card - it will show a checkmark when complete
-                </li>
-                <li>
-                    <strong>Task Updates Automatically</strong><br>
-                    The task status syncs with JobTread in the background
-                </li>
-            </ol>
-
-            <div class="info-box tip">
-                <strong>Pro Tip</strong>
-                <p>Use this feature at the end of each day to quickly check off all completed tasks from your schedule view without opening each one individually.</p>
-            </div>
-
-            <h3>Unmarking Tasks</h3>
-            <p>If you accidentally mark a task as complete or need to reopen it:</p>
-            <ol class="steps">
-                <li>Find the completed task (shows checkmark)</li>
-                <li>Click the checkbox again to uncheck it</li>
-                <li>The task will be marked as incomplete and synced with JobTread</li>
-            </ol>
-
-            <h2>Visual Indicators</h2>
-
-            <h3>Checkbox States</h3>
-            <ul>
-                <li><strong>Empty Checkbox</strong> - Task is incomplete/in progress</li>
-                <li><strong>Checked Checkbox</strong> - Task has been marked as complete</li>
-            </ul>
-
-            <h3>Task Card Appearance</h3>
-            <p>When a task is marked complete:</p>
-            <ul>
-                <li>The checkbox displays a checkmark</li>
-                <li>Visual styling indicates the completed status</li>
-                <li>The task remains visible on the schedule for reference</li>
-            </ul>
-
-            <h2>Best Practices</h2>
-
-            <h3>Efficient Workflow Tips</h3>
-            <ol>
-                <li><strong>End-of-Day Review</strong> - Check off completed tasks at the end of each workday</li>
-                <li><strong>Morning Planning</strong> - Review checked tasks from previous days to track progress</li>
-                <li><strong>Team Updates</strong> - Use checkboxes during team meetings to update task statuses in real-time</li>
-            </ol>
-
-            <h3>Common Use Cases</h3>
-
-            <h4>Daily Task Management</h4>
-            <p>Quickly mark off tasks as your team completes them throughout the day without interrupting your workflow.</p>
-
-            <h4>Weekly Reviews</h4>
-            <p>During weekly planning sessions, review the month view and check off any tasks that were completed but not yet marked.</p>
-
-            <h4>Project Tracking</h4>
-            <p>Get a visual overview of project progress by seeing which scheduled tasks have been completed at a glance.</p>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Checkboxes Not Appearing</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify the feature is enabled in the extension popup</li>
-                <li>Make sure you're in the schedule month view</li>
-                <li>Refresh the JobTread page</li>
-                <li>Check that your Pro license is active</li>
-            </ul>
-
-            <h3>Status Not Saving</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Check your internet connection</li>
-                <li>Refresh the page and try again</li>
-                <li>Open browser console (F12) to check for any error messages</li>
-                <li>Verify you have permission to edit the task in JobTread</li>
-            </ul>
-
-            <h3>Checkbox Unresponsive</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Make sure you're clicking directly on the checkbox, not the task card</li>
-                <li>Wait a moment for any pending operations to complete</li>
-                <li>Try refreshing the page</li>
-            </ul>
-
-            <div class="info-box tip">
-                <strong>Have Feedback?</strong>
-                <p>We'd love to hear how you use task checkboxes! <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Share your ideas on GitHub</a>.</p>
-            </div>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="premium.html">Premium Features & Licensing</a> - Learn how to activate your license</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-                <li><a href="contrast-fix.html">Contrast Fix</a> - Improve schedule readability</li>
-                <li><a href="kanban-filter.html">Kanban Type Filter</a> - Filter your Kanban view</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>JT Power Tools - Made with love for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-check-square"></i></span>
+          <span class="tier pro">Pro</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Schedule task</span> <span class="serif">checkboxes.</span></h1>
+        <p class="g-lede">Checkboxes appear on every task card in the schedule month view. Click one and it marks the task complete in JobTread. No opening the task, no extra steps.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Normally to mark a task complete from the schedule, you have to click into it, find the status, change it, and back out. With this on, every task card in the month view (and Action Items) has a small checkbox in the corner. One click to complete, one click to reopen. Status syncs to JobTread instantly.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Schedule Task Checkboxes</strong> under <em>Schedule &amp; Calendar</em>.</li>
+            <li>Flip it on. Go to the Schedule month view.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to use it</h2>
+          <ol class="g-steps">
+            <li>Find a task card.</li>
+            <li>Click the checkbox in the corner — it shows a checkmark and the task is marked complete.</li>
+            <li>Click again to reopen.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>End of day, run through the calendar and check off everything your crew finished. Way faster than opening each task.</li>
+            <li>Use it during morning huddles to update status as your team reports in.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/fat-gantt.html">Fat Gantt</a> — thicker dependency lines</li>
+            <li><a href="/guides/kanban-filter.html">Kanban Filter</a> — hide empty columns</li>
+            <li><a href="/guides/dark-mode.html">Dark Mode</a> — full dark theme</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

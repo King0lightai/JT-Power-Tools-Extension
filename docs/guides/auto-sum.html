@@ -1,126 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Sum - JT Power Tools</title>
-    <meta name="description" content="Select budget line items in JobTread to instantly see live totals for Extended Cost, Extended Price, and Profit. Free feature — no account needed.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/auto-sum.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/auto-sum.html">
-    <meta property="og:title" content="Auto Sum - JT Power Tools">
-    <meta property="og:description" content="Select budget line items in JobTread to instantly see live totals for Extended Cost, Extended Price, and Profit. Free feature — no account needed.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Sum — JT Power Tools</title>
+  <meta name="description" content="Tick a few budget rows in JobTread and see live totals — extended cost, extended price, and profit margin — right in the sidebar. Free.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/auto-sum.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/auto-sum.html">
+  <meta property="og:title" content="Auto Sum — JT Power Tools">
+  <meta property="og:description" content="Tick a few budget rows and see live totals — cost, price, and profit margin — instantly.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">🧮</span> Auto Sum</h1>
-            <p class="guide-meta">Free Feature — Select Line Items, See Totals</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Auto Sum gives you instant totals when you select budget line items in JobTread. Click row numbers to select items and a live "Selection Totals" panel appears at the top of the Mass Budget Actions sidebar showing Extended Cost, Extended Price, and Profit with margin percentage.</p>
-
-            <h2>How to Use</h2>
-
-            <ol class="steps">
-                <li>
-                    <strong>Open a job budget</strong><br>
-                    Navigate to any job's budget page in JobTread
-                </li>
-                <li>
-                    <strong>Select line items</strong><br>
-                    Click the row numbers on the left side of the budget table to select items. The Mass Budget Actions sidebar will open automatically.
-                </li>
-                <li>
-                    <strong>View your totals</strong><br>
-                    A "Selection Totals" panel appears at the top of the sidebar showing:
-                    <ul>
-                        <li><strong>Extended Cost</strong> — Total cost of selected items</li>
-                        <li><strong>Extended Price</strong> — Total price of selected items</li>
-                        <li><strong>Profit</strong> — Price minus cost, with margin percentage</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>Adjust your selection</strong><br>
-                    Click additional rows to add them or click selected rows to deselect. Totals update live as your selection changes.
-                </li>
-            </ol>
-
-            <h2>Key Details</h2>
-            <ul>
-                <li><strong>Live updates</strong> — Totals recalculate instantly as you select or deselect rows</li>
-                <li><strong>Handles scrolling</strong> — Items scrolled out of view still count toward the totals (JobTread uses virtual scrolling for large budgets)</li>
-                <li><strong>Skips parent groups</strong> — Only actual line items are summed, not group header rows that get auto-highlighted when children are selected</li>
-                <li><strong>TBD items</strong> — Items marked TBD are skipped and a count is shown so you know some items couldn't be included</li>
-                <li><strong>Column-aware</strong> — Reads your budget column headers to find Extended Cost and Extended Price regardless of column order or which columns you have visible</li>
-            </ul>
-
-            <h2>Appearance</h2>
-            <ul>
-                <li><strong>Dark Mode</strong> — Fully supported with neutral grey palette for readability</li>
-                <li><strong>Custom Theme</strong> — Adapts to your custom color palette automatically</li>
-                <li><strong>Profit color</strong> — Green when positive, red when negative</li>
-            </ul>
-
-            <h2>Enabling Auto Sum</h2>
-            <ol class="steps">
-                <li>Click the JT Power Tools icon in your toolbar</li>
-                <li>Find "Auto Sum" under Budget & Editing</li>
-                <li>Toggle it on — works immediately, no page reload needed</li>
-            </ol>
-
-            <div class="info-box tip">
-                <strong>Free Feature</strong>
-                <p>Auto Sum is completely free — no account or subscription required.</p>
-            </div>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="budget-hierarchy.html">Budget Hierarchy Shading</a> — Visual depth for nested groups</li>
-                <li><a href="auto-collapse.html">Auto Collapse Completed</a> — Hide finished budget sections</li>
-                <li><a href="budget-changelog.html">Budget Changelog</a> — Compare budget backup snapshots (Power User)</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-calculator"></i></span>
+          <span class="tier free">Free</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Auto</span> <span class="serif">Sum.</span></h1>
+        <p class="g-lede">Tick a few budget rows. See live totals — cost, price, and profit — without doing any math.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>When you select line items in a budget, a "Selection Totals" panel pops up at the top of the Mass Budget Actions sidebar. It shows extended cost, extended price, and profit (with margin %). The numbers update live as you check more rows on or off — perfect for sanity-checking phase totals or pricing a partial scope.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon in your browser toolbar.</li>
+            <li>Find <strong>Auto Sum</strong> under <em>Productivity Tools</em>.</li>
+            <li>Flip the toggle on. No reload needed.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to use it</h2>
+          <ol class="g-steps">
+            <li>Open any job's Budget page.</li>
+            <li>Click the row numbers on the left to select line items. The Mass Budget Actions sidebar opens.</li>
+            <li>Look at the top of that sidebar — your <strong>Selection Totals</strong> panel is right there.</li>
+            <li>Add or remove rows. The totals update instantly.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Profit turns green when positive, red when negative — easy gut check while you scope.</li>
+            <li>Items marked TBD are skipped, and you'll see a count so nothing's hidden from you.</li>
+            <li>Group header rows aren't double-counted — only real line items get summed.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/budget-hierarchy.html">Budget Hierarchy Shading</a> — easier to read nested groups</li>
+            <li><a href="/guides/auto-collapse.html">Auto Collapse Completed</a> — hide finished work on load</li>
+            <li><a href="/guides/budget-changelog.html">Budget Changelog</a> — compare backups (Power User)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

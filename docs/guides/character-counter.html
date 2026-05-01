@@ -1,299 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Counter & Templates - JT Power Tools</title>
-    <meta name="description" content="Real-time character counter for JobTread message fields. Track message length and use templates for faster communication with your team.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/character-counter.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/character-counter.html">
-    <meta property="og:title" content="Message Counter & Templates - JT Power Tools">
-    <meta property="og:description" content="Real-time character counter for JobTread message fields. Track message length and use templates for faster communication with your team.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Message Counter & Templates — JT Power Tools</title>
+  <meta name="description" content="Real-time character count for messages plus saved templates you can paste with one click. Free.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/character-counter.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/character-counter.html">
+  <meta property="og:title" content="Message Counter & Templates — JT Power Tools">
+  <meta property="og:description" content="Real-time character count for messages plus saved templates you can paste with one click. Free.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">💬</span> Message Counter & Templates</h1>
-            <p class="guide-meta">Free Feature - Track Characters & Save Time with Templates</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Message Counter & Templates is a powerful productivity feature that combines real-time character counting with reusable message templates. Track your character count as you type messages, and save frequently used text as templates for quick insertion.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Real-Time Character Count</strong> - See your character count update as you type in message fields</li>
-                <li><strong>Message Templates</strong> - Create, save, and paste signatures and common messages</li>
-                <li><strong>Color-Coded Warnings</strong> - Visual alerts as you approach character limits</li>
-                <li><strong>One-Click Insert</strong> - Paste saved templates instantly into any message</li>
-                <li><strong>Unlimited Templates</strong> - Save as many templates as you need</li>
-                <li><strong>Synced Storage</strong> - Templates sync across your devices via Chrome</li>
-            </ul>
-
-            <h2>Message Templates</h2>
-            <p>Templates let you save frequently used text snippets like signatures, common responses, and standard messages. Insert them with a single click instead of typing the same content repeatedly.</p>
-
-            <h3>Creating a Template</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Open the Templates Panel</strong><br>
-                    Click the templates icon in the message toolbar (appears when you focus on a message field)
-                </li>
-                <li>
-                    <strong>Click "Add New Template"</strong><br>
-                    A dialog will appear for creating your template
-                </li>
-                <li>
-                    <strong>Enter a Name</strong><br>
-                    Give your template a descriptive name (e.g., "Email Signature", "Thank You Response")
-                </li>
-                <li>
-                    <strong>Enter the Template Content</strong><br>
-                    Type or paste the text you want to save
-                </li>
-                <li>
-                    <strong>Save the Template</strong><br>
-                    Click Save - your template is now ready to use
-                </li>
-            </ol>
-
-            <h3>Using a Template</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Focus on a Message Field</strong><br>
-                    Click in any message or text field in JobTread
-                </li>
-                <li>
-                    <strong>Open the Templates Panel</strong><br>
-                    Click the templates icon in the toolbar
-                </li>
-                <li>
-                    <strong>Select Your Template</strong><br>
-                    Click on the template you want to insert
-                </li>
-                <li>
-                    <strong>Template is Inserted</strong><br>
-                    The template text is pasted at your cursor position
-                </li>
-            </ol>
-
-            <div class="info-box tip">
-                <strong>Pro Tip</strong>
-                <p>Create templates for your email signature, common project updates, standard customer responses, and frequently used instructions. This can save hours of typing each week!</p>
-            </div>
-
-            <h3>Managing Templates</h3>
-            <ul>
-                <li><strong>Edit</strong> - Click the edit icon next to a template to modify it</li>
-                <li><strong>Delete</strong> - Click the delete icon to remove a template</li>
-                <li><strong>Reorder</strong> - Templates appear in the order they were created</li>
-            </ul>
-
-            <h3>Template Ideas</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Template Type</th>
-                        <th>Example Use</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Email Signature</td>
-                        <td>Your name, title, phone number, and company info</td>
-                    </tr>
-                    <tr>
-                        <td>Project Update</td>
-                        <td>"Work completed today: [details]. Next steps: [details]."</td>
-                    </tr>
-                    <tr>
-                        <td>Customer Thank You</td>
-                        <td>Standard thank you message after project completion</td>
-                    </tr>
-                    <tr>
-                        <td>Meeting Follow-up</td>
-                        <td>Template for summarizing meeting discussions</td>
-                    </tr>
-                    <tr>
-                        <td>Change Order Notice</td>
-                        <td>Standard language for change order communications</td>
-                    </tr>
-                    <tr>
-                        <td>Payment Reminder</td>
-                        <td>Polite reminder about outstanding invoices</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h2>Character Counter</h2>
-            <p>The character counter displays a real-time count of characters in message fields, helping you stay within JobTread's limits.</p>
-
-            <h3>Where It Appears</h3>
-            <p>The character counter is visible in message fields throughout JobTread, including:</p>
-            <ul>
-                <li>Customer messages</li>
-                <li>Internal messages</li>
-                <li>Comments</li>
-            </ul>
-
-            <h3>Visual Feedback</h3>
-            <p>The counter changes color based on how close you are to the limit:</p>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Color</th>
-                        <th>Meaning</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Safe</td>
-                        <td style="color: #888;">Gray</td>
-                        <td>Plenty of space remaining</td>
-                    </tr>
-                    <tr>
-                        <td>Warning</td>
-                        <td style="color: #f59e0b; font-weight: bold;">Orange</td>
-                        <td>Approaching the limit</td>
-                    </tr>
-                    <tr>
-                        <td>Danger</td>
-                        <td style="color: #ef4444; font-weight: bold;">Red</td>
-                        <td>Very close to limit</td>
-                    </tr>
-                    <tr>
-                        <td>Over Limit</td>
-                        <td style="color: #991b1b; font-weight: bold;">Dark Red</td>
-                        <td>Exceeded limit - trim your message</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>Display Format</h3>
-            <ul>
-                <li><strong>Normal:</strong> <code>123 / 4096</code> - Current count / Maximum</li>
-                <li><strong>At Limit:</strong> <code>Limit reached</code></li>
-                <li><strong>Over Limit:</strong> <code>50 over limit</code> - Shows how many characters to remove</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <ol class="steps">
-                <li>
-                    <strong>Enable the Feature</strong><br>
-                    Open JT Power Tools popup and enable "Message Counter & Templates"
-                </li>
-                <li>
-                    <strong>Navigate to Messages</strong><br>
-                    Go to any page with a message field in JobTread
-                </li>
-                <li>
-                    <strong>Start Using</strong><br>
-                    The counter appears automatically, and the templates icon shows in the toolbar
-                </li>
-            </ol>
-
-            <h2>Common Use Cases</h2>
-
-            <h3>Customer Communications</h3>
-            <p>Use templates for standard customer messages like project updates, payment reminders, and thank you notes. The character counter ensures your messages won't get cut off.</p>
-
-            <h3>Team Signatures</h3>
-            <p>Create a professional signature template that includes your name, title, and contact information. Insert it at the end of every customer-facing message.</p>
-
-            <h3>Standard Responses</h3>
-            <p>Save time by creating templates for frequently asked questions or common scenarios. Customize as needed after inserting.</p>
-
-            <h2>Tips & Best Practices</h2>
-
-            <h3>Template Tips</h3>
-            <ul>
-                <li>Use descriptive names so you can quickly find the right template</li>
-                <li>Include placeholders like [CLIENT NAME] for content you'll customize</li>
-                <li>Review and update templates periodically to keep them current</li>
-                <li>Create templates for both internal and external communications</li>
-            </ul>
-
-            <h3>Character Counter Tips</h3>
-            <ul>
-                <li>Watch for the orange warning - it's your cue to start wrapping up</li>
-                <li>If you go over, the "X over limit" message tells you exactly how much to cut</li>
-                <li>Consider splitting long messages into multiple messages</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Templates Not Saving?</h3>
-            <ul>
-                <li>Make sure the feature is enabled in the extension popup</li>
-                <li>Check that you have storage permissions enabled for the extension</li>
-                <li>Try refreshing the page and creating the template again</li>
-            </ul>
-
-            <h3>Counter Not Appearing?</h3>
-            <ul>
-                <li>Make sure the feature is enabled in the extension popup</li>
-                <li>The counter only appears in message fields, not all text fields</li>
-                <li>Try clicking directly in the message field</li>
-            </ul>
-
-            <h3>Template Not Inserting?</h3>
-            <ul>
-                <li>Make sure your cursor is in the text field before selecting a template</li>
-                <li>Try clicking in the field first, then opening the templates panel</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="text-formatter.html">Text Formatter</a> - Format your messages with rich text</li>
-                <li><a href="quick-notes.html">Quick Notes</a> - Keep longer notes in a separate notepad</li>
-                <li><a href="dark-mode.html">Dark Mode</a> - Counter adapts to dark theme</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>JT Power Tools - Made with love for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-chat-circle-text"></i></span>
+          <span class="tier free">Free</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Message counter</span> <span class="serif">& templates.</span></h1>
+        <p class="g-lede">See message length live as you type. Save the messages you send all the time and paste them in one click instead of retyping.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Two tools, one feature. The character counter sits in JobTread message fields and turns orange then red as you near the limit. Templates let you save common messages — your email signature, project update boilerplate, late-payment follow-up — and drop them in with a single click. No more digging through old messages to copy your own text.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Message Counter &amp; Templates</strong> under <em>Productivity Tools</em>.</li>
+            <li>Flip it on. Click into any message field on JobTread.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to use templates</h2>
+          <ol class="g-steps">
+            <li>Click the templates icon in the toolbar that appears.</li>
+            <li>Hit <strong>Add New Template</strong>, give it a name (e.g. "Signature"), and paste your text.</li>
+            <li>Save. To use later: open templates, click the name. It pastes at your cursor.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Build a template for your email signature first — you'll use it dozens of times a day.</li>
+            <li>Templates sync across devices once you sign in.</li>
+            <li>Watch the orange warning to know when to start wrapping up a long message.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/text-formatter.html">Text Formatter</a> — format your messages with bold, lists, links</li>
+            <li><a href="/guides/quick-notes.html">Quick Notes</a> — save longer reference notes (Essential)</li>
+            <li><a href="/guides/dark-mode.html">Dark Mode</a> — easier reading at any hour</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

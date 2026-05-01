@@ -1,255 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fat Gantt - JT Power Tools</title>
-    <meta name="description" content="Expand JobTread Gantt chart rows for better visibility. Fat Gantt makes schedule bars taller and easier to read on large project timelines.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/fat-gantt.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/fat-gantt.html">
-    <meta property="og:title" content="Fat Gantt - JT Power Tools">
-    <meta property="og:description" content="Expand JobTread Gantt chart rows for better visibility. Fat Gantt makes schedule bars taller and easier to read on large project timelines.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fat Gantt — JT Power Tools</title>
+  <meta name="description" content="Gantt dependency lines get thicker so they're easier to click — especially on a trackpad. Free.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/fat-gantt.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/fat-gantt.html">
+  <meta property="og:title" content="Fat Gantt — JT Power Tools">
+  <meta property="og:description" content="Gantt dependency lines get thicker so they're easier to click — especially on a trackpad. Free.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-                <p>Documentation & Guides</p>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">📈</span> Fat Gantt</h1>
-            <p class="guide-meta">Free Feature - Thicker Dependency Lines for Easier Clicking</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>The Fat Gantt feature makes dependency lines in JobTread's Gantt view thicker and easier to click. Instead of struggling to precisely click on thin 1.5px lines, you can now easily select dependency lines that are over twice as thick.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Thicker Lines</strong> - Dependency lines increased from 1.5px to 3.5px width</li>
-                <li><strong>Easier Selection</strong> - Much larger click target for selecting dependencies</li>
-                <li><strong>Selected Line Visibility</strong> - Selected (red) lines are even thicker at 4px</li>
-                <li><strong>Smooth Corners</strong> - Rounded line caps and joins for a polished look</li>
-                <li><strong>Dark Mode Compatible</strong> - Enhanced visibility in dark mode with brighter colors</li>
-                <li><strong>No Performance Impact</strong> - Pure CSS solution with zero overhead</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>JT Power Tools extension installed in Chrome</li>
-                <li>Access to a JobTread job with a Gantt schedule view</li>
-            </ul>
-
-            <h3>Enabling the Feature</h3>
-            <ol class="steps">
-                <li>Click the JT Power Tools extension icon in your Chrome toolbar</li>
-                <li>Find the "Schedule & Calendar" section</li>
-                <li>Locate the "Fat Gantt" toggle</li>
-                <li>Toggle it ON - the switch will turn blue</li>
-                <li>Navigate to any JobTread Gantt view to see the thicker lines</li>
-            </ol>
-
-            <div class="info-box tip">
-                <strong>Enabled by Default</strong>
-                <p>Fat Gantt is enabled by default when you install JT Power Tools. If you prefer the original thin lines, you can toggle it off.</p>
-            </div>
-
-            <h2>How It Works</h2>
-
-            <h3>Visual Comparison</h3>
-            <p>Here's what changes when Fat Gantt is enabled:</p>
-
-            <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f5f5f5;">
-                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Property</th>
-                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Before (Default)</th>
-                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">After (Fat Gantt)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Line Width</td>
-                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">1.5px</td>
-                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;"><strong>3.5px</strong></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Selected Line Width</td>
-                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">1.5px</td>
-                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;"><strong>4px</strong></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Line Ends</td>
-                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">Square</td>
-                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;"><strong>Rounded</strong></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px;">Click Target</td>
-                        <td style="padding: 12px; text-align: center;">Tiny</td>
-                        <td style="padding: 12px; text-align: center;"><strong>2x+ Larger</strong></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>The Problem It Solves</h3>
-            <p>JobTread's default Gantt dependency lines are just 1.5 pixels wide. This creates several issues:</p>
-            <ul>
-                <li>Difficult to click precisely on such thin lines</li>
-                <li>Frustrating when trying to select dependencies to edit or delete them</li>
-                <li>Easy to miss-click and select the wrong element</li>
-                <li>Especially challenging on laptops with trackpads</li>
-            </ul>
-
-            <h3>The Solution</h3>
-            <p>Fat Gantt increases line thickness using CSS, making them:</p>
-            <ul>
-                <li>More visible at a glance</li>
-                <li>Much easier to click on the first try</li>
-                <li>Clearly distinguished when selected (red lines are thicker)</li>
-                <li>Professional-looking with smooth rounded corners</li>
-            </ul>
-
-            <h2>Dark Mode Support</h2>
-
-            <p>When using Dark Mode, Fat Gantt automatically adjusts the dependency line colors for better visibility:</p>
-            <ul>
-                <li><strong>Normal Lines</strong> - Bright blue (#60a5fa) for excellent contrast</li>
-                <li><strong>Selected Lines</strong> - Bright red (#f87171) that stands out clearly</li>
-            </ul>
-
-            <div class="info-box tip">
-                <strong>Works with Dark Mode</strong>
-                <p>Fat Gantt is fully compatible with the Dark Mode feature. The colors automatically adapt for optimal visibility.</p>
-            </div>
-
-            <h2>Best Practices</h2>
-
-            <h3>When Fat Gantt Helps Most</h3>
-            <ul>
-                <li>Complex schedules with many task dependencies</li>
-                <li>Using a laptop trackpad instead of a mouse</li>
-                <li>Working on smaller screens or lower resolution displays</li>
-                <li>Projects with overlapping dependency lines</li>
-                <li>Quick editing sessions where speed matters</li>
-            </ul>
-
-            <h3>When to Consider Disabling</h3>
-            <p>You might prefer to disable Fat Gantt if:</p>
-            <ul>
-                <li>You have very dense schedules where thicker lines might feel crowded</li>
-                <li>You prefer the original minimal look of JobTread's Gantt view</li>
-            </ul>
-
-            <h2>Compatibility</h2>
-
-            <h3>Works With</h3>
-            <ul>
-                <li><strong>Schedule Task Checkboxes</strong> - Check off completed tasks right from the Gantt view</li>
-                <li><strong>Dark Mode</strong> - Colors automatically adapt for dark theme</li>
-                <li><strong>Custom Theme</strong> - Compatible with custom color schemes</li>
-                <li><strong>All Other Features</strong> - No conflicts with any JT Power Tools features</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Lines Still Look Thin</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify the feature is enabled in the extension popup</li>
-                <li>Refresh the JobTread page (Ctrl/Cmd + R)</li>
-                <li>Make sure you're viewing a Gantt schedule (not Month, Week, or Day view)</li>
-            </ul>
-
-            <h3>Lines Not Visible in Dark Mode</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Ensure both Fat Gantt and Dark Mode are enabled</li>
-                <li>Refresh the page to apply both styles</li>
-            </ul>
-
-            <h3>Feature Not Working After Update</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Disable and re-enable the feature in the popup</li>
-                <li>Close and reopen JobTread</li>
-                <li>Clear browser cache if issues persist</li>
-            </ul>
-
-            <h2>Technical Details</h2>
-
-            <h3>How It's Implemented</h3>
-            <p>Fat Gantt uses CSS injection to modify the SVG path elements that make up dependency lines:</p>
-            <ul>
-                <li>Targets paths with the <code>stroke-blue-400</code> class (normal state)</li>
-                <li>Targets paths with the <code>stroke-red-400</code> class (selected state)</li>
-                <li>Applies <code>stroke-width</code>, <code>stroke-linecap</code>, and <code>stroke-linejoin</code> properties</li>
-            </ul>
-
-            <h3>CSS Applied</h3>
-            <pre><code>/* Normal dependency lines */
-stroke-width: 3.5px;
-stroke-linecap: round;
-stroke-linejoin: round;
-
-/* Selected dependency lines */
-stroke-width: 4px;</code></pre>
-
-            <h3>Zero Performance Impact</h3>
-            <p>Because Fat Gantt is a pure CSS solution:</p>
-            <ul>
-                <li>No JavaScript runs when the feature is active</li>
-                <li>No DOM observers or event listeners</li>
-                <li>Styles are applied instantly by the browser</li>
-                <li>Works with any number of dependencies without slowdown</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="drag-drop.html">Schedule Task Checkboxes</a> - Mark tasks complete from the Gantt view</li>
-                <li><a href="dark-mode.html">Dark Mode</a> - Dark theme for the entire JobTread interface</li>
-                <li><a href="auto-collapse.html">Auto Collapse Completed</a> - Collapse finished schedule groups</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>JT Power Tools - Made with love for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-chart-line-up"></i></span>
+          <span class="tier free">Free</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Fat</span> <span class="serif">gantt.</span></h1>
+        <p class="g-lede">Gantt dependency lines get visibly thicker. No more squinting and missing the line you're trying to grab on a trackpad.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Gantt views in JobTread use thin dependency lines (1.5px) that are tough to click precisely. This bumps them up to 3.5px — and 4px when selected — with smooth rounded ends. Same lines, easier to hit.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Fat Gantt</strong> under <em>Schedule &amp; Calendar</em>.</li>
+            <li>Flip it on. Open any Gantt view.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Trackpad users — this is the one for you.</li>
+            <li>Line colors brighten in Dark Mode so they stay easy to see.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/auto-collapse.html">Auto Collapse Completed</a> — hide done schedule groups</li>
+            <li><a href="/guides/dark-mode.html">Dark Mode</a> — full dark theme</li>
+            <li><a href="/guides/installation.html">Install &amp; Setup</a> — first time here?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

@@ -1,222 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Collapse Completed - JT Power Tools</title>
-    <meta name="description" content="Automatically collapse completed budget groups in JobTread. Keep large budgets organized by hiding 100% complete sections on page load.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://jtpowertools.com/guides/auto-collapse.html">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://jtpowertools.com/guides/auto-collapse.html">
-    <meta property="og:title" content="Auto Collapse Completed - JT Power Tools">
-    <meta property="og:description" content="Automatically collapse completed budget groups in JobTread. Keep large budgets organized by hiding 100% complete sections on page load.">
-    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.v3.css">
-    <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Collapse Completed — JT Power Tools</title>
+  <meta name="description" content="Schedule groups that are 100% done collapse on page load so you only see the work that still needs doing. Free.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/auto-collapse.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/auto-collapse.html">
+  <meta property="og:title" content="Auto Collapse Completed — JT Power Tools">
+  <meta property="og:description" content="Done schedule groups collapse automatically. See what still needs work, instantly.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1><img src="../850icon.png" alt="JT Power Tools"> <span>POWER TOOLS</span></h1>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/documentation/">Docs</a>
-                <a href="/#install">Install</a>
-                <a href="/#pricing">Pricing</a>
-                <a href="/changelog/">Changelog</a>
-                <a href="/roadmap/">Roadmap</a>
-                <a href="/about/">About</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="guide-container">
-        <div class="guide-header">
-            <h1><span class="icon">📁</span> Auto Collapse Completed</h1>
-            <p class="guide-meta">Free Feature - Reduce Schedule Clutter</p>
-        </div>
-
-        <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Auto Collapse Completed automatically collapses schedule groups that are 100% complete when you load a page. This reduces clutter and helps you focus on active work without manually collapsing finished sections every time.</p>
-
-            <h3>Key Features</h3>
-            <ul>
-                <li><strong>Automatic on Page Load</strong> - Collapses completed groups as soon as the page loads</li>
-                <li><strong>Works on Both Views</strong> - Supports Gantt view and List view</li>
-                <li><strong>100% Complete Detection</strong> - Only collapses groups that are fully finished</li>
-                <li><strong>Easy Expansion</strong> - Click any group to expand it normally</li>
-                <li><strong>Page Navigation Aware</strong> - Re-applies when you navigate between pages</li>
-                <li><strong>Non-Destructive</strong> - Doesn't change any data, just visual collapse</li>
-            </ul>
-
-            <h2>How It Works</h2>
-
-            <h3>Detection Methods</h3>
-            <p>The feature identifies completed groups using multiple detection methods:</p>
-
-            <h4>Gantt View</h4>
-            <ul>
-                <li>Detects groups with a progress field showing "100%"</li>
-                <li>Clicks the collapse chevron to hide child items</li>
-            </ul>
-
-            <h4>List View</h4>
-            <ul>
-                <li>Looks for blue checkmark icons indicating completion</li>
-                <li>Checks for "100%" text in the group row</li>
-                <li>Identifies bold styling on completed group names</li>
-            </ul>
-
-            <h3>Timing</h3>
-            <ul>
-                <li>Waits 800ms after page load for DOM to fully render</li>
-                <li>Applies collapse once schedule content is detected</li>
-                <li>Re-checks when DOM changes suggest new content loaded</li>
-            </ul>
-
-            <h2>Supported Pages</h2>
-
-            <p>Auto Collapse works on these JobTread pages:</p>
-            <ul>
-                <li><strong>/schedule</strong> - Job schedule pages</li>
-                <li><strong>/tasks</strong> - Task list pages</li>
-                <li><strong>/to-dos</strong> - To-do pages</li>
-                <li><strong>/todos</strong> - Alternative to-do URL</li>
-            </ul>
-
-            <h2>Getting Started</h2>
-
-            <ol class="steps">
-                <li>
-                    <strong>Enable the Feature</strong><br>
-                    Open JT Power Tools popup and enable "Auto Collapse Completed"
-                </li>
-                <li>
-                    <strong>Navigate to Schedule</strong><br>
-                    Go to any job's schedule or tasks page
-                </li>
-                <li>
-                    <strong>Watch It Work</strong><br>
-                    Completed groups automatically collapse after the page loads
-                </li>
-                <li>
-                    <strong>Expand When Needed</strong><br>
-                    Click any collapsed group to expand and view its contents
-                </li>
-            </ol>
-
-            <h2>Visual Behavior</h2>
-
-            <h3>Before Auto Collapse</h3>
-            <ul>
-                <li>All schedule groups expanded by default</li>
-                <li>Completed and active items mixed together</li>
-                <li>Long scroll through finished work to find active items</li>
-            </ul>
-
-            <h3>After Auto Collapse</h3>
-            <ul>
-                <li>100% complete groups are collapsed</li>
-                <li>Active groups remain expanded</li>
-                <li>Easy to see what needs attention</li>
-                <li>Cleaner, more focused view</li>
-            </ul>
-
-            <h2>Navigation Behavior</h2>
-
-            <h3>When Collapse Re-Applies</h3>
-            <ul>
-                <li>Initial page load</li>
-                <li>Navigating to a different job's schedule</li>
-                <li>Using browser back/forward buttons</li>
-                <li>URL path changes (e.g., switching from /schedule to /tasks)</li>
-            </ul>
-
-            <h3>When Collapse Does NOT Re-Apply</h3>
-            <ul>
-                <li>Clicking on individual tasks (URL gets task ID appended)</li>
-                <li>Query parameter changes (filters, sorting)</li>
-                <li>Manual expand/collapse actions by you</li>
-            </ul>
-
-            <h2>Tips & Best Practices</h2>
-
-            <h3>Workflow Benefits</h3>
-            <ul>
-                <li>Jump straight to active work without scrolling past completed items</li>
-                <li>Easier progress reviews - collapsed groups show they're done</li>
-                <li>Less cognitive load when viewing large schedules</li>
-                <li>Groups you expand stay expanded until you navigate away</li>
-            </ul>
-
-            <h3>Works Well With</h3>
-            <ul>
-                <li><strong>Freeze Header</strong> - Headers stay visible while scrolling through active items</li>
-                <li><strong>Budget Hierarchy Shading</strong> - Visual structure for remaining work</li>
-                <li><strong>Schedule Task Checkboxes</strong> - Mark tasks complete from the schedule view</li>
-            </ul>
-
-            <h2>Troubleshooting</h2>
-
-            <h3>Groups Not Collapsing?</h3>
-            <ul>
-                <li>Verify the group is truly 100% complete (not 99%)</li>
-                <li>Try refreshing the page</li>
-                <li>Make sure the feature is enabled in the popup</li>
-                <li>Check if you're on a supported page type</li>
-            </ul>
-
-            <h3>Wrong Groups Collapsing?</h3>
-            <ul>
-                <li>This is rare but can occur if progress displays incorrectly</li>
-                <li>Simply click to expand any incorrectly collapsed group</li>
-                <li>Report issues on GitHub if you notice patterns</li>
-            </ul>
-
-            <h3>Collapse Not Applying on Navigation?</h3>
-            <ul>
-                <li>The feature waits for page content to load</li>
-                <li>If JobTread is slow, collapse may take a moment</li>
-                <li>Hard refresh (Ctrl+Shift+R) ensures a clean state</li>
-            </ul>
-
-            <h2>Compatibility</h2>
-            <ul>
-                <li><strong>Dark Mode</strong> - Works with both light and dark themes</li>
-                <li><strong>Gantt View</strong> - Full support with chevron detection</li>
-                <li><strong>List View</strong> - Full support with icon/text detection</li>
-                <li><strong>All Browsers</strong> - Works wherever Chrome extensions run</li>
-            </ul>
-
-            <h2>Related Guides</h2>
-            <ul>
-                <li><a href="drag-drop.html">Schedule Task Checkboxes</a> - Check off tasks in collapsed or expanded groups</li>
-                <li><a href="freeze-header.html">Freeze Header</a> - Keep headers visible while scrolling</li>
-                <li><a href="kanban-filter.html">Kanban Filtering</a> - Hide empty columns in Kanban views</li>
-                <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
-            </ul>
-        </div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
 
-    <footer>
-        <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
-            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
-            <div class="footer-links">
-                <a href="/privacy/">Privacy Policy</a>
-                <a href="/documentation/">Documentation</a>
-                <a href="/about/">About</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension" target="_blank">GitHub</a>
-                <a href="https://github.com/King0lightai/JT-Power-Tools-Extension/issues" target="_blank">Support</a>
-            </div>
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-folder-simple"></i></span>
+          <span class="tier free">Free</span>
         </div>
-    </footer>
+        <h1 class="g-title"><span>Auto Collapse</span> <span class="serif">completed.</span></h1>
+        <p class="g-lede">Schedule groups that are 100% done collapse on page load. You see what still needs your attention — not what's already finished.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Open a schedule and any group that's at 100% complete is already collapsed. Active groups stay open. You spend zero time scrolling past finished phases looking for what's next.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon.</li>
+            <li>Find <strong>Auto Collapse Completed Groups</strong> under <em>Schedule &amp; Calendar</em>.</li>
+            <li>Flip it on.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>How to use it</h2>
+          <ol class="g-steps">
+            <li>Open any job's Schedule, Tasks, or To-Dos page.</li>
+            <li>Done groups are already collapsed. Active groups are expanded.</li>
+            <li>Need to look at a finished group? Just click it to expand. It'll stay open until you navigate away.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Works on both Gantt and List views.</li>
+            <li>Re-applies when you switch jobs or hit back/forward.</li>
+            <li>Pairs nicely with Freeze Header so your toolbar stays put while you scroll.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/drag-drop.html">Schedule Task Checkboxes</a> — check off tasks from the schedule</li>
+            <li><a href="/guides/freeze-header.html">Freeze Header</a> — keep the header pinned while scrolling</li>
+            <li><a href="/guides/kanban-filter.html">Kanban Filter</a> — hide empty Kanban columns</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

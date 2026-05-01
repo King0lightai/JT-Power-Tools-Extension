@@ -1238,7 +1238,7 @@ function initializeCategories() {
  * Opens the relevant guide page when clicked
  */
 function initFeatureHelpLinks() {
-  const baseUrl = 'https://king0lightai.github.io/JT-Power-Tools/guides/';
+  const baseUrl = 'https://jtpowertools.com/guides/';
 
   document.querySelectorAll('.feature-help[data-guide]').forEach(helpIcon => {
     helpIcon.addEventListener('click', (e) => {
