@@ -76,6 +76,7 @@ const TweakEngineFeature = (() => {
     loadAndApply();
     listenForStorageChanges();
     listenForOrgChanges();
+    listenForUrlChanges();
     listenForDryRunRequests();
     console.log('TweakEngine: Initialized');
   }
@@ -536,6 +537,17 @@ const TweakEngineFeature = (() => {
   }
 
   function runAction(action, el, tweakId) {
+    // Per-element match guard. Lets authors discriminate elements that
+    // share a class signature with non-target elements (e.g. "Vendor"
+    // cells among other elements with the same class) without inventing
+    // a regex DSL. Substring check on textContent — universal across
+    // verbs. Selector-level match counts in diagnostics intentionally
+    // remain unfiltered (auto-disable should still detect "selector
+    // stopped resolving", not "guard stopped passing").
+    if (typeof action.match === 'string' && action.match.length > 0) {
+      const text = el.textContent || '';
+      if (!text.includes(action.match)) return;
+    }
     switch (action.type) {
       case 'addClass':
         el.classList.add(action.class);
@@ -720,6 +732,69 @@ const TweakEngineFeature = (() => {
     eventListeners.push({ target: window, event: 'jt-org-changed', handler });
   }
 
+  // ─── SPA navigation re-apply ─────────────────────────────────────
+  // Tweaks are scoped by `urlMatch` (substring of pathname). The body
+  // MutationObserver re-runs ACTIONS on DOM mutations, but it never
+  // re-evaluates which tweaks MATCH the current URL — so a tweak
+  // scoped to /jobs/123 never enters the active set when JT pushes
+  // /jobs → /jobs/123 without a hard reload. We monkey-patch
+  // history.pushState/replaceState (JT/React route through these)
+  // and listen for popstate. A 200ms debounce gives React time to
+  // render the new view before we re-query selectors.
+  let urlChangeState = null;
+  function listenForUrlChanges() {
+    const origPush = history.pushState;
+    const origReplace = history.replaceState;
+
+    const fire = () => window.dispatchEvent(new Event('jt-tweak-url-changed'));
+
+    const wrappedPush = function (...args) {
+      const r = origPush.apply(this, args);
+      fire();
+      return r;
+    };
+    const wrappedReplace = function (...args) {
+      const r = origReplace.apply(this, args);
+      fire();
+      return r;
+    };
+    history.pushState = wrappedPush;
+    history.replaceState = wrappedReplace;
+
+    let lastUrl = window.location.pathname + window.location.search;
+    const reapply = debounce(() => {
+      const current = window.location.pathname + window.location.search;
+      if (current === lastUrl) return;
+      lastUrl = current;
+      console.log('TweakEngine: URL changed, re-applying tweaks');
+      removeAllAppliedTweaks();
+      loadAndApply();
+    }, 200);
+
+    const popHandler = () => reapply();
+    const customHandler = () => reapply();
+    window.addEventListener('popstate', popHandler);
+    window.addEventListener('jt-tweak-url-changed', customHandler);
+
+    urlChangeState = { origPush, origReplace, wrappedPush, wrappedReplace, popHandler, customHandler };
+  }
+
+  function teardownUrlChangeListener() {
+    if (!urlChangeState) return;
+    // Restore originals only if our wrappers are still on top of the
+    // stack. If another layer wrapped after us, leave the chain alone
+    // — they own the unwind.
+    if (history.pushState === urlChangeState.wrappedPush) {
+      history.pushState = urlChangeState.origPush;
+    }
+    if (history.replaceState === urlChangeState.wrappedReplace) {
+      history.replaceState = urlChangeState.origReplace;
+    }
+    window.removeEventListener('popstate', urlChangeState.popHandler);
+    window.removeEventListener('jt-tweak-url-changed', urlChangeState.customHandler);
+    urlChangeState = null;
+  }
+
   function removeAllAppliedTweaks() {
     for (const [id, styleEl] of injectedStyles.entries()) {
       if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
@@ -742,6 +817,7 @@ const TweakEngineFeature = (() => {
     if (!isActive) return;
     console.log('TweakEngine: Cleaning up...');
     if (diagnosticsFlushTimer) clearTimeout(diagnosticsFlushTimer);
+    teardownUrlChangeListener();
     removeAllAppliedTweaks();
     eventListeners.forEach(({ target, event, handler, isChromeListener }) => {
       if (isChromeListener) {

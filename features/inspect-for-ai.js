@@ -616,6 +616,7 @@ const InspectForAiFeature = (() => {
     lines.push('}');
     lines.push('');
     lines.push('Allowed action verbs: addClass, removeClass, setStyle, hide, show, setText, onEvent, moveBefore, moveAfter, sortChildren.');
+    lines.push('Every action also accepts an optional `match: "<substring>"` (≤200 chars) — a per-element guard. The engine fires the action only on elements whose textContent contains that substring. Use it when a selector is broader than you want (e.g. setText "Vendor" → "Trade Partner" only on cells whose current text contains "Vendor").');
     lines.push('Do NOT use innerHTML, insertHTML, insertElement, or any verb not in that list.');
     lines.push('Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.');
     lines.push('setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.');
@@ -697,6 +698,7 @@ const InspectForAiFeature = (() => {
       '',
       'For "warn before action" patterns use onEvent with preventDefault: true + an alert.',
       'For "JT table has no sort" use sortChildren on the tbody — keySelector picks the column to sort by.',
+      'Every action also accepts optional `"match": "<substring>"` (≤200 chars) — a per-element guard. The engine fires the action only on elements whose textContent contains that substring. Use it when a selector is broader than you want (e.g. setText "Vendor" → "Trade Partner" only on cells whose current text contains "Vendor").',
       'setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.',
       'Do NOT use innerHTML, insertHTML, insertElement, or any verb not on the list above.',
       'Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.',

@@ -13,7 +13,7 @@
  *     originalDomContext?: string
  *   }
  *
- * Actions (V1.6 closed list):
+ * Actions (V1.7 closed list):
  *   { type: 'addClass',     selector: string, class: string }
  *   { type: 'removeClass',  selector: string, class: string }
  *   { type: 'setStyle',     selector: string, style: { [prop]: value } }
@@ -27,6 +27,10 @@
  *   { type: 'moveAfter',    selector: string, referenceSelector: string }
  *   { type: 'sortChildren', selector: string, childSelector?: string, keySelector?: string,
  *                           key?: 'text'|'number'|'date', direction?: 'asc'|'desc' }
+ *
+ * Every action also accepts an optional `match: string` (≤200 chars). When
+ * set, the engine only fires the action on elements whose textContent
+ * contains the substring — a per-element guard for over-broad selectors.
  *
  * Refused: insertHTML, insertElement, removeElement, eval-style verbs.
  * onEvent requires at least one side effect (preventDefault, stopPropagation, or alert).
@@ -57,6 +61,7 @@ const TweakValidator = (() => {
   const MAX_DESC_LEN = 500;
   const MAX_TEXT_LEN = 500;
   const MAX_SELECTOR_LEN = 500;
+  const MAX_MATCH_LEN = 200;
 
   function isSafeSelector(sel) {
     if (typeof sel !== 'string' || sel.length === 0 || sel.length > MAX_SELECTOR_LEN) return false;
@@ -108,6 +113,14 @@ const TweakValidator = (() => {
     }
     if (!isSafeSelector(action.selector)) {
       errors.push({ field: `actions[${i}].selector`, reason: 'selector is invalid or targets extension UI' });
+    }
+    // Optional per-element guard — substring match against el.textContent.
+    // Universal across verbs. Plain string only (no regex) to keep the
+    // surface small and avoid ReDoS.
+    if (action.match !== undefined) {
+      if (typeof action.match !== 'string' || action.match.length > MAX_MATCH_LEN) {
+        errors.push({ field: `actions[${i}].match`, reason: `match must be a string up to ${MAX_MATCH_LEN} chars` });
+      }
     }
     if (action.type === 'addClass' || action.type === 'removeClass') {
       if (typeof action.class !== 'string' || !/^[a-zA-Z_-][a-zA-Z0-9_-]*$/.test(action.class)) {
