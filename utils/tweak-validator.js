@@ -22,7 +22,9 @@
  *   { type: 'setText',      selector: string, text: string }
  *   { type: 'onEvent',      selector: string, event: 'click'|'dblclick'|'mousedown'|'dragstart',
  *                           preventDefault?: boolean, stopPropagation?: boolean,
- *                           alert?: { title?: string, body: string, confirmLabel?: string } }
+ *                           alert?: { title?: string, body: string, confirmLabel?: string },
+ *                           then?: Array<Action>  // V1.7: chained DOM-mutation actions
+ *   }
  *   { type: 'moveBefore',   selector: string, referenceSelector: string }
  *   { type: 'moveAfter',    selector: string, referenceSelector: string }
  *   { type: 'sortChildren', selector: string, childSelector?: string, keySelector?: string,
@@ -33,7 +35,8 @@
  * contains the substring — a per-element guard for over-broad selectors.
  *
  * Refused: insertHTML, insertElement, removeElement, eval-style verbs.
- * onEvent requires at least one side effect (preventDefault, stopPropagation, or alert).
+ * onEvent requires at least one side effect (preventDefault, stopPropagation, alert, or then[]).
+ * Nested onEvent is forbidden inside `then` — chains are pure DOM-mutation only.
  * Move/sort verbs are not undone on tweak disable — same model as setText/addClass;
  * a page reload restores original DOM order.
  *
@@ -57,6 +60,7 @@ const TweakValidator = (() => {
   const DANGEROUS_VALUE_RE = /expression\s*\(|url\s*\(|behavior\s*:|@import|javascript:|<\/?script|@charset/i;
 
   const MAX_ACTIONS = 100;
+  const MAX_THEN_STEPS = 20;
   const MAX_NAME_LEN = 80;
   const MAX_DESC_LEN = 500;
   const MAX_TEXT_LEN = 500;
@@ -99,20 +103,30 @@ const TweakValidator = (() => {
     }
   }
 
-  function validateAction(action, i, errors) {
+  function validateAction(action, fieldPath, errors, inThen) {
     if (!action || typeof action !== 'object') {
-      errors.push({ field: `actions[${i}]`, reason: 'action must be an object' });
+      errors.push({ field: fieldPath, reason: 'action must be an object' });
       return;
     }
     if (!ALLOWED_VERBS.has(action.type)) {
       errors.push({
-        field: `actions[${i}].type`,
+        field: `${fieldPath}.type`,
         reason: `verb "${action.type}" is not allowed in V1 (allowed: ${[...ALLOWED_VERBS].join(', ')})`
       });
       return;
     }
+    // V1.7: nested onEvent inside then[] is forbidden — chains run only
+    // pure DOM-mutation verbs so we don't recursively register listeners
+    // (and keep the chain semantics simple: fire → mutate, no event-loops).
+    if (inThen && action.type === 'onEvent') {
+      errors.push({
+        field: `${fieldPath}.type`,
+        reason: 'onEvent is not allowed inside then[] — chains are pure DOM-mutation actions only'
+      });
+      return;
+    }
     if (!isSafeSelector(action.selector)) {
-      errors.push({ field: `actions[${i}].selector`, reason: 'selector is invalid or targets extension UI' });
+      errors.push({ field: `${fieldPath}.selector`, reason: 'selector is invalid or targets extension UI' });
     }
     // Optional per-element guard — substring match against el.textContent.
     // Universal across verbs. Plain string only (no regex) to keep the
@@ -124,76 +138,92 @@ const TweakValidator = (() => {
     }
     if (action.type === 'addClass' || action.type === 'removeClass') {
       if (typeof action.class !== 'string' || !/^[a-zA-Z_-][a-zA-Z0-9_-]*$/.test(action.class)) {
-        errors.push({ field: `actions[${i}].class`, reason: 'class must be a valid CSS identifier' });
+        errors.push({ field: `${fieldPath}.class`, reason: 'class must be a valid CSS identifier' });
       }
     }
     if (action.type === 'setStyle') {
       if (!action.style || typeof action.style !== 'object') {
-        errors.push({ field: `actions[${i}].style`, reason: 'style must be an object of {property: value}' });
+        errors.push({ field: `${fieldPath}.style`, reason: 'style must be an object of {property: value}' });
       } else {
         for (const [prop, val] of Object.entries(action.style)) {
           // Property must be a CSS identifier (camelCase or kebab-case).
           if (!/^[a-zA-Z][a-zA-Z0-9-]*$/.test(prop)) {
-            errors.push({ field: `actions[${i}].style.${prop}`, reason: 'property name is invalid' });
+            errors.push({ field: `${fieldPath}.style.${prop}`, reason: 'property name is invalid' });
             continue;
           }
-          validateStyleValue(prop, val, `actions[${i}].style.${prop}`, errors);
+          validateStyleValue(prop, val, `${fieldPath}.style.${prop}`, errors);
         }
       }
     }
     if (action.type === 'setText') {
       if (typeof action.text !== 'string' || action.text.length > MAX_TEXT_LEN) {
-        errors.push({ field: `actions[${i}].text`, reason: `text must be a string up to ${MAX_TEXT_LEN} chars` });
+        errors.push({ field: `${fieldPath}.text`, reason: `text must be a string up to ${MAX_TEXT_LEN} chars` });
       }
     }
     if (action.type === 'onEvent') {
       if (!ALLOWED_EVENTS.has(action.event)) {
-        errors.push({ field: `actions[${i}].event`, reason: `event "${action.event}" is not allowed in V1.5 (allowed: ${[...ALLOWED_EVENTS].join(', ')})` });
+        errors.push({ field: `${fieldPath}.event`, reason: `event "${action.event}" is not allowed in V1.5 (allowed: ${[...ALLOWED_EVENTS].join(', ')})` });
       }
       if (action.preventDefault !== undefined && typeof action.preventDefault !== 'boolean') {
-        errors.push({ field: `actions[${i}].preventDefault`, reason: 'preventDefault must be a boolean' });
+        errors.push({ field: `${fieldPath}.preventDefault`, reason: 'preventDefault must be a boolean' });
       }
       if (action.stopPropagation !== undefined && typeof action.stopPropagation !== 'boolean') {
-        errors.push({ field: `actions[${i}].stopPropagation`, reason: 'stopPropagation must be a boolean' });
+        errors.push({ field: `${fieldPath}.stopPropagation`, reason: 'stopPropagation must be a boolean' });
       }
       if (action.alert !== undefined) {
         if (!action.alert || typeof action.alert !== 'object') {
-          errors.push({ field: `actions[${i}].alert`, reason: 'alert must be an object' });
+          errors.push({ field: `${fieldPath}.alert`, reason: 'alert must be an object' });
         } else {
           if (action.alert.title !== undefined && (typeof action.alert.title !== 'string' || action.alert.title.length > 200)) {
-            errors.push({ field: `actions[${i}].alert.title`, reason: 'title must be a string up to 200 chars' });
+            errors.push({ field: `${fieldPath}.alert.title`, reason: 'title must be a string up to 200 chars' });
           }
           if (typeof action.alert.body !== 'string' || action.alert.body.length === 0 || action.alert.body.length > 1000) {
-            errors.push({ field: `actions[${i}].alert.body`, reason: 'body must be a string 1..1000 chars' });
+            errors.push({ field: `${fieldPath}.alert.body`, reason: 'body must be a string 1..1000 chars' });
           }
           if (action.alert.confirmLabel !== undefined && (typeof action.alert.confirmLabel !== 'string' || action.alert.confirmLabel.length > 30)) {
-            errors.push({ field: `actions[${i}].alert.confirmLabel`, reason: 'confirmLabel must be a string up to 30 chars' });
+            errors.push({ field: `${fieldPath}.alert.confirmLabel`, reason: 'confirmLabel must be a string up to 30 chars' });
           }
         }
       }
+      // V1.7: validate the chained then[] steps (recursively, with inThen=true
+      // to forbid further onEvent nesting).
+      if (action.then !== undefined) {
+        if (!Array.isArray(action.then)) {
+          errors.push({ field: `${fieldPath}.then`, reason: 'then must be an array of actions' });
+        } else if (action.then.length > MAX_THEN_STEPS) {
+          errors.push({ field: `${fieldPath}.then`, reason: `no more than ${MAX_THEN_STEPS} chained steps per onEvent` });
+        } else {
+          action.then.forEach((step, ti) => {
+            validateAction(step, `${fieldPath}.then[${ti}]`, errors, true);
+          });
+        }
+      }
       // Must have at least one side effect — otherwise the action is a no-op.
-      const hasSideEffect = action.preventDefault === true || action.stopPropagation === true || action.alert !== undefined;
+      // V1.7: a non-empty then[] counts as a side effect on its own (the
+      // sortable-headers use case is "click → setText" with no alert).
+      const hasThen = Array.isArray(action.then) && action.then.length > 0;
+      const hasSideEffect = action.preventDefault === true || action.stopPropagation === true || action.alert !== undefined || hasThen;
       if (!hasSideEffect) {
-        errors.push({ field: `actions[${i}]`, reason: 'onEvent must have at least one side effect (preventDefault, stopPropagation, or alert)' });
+        errors.push({ field: fieldPath, reason: 'onEvent must have at least one side effect (preventDefault, stopPropagation, alert, or then[])' });
       }
     }
     if (action.type === 'moveBefore' || action.type === 'moveAfter') {
       if (!isSafeSelector(action.referenceSelector)) {
-        errors.push({ field: `actions[${i}].referenceSelector`, reason: 'referenceSelector is invalid or targets extension UI' });
+        errors.push({ field: `${fieldPath}.referenceSelector`, reason: 'referenceSelector is invalid or targets extension UI' });
       }
     }
     if (action.type === 'sortChildren') {
       if (action.childSelector !== undefined && !isSafeSelector(action.childSelector)) {
-        errors.push({ field: `actions[${i}].childSelector`, reason: 'childSelector is invalid or targets extension UI' });
+        errors.push({ field: `${fieldPath}.childSelector`, reason: 'childSelector is invalid or targets extension UI' });
       }
       if (action.keySelector !== undefined && !isSafeSelector(action.keySelector)) {
-        errors.push({ field: `actions[${i}].keySelector`, reason: 'keySelector is invalid or targets extension UI' });
+        errors.push({ field: `${fieldPath}.keySelector`, reason: 'keySelector is invalid or targets extension UI' });
       }
       if (action.key !== undefined && !ALLOWED_SORT_KEYS.has(action.key)) {
-        errors.push({ field: `actions[${i}].key`, reason: `key must be one of: ${[...ALLOWED_SORT_KEYS].join(', ')}` });
+        errors.push({ field: `${fieldPath}.key`, reason: `key must be one of: ${[...ALLOWED_SORT_KEYS].join(', ')}` });
       }
       if (action.direction !== undefined && !ALLOWED_SORT_DIRECTIONS.has(action.direction)) {
-        errors.push({ field: `actions[${i}].direction`, reason: `direction must be one of: ${[...ALLOWED_SORT_DIRECTIONS].join(', ')}` });
+        errors.push({ field: `${fieldPath}.direction`, reason: `direction must be one of: ${[...ALLOWED_SORT_DIRECTIONS].join(', ')}` });
       }
     }
   }
@@ -250,7 +280,7 @@ const TweakValidator = (() => {
         if (tweak.actions.length > MAX_ACTIONS) {
           errors.push({ field: 'actions', reason: `no more than ${MAX_ACTIONS} actions per tweak` });
         }
-        tweak.actions.forEach((action, i) => validateAction(action, i, errors));
+        tweak.actions.forEach((action, i) => validateAction(action, `actions[${i}]`, errors, false));
       }
     }
 

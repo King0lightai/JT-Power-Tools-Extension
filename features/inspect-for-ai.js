@@ -17,6 +17,23 @@ const InspectForAiFeature = (() => {
   // Borrowed from the user-supplied design doc.
   const TAILWIND_PREFIX_RE = /^(text-|bg-|flex-|grid-|p-|m-|w-|h-|gap-|rounded|shadow|border-|cursor-|opacity-|z-|inset-|top-|right-|bottom-|left-|max-|min-|space-|divide-|order-|col-|row-|leading-|tracking-|uppercase|lowercase|whitespace-|truncate|overflow-|object-|select-|pointer-|appearance-|outline-|ring-|fill-|stroke-)/;
 
+  // Tags that mean "this element is a structural container worth showing in
+  // a structural-block dump." Used by findStableAncestor.
+  const STRUCTURAL_TAGS = new Set([
+    'main', 'section', 'nav', 'header', 'footer', 'article', 'aside',
+    'table', 'tbody', 'thead', 'tfoot', 'tr',
+    'ul', 'ol', 'dl', 'form', 'dialog'
+  ]);
+  // Tailwind/CSS classes that strongly imply a structural / layout role —
+  // sticky bars, scroll containers, grid/flex layouts, etc. The whole point
+  // of including the structural block is to disambiguate sibling containers
+  // that share class names (e.g. JT's documents page header vs body), so
+  // these are exactly the kinds of class signatures we want to pivot on.
+  const STRUCTURAL_CLASS_RE = /^(sticky|fixed|absolute|grid$|grid-|flex$|flex-row|flex-col|overflow-|scroll-|table$|table-|min-w-max|max-h-)/;
+  const MAX_STRUCTURAL_BLOCK_BYTES = 2048;
+  const STRUCTURAL_MAX_DEPTH_UP = 4;
+  const TARGET_MARKER_ATTR = 'data-jt-tools-target-marker';
+
   function init() {
     if (isActive) return;
     isActive = true;
@@ -536,17 +553,32 @@ const InspectForAiFeature = (() => {
     const ancestors = collectAncestors(el, 2);
     const descendants = collectDescendants(el, 3);
     const stateIndicators = findStateIndicators(el);
+    const structuralBlock = safeBuildStructuralBlock(el);
+    const siblingContext = describeSiblingContext(el);
     return {
       selector,
       snippet: '<' + tag + (classes.length ? ' class="' + classes.join(' ') + '"' : '') + (dataAttrs ? ' ' + dataAttrs : '') + '>',
       ancestors,
       descendants,
       stateIndicators,
+      structuralBlock,
+      siblingContext,
       path: window.location.pathname,
       // Capture the URL search/hash too — JT uses them for view switches
       // (e.g. ?view=gantt). The AI may need both to scope onEvent properly.
       pathWithQuery: window.location.pathname + window.location.search + window.location.hash
     };
+  }
+
+  // Wraps buildStructuralBlock with a try/catch so a serialization failure
+  // (e.g. shadow DOM weirdness) never breaks the rest of the capture.
+  function safeBuildStructuralBlock(el) {
+    try {
+      return buildStructuralBlock(el);
+    } catch (err) {
+      console.warn('InspectForAi: structural-block build failed', err);
+      return null;
+    }
   }
 
   /**
@@ -579,6 +611,22 @@ const InspectForAiFeature = (() => {
       lines.push('**Ancestor chain (closest first):**');
       lines.push(cap.ancestors.map((a, j) => `${j + 1}. \`${a}\``).join('\n') || '(none)');
       lines.push('');
+      if (cap.siblingContext) {
+        lines.push('**Sibling context:** parent has ' + cap.siblingContext.total + ' children, '
+          + cap.siblingContext.sameSignature + ' match the target\'s tag+class signature.'
+          + (cap.siblingContext.sameSignature > 1
+              ? ' (Look-alike siblings exist — selector must disambiguate.)'
+              : ''));
+        lines.push('');
+      }
+      if (cap.structuralBlock) {
+        lines.push('**Structural parent block** (target marked with `data-jt-target=""`):');
+        lines.push('');
+        lines.push('```html');
+        lines.push(cap.structuralBlock);
+        lines.push('```');
+        lines.push('');
+      }
       lines.push('**Descendants (breadth-first, depth 3, full classes):**');
       lines.push(cap.descendants.length ? cap.descendants.map(d => `- \`${d}\``).join('\n') : '(none)');
       if (cap.stateIndicators.length) {
@@ -596,6 +644,7 @@ const InspectForAiFeature = (() => {
     lines.push('1. Look for shared state indicators across captures (e.g. `opacity-40`, `line-through`). If they all use the same indicator, ONE selector with `:has(.indicator)` may catch every view.');
     lines.push('2. If the views truly differ, emit MULTIPLE action entries in the `actions` array — one per view. The engine applies all of them; non-matching ones are no-ops.');
     lines.push('3. Set `scope.urlMatch` to the broadest substring shared by every captured path (e.g. `/schedule` if all captures are under that). Selectors do the per-view discrimination.');
+    lines.push('4. **Use the Structural parent block in each capture to verify your selector is unique within that view.** The target element is marked with `data-jt-target=""`. If you see other elements inside the block that would match your candidate selector, qualify with a unique ancestor or `:nth-child(N)`. The **Sibling context** line tells you up front whether the target is one of N look-alike siblings.');
     lines.push('');
     lines.push('**Schema (use these fields):**');
     lines.push('');
@@ -616,6 +665,7 @@ const InspectForAiFeature = (() => {
     lines.push('}');
     lines.push('');
     lines.push('Allowed action verbs: addClass, removeClass, setStyle, hide, show, setText, onEvent, moveBefore, moveAfter, sortChildren.');
+    lines.push('onEvent supports an optional `then: [ <Action>, ... ]` array (V1.7) — chained DOM-mutation actions that run after preventDefault/alert. Use this for "click triggers state change" patterns (sortable headers, toggleable rows). Nested onEvent inside then[] is forbidden. Max 20 then-steps.');
     lines.push('Every action also accepts an optional `match: "<substring>"` (≤200 chars) — a per-element guard. The engine fires the action only on elements whose textContent contains that substring. Use it when a selector is broader than you want (e.g. setText "Vendor" → "Trade Partner" only on cells whose current text contains "Vendor").');
     lines.push('Do NOT use innerHTML, insertHTML, insertElement, or any verb not in that list.');
     lines.push('Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.');
@@ -634,6 +684,8 @@ const InspectForAiFeature = (() => {
     const ancestors = collectAncestors(el, 2);
     const descendants = collectDescendants(el, 3);
     const stateIndicators = findStateIndicators(el);
+    const structuralBlock = safeBuildStructuralBlock(el);
+    const siblingContext = describeSiblingContext(el);
     const orgName = window.OrgDetector ? window.OrgDetector.getActiveOrg() : '(unknown)';
     const path = window.location.pathname;
 
@@ -656,6 +708,15 @@ const InspectForAiFeature = (() => {
       '**Ancestor chain (closest first):**',
       ancestors.map((a, i) => `${i + 1}. \`${a}\``).join('\n'),
       '',
+      '**Sibling context:** target\'s parent has ' + siblingContext.total + ' children, '
+        + siblingContext.sameSignature + ' of which match the target\'s tag+class signature. '
+        + (siblingContext.sameSignature === 1
+            ? 'The target is unique within its parent — a class-only selector should be safe.'
+            : 'There are ' + siblingContext.sameSignature + ' look-alike siblings — your selector must use `:nth-child` or a unique data-attribute to disambiguate.'),
+      '',
+      structuralBlock
+        ? '**Structural parent block** (the closest stable enclosing container — use this to verify your selector is unique within the visible structure. The target element is marked with `data-jt-target=""`. Tailwind atomic classes are stripped from non-target elements; long text is truncated for privacy):\n\n```html\n' + structuralBlock + '\n```\n'
+        : '',
       '**Descendants (breadth-first, depth 3, full classes):**',
       descendants.length ? descendants.map(d => `- \`${d}\``).join('\n') : '(none)',
       '',
@@ -689,15 +750,19 @@ const InspectForAiFeature = (() => {
       '  { "type": "setText",     "selector": "...", "text": "..." }',
       '  { "type": "onEvent",     "selector": "...", "event": "click|dblclick|mousedown|dragstart",',
       '                           "preventDefault": true, "stopPropagation": false,',
-      '                           "alert": { "title": "...", "body": "...", "confirmLabel": "OK" } }',
+      '                           "alert": { "title": "...", "body": "...", "confirmLabel": "OK" },',
+      '                           "then": [ <Action>, <Action>, ... ]   // V1.7: chained DOM-mutation actions run after preventDefault/alert',
+      '                         }',
       '  { "type": "moveBefore",  "selector": "...", "referenceSelector": "..." }   // move target to be the previous sibling of reference',
       '  { "type": "moveAfter",   "selector": "...", "referenceSelector": "..." }   // move target to be the next sibling of reference',
       '  { "type": "sortChildren", "selector": "<parent>", "childSelector": "<row>",',
       '                            "keySelector": "<inside row>", "key": "text|number|date",',
       '                            "direction": "asc|desc" }   // bulk-sort children of <parent>',
       '',
+      'BEFORE writing the selector: scan the **Structural parent block** above. If you see multiple elements that would match your candidate selector inside that block, your selector is ambiguous — qualify it with a unique ancestor (e.g. `.sticky.z-30 ...` to scope to the header row, not the body row), or use `:nth-child(N)` for positional disambiguation. The **Sibling context** line tells you up front whether the target is unique within its parent.',
       'For "warn before action" patterns use onEvent with preventDefault: true + an alert.',
-      'For "JT table has no sort" use sortChildren on the tbody — keySelector picks the column to sort by.',
+      'For "click triggers state change" patterns (e.g. clickable headers that mutate cells, sortable columns) use onEvent + then[]: the then array runs DOM-mutation actions (addClass, removeClass, setStyle, setText, hide, show, moveBefore, moveAfter, sortChildren) after the click pre-effects fire. Each then-step has its OWN selector and runs against all matches. Nested onEvent inside then[] is forbidden (validator rejects). Max 20 then-steps per onEvent.',
+      'For "JT table has no sort" use sortChildren on the tbody — keySelector picks the column to sort by. To make headers clickable: combine onEvent + then[sortChildren] so each click toggles the sort.',
       'Every action also accepts optional `"match": "<substring>"` (≤200 chars) — a per-element guard. The engine fires the action only on elements whose textContent contains that substring. Use it when a selector is broader than you want (e.g. setText "Vendor" → "Trade Partner" only on cells whose current text contains "Vendor").',
       'setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.',
       'Do NOT use innerHTML, insertHTML, insertElement, or any verb not on the list above.',
@@ -794,6 +859,188 @@ const InspectForAiFeature = (() => {
   function cssEscape(ident) {
     if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(ident);
     return ident.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, '\\$1');
+  }
+
+  // ============================================================
+  // Structural-block capture (V2 picker upgrade)
+  // ============================================================
+  //
+  // The V1 capture format gave the AI a 2-deep ancestor chain of (tag +
+  // classes), which was not enough to disambiguate siblings sharing the
+  // same class names (the JT documents page is exactly this — sticky
+  // header row and body rows live in separate sibling scroll containers
+  // with identical class names). The AI couldn't tell whether
+  // `.flex.min-w-max` matched one element or several until runtime, and
+  // wrote ambiguous selectors as a result.
+  //
+  // V2 adds two new pieces to every capture:
+  //   1. A serialized outerHTML chunk of the closest "stable" ancestor
+  //      (sticky/grid/flex container, semantic structural tag, or list-
+  //      pattern container), capped at 4 levels up and 2KB serialized,
+  //      with Tailwind atomic classes stripped from non-target descendants
+  //      and long text truncated to keep PII out of AI prompts.
+  //   2. A sibling-context line: "the target's parent has N children, M
+  //      of which match the same tag+class signature."
+  //
+  // The schema instructions in the markdown output are also updated to
+  // tell the AI to USE the structural block to verify selector uniqueness.
+
+  /**
+   * Build a tag+stable-class signature for an element. Two elements with
+   * the same signature are visually-similar siblings (think JT table rows).
+   * Tailwind atomic classes are stripped (they're noise) and the remaining
+   * stable classes are sorted so order doesn't matter — `.foo.bar` and
+   * `.bar.foo` produce the same signature.
+   */
+  function tagClassSig(el) {
+    const tag = el.tagName.toLowerCase();
+    const stable = (el.className && typeof el.className === 'string')
+      ? el.className.split(/\s+/).filter(c => c && !TAILWIND_PREFIX_RE.test(c)).sort().slice(0, 3).join('.')
+      : '';
+    return tag + (stable ? '.' + stable : '');
+  }
+
+  /**
+   * Decide whether `el` is "structural" — worth using as the root of a
+   * structural-block dump. Returns true if it's a semantic structural tag,
+   * has a layout-role class, or has 2+ same-signature children (the
+   * list/grid heuristic).
+   */
+  function isStructural(el) {
+    if (STRUCTURAL_TAGS.has(el.tagName.toLowerCase())) return true;
+    const cls = (el.className && typeof el.className === 'string') ? el.className.split(/\s+/) : [];
+    for (const c of cls) {
+      if (c && STRUCTURAL_CLASS_RE.test(c)) return true;
+    }
+    // List/grid heuristic: a parent with 2+ children sharing the same
+    // tag+class signature is almost certainly a list or grid container.
+    const children = el.children;
+    if (children.length >= 2) {
+      const seen = new Map();
+      for (let i = 0; i < children.length; i++) {
+        const sig = tagClassSig(children[i]);
+        const count = (seen.get(sig) || 0) + 1;
+        if (count >= 2) return true;
+        seen.set(sig, count);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Walk up from `target` looking for an ancestor that gives the AI useful
+   * structural context. Caps at STRUCTURAL_MAX_DEPTH_UP levels. Falls back
+   * to the deepest non-structural ancestor we walked past so the AI always
+   * gets something more than the existing 2-deep ancestor chain.
+   */
+  function findStableAncestor(target) {
+    let el = target.parentElement;
+    let depth = 0;
+    let fallback = null;
+    while (el && depth < STRUCTURAL_MAX_DEPTH_UP) {
+      if (el === document.body || el === document.documentElement) {
+        return fallback || el;
+      }
+      if (isStructural(el)) return el;
+      fallback = el;
+      el = el.parentElement;
+      depth++;
+    }
+    return fallback;
+  }
+
+  /**
+   * Serialize a stable-ancestor subtree as outerHTML, with the target
+   * element marked (`data-jt-target=""`), Tailwind atomic classes stripped
+   * from non-target descendants, and long text truncated. Caps total
+   * output at MAX_STRUCTURAL_BLOCK_BYTES so a giant container (e.g. a JT
+   * table with hundreds of rows) doesn't blow up the AI prompt.
+   *
+   * Returns null if no useful parent exists. The original DOM is NOT
+   * permanently mutated — we add a marker attribute, clone, then remove
+   * the marker. The engine's MutationObserver is debounced 100ms so it
+   * doesn't fire on the brief attribute add/remove.
+   */
+  function buildStructuralBlock(target) {
+    const stable = findStableAncestor(target);
+    if (!stable) return null;
+
+    target.setAttribute(TARGET_MARKER_ATTR, '1');
+    let clone;
+    try {
+      clone = stable.cloneNode(true);
+    } finally {
+      target.removeAttribute(TARGET_MARKER_ATTR);
+    }
+
+    const targetClone = clone.querySelector('[' + TARGET_MARKER_ATTR + ']');
+    if (!targetClone) return null;
+
+    sanitizeStructuralBlock(clone, targetClone);
+    targetClone.removeAttribute(TARGET_MARKER_ATTR);
+    targetClone.setAttribute('data-jt-target', '');
+
+    let html = clone.outerHTML;
+    if (html.length > MAX_STRUCTURAL_BLOCK_BYTES) {
+      html = html.substring(0, MAX_STRUCTURAL_BLOCK_BYTES) + '…[truncated]';
+    }
+    return html;
+  }
+
+  /**
+   * Walk a cloned subtree and:
+   *   - Strip Tailwind atomic classes from non-target elements (cap at 4
+   *     stable classes per element). The target keeps its FULL class list
+   *     so the AI sees exactly what makes the target unique.
+   *   - Truncate text nodes longer than 40 chars (keeps customer names,
+   *     addresses, invoice numbers out of AI prompts — these end up in
+   *     chat logs, so this is a basic privacy hygiene step).
+   *   - Strip `style` attributes on non-target elements (visual noise).
+   */
+  function sanitizeStructuralBlock(root, targetClone) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, null);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const txt = node.textContent || '';
+        if (txt.length > 40) {
+          node.textContent = txt.substring(0, 35) + '…';
+        }
+        continue;
+      }
+      if (node === targetClone) continue;
+      const cls = (node.className && typeof node.className === 'string') ? node.className : '';
+      if (cls) {
+        const stable = cls.split(/\s+/)
+          .filter(c => c && !TAILWIND_PREFIX_RE.test(c))
+          .slice(0, 4);
+        if (stable.length) {
+          node.setAttribute('class', stable.join(' '));
+        } else {
+          node.removeAttribute('class');
+        }
+      }
+      if (node.hasAttribute && node.hasAttribute('style')) {
+        node.removeAttribute('style');
+      }
+    }
+  }
+
+  /**
+   * Count how many of the target's siblings share its tag+class signature.
+   * Returns `{ total, sameSignature }`. The AI uses this to decide whether
+   * a class-only selector is unique within the parent or needs nth-child
+   * disambiguation.
+   */
+  function describeSiblingContext(target) {
+    const parent = target.parentElement;
+    if (!parent) return { total: 0, sameSignature: 0 };
+    const targetSig = tagClassSig(target);
+    let same = 0;
+    for (let i = 0; i < parent.children.length; i++) {
+      if (tagClassSig(parent.children[i]) === targetSig) same++;
+    }
+    return { total: parent.children.length, sameSignature: same };
   }
 
   function formatTagSnippet(el, preserveAllClasses) {

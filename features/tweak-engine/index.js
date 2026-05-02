@@ -312,6 +312,37 @@ const TweakEngineFeature = (() => {
           });
         }
       }
+      // V1.7 — action chaining. After the click pre-effects (preventDefault,
+      // stopPropagation, alert), run each step in `then` against its own
+      // selector. Steps are DOM-mutation verbs only — the validator rejects
+      // `onEvent` inside `then` so we don't recursively register listeners.
+      // A failing step is recorded in diagnostics but doesn't abort the chain
+      // — partial progress is better than nothing for chained UI updates.
+      if (Array.isArray(action.then)) {
+        for (let ti = 0; ti < action.then.length; ti++) {
+          const step = action.then[ti];
+          let matches;
+          try {
+            matches = document.querySelectorAll(step.selector);
+          } catch (err) {
+            recordDiagnostic(tweak.id, {
+              lastError: `action[${actionIndex}].then[${ti}] invalid selector: ${err.message}`,
+              lastErrorAt: Date.now()
+            });
+            continue;
+          }
+          for (const stepEl of matches) {
+            try {
+              runAction(step, stepEl, tweak.id);
+            } catch (err) {
+              recordDiagnostic(tweak.id, {
+                lastError: `action[${actionIndex}].then[${ti}]: ${err.message}`,
+                lastErrorAt: Date.now()
+              });
+            }
+          }
+        }
+      }
     };
 
     // Capture phase so we fire BEFORE JT's own React-attached handlers,
@@ -357,15 +388,21 @@ const TweakEngineFeature = (() => {
   // and surface a "Re-enable" path in the popup so the user knows
   // why their tweak stopped working instead of silently failing.
   //
-  // Hysteresis: must hit zero on N consecutive applies AND the tweak
-  // must have had a successful match at least M ms ago. The first
-  // condition prevents false positives from React mid-render. The
-  // second prevents auto-disabling tweaks that NEVER matched (those
-  // are author bugs, surfaced via the existing "No matches" chip,
-  // not auto-disabled).
+  // Hysteresis: must hit zero on N consecutive applies AND the streak must
+  // have persisted for at least D ms AND the tweak must have had a successful
+  // match at least M ms ago.
+  //   - The COUNT threshold prevents single-fire transients from tripping.
+  //   - The DURATION threshold prevents false positives during initial JT
+  //     render: on page load the body MutationObserver can fire 5+ debounced
+  //     batches in well under a second while React's subtree forms — without
+  //     this gate, every reload was tripping the auto-disable for users.
+  //   - The SUCCESS-AGE threshold prevents auto-disabling tweaks that NEVER
+  //     matched (those are author bugs, surfaced via the existing "No matches"
+  //     chip, not auto-disabled).
   const ZERO_MATCH_THRESHOLD = 5;
+  const ZERO_STREAK_MIN_DURATION_MS = 10_000;
   const MIN_SUCCESS_AGE_MS = 30_000;
-  const consecutiveZeroMatches = new Map();   // tweakId -> count
+  const consecutiveZeroMatches = new Map();   // tweakId -> { count, since }
   const autoDisabled = new Map();              // tweakId -> { reason, since, lastSuccessfulMatchCount }
 
   /**
@@ -513,16 +550,26 @@ const TweakEngineFeature = (() => {
         partial.lastSuccessfulMatchAt = now;
         partial.lastSuccessfulMatchCount = totalMatches;
       } else {
-        // Zero matches. Increment counter; if we've crossed the
-        // threshold AND the tweak previously worked AND enough time
-        // has passed since it last worked, auto-disable.
-        const zeros = (consecutiveZeroMatches.get(tweak.id) || 0) + 1;
-        consecutiveZeroMatches.set(tweak.id, zeros);
-        if (zeros >= ZERO_MATCH_THRESHOLD) {
+        // Zero matches. Track count + when the streak started so the
+        // threshold check can require a minimum duration — protects against
+        // false positives from JT's mid-render mutation bursts on page load.
+        let streak = consecutiveZeroMatches.get(tweak.id);
+        if (!streak) {
+          streak = { count: 0, since: now };
+          consecutiveZeroMatches.set(tweak.id, streak);
+        }
+        streak.count++;
+        const streakAge = now - streak.since;
+        if (streak.count >= ZERO_MATCH_THRESHOLD && streakAge >= ZERO_STREAK_MIN_DURATION_MS) {
           // Pull last-success info from the persisted diagnostic
           // (in-memory buffer might not have the historical timestamp
           // if it was flushed already).
           chrome.storage.local.get(['jtTweakDiagnostics']).then((stored) => {
+            // Re-check inside the async callback: a successful match between
+            // the trip and now would have called consecutiveZeroMatches.delete.
+            // Without this, we'd auto-disable a tweak that just started
+            // working again — exactly the false-positive we're guarding against.
+            if (!consecutiveZeroMatches.has(tweak.id)) return;
             const d = (stored.jtTweakDiagnostics || {})[tweak.id] || {};
             const lastSuccessAt = d.lastSuccessfulMatchAt;
             const lastSuccessCount = d.lastSuccessfulMatchCount || 0;
@@ -632,7 +679,17 @@ const TweakEngineFeature = (() => {
             raw = (child.textContent || '').trim();
           }
           if (keyType === 'number') {
-            const n = parseFloat(raw);
+            // Strip currency symbols ($, €), thousands separators (,), whitespace,
+            // and any other non-numeric noise before parsing. Keeps digits, the
+            // decimal point, and a leading minus so "-$1,234.56" → "-1234.56".
+            // Without this, every JT currency column ($1,234.56) parses as NaN
+            // and sinks to Infinity — sorting amounts becomes impossible without
+            // a custom keySelector pointing at a hidden numeric attribute.
+            // Caveats: accounting-style negatives like "($50.00)" lose the
+            // negative (parens are stripped); European "1.234,56" gets misread
+            // as 1.234. JT is US-only currency-formatted, so this is fine.
+            const cleaned = raw.replace(/[^0-9.\-]/g, '');
+            const n = parseFloat(cleaned);
             return Number.isNaN(n) ? Infinity : n;
           }
           if (keyType === 'date') {
