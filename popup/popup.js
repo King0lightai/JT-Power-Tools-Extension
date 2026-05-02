@@ -1051,6 +1051,138 @@ function updateThemePreview() {
     previewText.style.color = colors.text;
     previewText.style.borderColor = '#e5e7eb';
   }
+
+  // v4.8 — also refresh OKLCH triplets, WCAG meter, JT preview, builder swatches
+  refreshThemeRebuildUI(colors);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// v4.8 Theme Rebuild — OKLCH triplets, WCAG meter, JT preview pane,
+// auto-nudge, random harmonized, color-blind toggle, active card.
+// All driven by window.ThemePalette (OKLCH module loaded with rgb-theme).
+// ──────────────────────────────────────────────────────────────────
+function refreshThemeRebuildUI(colorsArg) {
+  const TP = window.ThemePalette;
+  if (!TP || !TP.generatePalette) return; // module not loaded yet
+
+  const colors = colorsArg || getCurrentThemeColors();
+  let palette;
+  try {
+    palette = TP.generatePalette(colors);
+  } catch (e) {
+    console.warn('[v4.8] generatePalette failed, skipping refresh', e);
+    return;
+  }
+
+  // OKLCH triplet under each clr-cell hex
+  const fmtOklch = (hex) => {
+    try {
+      const c = TP.hexToOklch(hex);
+      const L = Math.round(c.L * 100);
+      const C = c.C.toFixed(2);
+      const H = isNaN(c.h) ? 0 : Math.round(c.h);
+      return `oklch(${L}% ${C} ${H})`;
+    } catch (_) { return ''; }
+  };
+  const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+  setText('primaryOklch', fmtOklch(colors.primary));
+  setText('backgroundOklch', fmtOklch(colors.background));
+  setText('textOklch', fmtOklch(colors.text));
+
+  // Builder cell swatches (visible color of the .swatch div)
+  const setBg = (id, color) => { const el = document.getElementById(id); if (el) el.style.background = color; };
+  setBg('primarySwatch', colors.primary);
+  setBg('backgroundSwatch', colors.background);
+  setBg('textSwatch', colors.text);
+
+  // Active card swatches
+  const activeRow = document.getElementById('activeSwatches');
+  if (activeRow) {
+    const spans = activeRow.querySelectorAll('span');
+    if (spans[0]) spans[0].style.background = colors.primary;
+    if (spans[1]) spans[1].style.background = colors.background;
+    if (spans[2]) spans[2].style.background = colors.text;
+  }
+
+  // WCAG panel
+  refreshWcagPanel(palette.meta && palette.meta.ratios ? palette.meta.ratios : null);
+}
+
+function refreshWcagPanel(ratios) {
+  if (!ratios) return;
+  const grade = (r) => r >= 7 ? 'AAA' : r >= 4.5 ? 'AA' : r >= 3 ? 'A' : 'FAIL';
+  const cls = (r) => r >= 4.5 ? 'badge-pass' : r >= 3 ? 'badge-warn' : 'badge-fail';
+  document.querySelectorAll('#wcagPanel .item').forEach(item => {
+    const key = item.dataset.ratio;
+    if (!key || ratios[key] == null) return;
+    const num = ratios[key];
+    const numEl = item.querySelector('[data-ratio-num]');
+    const badgeEl = item.querySelector('[data-ratio-badge]');
+    if (numEl) numEl.textContent = num.toFixed(1);
+    if (badgeEl) {
+      badgeEl.textContent = grade(num);
+      badgeEl.className = `badge ${cls(num)}`;
+      badgeEl.style.marginLeft = 'auto';
+    }
+  });
+  // Auto-nudge button: visible only when at least one ratio is below AA
+  const autoFixBtn = document.getElementById('autoFixBtn');
+  const anyFails = Object.values(ratios).some(r => r < 4.5);
+  if (autoFixBtn) autoFixBtn.hidden = !anyFails;
+}
+
+// One-shot: walk the failing color toward bg in 1% Oklab L steps until contrast >= 4.5
+function autoNudgeToAA() {
+  const TP = window.ThemePalette;
+  if (!TP) return;
+  const colors = getCurrentThemeColors();
+  const bgIsDark = TP.hexToOklch(colors.background).L < 0.5;
+  let changed = null;
+
+  // Try primary-on-bg first (most common fail), then text-on-bg (rare)
+  const tryShift = (key, target) => {
+    if (changed) return;
+    let c = colors[key];
+    const directionPos = bgIsDark; // dark bg → lighten the foreground; light bg → darken
+    for (let i = 0; i < 60; i++) {
+      const ratio = TP.contrast(c, colors[target]);
+      if (ratio >= 4.5) break;
+      c = TP.shiftL(c, directionPos ? +0.01 : -0.01);
+    }
+    if (c !== colors[key]) {
+      colors[key] = c;
+      changed = key;
+    }
+  };
+
+  if (TP.contrast(colors.primary, colors.background) < 4.5) tryShift('primary', 'background');
+  if (!changed && TP.contrast(colors.text, colors.background) < 4.5) tryShift('text', 'background');
+
+  if (changed) {
+    loadThemeColors(colors);
+    showStatus(`Auto-nudged ${changed} to AA`, 'success');
+  } else {
+    showStatus('Nothing to nudge — all combos pass AA', 'success');
+  }
+}
+
+function randomHarmonizedTheme() {
+  const TP = window.ThemePalette;
+  if (!TP) return;
+  const h = Math.random() * 360;
+  // Vivid mid-light primary
+  const primary = TP.oklchToHex({ L: 0.65, C: 0.18, h });
+  // Warm-tinted near-white background
+  const background = TP.oklchToHex({ L: 0.97, C: 0.012, h });
+  // Deep near-black text
+  const text = TP.oklchToHex({ L: 0.18, C: 0.04, h });
+  loadThemeColors({ primary, background, text });
+  // Mark "Custom" in the active card since this isn't a named preset
+  const nameEl = document.getElementById('activeThemeName');
+  const metaEl = document.getElementById('activeThemeMeta');
+  if (nameEl) nameEl.textContent = 'Custom';
+  if (metaEl) metaEl.textContent = `Harmonized · hue ${Math.round(h)}°`;
+  document.querySelectorAll('.preset.is-current').forEach(p => p.classList.remove('is-current'));
 }
 
 // Apply current theme
@@ -1078,26 +1210,32 @@ async function applyTheme() {
   }
 }
 
-// Preloaded theme presets
+// Preloaded theme presets — v4.8 lineup
 const PRESET_THEMES = {
-  // Light themes
-  ocean:    { primary: '#0EA5E9', background: '#E0F2FE', text: '#0C4A6E' },
-  forest:   { primary: '#16A34A', background: '#DCFCE7', text: '#14532D' },
-  sunset:   { primary: '#EA580C', background: '#FFF7ED', text: '#431407' },
-  berry:    { primary: '#7C3AED', background: '#F3E8FF', text: '#1F1B29' },
-  slate:    { primary: '#64748B', background: '#F1F5F9', text: '#1E293B' },
-  // Dark themes
-  midnight: { primary: '#60A5FA', background: '#1E293B', text: '#CBD5E1' },
-  ember:    { primary: '#F97316', background: '#292524', text: '#D6D3D1' },
-  neon:     { primary: '#22D3EE', background: '#18181B', text: '#E4E4E7' },
-  plum:     { primary: '#A78BFA', background: '#1C1917', text: '#D4D4D8' },
-  charcoal: { primary: '#A1A1AA', background: '#27272A', text: '#E4E4E7' }
+  'field-day':  { primary: '#FE4C0D', background: '#FFFBF4', text: '#1A1410', label: 'Field Day',  meta: 'High-vis · auto-applied' },
+  'blueprint':  { primary: '#0EA5E9', background: '#F4F8FC', text: '#0C2230', label: 'Blueprint',  meta: 'Brand · auto-applied' },
+  'carbon':     { primary: '#FFB000', background: '#1A1916', text: '#ECECEC', label: 'Carbon',     meta: 'Dark · auto-applied' },
+  'paper':      { primary: '#3B5898', background: '#F7F3E8', text: '#221C10', label: 'Paper',      meta: 'Low strain · auto-applied' },
+  'forest':     { primary: '#16A34A', background: '#F4F9EE', text: '#1A2410', label: 'Forest',     meta: 'Calm · auto-applied' },
+  'owner-demo': { primary: '#7C3AED', background: '#FBF6FF', text: '#1A1029', label: 'Owner Demo', meta: 'Screenshot · auto-applied' },
+  'sunset':     { primary: '#EA580C', background: '#FFF7ED', text: '#431407', label: 'Sunset',     meta: 'Warm · auto-applied' },
+  'berry':      { primary: '#7C3AED', background: '#F3E8FF', text: '#1F1B29', label: 'Berry',      meta: 'Vivid · auto-applied' },
+  'slate':      { primary: '#64748B', background: '#F1F5F9', text: '#1E293B', label: 'Slate',      meta: 'Neutral · auto-applied' },
+  'charcoal':   { primary: '#A1A1AA', background: '#27272A', text: '#E4E4E7', label: 'Charcoal',   meta: 'Mono · auto-applied' },
+  // legacy aliases — kept so users with old saved presetKey in storage don't see broken state
+  ocean:    { primary: '#0EA5E9', background: '#E0F2FE', text: '#0C4A6E', label: 'Ocean',    meta: 'Legacy preset' },
+  midnight: { primary: '#60A5FA', background: '#1E293B', text: '#CBD5E1', label: 'Midnight', meta: 'Legacy preset' },
+  ember:    { primary: '#F97316', background: '#292524', text: '#D6D3D1', label: 'Ember',    meta: 'Legacy preset' },
+  neon:     { primary: '#22D3EE', background: '#18181B', text: '#E4E4E7', label: 'Neon',     meta: 'Legacy preset' },
+  plum:     { primary: '#A78BFA', background: '#1C1917', text: '#D4D4D8', label: 'Plum',     meta: 'Legacy preset' }
 };
 
 // Load a preset theme — updates pickers, applies, and saves
 async function loadPresetTheme(presetKey) {
-  const colors = PRESET_THEMES[presetKey];
-  if (!colors) return;
+  const preset = PRESET_THEMES[presetKey];
+  if (!preset) return;
+
+  const colors = { primary: preset.primary, background: preset.background, text: preset.text };
 
   // Update the pickers
   loadThemeColors(colors);
@@ -1105,12 +1243,21 @@ async function loadPresetTheme(presetKey) {
   // Apply and save in one step (same as applyTheme)
   await applyTheme();
 
-  // Highlight the active circle
+  // Highlight the active circle (legacy) and the new preset card
   document.querySelectorAll('.preloaded-theme-circle').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.preset === presetKey);
   });
+  document.querySelectorAll('.preset[data-preset]').forEach(btn => {
+    btn.classList.toggle('is-current', btn.dataset.preset === presetKey);
+  });
 
-  showStatus(`Loaded "${presetKey}" theme`, 'success');
+  // v4.8 active card label/meta
+  const nameEl = document.getElementById('activeThemeName');
+  const metaEl = document.getElementById('activeThemeMeta');
+  if (nameEl) nameEl.textContent = preset.label || presetKey;
+  if (metaEl) metaEl.textContent = preset.meta || '';
+
+  showStatus(`Loaded "${preset.label || presetKey}" theme`, 'success');
 }
 
 // Load saved themes into slots
@@ -1466,6 +1613,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (refreshBtn) {
     refreshBtn.addEventListener('click', refreshCurrentTab);
   }
+
+  // ── v4.8 Theme rebuild — preset cards, extras pills, auto-nudge ──
+  document.querySelectorAll('.preset[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadPresetTheme(btn.dataset.preset);
+    });
+  });
+
+  const autoFixBtn = document.getElementById('autoFixBtn');
+  if (autoFixBtn) autoFixBtn.addEventListener('click', autoNudgeToAA);
+
+  const randomBtn = document.getElementById('randomHarmonizedBtn');
+  if (randomBtn) randomBtn.addEventListener('click', randomHarmonizedTheme);
+
+  // Initial paint of the v4.8 reactive UI (after pickers are populated)
+  setTimeout(() => refreshThemeRebuildUI(), 0);
 
   // Initialize AI Integration section
   await initAiIntegration();
@@ -2689,16 +2852,6 @@ async function updateAccountUI() {
     accountRegister.style.display = 'none';
     accountSetupPrompt.style.display = 'none';
     accountSection.style.display = 'block';
-
-    // Show "Manage Team" link for owners and admins
-    const manageLink = document.getElementById('manageTeamLink');
-    if (manageLink) {
-      if (user && user.role && (user.role === 'owner' || user.role === 'admin')) {
-        manageLink.style.display = '';
-      } else {
-        manageLink.style.display = 'none';
-      }
-    }
 
     // Hide migration banner when logged in
     const migrationBanner = document.getElementById('migrationBanner');

@@ -1,182 +1,313 @@
 /**
- * RGB Theme Palette Module
- * Generates a complete color palette from three base colors using HSL manipulation
+ * RGB Theme Palette Module — OKLCH edition (v4.8)
  *
- * Dependencies: utils/color-utils.js (ColorUtils)
+ * Generates a perceptually-uniform palette from three base colors:
+ *   primary, background, text.
+ *
+ * Why OKLCH? HSL lightness is wildly inconsistent across hues —
+ *   `hsl(60, 100%, 50%)` (yellow) looks brighter than `hsl(240, 100%, 50%)` (blue)
+ * even though L values are equal. OKLCH normalizes for human perception, so the
+ *   subtle / muted / emphasis ramps stay visually balanced for ANY primary the
+ *   user picks. This was the #1 reason custom themes felt patchy in v4.7.
+ *
+ * API parity — exposes:
+ *   window.ThemePalette.generatePalette({ primary, background, text }) → palette
+ *
+ * Returned shape matches the v4 module so rgb-theme.js consumes it unchanged:
+ *   { meta, primary, background, text, border, states, scrollbar, alerts, shadows }
+ *
+ * `meta.ratios` is new in v4.8 — provides live WCAG numbers for the popup's
+ * Contrast Check panel. Math from Björn Ottosson's Oklab paper.
+ *   https://bottosson.github.io/posts/oklab/
  */
 
-const ThemePalette = (() => {
-  // Get ColorUtils functions
-  const getColorUtils = () => window.ColorUtils || {};
+(() => {
+  /* ────────────────────────────────────────────────────────────
+     Color-space helpers (sRGB ↔ Oklab ↔ OKLCH)
+     ──────────────────────────────────────────────────────────── */
 
-  /**
-   * Generate a complete color palette from base colors
-   * @param {Object} colors - Base colors { primary, background, text }
-   * @returns {Object} Complete palette with all derived colors
-   */
-  function generatePalette(colors) {
-    const {
-      hexToHsl,
-      hslToHex,
-      isDark,
-      blendColors
-    } = getColorUtils();
+  function srgbToLinear(c) {
+    c = c / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  }
+  function linearToSrgb(c) {
+    const v = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+    return Math.max(0, Math.min(255, Math.round(v * 255)));
+  }
 
-    const { primary, background, text } = colors;
-    const bgHsl = hexToHsl(background);
-    const primaryHsl = hexToHsl(primary);
-    const darkMode = isDark(background);
-
-    // Calculate contrast direction (positive = lighten, negative = darken for contrast)
-    const contrastDir = darkMode ? 1 : -1;
-
-    // ---- BACKGROUND SHADES ----
-    // Create 5 distinct background levels for visual hierarchy
-    const bgShades = {
-      // Level 0: Base background (cards, main content)
-      base: background,
-      // Level 1: Subtle shade (slight contrast for sections)
-      subtle: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 3)),
-      // Level 2: Muted (input backgrounds, list items)
-      muted: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 6)),
-      // Level 3: Emphasis (active states, hover)
-      emphasis: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 10)),
-      // Level 4: Strong (tooltips, overlays)
-      strong: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 15)),
-      // Level 5: Elevated (modals, dropdowns - opposite direction for depth)
-      elevated: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * -2))
+  function hexToRgb(hex) {
+    const h = String(hex || '').replace('#', '');
+    const v = h.length === 3
+      ? h.split('').map(c => c + c).join('')
+      : h;
+    return {
+      r: parseInt(v.slice(0, 2), 16),
+      g: parseInt(v.slice(2, 4), 16),
+      b: parseInt(v.slice(4, 6), 16),
     };
+  }
+  function rgbToHex({ r, g, b }) {
+    const h = n => n.toString(16).padStart(2, '0');
+    return `#${h(r)}${h(g)}${h(b)}`;
+  }
 
-    // ---- BORDER COLORS ----
-    // Create distinct border shades for depth perception
-    const borderShades = {
-      // Subtle border for cards and sections
-      subtle: hslToHex(bgHsl.h, Math.min(bgHsl.s + 5, 30), bgHsl.l + (contrastDir * 12)),
-      // Default border for inputs and dividers
-      default: hslToHex(bgHsl.h, Math.min(bgHsl.s + 8, 35), bgHsl.l + (contrastDir * 18)),
-      // Strong border for focus states
-      strong: hslToHex(bgHsl.h, Math.min(bgHsl.s + 10, 40), bgHsl.l + (contrastDir * 25))
-    };
+  function rgbToOklab({ r, g, b }) {
+    const lr = srgbToLinear(r);
+    const lg = srgbToLinear(g);
+    const lb = srgbToLinear(b);
 
-    // ---- TEXT COLORS ----
-    // Create text hierarchy
-    const textShades = {
-      primary: text,
-      secondary: blendColors(text, background, 0.25),
-      muted: blendColors(text, background, 0.45),
-      disabled: blendColors(text, background, 0.6)
-    };
+    const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb;
+    const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb;
+    const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb;
 
-    // ---- PRIMARY COLOR VARIATIONS ----
-    // Create primary color palette for interactive elements
-    const primaryShades = {
-      base: primary,
-      hover: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 8 : -8)),
-      active: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 12 : -12)),
-      // Light versions for backgrounds
-      light: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 20, 20), darkMode ? 25 : 92),
-      lighter: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 30, 15), darkMode ? 20 : 95),
-      // For selection highlighting - blend with background
-      selection: blendColors(background, primary, 0.15),
-      selectionHover: blendColors(background, primary, 0.25),
-      selectionStrong: blendColors(background, primary, 0.35)
-    };
-
-    // ---- HOVER/FOCUS/ACTIVE STATES ----
-    // Distinct colors for interactive states (not just brightness filters!)
-    const states = {
-      hover: hslToHex(bgHsl.h, bgHsl.s + 2, bgHsl.l + (contrastDir * 5)),
-      focus: blendColors(background, primary, 0.1),
-      active: hslToHex(bgHsl.h, bgHsl.s + 3, bgHsl.l + (contrastDir * 8)),
-      // Row hover - subtle but noticeable
-      rowHover: hslToHex(bgHsl.h, bgHsl.s + 1, bgHsl.l + (contrastDir * 3))
-    };
-
-    // ---- ALERT COLORS ----
-    // Generate alert colors that harmonize with the theme
-    const alerts = generateAlertColors(background, darkMode);
-
-    // ---- SCROLLBAR COLORS ----
-    const scrollbar = {
-      track: bgShades.muted,
-      thumb: borderShades.default,
-      thumbHover: primary
-    };
-
-    // ---- SHADOW COLORS ----
-    const shadows = {
-      color: darkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)',
-      colorStrong: darkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.2)'
-    };
+    const l_ = Math.cbrt(l);
+    const m_ = Math.cbrt(m);
+    const s_ = Math.cbrt(s);
 
     return {
-      isDark: darkMode,
-      background: bgShades,
-      border: borderShades,
-      text: textShades,
-      primary: primaryShades,
-      states,
-      alerts,
-      scrollbar,
-      shadows,
-      // Keep raw colors for backward compatibility
-      raw: { primary, background, text }
+      L: 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+      a: 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+      b: 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_,
     };
   }
 
-  /**
-   * Generate alert colors that blend with the theme
-   * @param {string} background - Background color hex
-   * @param {boolean} darkMode - Whether dark mode is active
-   * @returns {Object} Alert colors for each alert type
-   */
-  function generateAlertColors(background, darkMode) {
-    const { hslToHex } = getColorUtils();
+  function oklabToRgb({ L, a, b }) {
+    const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
 
-    // Base alert hues
-    const alertHues = {
-      green: 145,
-      yellow: 45,
-      red: 0,
-      orange: 25,
-      purple: 270,
-      blue: 210
+    const lr = l_ ** 3;
+    const lm = m_ ** 3;
+    const ls = s_ ** 3;
+
+    const r = +4.0767416621 * lr - 3.3077115913 * lm + 0.2309699292 * ls;
+    const g = -1.2684380046 * lr + 2.6097574011 * lm - 0.3413193965 * ls;
+    const bl = -0.0041960863 * lr - 0.7034186147 * lm + 1.7076147010 * ls;
+
+    return {
+      r: linearToSrgb(r),
+      g: linearToSrgb(g),
+      b: linearToSrgb(bl),
+    };
+  }
+
+  function oklabToOklch({ L, a, b }) {
+    const C = Math.sqrt(a * a + b * b);
+    let h = (Math.atan2(b, a) * 180) / Math.PI;
+    if (h < 0) h += 360;
+    return { L, C, h };
+  }
+  function oklchToOklab({ L, C, h }) {
+    const rad = (h * Math.PI) / 180;
+    return { L, a: C * Math.cos(rad), b: C * Math.sin(rad) };
+  }
+
+  function hexToOklch(hex) {
+    return oklabToOklch(rgbToOklab(hexToRgb(hex)));
+  }
+  function oklchToHex(oklch) {
+    return rgbToHex(oklabToRgb(oklchToOklab(oklch)));
+  }
+
+  /* ────────────────────────────────────────────────────────────
+     OKLCH-aware operations
+     ──────────────────────────────────────────────────────────── */
+
+  // Adjust lightness by a perceptually-even delta (e.g. +0.05 = 5% brighter).
+  function shiftL(hex, delta) {
+    const c = hexToOklch(hex);
+    c.L = Math.max(0, Math.min(1, c.L + delta));
+    return oklchToHex(c);
+  }
+  function setL(hex, L) {
+    const c = hexToOklch(hex);
+    c.L = Math.max(0, Math.min(1, L));
+    return oklchToHex(c);
+  }
+  function scaleC(hex, factor) {
+    const c = hexToOklch(hex);
+    c.C = Math.max(0, c.C * factor);
+    return oklchToHex(c);
+  }
+  // Mix toward a target color in Oklab space (perceptually linear blend).
+  function mix(a, b, t) {
+    const A = rgbToOklab(hexToRgb(a));
+    const B = rgbToOklab(hexToRgb(b));
+    const out = { L: A.L + (B.L - A.L) * t, a: A.a + (B.a - A.a) * t, b: A.b + (B.b - A.b) * t };
+    return rgbToHex(oklabToRgb(out));
+  }
+
+  // WCAG 2.2 relative luminance (still defined in sRGB; that's the spec).
+  function relLuminance(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const rs = srgbToLinear(r);
+    const gs = srgbToLinear(g);
+    const bs = srgbToLinear(b);
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  }
+  function contrast(a, b) {
+    const la = relLuminance(a);
+    const lb = relLuminance(b);
+    const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+    return (hi + 0.05) / (lo + 0.05);
+  }
+  function readableTextOn(bg) {
+    return contrast(bg, '#ffffff') >= contrast(bg, '#0a0a0a') ? '#ffffff' : '#0a0a0a';
+  }
+
+  /* ────────────────────────────────────────────────────────────
+     Palette builder — output shape is rgb-theme.js's expected shape
+     ──────────────────────────────────────────────────────────── */
+
+  function generatePalette(colors) {
+    const { primary, background, text } = colors || {};
+    const bgIsDark = relLuminance(background) < 0.5;
+
+    // Direction of "deeper / shallower" depends on whether bg is light or dark.
+    const deeper = bgIsDark ? +0.04 : -0.03;
+    const shallower = bgIsDark ? -0.02 : +0.02;
+
+    const bg = {
+      base: background,
+      subtle:    shiftL(background, shallower * 1),
+      muted:     shiftL(background, deeper * 1),
+      emphasis:  shiftL(background, deeper * 2),
+      strong:    shiftL(background, deeper * 5),
+      elevated:  bgIsDark
+                   ? shiftL(background, +0.06)
+                   : shiftL(background, +0.015),
     };
 
-    const result = {};
+    const tx = {
+      primary:   text,
+      secondary: mix(text, background, 0.25),
+      muted:     mix(text, background, 0.45),
+      disabled:  mix(text, background, 0.6),
+    };
 
-    Object.entries(alertHues).forEach(([name, hue]) => {
-      if (darkMode) {
-        // Dark mode: desaturated dark backgrounds, bright text
-        result[name] = {
-          bg: hslToHex(hue, 35, 18),
-          text: hslToHex(hue, 75, 65),
-          border: hslToHex(hue, 50, 35)
-        };
-      } else {
-        // Light mode: tinted light backgrounds, dark vivid text
-        result[name] = {
-          bg: hslToHex(hue, 65, 95),
-          text: hslToHex(hue, 70, 40),
-          border: hslToHex(hue, 55, 75)
-        };
-      }
+    const border = {
+      subtle:  mix(text, background, bgIsDark ? 0.82 : 0.88),
+      default: mix(text, background, bgIsDark ? 0.72 : 0.78),
+      strong:  mix(text, background, bgIsDark ? 0.55 : 0.62),
+    };
+
+    const pri = {
+      base:   primary,
+      hover:  shiftL(primary, bgIsDark ? +0.05 : -0.04),
+      active: shiftL(primary, bgIsDark ? +0.10 : -0.08),
+      selection:       mix(primary, background, 0.85),
+      selectionHover:  mix(primary, background, 0.78),
+      selectionStrong: mix(primary, background, 0.7),
+    };
+
+    // v4.8.3 — secondary auto-derived from primary in OKLCH space.
+    // Complementary hue (+180°) at 85% chroma + same lightness:
+    //   - Same L → secondary buttons sit at the same visual weight as primary buttons.
+    //   - 85% C → doesn't compete with primary for attention.
+    //   - +180° h → maximum perceptual contrast.
+    //   - For low-chroma primaries (Slate / Charcoal), C * 0.85 stays low,
+    //     so secondary stays gracefully neutral instead of injecting jarring color.
+    const primaryOklch = hexToOklch(primary);
+    const secondaryBase = oklchToHex({
+      L: primaryOklch.L,
+      C: primaryOklch.C * 0.85,
+      h: (primaryOklch.h + 180) % 360,
     });
+    const secondary = {
+      base:   secondaryBase,
+      hover:  shiftL(secondaryBase, bgIsDark ? +0.05 : -0.04),
+      active: shiftL(secondaryBase, bgIsDark ? +0.10 : -0.08),
+    };
 
-    // Body text adapts to background
-    result.bodyText = darkMode ? '#e0e0e0' : '#374151';
+    const states = {
+      hover:    shiftL(background, deeper * 1.2),
+      active:   shiftL(background, deeper * 2.2),
+      focus:    background,
+      rowHover: shiftL(background, deeper * 0.8),
+    };
 
-    return result;
+    const scrollbar = {
+      track: shiftL(background, deeper * 1.2),
+      thumb: mix(text, background, 0.65),
+      thumbHover: mix(text, background, 0.5),
+    };
+
+    // Theme-harmonized alert hues — chroma matches the theme so
+    // greens/yellows/reds don't feel pasted on. Hold OKLCH lightness
+    // constant per bg-mode, then set hue to the canonical alert hue.
+    function tint(hue) {
+      const L = bgIsDark ? 0.30 : 0.95;
+      const C = bgIsDark ? 0.10 : 0.06;
+      return oklchToHex({ L, C, h: hue });
+    }
+    function tintText(hue) {
+      const L = bgIsDark ? 0.78 : 0.42;
+      const C = bgIsDark ? 0.16 : 0.18;
+      return oklchToHex({ L, C, h: hue });
+    }
+    function tintBorder(hue) {
+      const L = bgIsDark ? 0.50 : 0.78;
+      const C = bgIsDark ? 0.13 : 0.14;
+      return oklchToHex({ L, C, h: hue });
+    }
+    const alerts = {
+      bodyText: tx.primary,
+      green:  { bg: tint(155), text: tintText(155), border: tintBorder(155) },
+      yellow: { bg: tint(85),  text: tintText(85),  border: tintBorder(85) },
+      red:    { bg: tint(25),  text: tintText(25),  border: tintBorder(25) },
+      orange: { bg: tint(50),  text: tintText(50),  border: tintBorder(50) },
+      purple: { bg: tint(310), text: tintText(310), border: tintBorder(310) },
+    };
+
+    const shadows = bgIsDark
+      ? { color: 'rgba(0,0,0,0.4)', colorStrong: 'rgba(0,0,0,0.6)' }
+      : { color: 'rgba(20,20,20,0.08)', colorStrong: 'rgba(20,20,20,0.16)' };
+
+    return {
+      meta: {
+        bgIsDark,
+        // ratios for the WCAG panel in the Theme tab popup
+        ratios: {
+          textOnBg:        +contrast(text, background).toFixed(2),
+          primaryOnBg:     +contrast(primary, background).toFixed(2),
+          textOnPrimary:   +contrast(readableTextOn(primary), primary).toFixed(2),
+          mutedOnBg:       +contrast(tx.muted, background).toFixed(2),
+        },
+      },
+      // legacy alias — kept so any v4.7 caller checking `palette.isDark` still works
+      isDark: bgIsDark,
+      primary: pri,
+      secondary,
+      background: bg,
+      text: tx,
+      border,
+      states,
+      scrollbar,
+      alerts,
+      shadows,
+    };
   }
 
-  // Public API
-  return {
+  /* ────────────────────────────────────────────────────────────
+     Export — replaces window.ThemePalette
+     ──────────────────────────────────────────────────────────── */
+  const ThemePalette = {
     generatePalette,
-    generateAlertColors
+    // expose math helpers so the popup's WCAG panel + auto-nudge can use them
+    hexToOklch,
+    oklchToHex,
+    shiftL,
+    setL,
+    scaleC,
+    mix,
+    contrast,
+    readableTextOn,
   };
-})();
 
-// Export to window
-if (typeof window !== 'undefined') {
-  window.ThemePalette = ThemePalette;
-}
+  if (typeof window !== 'undefined') {
+    window.ThemePalette = ThemePalette;
+  }
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ThemePalette;
+  }
+})();

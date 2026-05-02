@@ -7,6 +7,10 @@
   <!-- Theme-aware favicons -->
   <link rel="icon" href="../icons/icon16-light.png" media="(prefers-color-scheme: light)">
   <link rel="icon" href="../icons/icon16-dark.png" media="(prefers-color-scheme: dark)">
+  <!-- v5 typography: Anton (display), Inter (body), JetBrains Mono (monospace) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <!-- Phosphor Icons -->
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
@@ -18,8 +22,8 @@
     <header>
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
-        <h1>Power Tools</h1>
-        <span class="version">v4.7.2</span>
+        <h1>POWER TOOLS</h1>
+        <span class="version">v4.8.3</span>
         <button class="header-action-btn" id="refreshBtn" title="Refresh current tab">
           <i class="ph ph-arrows-clockwise"></i>
         </button>
@@ -41,13 +45,13 @@
           <i class="ph ph-palette tab-icon"></i>
           <span class="tab-label">Theme</span>
         </button>
-        <button class="tab-item" data-tab="account">
-          <i class="ph ph-user-circle tab-icon"></i>
-          <span class="tab-label">Account</span>
-        </button>
         <button class="tab-item" data-tab="tweaks">
           <i class="ph ph-magic-wand tab-icon"></i>
           <span class="tab-label">Tweaks</span>
+        </button>
+        <button class="tab-item" data-tab="account">
+          <i class="ph ph-user-circle tab-icon"></i>
+          <span class="tab-label">Account</span>
         </button>
       </div>
     </nav>
@@ -316,7 +320,7 @@
             <div class="category-header collapsed" data-category="appearance-features">
               <i class="ph ph-palette category-icon"></i>
               <span class="category-title">Appearance</span>
-              <span class="category-count">4</span>
+              <span class="category-count">3</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="appearance-features">
@@ -354,17 +358,6 @@
                 </label>
               </div>
 
-              <!-- Pro -->
-              <div class="feature-item premium" id="rgbThemeFeature">
-                <div class="feature-info">
-                  <h3>Custom Theme <i class="ph ph-question feature-help" data-guide="custom-theme" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
-                  <p>Create your own custom color theme</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
-                  <span class="slider"></span>
-                </label>
-              </div>
             </div>
           </div>
 
@@ -380,91 +373,193 @@
           <div class="panel-header">
             <div class="panel-icon"><i class="ph ph-palette"></i></div>
             <div class="panel-info">
-              <h2 class="panel-title">Theme Customization</h2>
-              <p class="panel-desc">Personalize your JobTread experience</p>
+              <h2 class="panel-title">Theme</h2>
+              <p class="panel-desc">OKLCH palettes, presets, WCAG checks</p>
             </div>
           </div>
 
-          <div class="theme-customization-panel">
-            <div class="color-pickers">
-              <div class="color-group">
-                <label>Primary Color</label>
-                <div class="color-row">
-                  <div class="color-input-wrapper">
-                    <input type="color" id="primaryColorPicker" value="#3B82F6">
-                    <span class="color-value" id="primaryColorValue">#3B82F6</span>
-                  </div>
-                  <div class="preview-box primary" id="previewPrimary">Primary</div>
-                </div>
-              </div>
+          <!-- v4.8.2 — master toggle moved here from Features tab.
+               Preserves id="rgbThemeFeature" so popup.js's premium-gating
+               (getElementById('rgbThemeFeature')?.classList.add/remove('locked'))
+               continues binding correctly. -->
+          <div class="master-toggle-bar theme-master-toggle" id="rgbThemeFeature">
+            <div class="master-toggle-info">
+              <i class="ph ph-palette category-icon"></i>
+              <span class="master-toggle-label">Custom Theme</span>
+              <span class="badge pro">Pro</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+              <span class="slider"></span>
+            </label>
+          </div>
 
-              <div class="color-group">
-                <label>Background Color</label>
-                <div class="color-row">
-                  <div class="color-input-wrapper">
-                    <input type="color" id="backgroundColorPicker" value="#F3E8FF">
-                    <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
-                  </div>
-                  <div class="preview-box background" id="previewBackground">Background</div>
-                </div>
-              </div>
+          <div class="theme-rebuild">
 
-              <div class="color-group">
-                <label>Text Color</label>
-                <div class="color-row">
-                  <div class="color-input-wrapper">
-                    <input type="color" id="textColorPicker" value="#1F1B29">
-                    <span class="color-value" id="textColorValue">#1F1B29</span>
-                  </div>
-                  <div class="preview-box text" id="previewText">Text</div>
-                </div>
+            <!-- Active theme card -->
+            <div class="active-card">
+              <div class="swatches" id="activeSwatches">
+                <span style="background:#FE4C0D"></span>
+                <span style="background:#FFFBF4"></span>
+                <span style="background:#1A1410"></span>
               </div>
+              <div>
+                <div class="name" id="activeThemeName">Field Day</div>
+                <div class="meta" id="activeThemeMeta">High-vis · auto-applied</div>
+              </div>
+              <div class="pill">ACTIVE</div>
             </div>
 
-            <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
-
-            <!-- Preloaded Themes -->
-            <div class="preloaded-themes">
-              <div class="preview-label">Quick Themes</div>
-              <div class="preloaded-theme-circles">
-                <button class="preloaded-theme-circle" data-preset="ocean" title="Ocean">
-                  <span class="preset-ring" style="background: conic-gradient(#0EA5E9 0% 33%, #E0F2FE 33% 66%, #0C4A6E 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="forest" title="Forest">
-                  <span class="preset-ring" style="background: conic-gradient(#16A34A 0% 33%, #DCFCE7 33% 66%, #14532D 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="sunset" title="Sunset">
-                  <span class="preset-ring" style="background: conic-gradient(#EA580C 0% 33%, #FFF7ED 33% 66%, #431407 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="berry" title="Berry">
-                  <span class="preset-ring" style="background: conic-gradient(#7C3AED 0% 33%, #F3E8FF 33% 66%, #1F1B29 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="slate" title="Slate">
-                  <span class="preset-ring" style="background: conic-gradient(#64748B 0% 33%, #F1F5F9 33% 66%, #1E293B 66% 100%);"></span>
-                </button>
-              </div>
-              <div class="preloaded-theme-circles" style="margin-top: 8px;">
-                <button class="preloaded-theme-circle" data-preset="midnight" title="Midnight">
-                  <span class="preset-ring" style="background: conic-gradient(#60A5FA 0% 33%, #1E293B 33% 66%, #CBD5E1 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="ember" title="Ember">
-                  <span class="preset-ring" style="background: conic-gradient(#F97316 0% 33%, #292524 33% 66%, #D6D3D1 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="neon" title="Neon">
-                  <span class="preset-ring" style="background: conic-gradient(#22D3EE 0% 33%, #18181B 33% 66%, #E4E4E7 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="plum" title="Plum">
-                  <span class="preset-ring" style="background: conic-gradient(#A78BFA 0% 33%, #1C1917 33% 66%, #D4D4D8 66% 100%);"></span>
-                </button>
-                <button class="preloaded-theme-circle" data-preset="charcoal" title="Charcoal">
-                  <span class="preset-ring" style="background: conic-gradient(#A1A1AA 0% 33%, #27272A 33% 66%, #E4E4E7 66% 100%);"></span>
-                </button>
-              </div>
+            <!-- §01 Presets -->
+            <div class="sec-title">
+              <span class="num">01</span>
+              <h3>Presets</h3>
+              <span class="right">10 built-in</span>
+            </div>
+            <div class="preset-grid" id="presetGrid">
+              <button type="button" class="preset is-current" data-preset="field-day" data-primary="#FE4C0D" data-background="#FFFBF4" data-text="#1A1410">
+                <div class="swatch-row"><span style="background:#FE4C0D"></span><span style="background:#FFFBF4"></span><span style="background:#1A1410"></span></div>
+                <div class="nm">Field Day</div>
+                <div class="sub">High-vis</div>
+              </button>
+              <button type="button" class="preset" data-preset="blueprint" data-primary="#0EA5E9" data-background="#F4F8FC" data-text="#0C2230">
+                <div class="swatch-row"><span style="background:#0EA5E9"></span><span style="background:#F4F8FC"></span><span style="background:#0C2230"></span></div>
+                <div class="nm">Blueprint</div>
+                <div class="sub">Brand</div>
+              </button>
+              <button type="button" class="preset" data-preset="carbon" data-primary="#FFB000" data-background="#1A1916" data-text="#ECECEC">
+                <div class="swatch-row"><span style="background:#FFB000"></span><span style="background:#1A1916"></span><span style="background:#ECECEC"></span></div>
+                <div class="nm">Carbon</div>
+                <div class="sub">Dark</div>
+              </button>
+              <button type="button" class="preset" data-preset="paper" data-primary="#3B5898" data-background="#F7F3E8" data-text="#221C10">
+                <div class="swatch-row"><span style="background:#3B5898"></span><span style="background:#F7F3E8"></span><span style="background:#221C10"></span></div>
+                <div class="nm">Paper</div>
+                <div class="sub">Low strain</div>
+              </button>
+              <button type="button" class="preset" data-preset="forest" data-primary="#16A34A" data-background="#F4F9EE" data-text="#1A2410">
+                <div class="swatch-row"><span style="background:#16A34A"></span><span style="background:#F4F9EE"></span><span style="background:#1A2410"></span></div>
+                <div class="nm">Forest</div>
+                <div class="sub">Calm</div>
+              </button>
+              <button type="button" class="preset" data-preset="owner-demo" data-primary="#7C3AED" data-background="#FBF6FF" data-text="#1A1029">
+                <div class="swatch-row"><span style="background:#7C3AED"></span><span style="background:#FBF6FF"></span><span style="background:#1A1029"></span></div>
+                <div class="nm">Owner Demo</div>
+                <div class="sub">Screenshot</div>
+              </button>
+              <button type="button" class="preset" data-preset="sunset" data-primary="#EA580C" data-background="#FFF7ED" data-text="#431407">
+                <div class="swatch-row"><span style="background:#EA580C"></span><span style="background:#FFF7ED"></span><span style="background:#431407"></span></div>
+                <div class="nm">Sunset</div>
+                <div class="sub">Warm</div>
+              </button>
+              <button type="button" class="preset" data-preset="berry" data-primary="#7C3AED" data-background="#F3E8FF" data-text="#1F1B29">
+                <div class="swatch-row"><span style="background:#7C3AED"></span><span style="background:#F3E8FF"></span><span style="background:#1F1B29"></span></div>
+                <div class="nm">Berry</div>
+                <div class="sub">Vivid</div>
+              </button>
+              <button type="button" class="preset" data-preset="slate" data-primary="#64748B" data-background="#F1F5F9" data-text="#1E293B">
+                <div class="swatch-row"><span style="background:#64748B"></span><span style="background:#F1F5F9"></span><span style="background:#1E293B"></span></div>
+                <div class="nm">Slate</div>
+                <div class="sub">Neutral</div>
+              </button>
+              <button type="button" class="preset" data-preset="charcoal" data-primary="#A1A1AA" data-background="#27272A" data-text="#E4E4E7">
+                <div class="swatch-row"><span style="background:#A1A1AA"></span><span style="background:#27272A"></span><span style="background:#E4E4E7"></span></div>
+                <div class="nm">Charcoal</div>
+                <div class="sub">Mono</div>
+              </button>
             </div>
 
-            <!-- Saved Themes -->
+            <!-- §02 Custom Builder (OKLCH) -->
+            <div class="sec-title">
+              <span class="num">02</span>
+              <h3>Custom Builder</h3>
+              <span class="right">OKLCH</span>
+            </div>
+            <div class="builder-row">
+              <div class="clr-cell">
+                <div class="swatch" id="primarySwatch" style="background:#FE4C0D"></div>
+                <div class="lbl">Primary</div>
+                <div class="hex" id="primaryColorValue">#FE4C0D</div>
+                <div class="oklch" id="primaryOklch">oklch(64% .21 38)</div>
+                <input type="color" id="primaryColorPicker" value="#FE4C0D">
+              </div>
+              <div class="clr-cell">
+                <div class="swatch" id="backgroundSwatch" style="background:#FFFBF4"></div>
+                <div class="lbl">Background</div>
+                <div class="hex" id="backgroundColorValue">#FFFBF4</div>
+                <div class="oklch" id="backgroundOklch">oklch(99% .01 75)</div>
+                <input type="color" id="backgroundColorPicker" value="#FFFBF4">
+              </div>
+              <div class="clr-cell">
+                <div class="swatch" id="textSwatch" style="background:#1A1410"></div>
+                <div class="lbl">Text</div>
+                <div class="hex" id="textColorValue">#1A1410</div>
+                <div class="oklch" id="textOklch">oklch(15% .01 38)</div>
+                <input type="color" id="textColorPicker" value="#1A1410">
+              </div>
+            </div>
+            <div class="extras">
+              <button type="button" class="pill-btn" id="sampleFromLogoBtn" disabled title="Coming v4.9 — eyedrops the dominant color from any logo on screen via the Tweaks element picker">
+                <i class="ph ph-image-square"></i> Sample from logo
+              </button>
+              <button type="button" class="pill-btn" id="randomHarmonizedBtn">
+                <i class="ph ph-shuffle"></i> Random harmonized
+              </button>
+            </div>
+
+            <!-- §03 Contrast Check (WCAG 2.2) -->
+            <div class="sec-title">
+              <span class="num">03</span>
+              <h3>Contrast Check</h3>
+              <span class="right">WCAG 2.2</span>
+            </div>
+            <div class="wcag" id="wcagPanel">
+              <div class="item" data-ratio="textOnBg">
+                <div>
+                  <span class="num" data-ratio-num>—</span>
+                  <span class="lbl">Text on Background</span>
+                </div>
+                <span class="badge badge-pass" data-ratio-badge style="margin-left:auto">—</span>
+              </div>
+              <div class="item" data-ratio="primaryOnBg">
+                <div>
+                  <span class="num" data-ratio-num>—</span>
+                  <span class="lbl">Primary on Background</span>
+                </div>
+                <span class="badge badge-pass" data-ratio-badge style="margin-left:auto">—</span>
+              </div>
+              <div class="item" data-ratio="textOnPrimary">
+                <div>
+                  <span class="num" data-ratio-num>—</span>
+                  <span class="lbl">Text on Primary</span>
+                </div>
+                <span class="badge badge-pass" data-ratio-badge style="margin-left:auto">—</span>
+              </div>
+              <div class="item" data-ratio="mutedOnBg">
+                <div>
+                  <span class="num" data-ratio-num>—</span>
+                  <span class="lbl">Muted on Background</span>
+                </div>
+                <span class="badge badge-pass" data-ratio-badge style="margin-left:auto">—</span>
+              </div>
+            </div>
+            <button type="button" class="auto-fix" id="autoFixBtn" hidden>
+              <i class="ph-fill ph-magic-wand"></i>
+              <span><strong>Auto-nudge to AA</strong> — gently darkens the offending color without touching the brand</span>
+            </button>
+
+            <!-- v4.8.2 — Apply CTA moved here, adjacent to the WCAG meter that drives it -->
+            <button id="applyThemeBtn" class="apply-cta" type="button">
+              <i class="ph-fill ph-check-circle"></i> Apply theme
+            </button>
+
+            <!-- §04 Saved Themes — promoted to numbered section adjacent to Apply -->
+            <div class="sec-title">
+              <span class="num">04</span>
+              <h3>Saved Themes</h3>
+              <span class="right">3 slots</span>
+            </div>
             <div class="saved-themes">
-              <div class="preview-label">Saved Themes</div>
               <div class="theme-slots">
                 <div class="theme-slot" data-slot="0">
                   <input type="text" class="theme-name" id="themeName0" placeholder="Theme 1" maxlength="20">
@@ -498,12 +593,156 @@
                 </div>
               </div>
             </div>
+
+            <!-- v4.9 placeholders — collapsed by default so they stay discoverable without forcing every visit to scroll past them -->
+            <details class="theme-coming-soon">
+              <summary>Coming v4.9 — Per-Context &amp; Org Rollout</summary>
+
+              <!-- Per-Context (v4.9) -->
+              <div class="sec-title">
+                <span class="num">·</span>
+                <h3>Per-Context</h3>
+                <span class="right">Coming v4.9</span>
+              </div>
+              <div class="ctx-list coming-soon" aria-disabled="true">
+                <div class="ctx-row">
+                  <span class="lbl">/jobs</span>
+                  <span class="name">Field Day</span>
+                  <span class="swatches">
+                    <span style="background:#FE4C0D"></span>
+                    <span style="background:#FFFBF4"></span>
+                    <span style="background:#1A1410"></span>
+                  </span>
+                  <i class="ph ph-dots-three-vertical more"></i>
+                </div>
+                <div class="ctx-row">
+                  <span class="lbl">/budget</span>
+                  <span class="name">Paper</span>
+                  <span class="swatches">
+                    <span style="background:#3B5898"></span>
+                    <span style="background:#F7F3E8"></span>
+                    <span style="background:#221C10"></span>
+                  </span>
+                  <i class="ph ph-dots-three-vertical more"></i>
+                </div>
+                <div class="ctx-row">
+                  <span class="lbl">/schedule</span>
+                  <span class="name">Blueprint</span>
+                  <span class="swatches">
+                    <span style="background:#0EA5E9"></span>
+                    <span style="background:#F4F8FC"></span>
+                    <span style="background:#0C2230"></span>
+                  </span>
+                  <i class="ph ph-dots-three-vertical more"></i>
+                </div>
+                <div class="ctx-add"><i class="ph ph-plus-circle"></i> Add a context rule</div>
+              </div>
+
+              <!-- Org Rollout (v4.9) -->
+              <div class="sec-title">
+                <span class="num">·</span>
+                <h3>Org Rollout</h3>
+                <span class="right">Coming v4.9</span>
+              </div>
+              <div class="org-card coming-soon" aria-disabled="true">
+                <div class="top">
+                  <div class="ico"><i class="ph ph-buildings" style="font-size:14px"></i></div>
+                  <div>
+                    <div class="nm" id="orgRolloutName">Your Organization</div>
+                    <div class="meta">12 seats · push your active theme to every member</div>
+                  </div>
+                  <div class="members">
+                    <span style="background:#FE4C0D">DM</span>
+                    <span style="background:#0EA5E9">JR</span>
+                    <span style="background:#16A34A">AS</span>
+                    <span style="background:var(--fg-muted);font-size:9px">+9</span>
+                  </div>
+                </div>
+                <div class="row">
+                  <button type="button" class="btn btn-push"><i class="ph-fill ph-broadcast"></i> Push to org</button>
+                  <button type="button" class="btn btn-lock"><i class="ph ph-lock-key"></i> Lock</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TWEAKS TAB ==================== -->
+      <div class="tab-content" id="tab-tweaks">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-magic-wand"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">Tweaks</h2>
+              <p class="panel-desc">User-authored DOM and CSS tweaks for JobTread, scoped per org.</p>
+            </div>
           </div>
 
-          <!-- Theme toggle requirement notice -->
-          <div class="theme-notice" id="themeNotice">
-            <p><i class="ph ph-lightbulb"></i> Enable <strong>Custom Theme</strong> in the Features tab to use theme customization.</p>
+          <!-- Pro upgrade notice — shown when user is below Pro tier -->
+          <div class="tweaks-upgrade-notice" id="tweaksUpgradeNotice" hidden>
+            <p><i class="ph ph-lightbulb"></i> Tweaks are a <strong>Pro</strong> feature. Upgrade to write your own DOM and CSS tweaks. The <strong>Power User</strong> tier adds MCP-powered tweak authoring and editing on the fly.</p>
+            <a href="https://premium.jtpowertools.com" target="_blank" class="btn-primary btn-small">Upgrade</a>
           </div>
+
+          <!-- Tweaks toggles — engine + inspector -->
+          <div class="tweaks-toggles" id="tweaksToggles">
+            <div class="feature-item premium" id="tweakEngineFeature">
+              <div class="feature-info">
+                <h3>User Tweaks Engine <span class="badge pro">Pro</span></h3>
+                <p>Apply your installed tweaks to JobTread pages. Off disables all tweaks for this device.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="tweakEngine" data-feature="tweakEngine">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="feature-item premium" id="inspectForAiFeature">
+              <div class="feature-info">
+                <h3>Inspect for AI <span class="badge pro">Pro</span></h3>
+                <p>Highlights a JobTread element so you can pick the exact thing to send to your AI.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="inspectForAi" data-feature="inspectForAi">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="tweaks-pick-row" id="tweaksPickRow" hidden>
+              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="pick" title="Open JobTread, then click any element you want to change">Pick an element on JobTread</button>
+              <button class="jt-tweaks-action" data-action="pick-multi" title="Pick the same kind of element across multiple JobTread views (table, Gantt, month, etc.) — combines them into one AI prompt">Pick across views <span class="tweaks-pick-badge">multi</span></button>
+              <span class="tweaks-pick-hint">
+                Shortcuts on JobTread: <kbd>Alt</kbd>+click an element, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> for picker, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> for multi-view.
+              </span>
+            </div>
+          </div>
+
+          <section class="jt-tweaks-section" data-tweaks-section>
+            <div class="jt-tweaks-header">
+              <span class="jt-tweaks-org" data-tweaks-org>(no org)</span>
+              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="import" title="Paste a tweak you got from an AI chat">Paste from AI</button>
+              <button class="jt-tweaks-action" data-action="new" title="For advanced users — write the JSON yourself">Blank</button>
+            </div>
+            <!-- Tweaks status summary — visible at-a-glance for CS triage.
+                 First triage question becomes "do you have any active
+                 Power Tools tweaks?" and the user can read this line. -->
+            <div class="jt-tweaks-summary" data-tweaks-summary hidden>
+              <span class="jt-tweaks-summary-stats" data-tweaks-summary-stats></span>
+              <button class="jt-tweaks-action jt-tweaks-summary-copy" data-action="copy-diagnostic" title="Copy a support-friendly diagnostic summary to your clipboard">Copy for support</button>
+            </div>
+            <ul class="jt-tweaks-list" data-tweaks-list>
+              <!-- rendered by popup.js -->
+            </ul>
+            <div class="jt-tweaks-empty" data-tweaks-empty hidden>
+              <p>How tweaks work</p>
+              <ol>
+                <li>Turn on <em>Inspect for AI</em> above.</li>
+                <li>Click <strong>Pick an element on JobTread</strong>, then click the thing you want to change.</li>
+                <li>The DOM context is on your clipboard — paste it into Claude, ChatGPT, or Cursor and describe what you want.</li>
+                <li>Hit <strong>Paste from AI</strong> and paste the JSON it gives you back.</li>
+              </ol>
+            </div>
+          </section>
+
         </div>
       </div>
 
@@ -557,10 +796,6 @@
                   <span>Active</span>
                 </div>
               </div>
-              <a href="https://app.jtpowertools.com/dashboard.html" target="_blank"
-                 id="manageTeamLink" class="manage-team-link" style="display: none;">
-                <i class="ph ph-users-three"></i> Manage Team <i class="ph ph-arrow-square-out"></i>
-              </a>
             </div>
 
             <!-- Login Form -->
@@ -692,84 +927,6 @@
         </div>
       </div>
 
-      <!-- ==================== TWEAKS TAB ==================== -->
-      <div class="tab-content" id="tab-tweaks">
-        <div class="tab-panel-content">
-          <div class="panel-header">
-            <div class="panel-icon"><i class="ph ph-magic-wand"></i></div>
-            <div class="panel-info">
-              <h2 class="panel-title">Tweaks <span class="badge pro">Pro</span></h2>
-              <p class="panel-desc">User-authored DOM and CSS tweaks for JobTread, scoped per org.</p>
-            </div>
-          </div>
-
-          <!-- Pro upgrade notice — shown when user is below Pro tier -->
-          <div class="tweaks-upgrade-notice" id="tweaksUpgradeNotice" hidden>
-            <p><i class="ph ph-lightbulb"></i> Tweaks are a <strong>Pro</strong> feature. Upgrade to write your own DOM and CSS tweaks. The <strong>Power User</strong> tier adds MCP-powered tweak authoring and editing on the fly.</p>
-            <a href="https://premium.jtpowertools.com" target="_blank" class="btn-primary btn-small">Upgrade</a>
-          </div>
-
-          <!-- Tweaks toggles — engine + inspector -->
-          <div class="tweaks-toggles" id="tweaksToggles">
-            <div class="feature-item premium" id="tweakEngineFeature">
-              <div class="feature-info">
-                <h3>User Tweaks Engine <span class="badge pro">Pro</span></h3>
-                <p>Apply your installed tweaks to JobTread pages. Off disables all tweaks for this device.</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="tweakEngine" data-feature="tweakEngine">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="feature-item premium" id="inspectForAiFeature">
-              <div class="feature-info">
-                <h3>Inspect for AI <span class="badge pro">Pro</span></h3>
-                <p>Highlights a JobTread element so you can pick the exact thing to send to your AI.</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="inspectForAi" data-feature="inspectForAi">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="tweaks-pick-row" id="tweaksPickRow" hidden>
-              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="pick" title="Open JobTread, then click any element you want to change">Pick an element on JobTread</button>
-              <button class="jt-tweaks-action" data-action="pick-multi" title="Pick the same kind of element across multiple JobTread views (table, Gantt, month, etc.) — combines them into one AI prompt">Pick across views <span class="tweaks-pick-badge">multi</span></button>
-              <span class="tweaks-pick-hint">
-                Shortcuts on JobTread: <kbd>Alt</kbd>+click an element, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> for picker, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> for multi-view.
-              </span>
-            </div>
-          </div>
-
-          <section class="jt-tweaks-section" data-tweaks-section>
-            <div class="jt-tweaks-header">
-              <span class="jt-tweaks-org" data-tweaks-org>(no org)</span>
-              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="import" title="Paste a tweak you got from an AI chat">Paste from AI</button>
-              <button class="jt-tweaks-action" data-action="new" title="For advanced users — write the JSON yourself">Blank</button>
-            </div>
-            <!-- Tweaks status summary — visible at-a-glance for CS triage.
-                 First triage question becomes "do you have any active
-                 Power Tools tweaks?" and the user can read this line. -->
-            <div class="jt-tweaks-summary" data-tweaks-summary hidden>
-              <span class="jt-tweaks-summary-stats" data-tweaks-summary-stats></span>
-              <button class="jt-tweaks-action jt-tweaks-summary-copy" data-action="copy-diagnostic" title="Copy a support-friendly diagnostic summary to your clipboard">Copy for support</button>
-            </div>
-            <ul class="jt-tweaks-list" data-tweaks-list>
-              <!-- rendered by popup.js -->
-            </ul>
-            <div class="jt-tweaks-empty" data-tweaks-empty hidden>
-              <p>How tweaks work</p>
-              <ol>
-                <li>Turn on <em>Inspect for AI</em> above.</li>
-                <li>Click <strong>Pick an element on JobTread</strong>, then click the thing you want to change.</li>
-                <li>The DOM context is on your clipboard — paste it into Claude, ChatGPT, or Cursor and describe what you want.</li>
-                <li>Hit <strong>Paste from AI</strong> and paste the JSON it gives you back.</li>
-              </ol>
-            </div>
-          </section>
-
-        </div>
-      </div>
-
     </div>
 
     <!-- Footer Links -->
@@ -806,6 +963,9 @@
   <script src="../services/jobtread-pro-service.js"></script>
   <script src="../services/jobtread-api.js"></script>
   <script src="../services/tweaks-api.js"></script>
+  <!-- v4.8: OKLCH palette engine — must load before popup.js so the Theme tab
+       (WCAG meter, OKLCH triplets, JT preview) can read window.ThemePalette -->
+  <script src="../features/rgb-theme-modules/palette.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -120,10 +120,8 @@ const CustomThemeFeature = (() => {
       // Regenerate the full palette with new colors (using Palette module)
       palette = Palette().generatePalette(currentColors);
 
-      // Re-inject CSS with new colors
-      if (styleElement) {
-        styleElement.remove();
-      }
+      // v4.8 polish — injectThemeCSS now reuses the existing <style> element
+      // and only swaps textContent. No teardown needed.
       injectThemeCSS();
 
       // Reapply contrast fixes with new colors
@@ -141,26 +139,44 @@ const CustomThemeFeature = (() => {
     return { ...palette };
   }
 
-  // Inject theme CSS using the generated palette
-  function injectThemeCSS() {
-    if (styleElement) {
-      styleElement.remove();
-    }
+  // v4.8 polish — fixed-color contrast text values, computed once.
+  // The 6 picker hexes (#10b981, #f59e0b, #3b82f6, #ef4444, #f97316, #a855f7)
+  // never change, so memoizing avoids re-running luminance math on every
+  // injectThemeCSS() call (was hot during color-picker drag).
+  let _fixedContrastCache = null;
+  function getFixedContrastText() {
+    if (_fixedContrastCache) return _fixedContrastCache;
+    _fixedContrastCache = {
+      green:  getContrastText('#10b981'),
+      yellow: getContrastText('#f59e0b'),
+      blue:   getContrastText('#3b82f6'),
+      red:    getContrastText('#ef4444'),
+      orange: getContrastText('#f97316'),
+      purple: getContrastText('#a855f7'),
+    };
+    return _fixedContrastCache;
+  }
 
+  // Inject theme CSS using the generated palette
+  // v4.8 polish — reuse the same <style> element across updates instead of
+  // tearing down and recreating, which forced a fresh stylesheet parse +
+  // reflow on every color-picker tick.
+  function injectThemeCSS() {
     // Use the pre-generated palette
     const p = palette;
     const { primary, background, text } = currentColors;
 
-    // Get contrast text for primary color
+    // Get contrast text for primary color (changes per-theme so not cached)
     const primaryText = getContrastText(primary);
 
-    // Get appropriate text colors for standard color picker colors
-    const greenText = getContrastText('#10b981');
-    const yellowText = getContrastText('#f59e0b');
-    const blueText = getContrastText('#3b82f6');
-    const redText = getContrastText('#ef4444');
-    const orangeText = getContrastText('#f97316');
-    const purpleText = getContrastText('#a855f7');
+    // Fixed-color contrast (memoized — see getFixedContrastText)
+    const fc = getFixedContrastText();
+    const greenText = fc.green;
+    const yellowText = fc.yellow;
+    const blueText = fc.blue;
+    const redText = fc.red;
+    const orangeText = fc.orange;
+    const purpleText = fc.purple;
 
     // Create CSS using the rich palette
     const css = `
@@ -457,8 +473,23 @@ const CustomThemeFeature = (() => {
         background-color: ${p.background.emphasis} !important;
       }
 
-      .bg-gray-700 {
-        background-color: ${p.background.strong} !important;
+      /* v4.8.3 — secondary action buttons (Item / Group / chip-style buttons in JT).
+         The :not([style*="background-image"]) exclusion guarantees profile-icon
+         elements (which use inline background-image: url(...) but no .bg-gray-* class today)
+         are never recolored, even if a future JT markup change adds .bg-gray-* to them. */
+      .bg-gray-700:not([style*="background-image"]) {
+        background-color: ${p.secondary.base} !important;
+        color: white !important;
+      }
+      .bg-gray-800:not([style*="background-image"]) {
+        background-color: ${p.secondary.hover} !important;
+        color: white !important;
+      }
+      .hover\\:bg-gray-800:hover:not([style*="background-image"]) {
+        background-color: ${p.secondary.hover} !important;
+      }
+      .active\\:bg-gray-900:active:not([style*="background-image"]) {
+        background-color: ${p.secondary.active} !important;
       }
 
       /* === Selection Highlighting === */
@@ -499,11 +530,12 @@ const CustomThemeFeature = (() => {
       .bg-orange-50 { background-color: ${p.alerts.orange.bg} !important; }
       .bg-purple-50 { background-color: ${p.alerts.purple.bg} !important; }
 
-      .text-green-500, .border-green-500 { color: ${p.alerts.green.text}; border-color: ${p.alerts.green.border}; }
-      .text-yellow-500, .border-yellow-500 { color: ${p.alerts.yellow.text}; border-color: ${p.alerts.yellow.border}; }
-      .text-red-500, .border-red-500 { color: ${p.alerts.red.text}; border-color: ${p.alerts.red.border}; }
-      .text-orange-500, .border-orange-500 { color: ${p.alerts.orange.text}; border-color: ${p.alerts.orange.border}; }
-      .text-purple-500, .border-purple-500 { color: ${p.alerts.purple.text}; border-color: ${p.alerts.purple.border}; }
+      /* v4.8.3 — unscoped .text-{color}-500 / .border-{color}-500 rules removed.
+         JT uses these classes for standalone status indicators (e.g. yellow "pending",
+         green "submitted", red "rejected") that should keep their vivid defaults
+         regardless of theme. The SCOPED rules at .bg-{color}-50 .text-{color}-500
+         remain unchanged — alert text inside alert pills still harmonizes with the
+         OKLCH theme. */
 
       /* Alert body text */
       .bg-green-50, .bg-yellow-50, .bg-red-50, .bg-orange-50, .bg-purple-50 {
@@ -553,6 +585,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* Note: hover:bg-gray-800 and hover:bg-gray-900 are NOT overridden */
+      /* (v4.8.3 update: bg-gray-700 + bg-gray-800 + hover:bg-gray-800 NOW overridden via secondary token. bg-gray-900 + .bg-black still not overridden.) */
       /* They're used intentionally on dark toolbars/headers */
 
       /* Resize handles */
@@ -630,6 +663,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* Note: .bg-gray-800, .bg-gray-900, .bg-black are NOT overridden */
+      /* (v4.8.3 update: bg-gray-700 + bg-gray-800 + hover:bg-gray-800 NOW overridden via secondary token. bg-gray-900 + .bg-black still not overridden.) */
       /* They're used intentionally for dark toolbars, file viewers, etc. */
 
       /* === Text Color Hierarchy === */
@@ -970,10 +1004,15 @@ const CustomThemeFeature = (() => {
       }
     `;
 
-    styleElement = document.createElement('style');
+    // v4.8 polish — only create the <style> element once. Subsequent calls
+    // just swap textContent so JT's React reconciler doesn't see a node
+    // disappear/reappear (which was triggering its observer + reflow).
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'jt-custom-theme-styles';
+      document.head.appendChild(styleElement);
+    }
     styleElement.textContent = css;
-    styleElement.id = 'jt-custom-theme-styles';
-    document.head.appendChild(styleElement);
   }
 
   // Start observing DOM changes for contrast fixes
