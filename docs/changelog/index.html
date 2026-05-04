@@ -50,11 +50,182 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.8.3 — Theme Tab Rebuild + OKLCH Palette, Tweaks Engine V1.6/V1.7, Popup v5 Skin -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.8.3</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">May 4, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme — Full Theme Tab Rebuild (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Replaced the v4.7 "three sliders + ten quick-theme circles" with a structured five-section Theme tab — active-theme card, ten-card preset gallery (Field Day · Blueprint · Carbon · Paper · Forest · Owner Demo · Sunset · Berry · Slate · Charcoal), an OKLCH custom builder with live Primary / Background / Text cells, a WCAG 2.2 contrast meter, and a saved-themes slot picker</li>
+                            <li class="sub-item">New <strong>OKLCH palette engine</strong> — perceptually-uniform color math means a yellow-based theme now generates the same balanced subtle/muted/emphasis tiers as a blue-based one. No more washed-out yellows or over-saturated blues</li>
+                            <li class="sub-item"><strong>Live WCAG 2.2 contrast meter</strong> — four ratios update on every color change (Text on Background, Primary on Background, Text on Primary, Muted on Background) with AAA / AA / A / FAIL badges</li>
+                            <li class="sub-item"><strong>Auto-nudge to AA</strong> — one-click button walks the offending color toward the background until contrast clears AA, without touching your brand color when only primary-on-bg fails</li>
+                            <li class="sub-item"><strong>Random harmonized</strong> button generates a fresh palette in OKLCH at a random hue with matching near-white background and near-black text</li>
+                            <li class="sub-item"><strong>Custom Theme master toggle moved into the Theme tab itself</strong> — Pro users no longer have to backtrack to the Features tab to enable the feature before customizing</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Auto-Derived Secondary Color (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread's gray-700/800 buttons (Item / Group / chip-style action buttons) now render in a vivid theme-derived <em>secondary</em> color instead of always-gray — Field Day theme renders them deep teal, Blueprint orange-red, Forest rust, etc.</li>
+                            <li class="sub-item">Secondary color is computed by rotating your primary 180° in OKLCH space (complementary hue) with reduced chroma — gives you a punchy accent without picking a second color</li>
+                            <li class="sub-item">JobTread's standalone status indicators (yellow "pending", green "submitted", red "rejected") keep their default vivid colors regardless of theme — only the alert-pill variants harmonize with your palette</li>
+                            <li class="sub-item">Existing custom themes auto-upgrade on next palette regeneration — no schema migration needed</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">User Tweaks V1.7 — Click-Triggered Chains + Per-Element Guards (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><strong><code>onEvent.then[]</code> action chaining</strong> — click a JT header to trigger a sort, click a row to add a class, click a button to relabel adjacent cells. Each then-step has its own selector and runs after the click handler fires. Closes the gap that previously made <code>onEvent</code> a one-shot trigger only</li>
+                            <li class="sub-item"><strong><code>match</code> per-element guard on every action verb</strong> — every action now accepts an optional <code>match: "&lt;substring&gt;"</code> that filters which matched elements actually receive the action. Example: relabel only cells whose current text contains "Vendor" without touching other elements that share the selector. No more <code>:has()</code> gymnastics</li>
+                            <li class="sub-item"><strong>SPA navigation re-apply</strong> — tweaks scoped to specific URL paths (e.g. <code>/jobs/123</code>) now re-apply correctly when JobTread pushes a new URL without a hard reload. Multi-URL tweaks and the Trade Partner Rebrand pattern both benefit</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">User Tweaks V1.6 — DOM Reorder Verbs (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Three new action verbs let tweaks reorder elements without injecting HTML: <code>moveBefore</code> (place target before reference), <code>moveAfter</code> (place after), and <code>sortChildren</code> (bulk-sort matched parent's children)</li>
+                            <li class="sub-item">Closes the gap that previously forced contractors to abandon "make this JT table sortable" or "put Save before Cancel" requests because there was no verb to do it</li>
+                            <li class="sub-item"><code>sortChildren</code> supports <code>text</code>, <code>number</code>, and <code>date</code> key types with <code>asc</code>/<code>desc</code> direction. Example: make an unsorted JT table show newest-first by sorting the tbody by a date column</li>
+                            <li class="sub-item">All three verbs are idempotent — they short-circuit when the DOM is already in the requested state, so JobTread's React reconciler doesn't ping-pong with the engine</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Inspect-for-AI Picker V2 — Richer Captures for Better Tweaks (Pro)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The picker now captures the <strong>structural parent block</strong> alongside the existing ancestor chain — closes the V1 gap where two siblings sharing class names (e.g. JT's documents page header vs body row) looked indistinguishable in the markdown payload, leading the AI to write ambiguous selectors</li>
+                            <li class="sub-item">New <strong>"Sibling context" line</strong> on every capture: <em>"target's parent has N children, M of which match the target's tag+class signature."</em> Tells the AI up front whether the selector needs <code>:nth-child</code> qualifying or a class-only selector is safe</li>
+                            <li class="sub-item">Privacy hygiene: text nodes longer than 40 characters are truncated so customer names, addresses, and invoice text don't end up in AI chat logs. Tailwind atomic noise stripped from non-target elements</li>
+                            <li class="sub-item">Output capped at 2KB so AI prompts stay manageable even on huge JT tables</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Team Message Templates Exposed to AI (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New <code>jobtread_search_team_templates</code> tool returns your org's shared message templates — the same ones the Character Counter "Company" tab surfaces inside JT message dialogs</li>
+                            <li class="sub-item">Provide <code>query</code> to search by name/content, omit it to list the 20 most-recently-updated. Lets Claude pull a company-approved template when drafting a comment, daily log, or message instead of inventing copy from scratch</li>
+                            <li class="sub-item">Read-only by design — template authoring stays in the popup UI</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Popup v5 Skin — Full Visual Refresh</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Whole popup migrated to Anton (display) + Inter (body) + JetBrains Mono typography with a new neutral coal/paper token system. Orange flame underline on the header, tighter tab strip with active-state orange underline</li>
+                            <li class="sub-item"><strong>Hybrid dark-mode palette</strong> matches JobTread's canonical neutrals (<code>#252525</code> / <code>#2c2c2c</code> / <code>#333333</code>) so the popup visually blends with the JT app when both are open in your browser. Text uses the marketing site's warm cream so it reads as the same brand as jtpowertools.com</li>
+                            <li class="sub-item"><strong>Tab order changed</strong> — Account moves to the far right (Features · Theme · Tweaks · Account). Productivity flows stay grouped on the left where you actually use them; Account sits where settings/profile tabs conventionally live</li>
+                            <li class="sub-item">Removed redundant "PRO" pill on the Tweaks panel header (per-toggle PRO badges already communicate the gating). Removed duplicate "Manage Team" link from the Account tab</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks Engine — Auto-Disable on Suspected Breakage + Re-Enable Path</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">If a tweak's selector matches zero elements for several apply cycles in a row over a sustained window, the engine now auto-disables it instead of running broken-but-silent. Avoids the "I forgot which tweak was making the page weird" debugging spiral after a JT update</li>
+                            <li class="sub-item">Auto-disabled tweaks show a clear ⚠ badge in the popup with a one-click <strong>Re-enable</strong> button next to them — no manual edit needed once you've confirmed the page is working again</li>
+                            <li class="sub-item"><strong>One-time transparency banner</strong> for org-required tweaks — the first time an org-pushed tweak applies on your device, you see a banner explaining what it does and where it came from, with a link to the popup to disable locally if you want</li>
+                            <li class="sub-item">New <strong>Tweaks summary panel</strong> in the popup — at-a-glance stats (active count, error count, zero-match count) plus a "Copy for support" button that grabs a structured diagnostic report ready to paste into a support email</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Documentation Site — Contractor-Friendly Rewrite</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Every per-feature guide rewritten in plain contractor English. Stripped DOM/timing/CSS-internals jargon ("waits 800ms for DOM render", "MutationObserver detection methods") and replaced each guide with a tight four-section structure: <em>What it does</em>, <em>Turn it on</em>, <em>How to use it</em>, <em>Good to know</em>. Each guide now reads in 60 seconds</li>
+                            <li class="sub-item">Added a video placeholder block to every guide so mini walkthrough videos can be dropped in later</li>
+                            <li class="sub-item">Created the missing <code>reverse-thread-order</code> guide — the popup's help icon for that feature was pointing at a 404</li>
+                            <li class="sub-item">Rebuilt the docs hub at <code>jtpowertools.com/documentation/</code> as categorized cards (Start here · Free · Essential · Pro · Power User · AI &amp; MCP) with tier badges</li>
+                            <li class="sub-item">New <strong>public security page</strong> at <code>/security/</code> — threat model overview and responsible-disclosure contact, so security researchers have a clear way to reach us</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks: Currency Columns Now Sort Correctly</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>sortChildren</code> with <code>key: 'number'</code> used to fail on JT's currency cells (<code>$1,234.56</code>, <code>-$50.00</code>) — every value parsed as <code>NaN</code> and sank to the end of the sort. Now strips currency formatting before parsing, so every currency column on every JT page (budget, invoices, AR/AP, vendor bills, change orders) sorts correctly</li>
+                            <li class="sub-item">No JSON change needed — existing tweaks get the fix automatically</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks: No More Spurious Auto-Disable on Page Reload</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Auto-disable used to trip on every page reload because JT's React reconciler fires several MutationObserver batches in well under a second during initial render — each ran against an empty DOM, racked up the zero-match counter, and disabled the tweak before JT had finished painting</li>
+                            <li class="sub-item">The threshold now requires both the count AND a sustained 10-second window of zero matches, so a render burst can no longer trip auto-disable. Genuinely-broken tweaks still trip because their zero-match streak persists past 10s of normal use</li>
+                            <li class="sub-item">If you have tweaks stuck in the old auto-disabled state, click <strong>Re-enable</strong> in the popup once — the new logic won't re-trip them on the next reload</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Firefox: Per-Org API Keys Found After Sign-In</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Features that need a per-org grant key (Org Logo, AI Inspect, server-backed Tweaks) used to show "No API key for &lt;org&gt;" on Firefox even when you were signed in to the portal — the message handler that fetches per-org keys was missing from the Firefox background script</li>
+                            <li class="sub-item">Chrome was unaffected — only Firefox users hit this</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks: Save / Update / Revert No Longer Silently Breaks CSS</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Saving a CSS-bearing tweak twice (or reverting to a prior version) used to double-scope every selector — the tweak then matched zero elements and quietly did nothing on the page</li>
+                            <li class="sub-item">The CSS sanitizer is now idempotent: it strips any leading scope-class prefixes before re-applying the correct one. Already-broken tweaks self-heal at apply time the next time the engine runs — no need to re-save</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — <code>importCatalogGroup</code> Failed on Every Call</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Importing a cost-group template from the org catalog into a job used to error out on every call. Rewrote the source-side query to use the org-level <code>costGroups</code> collection and pull items via <code>descendentCostItems</code> with parent filtering — direct children only, no flattening of sub-groups</li>
+                            <li class="sub-item"><strong>Selection metadata now survives the import.</strong> Previously the org-level template's selection params (<code>isSimpleSelection</code>, <code>maxSelectionsAllowed</code>, <code>minSelectionsRequired</code>) were dropped during recreate, so a selection template (e.g. HIA Sign Offs) imported as a regular cost group and never appeared in the target job's Selections tab. Now passed through correctly</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks: Clickjacking Guard on Primary-Action Buttons</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The engine now refuses to relabel button-like elements whose current text matches a destructive/financial action word (Approve, Confirm, Delete, Remove, Discard, Archive, Reject, Submit, Send, Resend, Pay, Charge, Refund, Sign, Post, Publish — plus inflections)</li>
+                            <li class="sub-item">Closes the most plausible UI-redress attack — a malicious tweak relabeling an "Approve" or "Delete" button to look like "Cancel" so the user clicks expecting one outcome but triggers the dangerous one</li>
+                            <li class="sub-item">Conservative on false positives — relabeling Cancel / Save / Edit buttons still works since those aren't in the protected pattern. When the guard fires, the diagnostic surfaces in the popup so the tweak author knows why their tweak didn't apply</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Marketing Site — "700+ contractors" → "700+ installs"</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Hero trust strip and reviews-section CTA now say "installs" instead of "contractors" — Chrome Web Store reports installs, not unique contractors, so this is a more accurate framing of the number</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.7.0 — User Tweaks (Pro), MCP Permission Tiers, Inspect-for-AI -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.7.0</span>
-                <span class="version-badge">Current</span>
+                <span class="version-badge"></span>
                 <span class="version-date">April 28, 2026</span>
             </div>
 
