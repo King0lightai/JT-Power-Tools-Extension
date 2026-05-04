@@ -691,11 +691,17 @@ const CustomThemeFeature = (() => {
       /* Keep .text-white as white - used on intentionally dark UI elements */
       /* .text-white is NOT themed */
 
-      /* Don't interfere with JT's yellow updated-cell highlighting */
-      /* Use a muted yellow that works with themed text (same approach as dark mode) */
+      /* v4.8.4 — bg-yellow-100 edit-highlight is now theme-aware.
+         In LIGHT themes we let JT's default Tailwind pale yellow (#fef9c3)
+         ride — themed primary text is dark, so contrast is fine.
+         In DARK themes (Carbon, Charcoal) the pale yellow forces the themed
+         light-grey text into near-invisibility, so we re-color the cell to
+         a hue-harmonized dark olive (palette.alerts.yellow.bg, OKLCH
+         L=0.30 / C=0.10 / h=85) that supports light text without shouting. */
+      ${p.meta.bgIsDark ? `
       .bg-yellow-100 {
-        background-color: #46442e !important;
-      }
+        background-color: ${p.alerts.yellow.bg} !important;
+      }` : ''}
 
       .hover\\:text-gray-800:hover,
       .hover\\:text-gray-900:hover {
@@ -773,11 +779,26 @@ const CustomThemeFeature = (() => {
 
       /* Hover states for non-button elements */
       .hover\\:bg-blue-500:hover:not(button):not([style*="background-color"]),
-      .hover\\:bg-blue-600:hover:not(button):not([style*="background-color"]) {
+      .hover\\:bg-blue-600:hover:not(button):not([style*="background-color"]),
+      .hover\\:bg-blue-700:hover:not(button):not([style*="background-color"]) {
         background-color: ${p.primary.base} !important;
       }
 
       .hover\\:text-white:hover {
+        color: ${primaryText} !important;
+      }
+
+      /* v4.8.4 — Higher-specificity hover-text override for dropdown/menu items.
+         The dropdown rule "div[data-popper-placement] [tabindex]:not(.text-white)"
+         (specificity 0,3,0) was beating ".hover\\:text-white:hover" (0,2,0) and
+         keeping text in p.text.primary on hover — producing "themed text on
+         themed-primary background" (often invisible). These scoped rules
+         (specificity 0,4,0+) restore readable contrast on hovered dropdown
+         items across all 10 presets. */
+      div[data-popper-placement] div[role="button"].hover\\:text-white:hover,
+      div[data-popper-placement] [tabindex].hover\\:text-white:hover,
+      [role="menu"] [role="menuitem"].hover\\:text-white:hover,
+      [role="listbox"] [role="option"].hover\\:text-white:hover {
         color: ${primaryText} !important;
       }
 

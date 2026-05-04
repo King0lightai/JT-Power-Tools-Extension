@@ -725,6 +725,11 @@ async function loadSettings() {
     const savedThemes = settings.savedThemes || defaultSettings.savedThemes;
     loadSavedThemes(savedThemes);
 
+    // v4.8.4 — Sync the active-card label to whatever theme is actually applied
+    // (preset / saved slot / custom). Otherwise the HTML-hardcoded "Field Day"
+    // shows even when the applied colors are a saved theme.
+    reconcileActiveThemeLabel(themeColors, savedThemes);
+
     // Show/hide customize button based on rgbTheme state (if it exists in the HTML)
     const customizeBtn = document.getElementById('customizeThemeBtn');
     if (customizeBtn) {
@@ -1230,6 +1235,54 @@ const PRESET_THEMES = {
   plum:     { primary: '#A78BFA', background: '#1C1917', text: '#D4D4D8', label: 'Plum',     meta: 'Legacy preset' }
 };
 
+// v4.8.4 — Reconcile the active-card label against the currently-applied
+// themeColors. Without this, the HTML-hardcoded "Field Day" sat as the
+// active label whenever the user re-opened the popup with a saved-slot
+// theme applied, even though the actual JT colors matched the saved slot.
+// Order: preset match → saved-slot match → "Custom".
+function reconcileActiveThemeLabel(colors, savedThemes) {
+  const nameEl = document.getElementById('activeThemeName');
+  const metaEl = document.getElementById('activeThemeMeta');
+  if (!nameEl || !metaEl || !colors) return;
+
+  const norm = c => (c || '').toLowerCase();
+  const cp = norm(colors.primary), cb = norm(colors.background), ct = norm(colors.text);
+
+  // Try presets first (cheap and most common)
+  const matchedPreset = Object.entries(PRESET_THEMES).find(([_k, p]) =>
+    norm(p.primary) === cp && norm(p.background) === cb && norm(p.text) === ct
+  );
+  if (matchedPreset) {
+    const [presetKey, preset] = matchedPreset;
+    nameEl.textContent = preset.label || presetKey;
+    metaEl.textContent = preset.meta || '';
+    document.querySelectorAll('.preset[data-preset]').forEach(btn => {
+      btn.classList.toggle('is-current', btn.dataset.preset === presetKey);
+    });
+    return;
+  }
+
+  // Try saved-theme slots
+  if (Array.isArray(savedThemes)) {
+    const slotIdx = savedThemes.findIndex(t => t && t.colors &&
+      norm(t.colors.primary) === cp &&
+      norm(t.colors.background) === cb &&
+      norm(t.colors.text) === ct
+    );
+    if (slotIdx !== -1 && savedThemes[slotIdx]) {
+      nameEl.textContent = savedThemes[slotIdx].name || `Theme ${slotIdx + 1}`;
+      metaEl.textContent = `Saved · slot ${slotIdx + 1}`;
+      document.querySelectorAll('.preset.is-current').forEach(p => p.classList.remove('is-current'));
+      return;
+    }
+  }
+
+  // Custom colors — neither preset nor saved slot
+  nameEl.textContent = 'Custom';
+  metaEl.textContent = 'Custom palette';
+  document.querySelectorAll('.preset.is-current').forEach(p => p.classList.remove('is-current'));
+}
+
 // Load a preset theme — updates pickers, applies, and saves
 async function loadPresetTheme(presetKey) {
   const preset = PRESET_THEMES[presetKey];
@@ -1335,6 +1388,8 @@ async function loadThemeFromSlot(slotIndex) {
     if (settings.savedThemes && settings.savedThemes[slotIndex]) {
       const theme = settings.savedThemes[slotIndex];
       loadThemeColors(theme.colors);
+      // v4.8.4 — Update active-card label to reflect the loaded slot.
+      reconcileActiveThemeLabel(theme.colors, settings.savedThemes);
       showStatus(`Loaded "${theme.name}"`, 'success');
     }
   } catch (error) {
