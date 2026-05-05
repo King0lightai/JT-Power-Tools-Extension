@@ -166,6 +166,11 @@ const featureModules = {
     feature: () => window.TweakEngineFeature,
     instance: null
   },
+  forms: {
+    name: 'Forms',
+    feature: () => window.FormsFeature,
+    instance: null
+  },
   // fileDragToFolder: {
   //   name: 'Files Drag to Folder',
   //   feature: () => window.FileDragToFolderFeature,
@@ -185,7 +190,7 @@ let currentSettings = window.JTDefaults
       pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
       budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
       jobAccessCollapse: false, orgLogo: false,
-      inspectForAi: false, tweakEngine: true,
+      inspectForAi: false, tweakEngine: true, forms: true,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };

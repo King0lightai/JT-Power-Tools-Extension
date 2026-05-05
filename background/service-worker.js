@@ -25,6 +25,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
       taskTypeFilter: false,
       jobAccessCollapse: false,
       orgLogo: false,
+      forms: true,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };

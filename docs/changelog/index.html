@@ -50,11 +50,235 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.0 — Per-Job Forms + Custom Theme Sync + MCP Correctness Audit -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.0</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">May 5, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎉</span> Major New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Per-Job Forms — Fillable Intake Forms Inside JobTread (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A brand-new productivity feature that lets your team build company-wide intake form templates in the JT Power Tools portal and fill them out per job — directly inside JobTread. The salesperson workflow this closes: <em>print the blank form → hand-fill at the meeting → snap a photo → AI fills the digital copy via MCP back at the office.</em> The handwritten paper artifact and the structured digital record both exist, neither is the source of truth on its own, and nothing has to be retyped</li>
+                            <li class="sub-item"><strong>Forms button injected directly into JT's job action bar</strong> — sits alongside Edit Job / Message / Document / Task / overflow-dots. Native look, no separate edge tab cluttering the viewport. On narrow viewports where JT collapses the action bar into a Popper-positioned dropdown menu, Forms moves into that dropdown alongside Edit Job / Message / Document / Task / To-Do / Daily Log / Time Entry — no orphaned button standing alone in a collapsed bar</li>
+                            <li class="sub-item"><strong>Non-blocking right-side drawer</strong> — 480px default width, full viewport height, resizable (persists per-license). The JT page stays fully scrollable and clickable behind the drawer, so users can copy values out of JT directly into form fields. ESC, ×, or another tab/button click closes it</li>
+                            <li class="sub-item"><strong>Smart open behavior</strong> — auto-renders the single form in single-form mode; shows a card list with last-edited metadata (by + relative time) and Empty / In progress / Auto-attached pills in multi-form mode. Empty state when the license has no templates yet links to the portal admin builder</li>
+                            <li class="sub-item"><strong>5 field types</strong> — Section header, Short text, Long text, Multi-select (checkboxes), Single-select (radio). All selection-type inputs support the per-option <em>fillIn</em> pattern: an option can declare a typed inline input that activates when checked (the "Other ___" / "Yes — how many ___" pattern). Caps: 200 fields/template, 30 options/field, 500 chars short text, 10K chars long text, 100KB total instance blob</li>
+                            <li class="sub-item"><strong>Drag-and-drop builder UI in the portal</strong> at <code>app.jtpowertools.com/dashboard.html#forms</code> — palette of 5 field-type buttons on the left, canvas with stacked field cards on the right. Click a palette button to add a field; drag any existing field card by the <code>⋮⋮</code> handle to reorder. Pre-flight <code>confirm()</code> on Back/Cancel so unsaved field edits aren't lost on a misclick</li>
+                            <li class="sub-item"><strong>Auto-save engine with status pill</strong> — saves on every field blur AND on a 30-second heartbeat when dirty. Status pill in the drawer header surfaces every state in real time: <em>Saved Ns ago</em> (relative time, ticks every 5s), <em>Saving…</em>, <em>Unsaved</em>, <em>Conflict — click to merge</em>, <em>Offline — will retry</em>. Permanent failures (401/403/404) classified separately so a tier/auth error doesn't infinite-retry on every keystroke</li>
+                            <li class="sub-item"><strong>Field-level merge on conflict</strong> — when two team members edit the same form on different devices and the second save returns an optimistic-concurrency 409, the client keeps the fields the local user has touched since the last successful save and pulls remote values for everything else, then retries. A non-blocking toast announces "Synced edits from {name} · {n} fields refreshed: {names}". Three-way conflict pins the pill to <em>Conflict</em> and surfaces the third-writer's data for review</li>
+                            <li class="sub-item"><strong>Print to PDF</strong> — Print button in the drawer header triggers <code>window.print()</code> after injecting a temporary print-only header (form name + job + date). Print stylesheet hides JT's page + the drawer chrome and re-styles each field type for paper: section heads with horizontal rule, short-text on a single underlined writing line, long-text on a repeating-gradient ruled writing area (~24pt line height, ~4 lines default), checkboxes with empty squares + ✓ fallback, radio with empty circles + dot fallback, fill-in options with inline ~2.5in underlines. Long forms paginate at field boundaries without splitting labels from their writing areas</li>
+                            <li class="sub-item"><strong>Print stripping</strong> — Custom Theme + dark mode are explicitly stripped during print so output is always black-on-white regardless of on-screen theme. Salespeople in the field never get a stack of "burnt orange on cream" forms to fill out</li>
+                            <li class="sub-item"><strong>Custom Theme integration</strong> — every drawer surface (background, header, cards, fields, inputs, text, borders) consumes <code>var(--jt-theme-X, &lt;fallback&gt;)</code> from the namespace <code>rgb-theme.js</code> exposes on <code>:root</code>. Custom Theme's accent + background palette flows through to the Forms drawer; without a custom theme active, fallbacks preserve the default light/dark hexes. Mirrors the Quick Notes <code>--jt-notes-*</code> integration pattern</li>
+                            <li class="sub-item"><strong>2 new MCP tools for AI-driven fills</strong> — <code>jobtread_forms_list_for_job</code> and <code>jobtread_forms_upsert_instance</code> let AI clients read filled forms and write back updated instances over MCP. This is what closes the salesperson workflow loop: a photographed handwritten form goes through Claude / ChatGPT, the AI structurally fills the digital instance via MCP, and the team back at the office sees a structured record without anyone having to retype a single field</li>
+                            <li class="sub-item"><strong>Server architecture</strong> — full PR series #1 through #4 landed: D1 schema with optimistic-versioning + immutable template version history (<code>019_forms.sql</code>), pure data-layer functions (<code>forms-handler.js</code>), 9 REST endpoints under <code>/admin/forms/*</code> with separate <code>requireFormsMember</code> Power-User tier gate at the route entry, portal admin builder UI, extension consumer-side drawer + injection layer. Single-shared-instance-per-job in v1; per-form access control, field-level audit, and instance revision history all deferred to v2 per the brainstorm thread's decisions</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme — Saved Palettes Now Sync Per-Account Across Devices</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><strong>Your 3 saved palette slots now follow you across every browser, profile, and device you sign in to.</strong> Previously palettes lived only in <code>chrome.storage.sync</code> — synced across Chrome instances of the same Google account, but lost when signing in on a different browser, a different profile, a Firefox install, or a coworker's machine. Build a theme on your office desktop, log in on your laptop in the field, and your saved themes are right there</li>
+                            <li class="sub-item">New <code>user_custom_themes</code> D1 table is account-scoped (CASCADE on account deletion) with <code>UNIQUE(account_id, slot_index)</code> enforcing the 3-slot UI contract</li>
+                            <li class="sub-item">New REST endpoints under <code>/admin/themes/*</code> (<code>list</code>, <code>save</code>, <code>delete</code>) mirror the Tweaks Phase 2 pattern: thin client wrapper over <code>AccountService.authenticatedFetch</code>, server validates slot index 0-2 + name length + hex colors. Last-write-wins on conflicts — palettes are personal and tiny, no merge math needed</li>
+                            <li class="sub-item"><strong>Local-first, server-overlay</strong> — popup's load-saved-themes / save-to-slot / delete-slot now dual-write: local always, server when logged in. On open, popup pulls server, merges (server wins per slot), caches back to <code>chrome.storage.sync</code> for offline reads. Logged-out users keep working as before; the sync layer is purely additive</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — 2 New Forms Tools (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jobtread_forms_list_for_job</code> + <code>jobtread_forms_upsert_instance</code> — thin wrappers over the Forms data layer, Power User tier-gated. Bring the total tool count to 45 and close the AI-fills-handwritten-form loop end-to-end</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — <code>headerDepth</code> Opt-Out for Job &amp; Financial Context (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The job header (10 customFields + folder list + customer block + location block) used to ship on every <code>jt_job_context</code> / <code>jt_financial_context</code> response regardless of <code>include</code> — on a tight <code>include: ["budget"]</code> query it was <strong>75% of the payload</strong></li>
+                            <li class="sub-item">New <code>headerDepth</code> parameter: <code>'full'</code> (default, backward-compatible), <code>'minimal'</code> (returns just <code>{ id, name, jobNumber }</code> so callers retain identity context for downstream tool calls), <code>'none'</code> (omits the job section entirely). Estimated <strong>~9× token reduction</strong> on a 3-item budget query going <code>full → none</code></li>
+                            <li class="sub-item">Edge cases handled: <code>include: ['job']</code> + <code>headerDepth: 'none'</code> rejected with a clear error before any Pave call fires; empty <code>include</code> + <code>headerDepth: 'none'</code> falls back to the default sections minus <code>'job'</code></li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — <code>include: ["snapshots"]</code> Opt-In for Document Comparisons (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Surfaces document-snapshot costGroup roots grouped by their owning document — useful for "compare HIA-snapshot pricing against live budget" workflows. Distinct from the pre-existing <code>budgetBackups</code> section (user-saved backup history). Each entry: <code>{ documentId, rootCostGroupId, rootName, rootCreatedAt }</code></li>
+                            <li class="sub-item">Bonus diagnostic fields <code>liveRootCount</code> and <code>snapshotRootCount</code> added to summary responses for callers debugging snapshot-tree growth</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Per-Array Truncation for <code>jt_raw_query</code> (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Pave responses are mostly nested arrays of node objects, but the worker's >10 KB truncation was a head/tail JSON-string slice that lost the MIDDLE of those arrays — exactly where the data callers wanted typically lived</li>
+                            <li class="sub-item">New default for >10 KB responses without <code>intent</code>: walk the response structure recursively, shorten any array longer than 5 entries to the first 5 + a <code>{ _truncated: true, droppedCount, fullLength }</code> sentinel. Adds a top-level <code>_truncationApplied</code> block describing what got trimmed and why, so callers can see at a glance and refine their query</li>
+                            <li class="sub-item">Falls back to the legacy head/tail string slice with <code>strategy: 'fallback-string-slice'</code> when per-array truncation isn't enough (response is wide-not-deep — many fields per node). Cycle-safe via <code>WeakSet</code>. <code>intent</code> still bypasses both paths — relevance filter + indexing run unchanged</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Indexed-Section Labels Surfaced in Intent Responses (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">When <code>intent</code> triggered FTS5 indexing, the response said "use <code>ctx_search</code>" without naming the keys — agents had to guess section path syntax (<code>job.costGroups.nodes[3]</code>) and repeatedly miss</li>
+                            <li class="sub-item">Response now includes an <code>_indexed</code> block listing the exact <code>{ key, preview }</code> pairs the FTS5 store has for this query, plus the <code>source</code> label and a usage hint. When <code>index: false</code> is supplied, the in-memory relevance filter still runs and the response gets a <code>_filtered</code> block instead — same shape, but flagged as not-searchable post-hoc. Both blocks cap at 30 sections + a <code>{ _truncated, droppedCount, fullLength }</code> sentinel</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Pre-Flight Validation for <code>ctx_batch</code> &amp; <code>jt_raw_query</code> (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>ctx_batch</code> now <strong>pre-validates every command's <code>tool</code> field</strong> before dispatching ANY of them — missing/non-string <code>tool</code> rejects the whole batch with <code>"Command at index N missing required field 'tool'"</code> so the caller can fix the malformed entry instead of hunting through <code>"Unknown tool: undefined"</code> errors</li>
+                            <li class="sub-item"><code>jt_raw_query</code> gains an <code>index: boolean</code> parameter (default <code>true</code>) — when <code>false</code> AND <code>intent</code> is supplied, the response is filtered by relevance via a new in-memory scorer but NOT indexed into the FTS5 knowledge base, saving the indexing latency + storage cost for one-shot queries</li>
+                            <li class="sub-item"><code>jt_raw_query</code> now <strong>pre-flight-walks every <code>$.size</code> in the query payload</strong> — any connection with <code>size > 100</code> returns a clear path-pointed error (<code>"Connection size cap exceeded: &lt;path&gt;.size = &lt;value&gt;..."</code>) before the Pave call fires, so callers don't have to manually trace which nested connection triggered the generic 400. All three pre-validation paths verified by tests confirming Pave call count = 0 on bad input</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🛡️</span> MCP Correctness Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Live-Tree Budget Resolution — <code>jt_job_context</code> &amp; <code>jt_financial_context</code> (P1)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><strong>Empirically verified against Cyr Addition (a real document-heavy job):</strong> JobTread snapshots every document's line items into a parallel <code>costGroup</code> tree on the same job — a job with 1 HIA + N invoices has N+1 parallel "SCOPE OF WORK" trees. Previous name-based dedup with most-items + newest-createdAt tiebreak was returning <code>items: []</code> with <code>hasMore: true</code> on document-heavy jobs (cursor advanced but never yielded data) and overstating <code>summary.itemCount</code> by ~9× — <strong>1072 items reported, 113 actually live</strong></li>
+                            <li class="sub-item">Replaced the heuristic with <code>resolveLiveTree</code> (filters <code>costGroup.document === null</code> client-side) + <code>fetchLiveItems</code> per live root via <code>descendentCostItems</code>. New shared module <code>_budget.js</code> since both context avenues need the same helpers. The misleading "totals include all Pave cost items" note was removed because it no longer applies — the response only contains live-tree items now</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name"><code>assertLiveCostGroup</code> Defensive Helper for Budget Writes (P1)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Three <code>jt_budget_write</code> ops — <code>createGroup</code>, <code>deleteGroup</code>, <code>importCatalogGroup</code> — accepted caller-supplied parent/target costGroup IDs without validating they were on the live tree. <strong>A caller passing a snapshot-tree ID</strong> (an HIA's frozen costGroup, an invoice's line-item record) <strong>would land writes inside the document's snapshot, corrupting frozen contract data.</strong> Quiet, hard-to-detect, and dangerous</li>
+                            <li class="sub-item">New helper runs a single Pave query for <code>{ costGroup.$.id, document.id }</code> and throws with a path-pointed error if <code>document</code> is non-null. Wired as a defensive pre-flight on the three ops; fail-fast before any mutation. Stale <code>avenues/job-context.parity.js</code> diagnostic harness with hardcoded fixtures from the pre-91ea83ab dedup query shape was deleted in the same commit — not auto-run, not imported, no remaining references</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Save Engine Permanent-vs-Transient Error Classification (Forms)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Pre-fix: 401/403/404 errors had the dirty fields re-added to the queue, so the next keystroke would retry the doomed request — <strong>infinite retry on a permanent auth/tier failure.</strong> Now classifies 401/403/404 as permanent: skip the re-add, surface <code>meta.permanent: true</code> + status to the caller so the status pill renders "Auth error" / "Permission denied" / "Form deleted" / "Save failed (N)" instead of "Offline — will retry"</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📚</span> Knowledge Base</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name"><code>PAVE_KNOWLEDGE</code> Entity Reference Corrected for <code>costItem</code>, <code>costGroup</code>, <code>document</code></span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A live audit caught the docs confidently-wrong on three real fields (<code>costItem.costGroup</code> chain, <code>costItem.document</code>, <code>costItem.position</code>) — the previous "Does NOT have" list was discouraging probing of legitimate fields</li>
+                            <li class="sub-item">The live-vs-snapshot data model wasn't documented at all, leading agents into the dedup heuristics that produced the budget bug above. Both entries now name <code>document</code> as the live/snapshot discriminator + cross-reference the new gotchas</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Two New Gotcha Entries</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><strong>"Filterable vs selectable fields"</strong> — a confirmed-non-queryable table (<code>costItem.document</code>, <code>costItem.costGroup</code>, <code>costGroup.parentCostGroup</code>, <code>costGroup.name</code>, etc.) — the trap that burned ~6 queries during the audit</li>
+                            <li class="sub-item"><strong>"Live budget tree resolution"</strong> — the <code>costGroup.document === null &amp;&amp; parentCostGroup === null</code> identifier, plus the explicit anti-patterns: do NOT identify by HIA-association, most-recent createdAt, or name uniqueness</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Pagination Section Expanded 14 → 173 Lines</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Renamed in title to "Pagination, Sorting &amp; Truncation". Now covers: the <code>size: 100</code> per-connection cap (Pave returns a generic 400 with no path hint when exceeded), nested-connection independent caps, aggregations needing <code>size: 1</code> (and the <code>_</code> alias requirement for multiple sums on the same connection), <code>hasMore</code> / <code>nextPage</code> / <code>truncated</code> semantic distinction (table form), the worker-level 10 KB head/tail truncation contract + the <code>intent</code> escape hatch, client-side pagination for non-filterable fields, the <code>descendentCostItems</code> tree-walk pattern, sorting (<code>order</code> not <code>direction</code>), a 6-item cookbook, and a pitfall checklist</li>
+                            <li class="sub-item">22 search keywords (up from 10) so AI clients land on the right doc when querying about pagination or truncation</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Forms — URL Detector Returned Null on Every Job Page</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">First smoke pass against a real JT job page found the URL regex required <code>/orgs/{orgId}/jobs/{jobId}</code> but JT's actual pattern is <code>/jobs/{jobId}/{section}</code> with no <code>/orgs/</code> segment. Detector returned null on every job page, the trigger never appeared, and even if it had, the API calls would have failed for lack of <code>orgId</code></li>
+                            <li class="sub-item">Fixed the regex to match <code>/jobs/{jobId}</code> (with any sub-route, query, or hash) and added lazy <code>JobTreadAPI.getOrgId()</code> resolution alongside <code>currentJob</code></li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms — Reopening a Saved Form Showed Blank</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The server's list-by-job response is <code>{ instances: [{instance, template, schema}, ...], availableTemplates: [...] }</code> but the client treated the wrapper objects as bare instances. With <code>wrapper.templateId</code> undefined, no instance ever matched its template, so every reopen behaved like a fresh blank form</li>
+                            <li class="sub-item"><code>forms-api.listInstancesByJob</code> now returns both arrays from the response; <code>forms.js</code>'s open flow uses ONLY this endpoint (drops the redundant <code>listTemplates</code> parallel call) and normalizes the two arrays into a unified <code>{ template, schema, instance | null }</code> displayable list</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms — "Saved 56 Years Ago" Timestamp Bug</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Server returns <code>last_edited_at</code> and <code>updated_at</code> as Unix epoch SECONDS (D1 default <code>strftime('%s', 'now')</code>), but the relative-time formatter was treating the value as MILLISECONDS — so every just-saved form rendered as ~56 years old</li>
+                            <li class="sub-item">Helper now auto-detects by magnitude (<code>&lt;1e12</code> = seconds, <code>&gt;=1e12</code> = milliseconds) so both unit conventions just work without per-call-site adapters</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms — List-Card Pills Rendered Unstyled</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>.jt-forms-list-card-pill</code> with <code>is-empty</code> / <code>is-progress</code> / <code>is-auto</code> was emitted by JS but the CSS shipped with <code>.jt-forms-list-pill</code> and <code>is-empty</code> / <code>is-in-progress</code> / <code>is-auto-attached</code> — pills rendered completely unstyled in any mode. CSS selectors aligned to what the renderer actually emits</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms — Print Bleed from Dark Mode + Custom Theme</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Long-text textareas printed as solid black rectangles when JT was in dark mode because <code>body.jt-dark-mode</code> rules outranked the print block via CSS specificity even with <code>!important</code>. Custom Theme had the same issue — drawer surfaces resolved <code>var(--jt-theme-...)</code> to the user's chosen palette instead of the print fallbacks</li>
+                            <li class="sub-item">Inside <code>@media print</code>, override the theme variables on the drawer root + add high-specificity <code>body.jt-dark-mode .jt-forms-*</code> resets to print-safe values. <code>print-color-adjust: exact</code> on the textarea ruled-line gradient prevents Chrome from stripping the lines</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms — Button Injecting on Non-Job Pages</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The action-bar injector ran on every page that rendered the <code>.absolute.inset-0.flex.justify-end</code> container shape, which JT also uses on the org dashboard, contacts, schedule, and other surfaces. Result: Forms button appearing where it had no context</li>
+                            <li class="sub-item"><code>tryInject()</code> and <code>tryInjectMenu()</code> now consult <code>FormsJobDetector.getCurrentJob()</code> before injecting and remove any prior button when off a job page. The MutationObserver keeps running so navigating back to a job page re-injects on the next tick</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Form Builder — Palette No-Op After First Click</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Clicking Section header in the portal builder added a card, but every subsequent palette click (Short text / Long text / Multi-select / Single-select) silently no-op'd. Root cause: <code>renderFormBuilderCanvas</code> cleared <code>canvas.innerHTML</code> on every render, which detached the in-DOM <code>formBuilderEmpty</code> placeholder; the next call's <code>getElementById('formBuilderEmpty')</code> returned <code>null</code> and <code>empty.hidden = true</code> threw</li>
+                            <li class="sub-item">Now the renderer removes only <code>.form-field-card</code> children and leaves the placeholder element parented to the canvas, so it stays findable across renders</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Org Logo Rebrand for Single-Org Users</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JT only renders the org-switcher <code>&lt;select&gt;</code> element when the user has 2+ orgs. Single-org users got a <code>div.relative.rounded-sm</code> container with just the JT logo SVGs (icon <code>viewBox="0 0 8 8"</code> + JOBTREAD wordmark <code>viewBox="0 0 120 18"</code>) — no <code>&lt;select&gt;</code>. <code>findSwitcher</code>'s <code>hasSelect &amp;&amp; hasSvg</code> test skipped the container, so the custom logo never injected</li>
+                            <li class="sub-item">Broadened the match: container qualifies if it contains a <code>&lt;select&gt;</code> OR a JT-logo SVG (icon viewBox preferred, wordmark viewBox as fallback). Multi-org behavior unchanged. The existing render path drops cleanly into the single-org flex row without CSS tweaks since hidden SVGs don't trigger phantom <code>gap-2</code> spacing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📋</span> Internal / Tooling</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Stale Diagnostic Harness Removed</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Deleted <code>avenues/job-context.parity.js</code> in the same commit as the live-tree budget refactor — manual diagnostic harness with hardcoded fixtures from the pre-91ea83ab dedup query shape, no longer auto-run, not imported by anything, no remaining references</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Schema-Introspection Brief Filed</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New plan brief at <code>docs/plans/2026-05-05-mcp-schema-introspection-brief.md</code> for the architectural follow-up that closes audit items #1, #2, #10, and #11 — replace hand-maintained <code>PAVE_KNOWLEDGE</code> with a cache of live Pave introspection. Multi-day project that needs its own session; this release ships the polish round, the brief captures the next bite</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.8.3 — Theme Tab Rebuild + OKLCH Palette, Tweaks Engine V1.6/V1.7, Popup v5 Skin -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.8.3</span>
-                <span class="version-badge">Current</span>
+                <span class="version-badge"></span>
                 <span class="version-date">May 4, 2026</span>
             </div>
 

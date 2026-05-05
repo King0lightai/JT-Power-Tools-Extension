@@ -1,0 +1,1168 @@
+/**
+ * Forms Feature Styles
+ * Slide-in right drawer + field cards
+ *
+ * Class taxonomy: .jt-forms-* (prefixed to avoid collisions with JT's CSS)
+ * Dark mode: keyed off body.jt-dark-mode (matches existing project convention)
+ * Color palette: neutral greys per .claude/rules/code-style.md (NOT blue-greys)
+ *
+ * Trigger: a button injected into JT's job action bar by
+ * `features/forms-modules/action-bar-injector.js`. The button uses JT's
+ * own Tailwind utility classes, so no extension CSS is needed for it.
+ *
+ * Custom Theme integration: drawer chrome (background, header, cards, text,
+ * borders, inputs) consumes the generic `--jt-theme-*` custom properties that
+ * `features/rgb-theme.js` (lines 187-201) sets on :root whenever the user has
+ * an active custom theme. Each var() falls back to the original hardcoded hex
+ * so behavior is identical when no theme is active. Semantic-state colors
+ * (is-conflict amber, is-offline red, the required-asterisk red, the toast
+ * surface) are intentionally NOT themed — they convey meaning, not chrome.
+ */
+
+/* ============================================================
+   Drawer Panel — fixed right edge, full viewport height
+   Non-blocking: NO backdrop, JT page stays interactive
+   ============================================================ */
+.jt-forms-drawer {
+  /* Layout */
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  /* Sizing — width is JS-overridable inline via resize handle */
+  width: 480px;
+  max-width: 100vw;
+  /* Colors */
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-left: 1px solid var(--jt-theme-border, #e1e4e8);
+  /* Typography */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--jt-theme-text, #24292e);
+  /* Animation: slide in from right */
+  transform: translateX(100%);
+  transition: transform 200ms ease-out;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.08);
+  /* Z-index: same level as tab */
+  z-index: 99998;
+}
+
+.jt-forms-drawer.is-open {
+  transform: translateX(0);
+}
+
+.jt-forms-drawer.is-resizing {
+  transition: none;
+  user-select: none;
+}
+
+/* ============================================================
+   Resize Handle — left edge of drawer
+   ============================================================ */
+.jt-forms-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+  z-index: 1;
+}
+
+.jt-forms-resize-handle:hover,
+.jt-forms-drawer.is-resizing .jt-forms-resize-handle {
+  background: rgba(234, 88, 12, 0.3);
+}
+
+/* ============================================================
+   Header — title, status pill, close button
+   ============================================================ */
+.jt-forms-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--jt-theme-background-subtle, #f8f9fa);
+  border-bottom: 1px solid var(--jt-theme-border, #e1e4e8);
+  flex-shrink: 0;
+}
+
+.jt-forms-back {
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--jt-theme-text-secondary, #6a737d);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.jt-forms-back:hover {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text, #24292e);
+}
+
+.jt-forms-back[hidden] {
+  display: none !important;
+}
+
+.jt-forms-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--jt-theme-text, #24292e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-forms-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--jt-theme-text-secondary, #6a737d);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.jt-forms-close:hover {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text, #24292e);
+}
+
+/* ============================================================
+   Status Pill — five states
+   Base + is-saved + is-saving = neutral chrome (themed).
+   is-unsaved = stronger neutral chrome (themed).
+   is-conflict / is-offline = semantic, NOT themed.
+   ============================================================ */
+.jt-forms-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* Default colors (overridden by state classes) */
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text-secondary, #6a737d);
+}
+
+.jt-forms-status-pill.is-saved {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text-secondary, #6a737d);
+}
+
+.jt-forms-status-pill.is-saving {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text-secondary, #6a737d);
+  animation: jt-forms-pulse 1.4s ease-in-out infinite;
+}
+
+.jt-forms-status-pill.is-unsaved {
+  background: var(--jt-theme-border-strong, #d1d5da);
+  color: var(--jt-theme-text, #24292e);
+}
+
+.jt-forms-status-pill.is-conflict {
+  background: #fef3c7;
+  color: #78350f;
+  cursor: pointer;
+}
+
+.jt-forms-status-pill.is-conflict:hover {
+  background: #fde68a;
+}
+
+.jt-forms-status-pill.is-offline {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+@keyframes jt-forms-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* ============================================================
+   Content + Footer
+   ============================================================ */
+.jt-forms-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--jt-theme-background-elevated, #ffffff);
+}
+
+.jt-forms-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.jt-forms-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jt-forms-content::-webkit-scrollbar-thumb {
+  background: var(--jt-theme-border-strong, #d1d5da);
+  border-radius: 4px;
+}
+
+.jt-forms-content::-webkit-scrollbar-thumb:hover {
+  background: var(--jt-theme-text-muted, #959da5);
+}
+
+.jt-forms-footer {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--jt-theme-background-subtle, #f8f9fa);
+  border-top: 1px solid var(--jt-theme-border, #e1e4e8);
+  font-size: 12px;
+  color: var(--jt-theme-text-secondary, #6a737d);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ============================================================
+   List View — multiple-form mode
+   ============================================================ */
+.jt-forms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jt-forms-list-card {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  /* Colors */
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border: 1px solid var(--jt-theme-border, #e1e4e8);
+  border-radius: 4px;
+  /* Affordance */
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.jt-forms-list-card:hover {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  border-color: var(--jt-theme-border-strong, #d1d5da);
+}
+
+.jt-forms-list-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jt-forms-list-card-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--jt-theme-text, #24292e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-forms-list-card-description {
+  font-size: 12px;
+  color: var(--jt-theme-text-secondary, #6a737d);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.jt-forms-list-card-meta {
+  font-size: 11px;
+  color: var(--jt-theme-text-muted, #959da5);
+  font-style: italic;
+}
+
+/* Pill class name MUST match what forms.js#buildListCard sets:
+   `jt-forms-list-card-pill is-{auto|empty|progress}`
+   Base + is-empty + is-progress = neutral chrome (themed).
+   is-auto = semantic amber (NOT themed). */
+.jt-forms-list-card-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 2px 8px;
+  margin-top: 4px;
+  border-radius: 8px;
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text-secondary, #6a737d);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.jt-forms-list-card-pill.is-empty {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text-muted, #959da5);
+}
+
+.jt-forms-list-card-pill.is-progress {
+  background: var(--jt-theme-border-strong, #d1d5da);
+  color: var(--jt-theme-text, #24292e);
+}
+
+.jt-forms-list-card-pill.is-auto {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+/* ============================================================
+   Field Cards — form-fill view
+   ============================================================ */
+.jt-forms-field-card {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  /* Colors */
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border: 1px solid var(--jt-theme-border, #e1e4e8);
+  border-radius: 4px;
+  /* Animation */
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.jt-forms-field-card:hover,
+.jt-forms-field-card:focus-within {
+  border-color: var(--jt-theme-primary, #ea580c);
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.2);
+}
+
+.jt-forms-field-section {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--jt-theme-text, #24292e);
+  line-height: 1.3;
+}
+
+.jt-forms-field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--jt-theme-text, #24292e);
+  line-height: 1.3;
+}
+
+.jt-forms-required-asterisk {
+  display: inline;
+  margin-left: 2px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Short text input */
+.jt-forms-field-text-short input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--jt-theme-border, #d1d5da);
+  border-radius: 3px;
+  background: var(--jt-theme-background-elevated, #ffffff);
+  color: var(--jt-theme-text, #24292e);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.jt-forms-field-text-short input:hover:not(:focus) {
+  border-color: var(--jt-theme-text-muted, #959da5);
+}
+
+.jt-forms-field-text-short input:focus {
+  border-color: var(--jt-theme-primary, #ea580c);
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.4);
+}
+
+/* Long text textarea */
+.jt-forms-field-text-long textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid var(--jt-theme-border, #d1d5da);
+  border-radius: 3px;
+  background: var(--jt-theme-background-elevated, #ffffff);
+  color: var(--jt-theme-text, #24292e);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.jt-forms-field-text-long textarea:hover:not(:focus) {
+  border-color: var(--jt-theme-text-muted, #959da5);
+}
+
+.jt-forms-field-text-long textarea:focus {
+  border-color: var(--jt-theme-primary, #ea580c);
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.4);
+}
+
+/* Checkbox + radio group containers */
+.jt-forms-field-checkboxes,
+.jt-forms-field-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Each option is a label row */
+.jt-forms-field-checkboxes label,
+.jt-forms-field-radio label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--jt-theme-border, #d1d5da);
+  border-radius: 3px;
+  background: var(--jt-theme-background-elevated, #ffffff);
+  color: var(--jt-theme-text, #24292e);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.jt-forms-field-checkboxes label:hover,
+.jt-forms-field-radio label:hover {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  border-color: var(--jt-theme-text-muted, #959da5);
+}
+
+.jt-forms-field-checkboxes input[type="checkbox"],
+.jt-forms-field-radio input[type="radio"] {
+  flex-shrink: 0;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--jt-theme-primary, #ea580c);
+}
+
+.jt-forms-field-checkboxes label > span,
+.jt-forms-field-radio label > span {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Fill-in input (inline with option row) */
+.jt-forms-fillin-input {
+  display: none;
+  width: 100px;
+  padding: 4px 6px;
+  border: 1px solid var(--jt-theme-border, #d1d5da);
+  border-radius: 3px;
+  background: var(--jt-theme-background-elevated, #ffffff);
+  color: var(--jt-theme-text, #24292e);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.jt-forms-fillin-input.is-active {
+  display: inline-block;
+}
+
+.jt-forms-fillin-input:focus {
+  border-color: var(--jt-theme-primary, #ea580c);
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.4);
+}
+
+/* ============================================================
+   Toast — viewport-scoped conflict notification
+   Intentionally NOT themed: needs to remain a contrasting fixed
+   surface that reads correctly regardless of drawer theme.
+   ============================================================ */
+.jt-forms-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  max-width: 360px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: #24292e;
+  /* Hidden by default — slide-in animation */
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  pointer-events: none;
+  /* Above drawer + tab */
+  z-index: 99999;
+}
+
+.jt-forms-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.jt-forms-toast-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.jt-forms-toast-message {
+  color: #6a737d;
+  line-height: 1.4;
+}
+
+.jt-forms-toast-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   DARK MODE — body.jt-dark-mode selector
+   Color palette per .claude/rules/code-style.md (neutral greys)
+   Drawer chrome is themed via var(--jt-theme-*); fallback hex is the
+   prior dark-mode neutral so behavior is identical without a theme.
+   ============================================================ */
+
+/* Drawer */
+body.jt-dark-mode .jt-forms-drawer {
+  background: var(--jt-theme-background-elevated, #2c2c2c);
+  color: var(--jt-theme-text, #e0e0e0);
+  border-left-color: var(--jt-theme-border, #404040);
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.4);
+}
+
+body.jt-dark-mode .jt-forms-resize-handle:hover,
+body.jt-dark-mode .jt-forms-drawer.is-resizing .jt-forms-resize-handle {
+  background: rgba(234, 88, 12, 0.4);
+}
+
+/* Header */
+body.jt-dark-mode .jt-forms-header {
+  background: var(--jt-theme-background-subtle, #252525);
+  border-bottom-color: var(--jt-theme-border, #404040);
+}
+
+body.jt-dark-mode .jt-forms-title {
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-back {
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-back:hover {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-close {
+  color: var(--jt-theme-text-muted, #a0a0a0);
+}
+
+body.jt-dark-mode .jt-forms-close:hover {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+/* Status pills — dark mode (chrome states only; semantic states keep their hues) */
+body.jt-dark-mode .jt-forms-status-pill {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-status-pill.is-saved {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-status-pill.is-saving {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-status-pill.is-unsaved {
+  background: var(--jt-theme-border-strong, #505050);
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-status-pill.is-conflict {
+  background: #78350f;
+  color: #fef3c7;
+}
+
+body.jt-dark-mode .jt-forms-status-pill.is-conflict:hover {
+  background: #92400e;
+}
+
+body.jt-dark-mode .jt-forms-status-pill.is-offline {
+  background: #7f1d1d;
+  color: #fee2e2;
+}
+
+/* Content + Footer */
+body.jt-dark-mode .jt-forms-content {
+  background: var(--jt-theme-background-elevated, #2c2c2c);
+}
+
+body.jt-dark-mode .jt-forms-content::-webkit-scrollbar-thumb {
+  background: var(--jt-theme-border-strong, #505050);
+}
+
+body.jt-dark-mode .jt-forms-content::-webkit-scrollbar-thumb:hover {
+  background: var(--jt-theme-text-muted, #707070);
+}
+
+body.jt-dark-mode .jt-forms-footer {
+  background: var(--jt-theme-background-subtle, #252525);
+  border-top-color: var(--jt-theme-border, #404040);
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+/* List view */
+body.jt-dark-mode .jt-forms-list-card {
+  background: var(--jt-theme-background-elevated, #333333);
+  border-color: var(--jt-theme-border, #404040);
+}
+
+body.jt-dark-mode .jt-forms-list-card:hover {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  border-color: var(--jt-theme-border-strong, #505050);
+}
+
+body.jt-dark-mode .jt-forms-list-card-name {
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-list-card-description {
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-list-card-meta {
+  color: var(--jt-theme-text-muted, #a0a0a0);
+}
+
+body.jt-dark-mode .jt-forms-list-card-pill {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-list-card-pill.is-empty {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  color: var(--jt-theme-text-muted, #a0a0a0);
+}
+
+body.jt-dark-mode .jt-forms-list-card-pill.is-progress {
+  background: var(--jt-theme-border-strong, #505050);
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-list-card-pill.is-auto {
+  background: #78350f;
+  color: #fef3c7;
+}
+
+/* Field cards */
+body.jt-dark-mode .jt-forms-field-card {
+  background: var(--jt-theme-background-elevated, #333333);
+  border-color: var(--jt-theme-border, #404040);
+}
+
+body.jt-dark-mode .jt-forms-field-card:hover,
+body.jt-dark-mode .jt-forms-field-card:focus-within {
+  border-color: var(--jt-theme-primary, #ea580c);
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.3);
+}
+
+body.jt-dark-mode .jt-forms-field-section {
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-field-label {
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-required-asterisk {
+  color: #f87171;
+}
+
+/* Inputs (short + long + fillin) */
+body.jt-dark-mode .jt-forms-field-text-short input,
+body.jt-dark-mode .jt-forms-field-text-long textarea,
+body.jt-dark-mode .jt-forms-fillin-input {
+  background: var(--jt-theme-background, #2c2c2c);
+  color: var(--jt-theme-text, #e0e0e0);
+  border-color: var(--jt-theme-border-strong, #505050);
+}
+
+body.jt-dark-mode .jt-forms-field-text-short input:hover:not(:focus),
+body.jt-dark-mode .jt-forms-field-text-long textarea:hover:not(:focus) {
+  border-color: var(--jt-theme-text-muted, #707070);
+}
+
+body.jt-dark-mode .jt-forms-field-text-short input:focus,
+body.jt-dark-mode .jt-forms-field-text-long textarea:focus,
+body.jt-dark-mode .jt-forms-fillin-input:focus {
+  border-color: var(--jt-theme-primary, #ea580c);
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.5);
+}
+
+body.jt-dark-mode .jt-forms-field-text-short input::placeholder,
+body.jt-dark-mode .jt-forms-field-text-long textarea::placeholder {
+  color: #707070;
+}
+
+/* Checkbox + radio option rows */
+body.jt-dark-mode .jt-forms-field-checkboxes label,
+body.jt-dark-mode .jt-forms-field-radio label {
+  background: var(--jt-theme-background, #2c2c2c);
+  color: var(--jt-theme-text, #e0e0e0);
+  border-color: var(--jt-theme-border-strong, #505050);
+}
+
+body.jt-dark-mode .jt-forms-field-checkboxes label:hover,
+body.jt-dark-mode .jt-forms-field-radio label:hover {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+  border-color: var(--jt-theme-text-muted, #707070);
+}
+
+/* Toast — dark mode keeps fixed-surface behavior (intentionally NOT themed) */
+body.jt-dark-mode .jt-forms-toast {
+  background: #2c2c2c;
+  border-color: #404040;
+  color: #e0e0e0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+body.jt-dark-mode .jt-forms-toast-message {
+  color: #b0b0b0;
+}
+
+/* ============================================================
+   Responsive — narrow viewports
+   The trigger button piggybacks on JT's job action bar (which JT
+   already lays out responsively), so no mobile-specific trigger
+   styling is needed. We only widen the drawer + tighten the toast.
+   ============================================================ */
+@media (max-width: 768px) {
+  .jt-forms-drawer {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .jt-forms-toast {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    max-width: none;
+  }
+}
+
+/* ============================================================
+   Print Button — header chrome (screen-only)
+   Sits between the status pill and close button. Same visual
+   weight as the close button so they read as a pair.
+   ============================================================ */
+.jt-forms-print {
+  /* Layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  /* Spacing */
+  padding: 0;
+  /* Colors */
+  background: transparent;
+  border: 0;
+  color: var(--jt-theme-text-muted, #6a737d);
+  /* Typography */
+  cursor: pointer;
+  /* Animation */
+  transition: background 0.15s ease, color 0.15s ease;
+  border-radius: 4px;
+}
+
+.jt-forms-print:hover {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  color: var(--jt-theme-text, #24292e);
+}
+
+.jt-forms-print:focus-visible {
+  outline: 2px solid var(--jt-theme-primary, #ea580c);
+  outline-offset: 1px;
+}
+
+body.jt-dark-mode .jt-forms-print {
+  color: #b0b0b0;
+}
+
+body.jt-dark-mode .jt-forms-print:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+/* Print-only header card lives inside .jt-forms-content during print.
+   Hidden on screen — only visible when @media print matches. */
+.jt-forms-print-header {
+  display: none;
+}
+
+/* ============================================================
+   @media print — paper-friendly Forms output
+   Strips JT's page + drawer chrome, re-styles every field card
+   for handwriting-friendly output. break-inside:avoid on field
+   cards keeps long forms paginating at field boundaries.
+   ============================================================ */
+@media print {
+  /* Neutralize custom-theme variables for print so the drawer renders
+     black-on-white regardless of the user's chosen theme. */
+  .jt-forms-drawer,
+  body.jt-dark-mode .jt-forms-drawer {
+    --jt-theme-primary: #000;
+    --jt-theme-primary-hover: #000;
+    --jt-theme-primary-active: #000;
+    --jt-theme-background: #fff;
+    --jt-theme-background-subtle: #fff;
+    --jt-theme-background-muted: #fff;
+    --jt-theme-background-emphasis: #fff;
+    --jt-theme-background-elevated: #fff;
+    --jt-theme-text: #000;
+    --jt-theme-text-secondary: #444;
+    --jt-theme-text-muted: #555;
+    --jt-theme-border: #000;
+    --jt-theme-border-subtle: #444;
+    --jt-theme-border-strong: #000;
+  }
+
+  /* High-specificity dark-mode overrides for drawer chrome.
+     These match the specificity of body.jt-dark-mode .X dark-mode rules
+     so !important wins via equal-or-higher specificity. */
+  body.jt-dark-mode .jt-forms-drawer,
+  body.jt-dark-mode .jt-forms-content,
+  body.jt-dark-mode .jt-forms-field-card,
+  body.jt-dark-mode .jt-forms-field-section,
+  body.jt-dark-mode .jt-forms-field-label,
+  body.jt-dark-mode .jt-forms-print-header,
+  body.jt-dark-mode .jt-forms-print-context {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+
+  body.jt-dark-mode .jt-forms-field-text-short input,
+  body.jt-dark-mode .jt-forms-fillin-input,
+  body.jt-dark-mode .jt-forms-field-checkboxes input[type="checkbox"],
+  body.jt-dark-mode .jt-forms-field-radio input[type="radio"] {
+    background: transparent !important;
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+
+  /* Long-text textarea — the ruled-line gradient is the desired background;
+     keep it but force it to black ink on white paper regardless of mode. */
+  body.jt-dark-mode .jt-forms-field-text-long textarea,
+  .jt-forms-field-text-long textarea {
+    background: repeating-linear-gradient(to bottom, transparent 0, transparent 23pt, #000 23pt, #000 24pt) !important;
+    color: #000 !important;
+    border: 0 !important;
+  }
+
+  /* Dropdown / option rows in dark mode */
+  body.jt-dark-mode .jt-forms-field-checkboxes label,
+  body.jt-dark-mode .jt-forms-field-radio label {
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  /* Required asterisk — always print red enough to be visible but not too dark */
+  .jt-forms-required-asterisk {
+    color: #b00 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide everything outside the drawer. */
+  body > *:not(.jt-forms-drawer) {
+    display: none !important;
+  }
+
+  /* Drawer becomes the page itself. */
+  .jt-forms-drawer {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    transform: none !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  /* Strip drawer chrome — header, footer, resize, toast, buttons. */
+  .jt-forms-header,
+  .jt-forms-footer,
+  .jt-forms-resize-handle,
+  .jt-forms-status-pill,
+  .jt-forms-back,
+  .jt-forms-close,
+  .jt-forms-print,
+  .jt-forms-toast {
+    display: none !important;
+  }
+
+  /* Content area — flatten scrolling, plain typography. */
+  .jt-forms-content {
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  /* Print-only header — form name + job/date subtitle. */
+  .jt-forms-print-header {
+    display: block !important;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8pt;
+    margin-bottom: 16pt;
+  }
+
+  .jt-forms-print-header h1 {
+    margin: 0;
+    font-size: 18pt;
+    font-weight: bold;
+    color: #000;
+  }
+
+  .jt-forms-print-context {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 4pt;
+  }
+
+  /* Field cards — strip backgrounds/borders, keep together when paginating. */
+  .jt-forms-field-card {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 0 14pt 0 !important;
+    margin: 0 0 8pt 0 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Section heads — bold, ruled underline, never strand from following content. */
+  .jt-forms-field-section {
+    font-size: 13pt !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    border-bottom: 1px solid #000;
+    padding-bottom: 2pt;
+    margin: 14pt 0 6pt 0 !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Field labels — sit right above writing area, never split from it. */
+  .jt-forms-field-label {
+    font-weight: 600 !important;
+    color: #000 !important;
+    margin-bottom: 4pt !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .jt-forms-required-asterisk {
+    color: #b00 !important;
+  }
+
+  /* Short text — single underlined writing line. */
+  .jt-forms-field-text-short input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    border: 0 !important;
+    border-bottom: 1px solid #000 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: black !important;
+    width: 100% !important;
+    padding: 2pt 0 !important;
+    font-size: 11pt !important;
+    height: 18pt;
+    box-shadow: none !important;
+  }
+
+  /* Long text — multiple ruled lines via repeating gradient.
+     Note: textarea [rows] attribute is unreliable across renderers, so we
+     anchor a min-height (~4 lines) and let the gradient fill whatever
+     height the textarea actually takes. line-height matches gradient pitch
+     so any pre-filled value lands ON the lines. */
+  .jt-forms-field-text-long textarea {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 23pt,
+      #000 23pt,
+      #000 24pt
+    ) !important;
+    color: black !important;
+    width: 100% !important;
+    padding: 0 !important;
+    line-height: 24pt !important;
+    font-size: 11pt !important;
+    resize: none !important;
+    overflow: hidden !important;
+    min-height: 96pt;
+    box-shadow: none !important;
+    /* Ensure backgrounds print in Chrome (default is "economy" which strips them). */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* Checkbox + radio rows — strip card chrome, keep options together. */
+  .jt-forms-field-checkboxes,
+  .jt-forms-field-radio {
+    gap: 0 !important;
+  }
+
+  .jt-forms-field-checkboxes label,
+  .jt-forms-field-radio label {
+    display: flex !important;
+    align-items: center;
+    gap: 6pt !important;
+    padding: 0 !important;
+    margin-bottom: 4pt !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #000 !important;
+    font-size: 11pt !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Native check/radio re-rendered as printable boxes/circles. */
+  .jt-forms-field-checkboxes input[type="checkbox"],
+  .jt-forms-field-radio input[type="radio"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 12pt !important;
+    height: 12pt !important;
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    background: white !important;
+    margin: 0 !important;
+    flex-shrink: 0;
+    position: relative;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  .jt-forms-field-radio input[type="radio"] {
+    border-radius: 50% !important;
+  }
+
+  /* Checked-state fallbacks — checkmark glyph for checkbox, dot fill for radio.
+     These render even when the user prints with a value already set. */
+  .jt-forms-field-checkboxes input[type="checkbox"]:checked::after {
+    content: "\2713";
+    display: block;
+    text-align: center;
+    line-height: 11pt;
+    font-size: 10pt;
+    font-weight: bold;
+    color: #000;
+  }
+
+  .jt-forms-field-radio input[type="radio"]:checked::after {
+    content: "";
+    display: block;
+    width: 6pt;
+    height: 6pt;
+    background: #000;
+    border-radius: 50%;
+    margin: 2pt auto;
+  }
+
+  /* Fill-in inputs — inline underlined writing line beside option label. */
+  .jt-forms-fillin-input {
+    display: inline-block !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    border: 0 !important;
+    border-bottom: 1px solid #000 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: black !important;
+    margin-left: 6pt !important;
+    padding: 0 0 1pt 0 !important;
+    min-width: 2.5in !important;
+    width: 2.5in !important;
+    height: 14pt;
+    font-size: 11pt !important;
+    box-shadow: none !important;
+  }
+
+  /* Page margins for the printed output. */
+  @page {
+    margin: 0.5in;
+  }
+}
+

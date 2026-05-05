@@ -627,6 +627,10 @@ body.dark-theme .badge.power-user {
   background: oklch(32% 0.12 310 / 0.4);
   color: #d97fff;
 }
+body.dark-theme .badge.new {
+  background: oklch(32% 0.10 170 / 0.4);
+  color: #4dd4a8;
+}
 
 /* ═══════════════════════════════════════════════════════════
    TOGGLE SWITCH — orange flame ON state

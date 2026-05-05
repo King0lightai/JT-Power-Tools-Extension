@@ -188,19 +188,40 @@ const OrgLogoFeature = (() => {
   /**
    * Locate the org switcher element — strictly inside the top header.
    *
-   * The switcher is a `div.relative.rounded-sm` that contains BOTH an <svg>
-   * (the JT logo icon) AND a <select> (the org dropdown). The select+svg
-   * combination alone is NOT unique: plenty of form dropdowns elsewhere in
-   * the app render as `<div class="relative rounded-sm"><select/><svg/></div>`
-   * (the svg is the dropdown chevron). Scoping the search to the top header
-   * bar prevents the logo from being injected into random page dropdowns.
+   * The switcher is a `div.relative.rounded-sm` inside the top header. It
+   * has two render modes depending on how many orgs the user belongs to:
+   *
+   *   - Multi-org: contains a `<select>` (the org dropdown) plus a chevron
+   *     <svg>. JT renders the dropdown so users can switch between orgs.
+   *   - Single-org: no `<select>` is rendered (nothing to choose from). The
+   *     container holds just the JT logo SVGs — the icon mark
+   *     (viewBox="0 0 8 8") and the wordmark (viewBox="0 0 120 18").
+   *
+   * Match condition: the container qualifies if it has either a `<select>`
+   * OR a JT-logo SVG (icon viewBox or wordmark viewBox). The icon viewBox
+   * is the more reliable signal — it's present in both modes — but we also
+   * accept the wordmark as a defensive fallback against future markup.
+   *
+   * Scoping to the top header is still load-bearing: the select+svg combo
+   * alone is NOT unique — plenty of form dropdowns elsewhere in the app
+   * render as `<div class="relative rounded-sm"><select/><svg/></div>` (the
+   * svg is the dropdown chevron). Top-header scoping prevents the custom
+   * logo from being injected into random page dropdowns.
    */
   function findSwitcher() {
     const header = findTopHeader();
     if (!header) return null;
     const candidates = header.querySelectorAll('div.relative.rounded-sm');
     for (const el of candidates) {
-      if (el.querySelector('select') && el.querySelector('svg')) {
+      // Multi-org case: container has a <select> for choosing org.
+      const hasSelect = el.querySelector('select');
+      // Single-org case: container has the JT logo SVG(s) and no <select>.
+      // Match the icon viewBox (always present) — fall back to the wordmark
+      // viewBox in case JT ever renders just the wordmark.
+      const hasJtLogo =
+        el.querySelector('svg[viewBox="0 0 8 8"]') ||
+        el.querySelector('svg[viewBox="0 0 120 18"]');
+      if (hasSelect || hasJtLogo) {
         return el;
       }
     }

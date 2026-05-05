@@ -48,6 +48,7 @@ const JTDefaults = (() => {
     taskTypeFilter: false,
     jobAccessCollapse: false,
     orgLogo: false,
+    forms: true,
 
     // Pro Features - Schedule & Calendar
     availabilityFilter: false,

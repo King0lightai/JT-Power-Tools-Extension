@@ -678,6 +678,7 @@ async function loadSettings() {
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
+    setCheckbox('forms', settings.forms !== undefined ? settings.forms : true);
 
     // Reconcile storage with current access: if a feature is stored as true
     // but can't actually run given the current tier or portal session state,
@@ -721,7 +722,9 @@ async function loadSettings() {
     const themeColors = settings.themeColors || defaultSettings.themeColors;
     loadThemeColors(themeColors);
 
-    // Load saved themes
+    // Load saved themes — render local first so the UI is immediately
+    // populated, then attempt a server pull and re-render with the
+    // merged result. Server fetch is best-effort; local wins on error.
     const savedThemes = settings.savedThemes || defaultSettings.savedThemes;
     loadSavedThemes(savedThemes);
 
@@ -729,6 +732,18 @@ async function loadSettings() {
     // (preset / saved slot / custom). Otherwise the HTML-hardcoded "Field Day"
     // shows even when the applied colors are a saved theme.
     reconcileActiveThemeLabel(themeColors, savedThemes);
+
+    // Fire-and-forget server sync for saved palettes. When logged in,
+    // pulls server themes and merges with local (server wins per slot),
+    // then re-renders. Logged-out users get the local-only path.
+    syncSavedThemesFromServer(savedThemes).then(merged => {
+      if (merged !== savedThemes) {
+        loadSavedThemes(merged);
+        reconcileActiveThemeLabel(themeColors, merged);
+      }
+    }).catch(err => {
+      console.warn('CustomTheme: initial sync failed:', err && err.message);
+    });
 
     // Show/hide customize button based on rgbTheme state (if it exists in the HTML)
     const customizeBtn = document.getElementById('customizeThemeBtn');
@@ -906,6 +921,7 @@ async function getCurrentSettings() {
     orgLogo: true,
     tweakEngine: getCheckboxValue('tweakEngine', defaultSettings.tweakEngine !== undefined ? defaultSettings.tweakEngine : true),
     inspectForAi: getCheckboxValue('inspectForAi', defaultSettings.inspectForAi !== undefined ? defaultSettings.inspectForAi : false),
+    forms: getCheckboxValue('forms', defaultSettings.forms !== undefined ? defaultSettings.forms : true),
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes
@@ -1348,6 +1364,61 @@ function loadSavedThemes(savedThemes) {
   });
 }
 
+/**
+ * Pull saved palettes from the server and merge with local. Server
+ * wins per slot (last-write-wins by way of the upsert at save time —
+ * server's row reflects whichever device saved most recently). Returns
+ * the merged 3-slot array, also written back to chrome.storage.sync
+ * for offline use.
+ *
+ * No-op + returns the local array unchanged when:
+ *   - CustomThemeApi or AccountService is not available
+ *   - The user is not logged in
+ *   - The server fetch fails (network, auth, etc.) — local wins
+ */
+async function syncSavedThemesFromServer(localSavedThemes) {
+  // Always start from a 3-slot array so callers can index safely.
+  const merged = Array.isArray(localSavedThemes) && localSavedThemes.length === 3
+    ? [...localSavedThemes]
+    : [null, null, null];
+
+  if (!window.CustomThemeApi || !window.CustomThemeApi.isAvailable()) {
+    return merged;
+  }
+
+  try {
+    const serverThemes = await window.CustomThemeApi.list();
+    if (!Array.isArray(serverThemes)) return merged;
+
+    // Server entries replace whatever was local at that slot. Slots
+    // missing from the server response are NOT cleared — the client
+    // may have unsynced local saves we don't want to drop.
+    for (const t of serverThemes) {
+      if (!t || !Number.isInteger(t.slotIndex)) continue;
+      if (t.slotIndex < 0 || t.slotIndex > 2) continue;
+      merged[t.slotIndex] = {
+        name: t.name,
+        colors: {
+          primary: t.primary,
+          background: t.background,
+          text: t.text
+        }
+      };
+    }
+
+    // Cache merged result for offline use. Read-modify-write the full
+    // settings blob since other code paths use the same key.
+    const result = await chrome.storage.sync.get(['jtToolsSettings']);
+    const settings = result.jtToolsSettings || defaultSettings;
+    settings.savedThemes = merged;
+    await chrome.storage.sync.set({ jtToolsSettings: settings });
+  } catch (err) {
+    console.warn('CustomTheme: server sync failed, using local copy:', err && err.message);
+  }
+
+  return merged;
+}
+
 // Save theme to slot
 async function saveThemeToSlot(slotIndex) {
   try {
@@ -1372,7 +1443,30 @@ async function saveThemeToSlot(slotIndex) {
     // Update the slot display
     loadSavedThemes(settings.savedThemes);
 
-    showStatus(`Theme saved to slot ${slotIndex + 1}!`, 'success');
+    // Dual-write to server when logged in. Local save above is the
+    // source of truth; server failure surfaces as a soft warning so
+    // the user knows sync didn't take, but we don't roll back.
+    let syncWarning = null;
+    if (window.CustomThemeApi && window.CustomThemeApi.isAvailable()) {
+      try {
+        await window.CustomThemeApi.save({
+          slotIndex,
+          name: themeName,
+          primary: colors.primary,
+          background: colors.background,
+          text: colors.text
+        });
+      } catch (err) {
+        console.warn('CustomTheme: server save failed:', err && err.message);
+        syncWarning = err && err.message ? err.message : 'sync failed';
+      }
+    }
+
+    if (syncWarning) {
+      showStatus(`Saved locally — sync failed: ${syncWarning}`, 'error');
+    } else {
+      showStatus(`Theme saved to slot ${slotIndex + 1}!`, 'success');
+    }
   } catch (error) {
     console.error('Error saving theme:', error);
     showStatus('Error saving theme', 'error');
