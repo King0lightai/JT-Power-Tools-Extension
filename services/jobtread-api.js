@@ -948,6 +948,93 @@ const JobTreadAPI = (() => {
     }
   }
 
+  /**
+   * Upload arbitrary bytes as a file attached to a job. Mirrors the
+   * server-side `jt_files.upload` helper:
+   *   1. createUploadRequest → returns a signed URL + headers
+   *   2. PUT the bytes to that URL
+   *   3. createComment with the upload reference so the file shows up in
+   *      the Files tab on the job
+   *
+   * Used by the Forms feature to drop a signed PDF into JobTread Files
+   * directly from the extension — no extension-server round-trip required.
+   *
+   * @param {object} args
+   * @param {Uint8Array|ArrayBuffer} args.bytes
+   * @param {string}                 args.fileName  - Suggested filename
+   * @param {string}                 args.jobId     - JT job ID
+   * @param {string}                 [args.contentType='application/pdf']
+   * @param {string}                 [args.message] - Comment body shown alongside the file
+   * @returns {Promise<{ id: string, name: string, url?: string }>}
+   */
+  async function uploadFileToJob({ bytes, fileName, jobId, contentType, message }) {
+    if (!jobId) throw new Error('uploadFileToJob: jobId is required');
+    if (!fileName) throw new Error('uploadFileToJob: fileName is required');
+    if (!bytes) throw new Error('uploadFileToJob: bytes is required');
+
+    const buffer = bytes instanceof ArrayBuffer ? bytes : (bytes.buffer || bytes);
+    const size = buffer.byteLength;
+    const type = contentType || 'application/pdf';
+
+    const orgId = await getOrgId();
+    if (!orgId) throw new Error('uploadFileToJob: organization id not resolved');
+
+    // 1. createUploadRequest — Pave hands back a signed URL we PUT to.
+    const reqData = await paveQuery({
+      createUploadRequest: {
+        $: { organizationId: orgId, size, type },
+        createdUploadRequest: {
+          id: {}, url: {}, method: {}, headers: {},
+        },
+      },
+    });
+    const uploadReq = reqData?.createUploadRequest?.createdUploadRequest;
+    if (!uploadReq) throw new Error('createUploadRequest returned no data');
+
+    // 2. PUT bytes to the signed URL. We use raw fetch (not proxyFetch)
+    // because the URL is on JobTread's storage host, which the extension
+    // already has host_permissions for.
+    const uploadHeaders = {};
+    if (uploadReq.headers && typeof uploadReq.headers === 'object') {
+      for (const [k, v] of Object.entries(uploadReq.headers)) {
+        uploadHeaders[k] = v;
+      }
+    }
+    const putResp = await fetch(uploadReq.url, {
+      method: uploadReq.method || 'PUT',
+      headers: uploadHeaders,
+      body: buffer,
+    });
+    if (!putResp.ok) {
+      const errText = await putResp.text().catch(() => '');
+      throw new Error('Upload failed (' + putResp.status + '): ' + errText.slice(0, 200));
+    }
+
+    // 3. Attach to the job via comment — same pattern the MCP server uses,
+    // which results in the file appearing in the Files tab.
+    const commentData = await paveQuery({
+      createComment: {
+        $: {
+          targetId: jobId,
+          targetType: 'job',
+          message: typeof message === 'string' && message.length > 0
+            ? message
+            : ('File uploaded: ' + fileName),
+          files: [{ uploadRequestId: uploadReq.id, name: fileName }],
+        },
+        createdComment: {
+          id: {},
+          files: { nodes: { id: {}, name: {}, url: {} } },
+        },
+      },
+    });
+
+    const created = commentData?.createComment?.createdComment;
+    const file = created?.files?.nodes?.[0];
+    if (!file) throw new Error('createComment returned no file reference');
+    return { id: file.id, name: file.name, url: file.url };
+  }
+
   // Public API
   return {
     // Configuration
@@ -974,6 +1061,9 @@ const JobTreadAPI = (() => {
 
     // Raw query access
     paveQuery,
+
+    // File uploads (Files tab on a job)
+    uploadFileToJob,
 
     // Cache management
     clearCache,

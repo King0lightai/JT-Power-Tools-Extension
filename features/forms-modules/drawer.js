@@ -50,6 +50,7 @@ const FormsDrawer = (() => {
   let onClose = null;
   let onBackClick = null;
   let onPrint = null;
+  let onSavePdf = null;
 
   function log(...args) {
     if (DEBUG) console.log('FormsDrawer:', ...args);
@@ -153,6 +154,24 @@ const FormsDrawer = (() => {
       + '<rect x="6" y="14" width="12" height="8"></rect>'
       + '</svg>';
 
+    // Save signed PDF to JobTread Files. Hidden by default — orchestrator
+    // shows it only on forms that contain at least one signature field with
+    // a captured value (see forms.js setSavePdfVisible()).
+    const savePdfBtn = document.createElement('button');
+    savePdfBtn.type = 'button';
+    savePdfBtn.className = 'jt-forms-save-pdf';
+    savePdfBtn.hidden = true;
+    savePdfBtn.setAttribute('aria-label', 'Save signed PDF to Job Files');
+    savePdfBtn.innerHTML = ''
+      + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" '
+      + 'viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+      + 'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+      + 'aria-hidden="true" focusable="false">'
+      + '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>'
+      + '<polyline points="7 10 12 15 17 10"></polyline>'
+      + '<line x1="12" y1="15" x2="12" y2="3"></line>'
+      + '</svg>';
+
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'jt-forms-close';
@@ -162,6 +181,7 @@ const FormsDrawer = (() => {
     header.appendChild(back);
     header.appendChild(title);
     header.appendChild(statusPill);
+    header.appendChild(savePdfBtn);
     header.appendChild(printBtn);
     header.appendChild(closeBtn);
 
@@ -185,6 +205,7 @@ const FormsDrawer = (() => {
       title,
       statusPill,
       print: printBtn,
+      savePdf: savePdfBtn,
       close: closeBtn,
       content,
       footer
@@ -207,6 +228,13 @@ const FormsDrawer = (() => {
     event.preventDefault();
     if (typeof onPrint === 'function') {
       onPrint();
+    }
+  }
+
+  function handleSavePdfClick(event) {
+    event.preventDefault();
+    if (typeof onSavePdf === 'function') {
+      onSavePdf();
     }
   }
 
@@ -285,6 +313,7 @@ const FormsDrawer = (() => {
       back: built.back,
       statusPill: built.statusPill,
       print: built.print,
+      savePdf: built.savePdf,
       close: built.close,
       content: built.content,
       footer: built.footer,
@@ -299,6 +328,7 @@ const FormsDrawer = (() => {
     addListener(elements.close, 'click', handleCloseClick);
     addListener(elements.back, 'click', handleBackClick);
     addListener(elements.print, 'click', handlePrintClick);
+    addListener(elements.savePdf, 'click', handleSavePdfClick);
     addListener(elements.resizeHandle, 'mousedown', handleResizeDown);
     addListener(document, 'keydown', handleKeyDown);
 
@@ -327,6 +357,7 @@ const FormsDrawer = (() => {
       back: null,
       statusPill: null,
       print: null,
+      savePdf: null,
       close: null,
       content: null,
       footer: null,
@@ -336,6 +367,7 @@ const FormsDrawer = (() => {
     onClose = null;
     onBackClick = null;
     onPrint = null;
+    onSavePdf = null;
 
     openState = false;
     storedWidth = DEFAULT_W;
@@ -387,6 +419,24 @@ const FormsDrawer = (() => {
   /** Register a handler fired when the Print button is clicked. */
   function setOnPrint(fn) {
     onPrint = (typeof fn === 'function') ? fn : null;
+  }
+
+  /** Register a handler fired when the Save signed PDF button is clicked. */
+  function setOnSavePdf(fn) {
+    onSavePdf = (typeof fn === 'function') ? fn : null;
+  }
+
+  /** Toggle visibility of the Save signed PDF button. */
+  function setSavePdfVisible(visible) {
+    if (!elements.savePdf) return;
+    elements.savePdf.hidden = !visible;
+  }
+
+  /** Toggle the disabled state on the Save signed PDF button (used during upload). */
+  function setSavePdfBusy(busy) {
+    if (!elements.savePdf) return;
+    elements.savePdf.disabled = !!busy;
+    elements.savePdf.classList.toggle('is-busy', !!busy);
   }
 
   /** Live ref to the .jt-forms-content element, or null if unmounted. */
@@ -453,6 +503,9 @@ const FormsDrawer = (() => {
     setOnClose,
     setOnBackClick,
     setOnPrint,
+    setOnSavePdf,
+    setSavePdfVisible,
+    setSavePdfBusy,
     getContentEl,
     getFooterEl,
     getStatusPillEl,

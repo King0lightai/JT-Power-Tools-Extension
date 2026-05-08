@@ -318,6 +318,185 @@ const FormsFieldRenderers = (() => {
     return card;
   }
 
+  // ─── Date field ───
+
+  function renderDate(field, value, onChange) {
+    const card = makeCard('jt-forms-field-date');
+    appendLabel(card, field);
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.id = 'jt-forms-' + field.id;
+    input.maxLength = 10;
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      input.value = value;
+    }
+    if (field.required) input.setAttribute('aria-required', 'true');
+    input.addEventListener('input', (event) => {
+      onChange(field.id, event.target.value);
+    });
+    const lbl = card.querySelector('.jt-forms-field-label');
+    if (lbl) lbl.setAttribute('for', input.id);
+    card.appendChild(input);
+    return card;
+  }
+
+  // ─── Signature field ───
+
+  // signature_pad is bundled as a content script (see manifest.json) so the
+  // constructor is resident on `window` from page load. We still expose a
+  // promise wrapper so the renderer can render its loading state cleanly if
+  // the script ever fails to register (e.g. partial extension corruption).
+  function loadSignaturePad() {
+    if (typeof window.SignaturePad === 'function') {
+      return Promise.resolve(window.SignaturePad);
+    }
+    return Promise.reject(new Error('signature_pad not loaded — check manifest content_scripts'));
+  }
+
+  // High-DPI canvas resize. Necessary because the captured strokes track
+  // CSS pixels but the underlying bitmap needs devicePixelRatio scaling
+  // for crisp lines on retina/tablet displays.
+  function resizeSignatureCanvas(canvas, pad) {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.scale(ratio, ratio);
+    if (pad && typeof pad.clear === 'function') pad.clear();
+  }
+
+  function isLocked(field) {
+    // lockOnSign defaults to true — once a signature is captured, the field
+    // becomes read-only with a "Clear signature" affordance. Builders can
+    // opt out for fields where the signer wants to redraw in place.
+    return field.lockOnSign !== false;
+  }
+
+  function renderSignedImage(card, value, onClear, locked) {
+    const wrap = document.createElement('div');
+    wrap.className = 'jt-forms-signature-signed';
+    const img = document.createElement('img');
+    img.className = 'jt-forms-signature-image';
+    img.alt = 'Captured signature';
+    img.src = value.dataUrl;
+    wrap.appendChild(img);
+
+    const meta = document.createElement('div');
+    meta.className = 'jt-forms-signature-meta';
+    if (typeof value.signedAt === 'string' && value.signedAt) {
+      const d = new Date(value.signedAt);
+      meta.textContent = Number.isNaN(d.getTime())
+        ? 'Signed'
+        : 'Signed ' + d.toLocaleString();
+    } else {
+      meta.textContent = 'Signed';
+    }
+    wrap.appendChild(meta);
+
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'jt-forms-signature-clear';
+    clearBtn.textContent = locked ? 'Clear signature' : 'Redraw';
+    clearBtn.addEventListener('click', onClear);
+    wrap.appendChild(clearBtn);
+
+    card.appendChild(wrap);
+  }
+
+  function renderSignature(field, value, onChange) {
+    const card = makeCard('jt-forms-field-signature');
+    appendLabel(card, field);
+
+    // Has-signature path: when locked, show the captured PNG with a clear
+    // affordance. When unlocked, fall through to the live pad below — the
+    // pad's `fromDataURL` re-hydrates the strokes.
+    const hasSignature = value
+      && typeof value === 'object'
+      && typeof value.dataUrl === 'string'
+      && value.dataUrl.length > 0;
+
+    const locked = isLocked(field);
+
+    if (hasSignature && locked) {
+      renderSignedImage(card, value, () => {
+        // Clearing wipes both dataUrl and signedAt so a stale timestamp
+        // can't leak into the saved blob.
+        onChange(field.id, '');
+        // Re-render the card by replacing in place
+        const fresh = renderSignature(field, '', onChange);
+        if (card.parentElement) {
+          card.parentElement.replaceChild(fresh, card);
+        }
+      }, true);
+      return card;
+    }
+
+    // Live pad path: create the canvas and a control row below it.
+    const padWrap = document.createElement('div');
+    padWrap.className = 'jt-forms-signature-pad';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'jt-forms-signature-canvas';
+    canvas.setAttribute('aria-label', 'Signature pad — draw with mouse, finger, or stylus');
+    padWrap.appendChild(canvas);
+
+    const hint = document.createElement('div');
+    hint.className = 'jt-forms-signature-hint';
+    hint.textContent = 'Sign above';
+    padWrap.appendChild(hint);
+
+    card.appendChild(padWrap);
+
+    const controls = document.createElement('div');
+    controls.className = 'jt-forms-signature-controls';
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'jt-forms-signature-clear';
+    clearBtn.textContent = 'Clear';
+    controls.appendChild(clearBtn);
+    card.appendChild(controls);
+
+    let pad = null;
+    let resizeHandler = null;
+
+    loadSignaturePad().then((SignaturePad) => {
+      pad = new SignaturePad(canvas, {
+        minWidth: 0.6,
+        maxWidth: 2.0,
+        penColor: '#1a1a1a',
+        backgroundColor: 'rgba(0,0,0,0)',
+      });
+      resizeSignatureCanvas(canvas, pad);
+      // Re-hydrate prior strokes when unlocked + already-signed
+      if (hasSignature) {
+        try { pad.fromDataURL(value.dataUrl); } catch (_e) { /* ignore */ }
+      }
+      pad.addEventListener('endStroke', () => {
+        if (pad.isEmpty()) return;
+        // Trim transparent margins to keep the dataUrl compact. SignaturePad
+        // exposes the raw canvas; trimming is a small extra step that
+        // typically halves the payload for centered signatures.
+        const dataUrl = pad.toDataURL('image/png');
+        onChange(field.id, {
+          dataUrl,
+          signedAt: new Date().toISOString(),
+        });
+      });
+
+      resizeHandler = () => resizeSignatureCanvas(canvas, pad);
+      window.addEventListener('resize', resizeHandler);
+    }).catch((err) => {
+      console.error('FormsFieldRenderers: failed to load signature_pad', err);
+      hint.textContent = 'Signature pad unavailable — please reload the page.';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (pad) pad.clear();
+      onChange(field.id, '');
+    });
+
+    return card;
+  }
+
   // ─── Public dispatcher ───
 
   function renderField(field, value, onChange) {
@@ -334,6 +513,8 @@ const FormsFieldRenderers = (() => {
       case 'text_long':  return renderTextLong(field, value, onChange);
       case 'checkboxes': return renderCheckboxes(field, value, onChange);
       case 'radio':      return renderRadio(field, value, onChange);
+      case 'date':       return renderDate(field, value, onChange);
+      case 'signature':  return renderSignature(field, value, onChange);
       default: {
         console.warn('FormsFieldRenderers: unknown field type', field.type);
         const div = document.createElement('div');

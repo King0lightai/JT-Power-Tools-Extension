@@ -225,6 +225,9 @@ const FormsFeature = (() => {
     window.FormsDrawer.setTitle('Forms');
     window.FormsDrawer.setBackVisible(false);
     window.FormsDrawer.setStatusPill(null, '');
+    if (typeof window.FormsDrawer.setSavePdfVisible === 'function') {
+      window.FormsDrawer.setSavePdfVisible(false);
+    }
 
     renderListView(computeDisplayable(formsCache.instances, formsCache.availableTemplates));
   }
@@ -272,6 +275,30 @@ const FormsFeature = (() => {
 
     renderFormFields(schema, initialData);
     window.FormsDrawer.setStatusPill(null, '');
+    recomputeSavePdfVisibility(schema, initialData);
+  }
+
+  /**
+   * Toggle the "Save signed PDF to Job Files" button. We only surface it
+   * once at least one signature has been captured — printing/uploading an
+   * unsigned form via this button would create a noisy file in JT.
+   */
+  function recomputeSavePdfVisibility(schema, data) {
+    if (!window.FormsDrawer || typeof window.FormsDrawer.setSavePdfVisible !== 'function') return;
+    const visible = hasCapturedSignature(schema, data);
+    window.FormsDrawer.setSavePdfVisible(visible);
+  }
+
+  function hasCapturedSignature(schema, data) {
+    if (!schema || !Array.isArray(schema.fields) || !data) return false;
+    for (const field of schema.fields) {
+      if (!field || field.type !== 'signature') continue;
+      const v = data[field.id];
+      if (v && typeof v === 'object' && typeof v.dataUrl === 'string' && v.dataUrl.length > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -325,6 +352,17 @@ const FormsFeature = (() => {
   function handleSaveStateChange(state, meta) {
     if (!window.FormsDrawer) return;
     const m = meta || {};
+
+    // Recompute save-pdf button visibility on every state transition. The
+    // user's signature can land in any of dirty/saving/saved, and the
+    // simplest correct heuristic is to scan the latest data each time.
+    if (window.FormsSaveEngine && activeSchema) {
+      try {
+        const latest = window.FormsSaveEngine.getData();
+        recomputeSavePdfVisibility(activeSchema, latest);
+      } catch (_e) { /* noop */ }
+    }
+
     switch (state) {
       case 'idle':
         stopSavedAtTimer();
@@ -722,6 +760,76 @@ const FormsFeature = (() => {
     printHeaderEl = null;
   }
 
+  // ─── Save signed PDF to Job Files ───────────────────────────────────
+
+  /**
+   * Build a PDF of the current form state (with embedded signature image)
+   * and upload it directly to the job's Files via the Pave API. Runs
+   * client-side end-to-end — no extension-server round-trip — using the
+   * grant key the user already has configured for JobTreadAPI.
+   */
+  async function handleSavePdf() {
+    if (!window.FormsDrawer || !window.FormsPdfExporter) return;
+    if (!window.FormsSaveEngine || !window.JobTreadAPI) return;
+    if (!activeTemplate || !activeSchema || !currentJob) return;
+
+    window.FormsDrawer.setSavePdfBusy(true);
+
+    try {
+      // Force-save before exporting so the PDF reflects what's persisted.
+      // If the save fails (offline/conflict), we abort the upload and let
+      // the existing status pill explain why.
+      try {
+        const flush = window.FormsSaveEngine.forceSave();
+        if (flush && typeof flush.then === 'function') await flush;
+      } catch (saveErr) {
+        showToast('Could not save form before exporting: ' + (saveErr && saveErr.message
+          ? saveErr.message : 'unknown error'));
+        return;
+      }
+
+      const data = window.FormsSaveEngine.getData() || {};
+      const generatedAt = new Date();
+      const { base64 } = window.FormsPdfExporter.buildPdf({
+        schema: activeSchema,
+        data,
+        template: activeTemplate,
+        job: currentJob,
+        generatedAt,
+      });
+      const fileName = window.FormsPdfExporter.buildFilename(activeTemplate, generatedAt);
+
+      // Decode base64 → Uint8Array. Worker upload helpers expect raw bytes.
+      const bytes = base64ToUint8Array(base64);
+
+      const file = await window.JobTreadAPI.uploadFileToJob({
+        bytes,
+        fileName,
+        jobId: currentJob.jobId,
+        contentType: 'application/pdf',
+        message: 'Signed form: ' + (activeTemplate.name || 'Form'),
+      });
+
+      showToast('Saved to Job Files: ' + (file && file.name ? file.name : fileName));
+    } catch (err) {
+      console.error('FormsFeature: Save signed PDF failed', err);
+      showToast('Save signed PDF failed: ' + (err && err.message ? err.message : 'unknown error'));
+    } finally {
+      window.FormsDrawer.setSavePdfBusy(false);
+    }
+  }
+
+  /**
+   * Decode a base64 string to a Uint8Array. Used to hand the PDF bytes to
+   * JobTreadAPI.uploadFileToJob. Browser's atob is the canonical primitive.
+   */
+  function base64ToUint8Array(base64) {
+    const binary = atob(base64);
+    const out = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+    return out;
+  }
+
   // ─── Close handler ──────────────────────────────────────────────────
 
   function handleClose() {
@@ -740,6 +848,9 @@ const FormsFeature = (() => {
     activeTemplate = null;
     activeSchema = null;
     activeInstance = null;
+    if (window.FormsDrawer && typeof window.FormsDrawer.setSavePdfVisible === 'function') {
+      window.FormsDrawer.setSavePdfVisible(false);
+    }
     if (window.FormsDrawer && window.FormsDrawer.isOpen()) {
       window.FormsDrawer.close();
     }
@@ -817,6 +928,9 @@ const FormsFeature = (() => {
     });
     window.FormsDrawer.setOnPrint(() => {
       handlePrint();
+    });
+    window.FormsDrawer.setOnSavePdf(() => {
+      handleSavePdf().catch(err => console.error('FormsFeature: handleSavePdf failed', err));
     });
 
     window.FormsJobDetector.start(handleJobChange);
