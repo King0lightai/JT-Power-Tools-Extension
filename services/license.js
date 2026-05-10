@@ -7,9 +7,9 @@ const LicenseService = (() => {
   const DEBUG = false;
 
   // Safe logging — only outputs when DEBUG is true
-  function log(...args) { if (DEBUG) log('', ...args); }
-  function logError(...args) { if (DEBUG) logError('', ...args); }
-  function logWarn(...args) { if (DEBUG) logWarn('', ...args); }
+  function log(...args) { if (DEBUG) console.log('[License]', ...args); }
+  function logError(...args) { if (DEBUG) console.error('[License]', ...args); }
+  function logWarn(...args) { if (DEBUG) console.warn('[License]', ...args); }
 
   // ⚠️ IMPORTANT: Set this to your deployed license proxy URL
   // See server/DEPLOYMENT.md for setup instructions

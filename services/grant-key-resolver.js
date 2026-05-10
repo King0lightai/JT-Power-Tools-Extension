@@ -32,10 +32,15 @@ const GrantKeyResolver = (() => {
     if (window.Sanitizer && typeof window.Sanitizer.escapeHTML === 'function') {
       return window.Sanitizer.escapeHTML(str);
     }
-    // Local fallback
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    // Local fallback — escapes the same five chars as Sanitizer.escapeHTML
+    // so it's safe in both text-content and attribute-value contexts.
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   async function getGrantKey() {

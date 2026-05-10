@@ -85,23 +85,30 @@ const Sanitizer = (() => {
   }
 
   /**
-   * Escape HTML to prevent XSS
-   * @param {string} html - HTML string to escape
-   * @returns {string} Escaped HTML
+   * Escape a string for safe interpolation into HTML — works in BOTH
+   * text-content and attribute-value contexts. Escapes &, <, >, ", and '.
+   *
+   * Historically this used textContent→innerHTML, which does not escape
+   * quotes — many callers interpolate the result into attr="..." contexts
+   * (data-*, title, value, etc.), which left a stored-XSS surface for
+   * any user-controlled string that landed in such an attribute. Switching
+   * to direct character replacement closes that without requiring every
+   * call site to migrate to escapeAttr.
+   *
+   * @param {string} html
+   * @returns {string}
    */
   function escapeHTML(html) {
-    try {
-      if (!html || typeof html !== 'string') {
-        return '';
-      }
-
-      const div = document.createElement('div');
-      div.textContent = html;
-      return div.innerHTML;
-    } catch (error) {
-      console.error('Sanitizer: escapeHTML error:', error);
-      return '';
+    if (html === null || html === undefined) return '';
+    if (typeof html !== 'string') {
+      try { html = String(html); } catch { return ''; }
     }
+    return html
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /**

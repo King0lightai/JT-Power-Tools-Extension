@@ -9,8 +9,8 @@ const JobTreadProService = (() => {
   const DEBUG = false;
 
   // Safe logging — only outputs when DEBUG is true
-  function log(...args) { if (DEBUG) log('', ...args); }
-  function logError(...args) { if (DEBUG) logError('', ...args); }
+  function log(...args) { if (DEBUG) console.log('[JobTreadPro]', ...args); }
+  function logError(...args) { if (DEBUG) console.error('[JobTreadPro]', ...args); }
 
   // Storage keys
   const STORAGE_KEYS = {

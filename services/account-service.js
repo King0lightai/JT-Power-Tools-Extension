@@ -11,8 +11,8 @@ const AccountService = (() => {
   const DEBUG = false;
 
   // Safe logging — only outputs when DEBUG is true
-  function log(...args) { if (DEBUG) log('', ...args); }
-  function logError(...args) { if (DEBUG) logError('', ...args); }
+  function log(...args) { if (DEBUG) console.log('[Account]', ...args); }
+  function logError(...args) { if (DEBUG) console.error('[Account]', ...args); }
 
   // API endpoints
   const API_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
