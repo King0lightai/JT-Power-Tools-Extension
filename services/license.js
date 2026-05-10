@@ -21,6 +21,11 @@ const LicenseService = (() => {
   // Re-validation interval (24 hours)
   const REVALIDATION_INTERVAL = 24 * 60 * 60 * 1000;
 
+  // Offline grace period — if a successful revalidation hasn't completed
+  // within this window, deny access. Prevents indefinite premium use after
+  // a single valid check (e.g. blocking the proxy host in /etc/hosts).
+  const OFFLINE_GRACE_PERIOD = 7 * 24 * 60 * 60 * 1000;
+
   // Tier definitions - must match server/mcp-server/src/config/tiers.js
   const TIERS = {
     ESSENTIAL: 'essential',
@@ -386,7 +391,12 @@ const LicenseService = (() => {
 
           if (!result.success) {
             // If re-validation failed due to network, allow temporary access
+            // ONLY if we're still within the offline grace period.
             if (result.silent) {
+              if (timeSinceRevalidation > OFFLINE_GRACE_PERIOD) {
+                logWarn('Re-validation failed (network) and offline grace period exceeded — denying access');
+                return false;
+              }
               logWarn('Re-validation failed (network), allowing temporary access');
               return true;
             }
@@ -403,7 +413,12 @@ const LicenseService = (() => {
 
             if (!result.success) {
               // If re-validation failed due to network, allow temporary access
+              // ONLY if we're still within the offline grace period.
               if (result.silent) {
+                if (timeSinceRevalidation > OFFLINE_GRACE_PERIOD) {
+                  logWarn('Re-validation failed (network) and offline grace period exceeded — denying access');
+                  return false;
+                }
                 logWarn('Re-validation failed (network), allowing temporary access');
                 return true;
               }
