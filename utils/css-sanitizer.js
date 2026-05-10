@@ -22,6 +22,43 @@ const CssSanitizer = (() => {
   const ALLOWED_AT_RULES = new Set(['media', 'supports', 'keyframes', 'font-face', 'page']);
   const EXTENSION_UI_PREFIXES = ['.jt-tools-', '.jt-popup-', '.jt-tweak-edit-'];
   const FORBIDDEN_BARE_SELECTORS = new Set(['html', 'body', ':root', '*']);
+
+  // Raster-only image data URI (M7). Excludes svg+xml — inline SVG can
+  // carry <script> / event handlers that some browsers honor in
+  // CSS-loaded contexts. Tweak authors who need SVG can serve it as an
+  // https URL instead.
+  const SAFE_DATA_IMAGE_RE = /^data:image\/(?:png|jpe?g|gif|webp|avif|bmp|x-icon|vnd\.microsoft\.icon)(?:;|,)/i;
+  const SAFE_HTTPS_RE = /^https:\/\//i;
+
+  // @font-face src=url() allowlist (M9). An attacker-controlled tweak
+  // could otherwise force the browser to fetch a font from any HTTPS
+  // server — a tracking / fingerprinting primitive that reveals the
+  // user's IP + JobTread-page presence to a third party. Limit to
+  // first-party (jobtread.com) and the major font CDNs the project
+  // already trusts via the portal pages.
+  const ALLOWED_FONT_HOSTS = [
+    /^https:\/\/[a-z0-9-]+\.jobtread\.com\//i,
+    /^https:\/\/jobtread\.com\//i,
+    /^https:\/\/fonts\.gstatic\.com\//i,
+    /^https:\/\/fonts\.googleapis\.com\//i,
+  ];
+
+  function isSafeUrl(value) {
+    if (SAFE_HTTPS_RE.test(value)) return true;
+    if (SAFE_DATA_IMAGE_RE.test(value)) return true;
+    return false;
+  }
+
+  function isSafeFontUrl(value) {
+    return ALLOWED_FONT_HOSTS.some((re) => re.test(value));
+  }
+
+  // csstree's walk callback receives `this.atrule` set to the closest
+  // enclosing Atrule node (or null). Returns true when a Url node is
+  // being visited inside `@font-face { src: url(...) }`.
+  function isInsideFontFace(atrule) {
+    return !!(atrule && atrule.type === 'Atrule' && (atrule.name || '').toLowerCase() === 'font-face');
+  }
   // At-rules whose body contains nested Rules whose preludes are real
   // selectors (need scoping). @keyframes is intentionally excluded — its
   // rule preludes are frame selectors (0%, from, to) which must stay raw.
@@ -193,37 +230,37 @@ const CssSanitizer = (() => {
           return;
         }
 
-        // url() — only https:// or data:image/ permitted
+        // url() — only https:// or raster-image data URIs permitted.
+        // Inside @font-face src, additionally require the font URL to be
+        // on the trusted-host allowlist (M9).
         if (node.type === 'Url') {
           const value = (node.value || '').replace(/^['"]|['"]$/g, '').trim();
-          const ok = /^https:\/\//i.test(value) || /^data:image\//i.test(value);
+          const inFontFace = isInsideFontFace(this.atrule);
+          const ok = inFontFace ? isSafeFontUrl(value) : isSafeUrl(value);
           if (!ok) {
-            errors.push({ reason: 'url() must be https:// or data:image/, got: ' + value.slice(0, 80), position: node.loc?.start });
+            const expected = inFontFace
+              ? '@font-face url() must be on the font allowlist (jobtread.com / fonts.gstatic.com / fonts.googleapis.com)'
+              : 'url() must be https:// or a raster image data URI (svg+xml not allowed)';
+            errors.push({ reason: expected + ', got: ' + value.slice(0, 80), position: node.loc?.start });
             node.value = '';
           }
         }
 
         // Raw nodes: css-tree falls back to Raw when it can't tokenize
         // cleanly (e.g., url(javascript:alert(1)) — unquoted with inner
-        // parens). Without this, dangerous URLs slip through. If we detect
-        // any unsafe url() in the raw value, blank the whole value — the
-        // declaration becomes invalid CSS that browsers drop. Cleaner than
-        // splicing the regex match out (which would leave stray parens).
+        // parens). The previous regex-based extraction couldn't tolerate
+        // inner parens / escaped close-parens, leaving room for crafted
+        // payloads (M8). Treat ANY Raw containing `url(` as untrusted and
+        // blank the value — the declaration becomes invalid CSS that
+        // browsers drop. Cleaner than trying to recover the inner URL
+        // from a tokenizer-recovery context.
         if (node.type === 'Raw' && typeof node.value === 'string') {
-          const urlMatches = node.value.match(/url\s*\(\s*([^)]*)\s*\)/gi);
-          if (urlMatches) {
-            for (const match of urlMatches) {
-              const inner = match.replace(/^url\s*\(\s*['"]?|['"]?\s*\)$/gi, '').trim();
-              const safe = /^https:\/\//i.test(inner) || /^data:image\//i.test(inner);
-              if (!safe) {
-                errors.push({
-                  reason: 'url() in raw value must be https:// or data:image/, got: ' + inner.slice(0, 80),
-                  position: node.loc?.start
-                });
-                node.value = '';
-                break;
-              }
-            }
+          if (/url\s*\(/i.test(node.value)) {
+            errors.push({
+              reason: 'url() inside an unparsed/raw value is not allowed (use a clean declaration)',
+              position: node.loc?.start,
+            });
+            node.value = '';
           }
         }
       }

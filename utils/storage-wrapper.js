@@ -40,8 +40,34 @@ const StorageWrapper = (() => {
     });
   }
 
+  // chrome.storage.sync per-item: 8 KB; total: 100 KB. Cap inputs below
+  // those limits so a single oversized write can't wipe out all of sync
+  // (which would knock out license persistence + every feature's settings).
+  // chrome.storage.local is much larger (~10 MB) but the same DoS shape
+  // applies, so a soft cap keeps writes sane.
+  const MAX_ITEM_BYTES = 7 * 1024;       // headroom under the 8 KB sync cap
+  const MAX_TOTAL_BYTES = 80 * 1024;     // headroom under the 100 KB sync cap
+
   /**
-   * Safely set data in Chrome storage
+   * JSON-serialize a value to estimate its on-disk size before writing.
+   * Returns null if the value contains anything non-JSON-serializable
+   * (functions, symbols, bigints, circular refs).
+   */
+  function safeSerialize(value) {
+    try {
+      const json = JSON.stringify(value);
+      if (json === undefined) return null;
+      return json;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Safely set data in Chrome storage. Validates each value is
+   * JSON-serializable, caps per-item and per-call sizes, and rejects
+   * non-string keys.
+   *
    * @param {Object} data - Data to store
    * @returns {Promise<boolean>} True if successful, false otherwise
    */
@@ -54,8 +80,35 @@ const StorageWrapper = (() => {
           return;
         }
 
-        if (!data || typeof data !== 'object') {
-          console.error('JT-Tools Storage: Invalid data provided to set()');
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+          console.error('JT-Tools Storage: set() requires a plain object');
+          resolve(false);
+          return;
+        }
+
+        let totalBytes = 0;
+        for (const [key, value] of Object.entries(data)) {
+          if (typeof key !== 'string' || key.length === 0 || key.length > 256) {
+            console.error('JT-Tools Storage: Invalid key in set():', key);
+            resolve(false);
+            return;
+          }
+          const json = safeSerialize(value);
+          if (json === null) {
+            console.error('JT-Tools Storage: Value for key', key, 'is not JSON-serializable');
+            resolve(false);
+            return;
+          }
+          const bytes = json.length;
+          if (bytes > MAX_ITEM_BYTES) {
+            console.error('JT-Tools Storage: Value for key', key, 'exceeds per-item cap', bytes, '>', MAX_ITEM_BYTES);
+            resolve(false);
+            return;
+          }
+          totalBytes += bytes;
+        }
+        if (totalBytes > MAX_TOTAL_BYTES) {
+          console.error('JT-Tools Storage: set() payload exceeds total cap', totalBytes, '>', MAX_TOTAL_BYTES);
           resolve(false);
           return;
         }

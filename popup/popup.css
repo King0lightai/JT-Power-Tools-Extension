@@ -2230,6 +2230,60 @@ body.dark-theme .tweak-card-actions .icon-btn.danger:hover {
   max-width: 90vw;
   box-shadow: var(--shadow-md);
 }
+
+/* Register-nudge dialog — same shape as the import dialog so the popup
+   keeps a consistent modal language. */
+.jt-tools-register-nudge-dialog {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-md);
+}
+.jt-tools-register-nudge-dialog::backdrop {
+  background: rgba(15, 15, 15, 0.55);
+  backdrop-filter: blur(2px);
+}
+.jt-tools-register-nudge-dialog h3 { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
+.jt-tools-register-nudge-dialog p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.jt-tools-register-nudge-dontshow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary, var(--text-secondary));
+  margin: 8px 0 14px;
+  cursor: pointer;
+}
+.jt-tools-register-nudge-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.jt-tools-register-nudge-actions button {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 12px;
+  cursor: pointer;
+}
+.jt-tools-register-nudge-actions button.primary {
+  background: var(--accent, #f97316);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+.jt-tools-register-nudge-actions button:hover { filter: brightness(1.1); }
 .jt-tweaks-import-dialog::backdrop {
   background: rgba(15, 15, 15, 0.55);
   backdrop-filter: blur(2px);

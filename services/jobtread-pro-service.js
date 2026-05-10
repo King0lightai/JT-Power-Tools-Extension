@@ -186,6 +186,40 @@ const JobTreadProService = (() => {
   const CUSTOM_FIELDS_CACHE_DURATION = 60 * 60 * 1000;
 
   /**
+   * Check whether the current license has a registered portal account.
+   *
+   * Returns { hasValidLicense, hasAccount } so the popup can distinguish
+   * "legacy user — needs to register" from "registered user — needs to
+   * configure grant key". Returns null on network/transport errors so
+   * the caller can fall through to the existing prompt rather than
+   * lock the user out.
+   */
+  async function checkAccountState(licenseKey) {
+    try {
+      if (!licenseKey || typeof licenseKey !== 'string') return null;
+      const mcpServerUrl = window.WORKER_CONFIG?.MCP_SERVER_URL
+        || 'https://jobtread-mcp-server.king0light-ai.workers.dev';
+      const response = await fetch(`${mcpServerUrl}/auth/check-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey: licenseKey.trim() }),
+      });
+      if (!response.ok) {
+        log('checkAccountState: non-OK response', response.status);
+        return null;
+      }
+      const data = await response.json();
+      if (typeof data?.hasValidLicense !== 'boolean' || typeof data?.hasAccount !== 'boolean') {
+        return null;
+      }
+      return { hasValidLicense: data.hasValidLicense, hasAccount: data.hasAccount };
+    } catch (e) {
+      logError('checkAccountState error:', e);
+      return null;
+    }
+  }
+
+  /**
    * Get or generate device ID
    */
   async function getDeviceId() {
@@ -775,6 +809,7 @@ const JobTreadProService = (() => {
     getStatus,
     getGrantKey,
     getSessionToken,
+    checkAccountState,
     disconnect,
     clearConfig,
 

@@ -809,7 +809,18 @@ const QuickNotesFeature = (() => {
   function renderFolderGroup(folderName, folderNotes, isCollapsed, markdown) {
     const escapedFolderName = markdown.escapeHtml ? markdown.escapeHtml(folderName) : folderName;
     const notesHtml = isCollapsed ? '' : folderNotes.map(note => renderNoteItem(note, markdown)).join('');
-    const folderColor = getFolderColor(folderName);
+    // Validate the folder color as a hex literal before interpolating it
+    // into a `style="..."` attribute. The values today come from a fixed
+    // palette (storage.js FOLDER_COLORS), but they flow through
+    // chrome.storage.sync — a poisoned/tampered storage entry could
+    // smuggle a CSS injection like `red; background-image: url(...)`.
+    // Sanitizer.sanitizeHexColor returns null for anything that isn't
+    // `#RRGGBB` / `#RGB`, which we treat as "no color" rather than
+    // emitting raw user-influenced CSS.
+    const rawColor = getFolderColor(folderName);
+    const folderColor = window.Sanitizer && typeof window.Sanitizer.sanitizeHexColor === 'function'
+      ? window.Sanitizer.sanitizeHexColor(rawColor)
+      : (typeof rawColor === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(rawColor) ? rawColor : null);
     const colorBtnStyle = folderColor ? `style="background-color: ${folderColor}"` : '';
     const headerStyle = folderColor ? `style="border-left: 3px solid ${folderColor}"` : '';
     const colorClass = folderColor ? 'has-color' : '';

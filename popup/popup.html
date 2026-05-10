@@ -952,6 +952,33 @@
     </div>
   </div>
 
+  <!-- ==================== REGISTER-NUDGE DIALOG ==================== -->
+  <!-- Shown when a user toggles on a feature that needs a grant key, has a
+       valid Gumroad license, but has no portal account on the new system.
+       Without this nudge legacy users go to the portal, hit forgot-password
+       on an account that doesn't exist, never get an email, and get stuck. -->
+  <dialog class="jt-tools-register-nudge-dialog" data-register-nudge>
+    <h3>One step left to enable this feature</h3>
+    <p data-register-nudge-body>
+      This feature needs an account on the new JT Power Tools portal.
+      Your Gumroad license is valid, but we couldn't find a registered
+      account for it yet.
+    </p>
+    <p style="margin-top:8px;">
+      <strong>If you've used JT Power Tools before:</strong> you don't have
+      a portal account yet — please <em>register</em> (don't try password
+      reset, the email won't arrive).
+    </p>
+    <label class="jt-tools-register-nudge-dontshow">
+      <input type="checkbox" data-register-nudge-dontshow>
+      Don't show this again
+    </label>
+    <div class="jt-tools-register-nudge-actions">
+      <button data-register-nudge-close>Close</button>
+      <button data-register-nudge-register class="primary">Register now</button>
+    </div>
+  </dialog>
+
   <!-- ==================== TWEAKS IMPORT DIALOG ==================== -->
   <dialog class="jt-tweaks-import-dialog" data-import-dialog>
     <h3>Paste from AI</h3>

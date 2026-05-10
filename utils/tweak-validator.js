@@ -67,19 +67,36 @@ const TweakValidator = (() => {
   const MAX_SELECTOR_LEN = 500;
   const MAX_MATCH_LEN = 200;
 
+  // Conservative selector charset for non-DOM environments. Real CSS
+  // selectors are far more permissive, but in a service-worker / Node
+  // context (no `document.createDocumentFragment`) we can't ask the
+  // browser to parse, so we apply a strict syntactic gate covering the
+  // common combinators / pseudo-classes / attribute selectors / nesting
+  // characters and reject anything outside it. This prevents the
+  // historical fall-open behavior where any string passed.
+  const SAFE_SELECTOR_CHARSET = /^[a-zA-Z0-9\s\-_#.>+~*:()[\]="',\\^$|@/]+$/;
+
   function isSafeSelector(sel) {
     if (typeof sel !== 'string' || sel.length === 0 || sel.length > MAX_SELECTOR_LEN) return false;
     if (EXTENSION_UI_PREFIXES.some(p => sel.includes(p))) return false;
-    // Quick syntax check: must succeed querySelector parse.
-    // In a non-DOM env (e.g. node test harness), `document` may not exist;
-    // skip the parse step there and rely on the prefix check.
-    if (typeof document === 'undefined' || !document.createDocumentFragment) return true;
-    try {
-      document.createDocumentFragment().querySelector(sel);
-      return true;
-    } catch (e) {
-      return false;
+
+    // Quick syntax check: must succeed querySelector parse. Preferred
+    // path when running inside a content script / popup — the browser
+    // is the gold-standard parser.
+    if (typeof document !== 'undefined' && document.createDocumentFragment) {
+      try {
+        document.createDocumentFragment().querySelector(sel);
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
+
+    // Non-DOM env (service worker, Node test harness): apply a strict
+    // syntactic gate. Anything containing characters outside the
+    // expected CSS selector charset is rejected — closes the previous
+    // "return true unconditionally" fall-open path.
+    return SAFE_SELECTOR_CHARSET.test(sel);
   }
 
   function validateStyleValue(prop, val, fieldPrefix, errors) {

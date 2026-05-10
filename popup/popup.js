@@ -8,6 +8,19 @@ const FEATURE_TOGGLE_IDS = [
   'jobAccessCollapse', 'orgLogo'
 ];
 
+// Feature toggles that require a JobTread grant key to function. When a
+// user enables one of these without a grant key configured, we may nudge
+// them through the register/setup flow (see maybeShowRegisterNudge).
+const GRANT_KEY_REQUIRED_FEATURES = new Set([
+  'customFieldFilter',
+  'budgetChangelog',
+  'taskTypeFilter',
+  'availabilityFilter',
+]);
+
+const REGISTER_NUDGE_DISMISSED_KEY = 'jtRegisterNudgeDismissed';
+const PORTAL_BASE_URL = 'https://app.jtpowertools.com';
+
 const MASTER_TOGGLE_KEY = 'jtMasterToggleOff';
 const MASTER_SNAPSHOT_KEY = 'jtMasterToggleSnapshot';
 
@@ -929,6 +942,98 @@ async function getCurrentSettings() {
 }
 
 // Show status message
+/**
+ * If the user just toggled on a grant-key-requiring feature but is in the
+ * "legacy" state (valid Gumroad license, no portal account), show a modal
+ * directing them to register. No-ops in every other state:
+ *   - Already registered + grant key set: nothing to do
+ *   - Already registered + no grant key: existing UI handles this
+ *   - No license at all: existing UI handles this
+ *   - User dismissed the modal previously: respect that
+ *   - Network error / endpoint unavailable: silently skip
+ *
+ * Non-blocking — the toggle proceeds either way; the modal is informative.
+ */
+async function maybeShowRegisterNudge() {
+  try {
+    if (typeof StorageWrapper === 'undefined') return;
+
+    // Respect prior dismissal
+    const dismissedRecord = await StorageWrapper.get(REGISTER_NUDGE_DISMISSED_KEY);
+    if (dismissedRecord && dismissedRecord[REGISTER_NUDGE_DISMISSED_KEY]) return;
+
+    // Need a license + license key to ask the server about
+    if (typeof LicenseService === 'undefined') return;
+    const hasLicense = await LicenseService.hasValidLicense();
+    if (!hasLicense) return;
+    const licenseData = await LicenseService.getLicenseData();
+    const licenseKey = licenseData?.key;
+    if (!licenseKey) return;
+
+    // If a grant key is already configured, nothing to nudge about
+    if (typeof JobTreadProService !== 'undefined') {
+      const existingGrantKey = await JobTreadProService.getGrantKey();
+      if (existingGrantKey) return;
+    }
+
+    // Ask the server: does this license have a registered portal account?
+    if (typeof JobTreadProService === 'undefined' || !JobTreadProService.checkAccountState) return;
+    const state = await JobTreadProService.checkAccountState(licenseKey);
+    if (!state) return; // Network error — fall through silently
+    if (!state.hasValidLicense) return; // Server-side license invalid — different UX path
+    if (state.hasAccount) return; // Registered already; existing "configure grant key" UI handles this
+
+    // Legacy state confirmed — show the nudge
+    showRegisterNudgeDialog(licenseKey);
+  } catch (e) {
+    console.error('maybeShowRegisterNudge error:', e);
+  }
+}
+
+function showRegisterNudgeDialog(licenseKey) {
+  const dialog = document.querySelector('[data-register-nudge]');
+  if (!dialog || typeof dialog.showModal !== 'function') return;
+
+  const dontShow = dialog.querySelector('[data-register-nudge-dontshow]');
+  const closeBtn = dialog.querySelector('[data-register-nudge-close]');
+  const registerBtn = dialog.querySelector('[data-register-nudge-register]');
+
+  if (dontShow) dontShow.checked = false;
+
+  const persistDismissalIfChecked = async () => {
+    if (dontShow?.checked && typeof StorageWrapper !== 'undefined') {
+      await StorageWrapper.set({ [REGISTER_NUDGE_DISMISSED_KEY]: true });
+    }
+  };
+
+  const onClose = async () => {
+    await persistDismissalIfChecked();
+    dialog.close();
+    cleanup();
+  };
+
+  const onRegister = async () => {
+    await persistDismissalIfChecked();
+    // Pre-fill the licenseKey field via query param so the user only has
+    // to set displayName/email/password. The portal's register.html
+    // handles ?licenseKey=… already if wired; otherwise the user pastes.
+    const url = `${PORTAL_BASE_URL}/register.html?licenseKey=${encodeURIComponent(licenseKey)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    dialog.close();
+    cleanup();
+  };
+
+  function cleanup() {
+    closeBtn?.removeEventListener('click', onClose);
+    registerBtn?.removeEventListener('click', onRegister);
+  }
+
+  closeBtn?.addEventListener('click', onClose);
+  registerBtn?.addEventListener('click', onRegister);
+
+  dialog.showModal();
+}
+
 function showStatus(message, type = 'success') {
   const statusEl = document.getElementById('statusMessage');
   if (!statusEl) {
@@ -1681,6 +1786,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (contrastFixEl) contrastFixEl.checked = false;
           if (darkModeEl) darkModeEl.checked = false;
         }
+      }
+
+      // If the user just enabled a feature that needs a grant key but
+      // hasn't registered a portal account yet (legacy state), nudge
+      // them to register instead of leaving them to discover the gap
+      // via a forgot-password email that never arrives. Non-blocking —
+      // the toggle proceeds, the feature just won't work until they
+      // register and configure a grant key.
+      if (checkbox.checked && GRANT_KEY_REQUIRED_FEATURES.has(checkbox.id)) {
+        maybeShowRegisterNudge().catch(err => console.error('Register nudge error:', err));
       }
 
       // Get current settings from checkboxes
