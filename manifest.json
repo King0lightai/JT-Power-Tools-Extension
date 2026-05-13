@@ -11,7 +11,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "clipboardWrite"
+    "clipboardWrite",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://*.jobtread.com/*",
@@ -27,6 +28,9 @@
       "48": "icons/icon48-light.png",
       "128": "icons/icon128-light.png"
     }
+  },
+  "side_panel": {
+    "default_path": "popup/popup.html?context=sidepanel"
   },
   "background": {
     "service_worker": "background/service-worker.js"

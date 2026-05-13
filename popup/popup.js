@@ -1080,6 +1080,16 @@ async function refreshCurrentTab() {
   }
 }
 
+function openInSidebar(windowId) {
+  try {
+    chrome.sidePanel.open({ windowId });
+    window.close();
+  } catch (error) {
+    console.error('Error opening side panel:', error);
+    showStatus('Could not open side panel', 'error');
+  }
+}
+
 // Convert hex to RGB for preview generation
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1657,8 +1667,13 @@ function initFeatureHelpLinks() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
 
-  // Check for password reset token in URL
   const urlParams = new URLSearchParams(window.location.search);
+  const isInSidePanel = urlParams.get('context') === 'sidepanel';
+  if (isInSidePanel) {
+    document.body.classList.add('in-sidepanel');
+  }
+
+  // Check for password reset token in URL
   const resetToken = urlParams.get('reset_token');
   if (resetToken) {
     console.log('Password reset token detected, showing reset form');
@@ -1876,6 +1891,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const refreshBtn = document.getElementById('refreshBtn');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', refreshCurrentTab);
+  }
+
+  // Open-in-sidebar button: only shown in popup context, only if browser supports sidePanel.
+  // Pre-fetch windowId so the click handler can call sidePanel.open() synchronously and
+  // preserve the user-gesture activation required by chrome.sidePanel.open().
+  const openInSidebarBtn = document.getElementById('openInSidebarBtn');
+  if (openInSidebarBtn) {
+    if (isInSidePanel || !chrome.sidePanel || typeof chrome.sidePanel.open !== 'function') {
+      openInSidebarBtn.style.display = 'none';
+    } else {
+      chrome.windows.getCurrent().then(win => {
+        openInSidebarBtn.addEventListener('click', () => openInSidebar(win.id));
+      }).catch(err => {
+        console.error('Could not resolve current window for sidebar button:', err);
+        openInSidebarBtn.style.display = 'none';
+      });
+    }
   }
 
   // ── v4.8 Theme rebuild — preset cards, extras pills, auto-nudge ──
