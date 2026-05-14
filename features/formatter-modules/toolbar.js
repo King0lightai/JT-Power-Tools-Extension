@@ -826,6 +826,28 @@ const FormatterToolbar = (() => {
       }
     }
 
+    // ─── Right-rail clipping (Help / Time / Files / etc. sidebars) ──
+    // JobTread sidebars render as `.absolute.top-0.bottom-0.right-0`
+    // overlays — they paint on top of the page WITHOUT reflowing the
+    // budget table. So a focused Description cell can still sit at
+    // its original X coordinate behind the open sidebar, and our
+    // position:fixed toolbar would otherwise render on top of the
+    // sidebar. Clip the toolbar's right edge to the sidebar's left
+    // edge so it stops cleanly at the rail.
+    let clipRight = 0;
+    const rightRails = document.querySelectorAll('.absolute.top-0.bottom-0.right-0');
+    rightRails.forEach(rail => {
+      const r = rail.getBoundingClientRect();
+      // Skip non-visible / not-right-anchored / too-short candidates so
+      // we don't accidentally clip against an unrelated absolute element.
+      if (r.width === 0 || r.height < window.innerHeight * 0.5) return;
+      if (Math.abs(r.right - window.innerWidth) > 2) return;
+      if (r.left < left + width) {
+        const overlap = (left + width) - r.left;
+        if (overlap > clipRight) clipRight = overlap;
+      }
+    });
+
     // Parse existing top clip value into a combined inset()
     // clip-path: inset(top right bottom left)
     let clipTop = 0;
@@ -837,11 +859,16 @@ const FormatterToolbar = (() => {
       if (m) clipTop = parseFloat(m[1]);
     }
 
-    // Build final clip-path combining top + left clipping
+    // If the right-rail covers the entire toolbar, hide it outright.
+    if (clipRight >= width) {
+      isVisible = false;
+    }
+
+    // Build final clip-path combining top + right + left clipping
     if (clipTop >= toolbarHeight || !isVisible) {
       clipPath = 'inset(100% 0 0 0)';
-    } else if (clipTop > 0 || clipLeft > 0) {
-      clipPath = `inset(${clipTop}px 0 0 ${clipLeft}px)`;
+    } else if (clipTop > 0 || clipLeft > 0 || clipRight > 0) {
+      clipPath = `inset(${clipTop}px ${clipRight}px 0 ${clipLeft}px)`;
     } else {
       clipPath = 'none';
     }

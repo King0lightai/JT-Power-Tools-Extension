@@ -50,11 +50,142 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.1 — Document Sort + Side Panel + Polish Pass -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.1</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">May 13, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Document Sort — Sortable Column Headers on Job &rsaquo; Documents (Free)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Click any column header on the Job &rsaquo; Documents table (Name / Account / Subject / Status / Amount) to sort. Each click cycles asc &rarr; desc &rarr; back to JobTread's original order, so undoing a sort is one click away</li>
+                            <li class="sub-item"><strong>Force-loads every row on first click</strong> — the Documents table lazy-loads as you scroll, which means a naive sort would only reorder rows you've already seen. We auto-scroll the table to the bottom in 100ms ticks until JobTread stops loading new rows, then sort the complete dataset. Your scroll position is saved before the load and restored after, so you land back where you started instead of pinned to the bottom of the page</li>
+                            <li class="sub-item"><strong>Smart parsers per column</strong> — Name and Account sort by the bold primary line; Subject sorts text with empty values pushed to the end; Status uses a sensible enum order (draft &lt; pending &lt; payable &lt; approved &lt; paid) with the document date as a tiebreaker so within "draft" you still get a date-ordered slice; Amount parses the currency string properly (handles negatives like credit memos)</li>
+                            <li class="sub-item">Skips the force-load entirely when the table already fits on screen — short job histories sort instantly with no scroll bounce</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Open the Popup as a Pinned Side Panel</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New sidebar icon in the popup header re-opens the same UI in Chrome's native side panel via <code>chrome.sidePanel</code>. Useful for keeping the Theme builder, Tweaks list, or Quick Notes visible while working in JobTread — the panel stays pinned next to the page instead of dismissing on every blur. Toolbar click still opens the regular popup by default; the side panel is opt-in per click. Hidden on Firefox (no <code>sidePanel</code> API there) and inside the side panel itself (no point in re-opening). Side-panel mode keeps the panel pinned through Refresh-tab and Tweaks &ldquo;Pick an element&rdquo; actions — those used to auto-close the popup, which would collapse the pinned panel</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎨</span> Custom Theme Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Document Body Text No Longer Rendered in the Primary Brand Color</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A stale &ldquo;Logo Colors&rdquo; rule was overriding <code>.text-gray-800</code> (JobTread's everyday body-text class) to your primary brand color across all document views — Bid Revisions, HIAs, Change Orders, contact blocks, date stamps, totals. Removed the rule; body text now renders as your chosen <em>text</em> color, as intended. The dedicated text-color hierarchy further down in the stylesheet was already handling this correctly — it just wasn't winning the specificity fight</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Status Badges Preserve Their Semantic Colors</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The blue &ldquo;Draft&rdquo; / green &ldquo;Approved&rdquo; / yellow &ldquo;Pending&rdquo; status pills on documents used to get repainted to your primary brand color, which erased the at-a-glance semantic cue (blue means draft, green means approved). Status pills are now excluded from theming and keep their canonical JobTread colors; menu-item highlights and other UI accents still pick up your primary</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">JobTread's Brand Navy Inline Color Now Adapts to Dark Themes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread hard-codes <code>style=&quot;color: rgb(25, 34, 82)&quot;</code> (their brand navy) on document section labels — &ldquo;Prepared by&rdquo;, &ldquo;Prepared for&rdquo;, &ldquo;Bid Revision details&rdquo;, &ldquo;Total&rdquo;, the budget table sticky &ldquo;Description&rdquo; header. In a dark Custom Theme (or in Dark Mode), the dark-navy text was rendering on a dark background — nearly invisible. Now overridden to track your themed text color, so these labels stay readable regardless of theme</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Forms Drawer No Longer Flashes on First Paint</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Opening Forms on the first activation after install briefly rendered the drawer as a default-styled <code>&lt;aside&gt;</code> (block-level, full-width) for a frame or two before its stylesheet finished loading and snapped it off-screen. Now hidden inline at construction time and revealed only after the stylesheet has applied — no flash, regardless of network speed or browser</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms Toggle Properly License-Gated</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Forms toggle in the popup used to appear ON even when the user wasn't signed in to the portal (the feature itself wouldn't actually run, but the toggle state was misleading). Now defaults off and auto-disables when there's no portal session, matching every other Power User feature</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forms Drawer Loads on All Browsers Again</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A recent CORS lockdown on the AI / admin endpoints was rejecting requests originating from the JobTread page itself (where the extension's content scripts run) because they carry <code>Origin: https://app.jobtread.com</code> rather than the extension origin. The allowlist now matches <code>*.jobtread.com</code> in addition to the existing extension and portal origins — the Forms drawer loads cleanly across Chrome, Edge, and Firefox</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Org Logo No Longer Reverts to JOBTREAD Wordmark on Resize</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread's top-header is responsive — at wider widths it renders the bird icon plus the JOBTREAD wordmark, at narrower widths only the bird. When you resized your window across that breakpoint, JT remounted the wordmark <code>&lt;svg&gt;</code> and our hide rule didn't re-apply, leaving the wordmark sitting next to your custom org logo until you reloaded the page. Now re-hidden on every layout swap</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Sidebar Button Was Broken After a Refactor</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A leftover variable reference after we promoted side-panel detection to a top-level constant was throwing a <code>ReferenceError</code> when the popup tried to wire up the &ldquo;Open in Sidebar&rdquo; click handler — the button rendered but clicking it did nothing. Reference corrected; sidebar button works again</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security &amp; Auth</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Portal Login Works Again for All Password Formats</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A subtle JavaScript scoping bug in a recent security pass put portal sign-in into a state where the password-verification function would throw before it could compare hashes — manifesting to users as &ldquo;Invalid email or password&rdquo; even when credentials were correct. The bug only affected accounts using the newer PBKDF2 hash format (most active accounts). Fixed; sign-in works as expected</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Extension Popup Auth Endpoints Work Through Captcha</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A Cloudflare Turnstile captcha was recently added to the four portal auth endpoints (login / register / forgot-password / reset-password) to deflect bot traffic. The captcha widget can't render inside a Chrome extension popup, which meant pinned-extension users were getting <code>Missing captcha token</code> errors on every sign-in. The server now recognizes requests coming from the extension origin (via the <code>Origin</code> header, which the browser sets and JavaScript can't spoof) and skips the captcha gate for those — per-IP rate limiting still applies, but captcha is no longer required from inside the extension</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Password-Reset Email Links Now Use URL Fragments</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Reset tokens are now delivered as <code>#token=...</code> fragments instead of <code>?token=...</code> query strings. Fragments never travel over the wire — they don't appear in server access logs, third-party analytics, or the <code>Referer</code> header when the page loads fonts / icons from external CDNs. The token is also stripped from the visible URL via <code>history.replaceState</code> immediately after reading, so it can't be casually copy-pasted out of the address bar after the page loads</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Transactional Emails Restyled to Match the New Portal Design</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Invite emails, system-invite emails, and password-reset emails now render in the portal's light-mode design — cream background, white card with warm border, solid orange CTA pill, Anton heading font with Impact fallback for the &ldquo;POWER TOOLS&rdquo; wordmark. The legacy dark-on-near-black theme that clashed with the redesigned <code>app.jtpowertools.com</code> is gone</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Polish</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">&ldquo;Where do I find a grant key?&rdquo; replaced with the actual path</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Extension Access onboarding band on the portal used to point users at a docs anchor that didn't give them the answer they wanted. Replaced the link with the literal JobTread path: <strong>Settings &rsaquo; Integrations &rsaquo; JobTread API &rsaquo; Create Grant Key</strong>. One less click, no docs detour</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.0 — Per-Job Forms + Custom Theme Sync + MCP Correctness Audit -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.0</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">May 5, 2026</span>
             </div>
 

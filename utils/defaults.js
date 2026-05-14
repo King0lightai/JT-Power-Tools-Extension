@@ -29,6 +29,7 @@ const JTDefaults = (() => {
     pdfMarkupTools: true,
     reverseThreadOrder: false,
     budgetTools: false,
+    documentSort: false,
     inspectForAi: false,    // off by default — most users won't author tweaks
     tweakEngine: true,      // on by default — installed tweaks should "just work"
 
@@ -48,7 +49,7 @@ const JTDefaults = (() => {
     taskTypeFilter: false,
     jobAccessCollapse: false,
     orgLogo: false,
-    forms: true,
+    forms: false,
 
     // Pro Features - Schedule & Calendar
     availabilityFilter: false,

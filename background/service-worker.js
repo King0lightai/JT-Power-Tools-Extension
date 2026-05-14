@@ -19,13 +19,13 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
       dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
-      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, budgetTools: false,
+      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
       pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
       availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
       taskTypeFilter: false,
       jobAccessCollapse: false,
       orgLogo: false,
-      forms: true,
+      forms: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };

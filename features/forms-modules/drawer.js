@@ -116,6 +116,15 @@ const FormsDrawer = (() => {
     drawer.setAttribute('role', 'dialog');
     drawer.setAttribute('aria-label', 'Job Forms');
     drawer.setAttribute('aria-modal', 'false');
+    // Inline visibility:hidden defends against a CSS-not-loaded-yet flash:
+    // mount() runs immediately after injectStylesheet() with only one short
+    // awaited storage read in between, so on a slow first paint the drawer
+    // can render as a default <aside> (block / full width) before
+    // `.jt-forms-drawer { transform: translateX(100%); }` applies. Inline
+    // styles beat un-applied classes, so this stays invisible regardless of
+    // CSS load state — then cleared on the next animation frame after mount
+    // (by which point CSS has applied and the off-screen transform owns it).
+    drawer.style.visibility = 'hidden';
 
     const resizeHandle = document.createElement('div');
     resizeHandle.className = 'jt-forms-resize-handle';
@@ -324,6 +333,17 @@ const FormsDrawer = (() => {
     elements.drawer.style.width = storedWidth + 'px';
 
     document.body.appendChild(elements.drawer);
+
+    // CSS has had a tick to load by now; clear the inline visibility:hidden
+    // set in buildDrawer so the drawer can subsequently be opened. Two
+    // rAFs guarantee at least one style/layout pass before the reveal —
+    // single rAF can race with the same paint frame as the append on some
+    // engines and re-introduce the flash.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (elements.drawer) elements.drawer.style.visibility = '';
+      });
+    });
 
     addListener(elements.close, 'click', handleCloseClick);
     addListener(elements.back, 'click', handleBackClick);

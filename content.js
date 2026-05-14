@@ -106,6 +106,11 @@ const featureModules = {
     feature: () => window.AutoCollapseGroupsFeature,
     instance: null
   },
+  documentSort: {
+    name: 'Document Sort',
+    feature: () => window.DocumentSortFeature,
+    instance: null
+  },
   budgetTools: {
     name: 'Budget Tools',
     feature: () => window.BudgetTools,
@@ -186,7 +191,7 @@ let currentSettings = window.JTDefaults
       dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
-      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, budgetTools: false,
+      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
       pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
       budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
       jobAccessCollapse: false, orgLogo: false,

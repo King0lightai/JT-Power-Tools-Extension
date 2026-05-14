@@ -45,7 +45,8 @@ const LicenseService = (() => {
     'autoCollapseGroups', // Simple - collapse 100% complete groups
     'ganttLines',       // Simple visual enhancement for Gantt chart
     'jobAccessCollapse', // Simple UI collapse helper
-    'budgetTools'       // Auto Sum — simple totals helper
+    'budgetTools',      // Auto Sum — simple totals helper
+    'documentSort'      // Sortable column headers on Job > Documents table
   ];
 
   // ESSENTIAL tier features ($10) - "I want more"

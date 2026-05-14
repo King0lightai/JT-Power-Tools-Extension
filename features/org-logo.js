@@ -62,6 +62,13 @@ const OrgLogoFeature = (() => {
         existingImg &&
         existingImg.src === appliedFor.logoUrl
       ) {
+        // Re-hide any SVGs that may have been remounted by JT (e.g. on
+        // viewport resize, JT swaps between the bird icon and the
+        // bird+wordmark variants — the new SVG comes in without our
+        // inline display:none, which makes the JOBTREAD wordmark briefly
+        // visible next to the custom org logo). Idempotent — safe to run
+        // even when nothing's changed.
+        ensureSvgsHidden(switcher);
         consecutiveRetries = 0;
         return;
       }
@@ -127,6 +134,9 @@ const OrgLogoFeature = (() => {
         appliedFor.logoUrl === logoUrl &&
         switcher.querySelector('.jt-org-logo')
       ) {
+        // Re-hide any SVGs JT may have remounted since last apply.
+        // Same defense-in-depth as the fast path above.
+        ensureSvgsHidden(switcher);
         return;
       }
 
@@ -231,6 +241,26 @@ const OrgLogoFeature = (() => {
   function removeLogo(container) {
     const img = (container || document).querySelector('.jt-org-logo');
     if (img) img.remove();
+  }
+
+  /**
+   * Make sure every SVG in the switcher (JT's bird icon, JOBTREAD
+   * wordmark, dropdown chevron, etc.) has inline display:none — even ones
+   * JT remounted after our initial pass. JT swaps between bird-only and
+   * bird+wordmark layouts at certain viewport widths, and the freshly-
+   * remounted wordmark comes in without our display:none, so a brief
+   * resize can leave it visible next to the custom org logo. Idempotent;
+   * called from both early-return paths in applyLogo so the observer
+   * tick after any DOM resize re-pins the new SVGs.
+   */
+  function ensureSvgsHidden(switcher) {
+    if (!switcher) return;
+    const svgs = switcher.querySelectorAll('svg');
+    svgs.forEach(svg => {
+      if (svg.style.display !== 'none') {
+        svg.style.display = 'none';
+      }
+    });
   }
 
   function cleanup() {

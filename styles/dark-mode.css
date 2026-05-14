@@ -27,6 +27,20 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
     color: #ffffff !important;
 }
 
+/* === JT brand navy inline-color override === */
+/* JobTread hard-codes inline `style="color: rgb(25, 34, 82)"` (their brand
+   navy #192252) on document headers (Bid Revision "Prepared by",
+   "Prepared for", "Bid Revision details", "Total"), the budget table
+   sticky column-header row, and other label elements. The inline color
+   beats `.text-gray-800 { color: #fff }` above (specificity), so the
+   navy text stays dark and renders nearly-invisibly on the themed dark
+   `bg-white` (#2c2c2c). Override the inline navy to the standard dark
+   mode primary text color. */
+[style*="color: rgb(25, 34, 82)"],
+[style*="color:rgb(25, 34, 82)"] {
+    color: #e0e0e0 !important;
+}
+
 /* === Schedule Card Overrides (Inline Styles) === */
 /* Dark overlay on task cards to darken bright backgrounds */
 /* Covers month view (td), week/day view (div.select-none), and direct cards (border-l-2) */

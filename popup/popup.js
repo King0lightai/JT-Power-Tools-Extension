@@ -1,6 +1,16 @@
+// True when this popup.html instance is loaded inside Chrome's side panel
+// rather than the toolbar popup. The side-panel default_path includes
+// `?context=sidepanel` (see manifest.json side_panel.default_path), and the
+// Open-in-Sidebar button preserves that param. Side-panel mode behaves
+// like a persistent panel — closing it requires the user, so calls that
+// would auto-close the popup (e.g. `window.close()` after refreshing the
+// JobTread tab) must no-op here, otherwise the user's pinned sidebar
+// disappears every time they touch the refresh icon.
+const IS_IN_SIDE_PANEL = new URLSearchParams(window.location.search).get('context') === 'sidepanel';
+
 // All feature toggle IDs (used by master toggle)
 const FEATURE_TOGGLE_IDS = [
-  'kanbanTypeFilter', 'autoCollapseGroups', 'ganttLines', 'dragDrop',
+  'kanbanTypeFilter', 'autoCollapseGroups', 'documentSort', 'ganttLines', 'dragDrop',
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
@@ -643,6 +653,7 @@ async function loadSettings() {
     setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
     setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
     setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
+    setCheckbox('documentSort', settings.documentSort !== undefined ? settings.documentSort : false);
     setCheckbox('budgetTools', settings.budgetTools !== undefined ? settings.budgetTools : false);
     setCheckbox('ganttLines', settings.ganttLines !== undefined ? settings.ganttLines : true);
     setCheckbox('jobAccessCollapse', settings.jobAccessCollapse !== undefined ? settings.jobAccessCollapse : false);
@@ -691,7 +702,7 @@ async function loadSettings() {
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
-    setCheckbox('forms', settings.forms !== undefined ? settings.forms : true);
+    setCheckbox('forms', settings.forms !== undefined ? settings.forms : false);
 
     // Reconcile storage with current access: if a feature is stored as true
     // but can't actually run given the current tier or portal session state,
@@ -723,6 +734,7 @@ async function loadSettings() {
       if (settings.customFieldFilter) featuresToDisable.push('customFieldFilter');
       if (settings.budgetChangelog) featuresToDisable.push('budgetChangelog');
       if (settings.taskTypeFilter) featuresToDisable.push('taskTypeFilter');
+      if (settings.forms) featuresToDisable.push('forms');
     }
 
     if (featuresToDisable.length > 0) {
@@ -922,6 +934,7 @@ async function getCurrentSettings() {
     characterCounter: getCheckboxValue('characterCounter', defaultSettings.characterCounter),
     kanbanTypeFilter: getCheckboxValue('kanbanTypeFilter', defaultSettings.kanbanTypeFilter),
     autoCollapseGroups: getCheckboxValue('autoCollapseGroups', defaultSettings.autoCollapseGroups),
+    documentSort: getCheckboxValue('documentSort', defaultSettings.documentSort),
     budgetTools: getCheckboxValue('budgetTools', defaultSettings.budgetTools),
     ganttLines: getCheckboxValue('ganttLines', defaultSettings.ganttLines),
     availabilityFilter: getCheckboxValue('availabilityFilter', false),
@@ -934,7 +947,7 @@ async function getCurrentSettings() {
     orgLogo: true,
     tweakEngine: getCheckboxValue('tweakEngine', defaultSettings.tweakEngine !== undefined ? defaultSettings.tweakEngine : true),
     inspectForAi: getCheckboxValue('inspectForAi', defaultSettings.inspectForAi !== undefined ? defaultSettings.inspectForAi : false),
-    forms: getCheckboxValue('forms', defaultSettings.forms !== undefined ? defaultSettings.forms : true),
+    forms: getCheckboxValue('forms', defaultSettings.forms !== undefined ? defaultSettings.forms : false),
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes
@@ -1070,10 +1083,15 @@ async function refreshCurrentTab() {
     await chrome.tabs.reload(tab.id);
     showStatus('Tab refreshed!', 'success');
 
-    // Close popup after short delay
-    setTimeout(() => {
-      window.close();
-    }, 1000);
+    // Auto-close the popup after the toast so the user lands on the
+    // freshly-reloaded JobTread tab. Skip this in side-panel mode —
+    // window.close() collapses the entire pinned sidebar, defeating the
+    // whole point of pinning.
+    if (!IS_IN_SIDE_PANEL) {
+      setTimeout(() => {
+        window.close();
+      }, 1000);
+    }
   } catch (error) {
     console.error('Error refreshing tab:', error);
     showStatus('Error refreshing tab', 'error');
@@ -1668,8 +1686,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
 
   const urlParams = new URLSearchParams(window.location.search);
-  const isInSidePanel = urlParams.get('context') === 'sidepanel';
-  if (isInSidePanel) {
+  if (IS_IN_SIDE_PANEL) {
     document.body.classList.add('in-sidepanel');
   }
 
@@ -1898,7 +1915,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // preserve the user-gesture activation required by chrome.sidePanel.open().
   const openInSidebarBtn = document.getElementById('openInSidebarBtn');
   if (openInSidebarBtn) {
-    if (isInSidePanel || !chrome.sidePanel || typeof chrome.sidePanel.open !== 'function') {
+    if (IS_IN_SIDE_PANEL || !chrome.sidePanel || typeof chrome.sidePanel.open !== 'function') {
       openInSidebarBtn.style.display = 'none';
     } else {
       chrome.windows.getCurrent().then(win => {
@@ -4062,7 +4079,10 @@ function showAccountError(formType, message) {
       try {
         await chrome.tabs.update(tab.id, { active: true });
         await chrome.tabs.sendMessage(tab.id, { type: messageType });
-        window.close();
+        // Close the popup so the user lands on JT for picking — except
+        // in side-panel mode, where closing would collapse the pinned
+        // sidebar (the picker runs on the page itself either way).
+        if (!IS_IN_SIDE_PANEL) window.close();
       } catch (err) {
         btn.textContent = 'JT tab not ready — reload it';
         setTimeout(() => { btn.textContent = originalLabel; }, 2200);
@@ -4087,7 +4107,7 @@ function showAccountError(formType, message) {
         try {
           await chrome.tabs.update(tab.id, { active: true });
           await chrome.tabs.sendMessage(tab.id, { type: 'INSPECT_START_MULTI_PICKER' });
-          window.close();
+          if (!IS_IN_SIDE_PANEL) window.close();
         } catch (err) {
           $pickMultiBtn.textContent = 'JT tab not ready — reload it';
           setTimeout(() => { $pickMultiBtn.innerHTML = originalMultiHTML; }, 2200);

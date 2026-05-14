@@ -274,11 +274,6 @@ const CustomThemeFeature = (() => {
         scrollbar-color: ${p.scrollbar.thumb} ${p.scrollbar.track};
       }
 
-      /* === Logo Colors === */
-      .text-gray-800 {
-        color: ${p.primary.base} !important;
-      }
-
       /* === Task Cards === */
       /* Overlay on task cards to blend with theme while preserving selection state */
       /* Covers all schedule task cards: month, week/day, availability, and task type filter row */
@@ -765,23 +760,44 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Primary colors on non-button elements (menu items, etc.) === */
-      /* Exclude elements with inline background-color (task type colors on schedule) */
-      .bg-blue-500:not(button):not([style*="background-color"]),
-      .bg-blue-600:not(button):not([style*="background-color"]) {
+      /* Exclude:
+         - elements with inline background-color (task type colors on schedule)
+         - .uppercase elements (status badges: Draft / Pending / Approved /
+           Denied, etc. use bg-blue-500 + font-bold + uppercase + text-white.
+           Recoloring those to the user's primary brand color erased the
+           semantic blue-means-draft signal and confused users.)
+       */
+      .bg-blue-500:not(button):not([style*="background-color"]):not(.uppercase),
+      .bg-blue-600:not(button):not([style*="background-color"]):not(.uppercase) {
         background-color: ${p.primary.base} !important;
       }
 
-      /* Preserve text-white on blue backgrounds */
-      .bg-blue-500.text-white:not([style*="background-color"]),
-      .bg-blue-600.text-white:not([style*="background-color"]) {
+      /* Preserve text-white on blue backgrounds (status badges excluded
+         since their bg stays blue, so default text-white styling is fine) */
+      .bg-blue-500.text-white:not([style*="background-color"]):not(.uppercase),
+      .bg-blue-600.text-white:not([style*="background-color"]):not(.uppercase) {
         color: ${primaryText} !important;
       }
 
       /* Hover states for non-button elements */
-      .hover\\:bg-blue-500:hover:not(button):not([style*="background-color"]),
-      .hover\\:bg-blue-600:hover:not(button):not([style*="background-color"]),
-      .hover\\:bg-blue-700:hover:not(button):not([style*="background-color"]) {
+      .hover\\:bg-blue-500:hover:not(button):not([style*="background-color"]):not(.uppercase),
+      .hover\\:bg-blue-600:hover:not(button):not([style*="background-color"]):not(.uppercase),
+      .hover\\:bg-blue-700:hover:not(button):not([style*="background-color"]):not(.uppercase) {
         background-color: ${p.primary.base} !important;
+      }
+
+      /* === JT brand navy inline-color override === */
+      /* JobTread hard-codes inline style="color: rgb(25, 34, 82)" (their
+         brand navy #192252) on document headers ("Prepared by", "Prepared
+         for", "Bid Revision details", "Total"), the budget table sticky
+         column-header row, and other label elements. The inline style
+         beats Tailwind's color classes — so in dark themes (themed
+         background = p.background.base, themed text = light) the navy
+         text stays dark and renders dark-on-dark, unreadable. Re-route
+         the navy to the themed text color so it contrasts correctly. */
+      [style*="color: rgb(25, 34, 82)"],
+      [style*="color:rgb(25, 34, 82)"] {
+        color: ${p.text.primary} !important;
       }
 
       .hover\\:text-white:hover {
