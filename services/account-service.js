@@ -429,72 +429,122 @@ const AccountService = (() => {
    * @param {Array} localNotes - Local notes array from QuickNotesStorage
    * @returns {Promise<{success: boolean, notes?: Array, stats?: Object, error?: string}>}
    */
+  /**
+   * Bidirectional notes sync — bridged onto /sync/notebooks/* (Migration 022).
+   *
+   * The legacy /sync/notes endpoint pushed every local note + every
+   * deleted id in a single payload and received the merged set back.
+   * The notebook hierarchy uses per-page CRUD instead, so this function
+   * fans the old shape into per-page calls:
+   *
+   *   1. Fetch the personal notebook tree (auto-imports legacy on first call).
+   *   2. Apply local deletions via /sync/pages/delete.
+   *   3. Apply local upserts (notes newer than server, or never seen) via
+   *      /sync/pages/upsert. Sections are materialized on the fly.
+   *   4. Re-read the tree and return the merged flat-note list.
+   *
+   * Wire contract preserved: callers still get `{ success, notes, stats }`
+   * back with flat `{id, title, content, folder, isPinned, createdAt,
+   * updatedAt}` rows.
+   */
   async function syncNotes(localNotes = []) {
     if (!isLoggedIn()) {
       return { success: false, error: 'Not logged in' };
     }
 
     try {
-      // Get last sync timestamp
       const stored = await chrome.storage.local.get([STORAGE_KEYS.NOTES_SYNC_TIMESTAMP]);
-      const lastSyncTimestamp = stored[STORAGE_KEYS.NOTES_SYNC_TIMESTAMP] || null;
+      const lastSyncTimestamp = stored[STORAGE_KEYS.NOTES_SYNC_TIMESTAMP] || 0;
 
-      // Get deleted note IDs to sync
       let deletedNoteIds = [];
       if (window.QuickNotesStorage && window.QuickNotesStorage.getDeletedNoteIds) {
         deletedNoteIds = await window.QuickNotesStorage.getDeletedNoteIds();
       }
 
-      log('Syncing notes...', {
+      log('Syncing notes (notebook-bridged)...', {
         localNotesCount: localNotes.length,
         deletedCount: deletedNoteIds.length,
-        lastSyncTimestamp
+        lastSyncTimestamp,
       });
 
-      // Make authenticated request to sync endpoint
-      const response = await authenticatedFetch('/sync/notes', {
-        method: 'POST',
-        body: JSON.stringify({
-          lastSyncTimestamp,
-          notes: localNotes.map(note => ({
-            id: note.id,
-            title: note.title,
-            content: note.content,
-            folder: note.folder || 'General',
-            isPinned: note.isPinned || false,
-            createdAt: note.createdAt,
-            updatedAt: note.updatedAt
-          })),
-          deletedNoteIds: deletedNoteIds
-        })
-      });
+      // 1. Tree fetch (this triggers the server-side legacy importer on
+      //    the very first call after upgrade).
+      const tree = await fetchNotebookTree('personal');
+      const sectionNameById = new Map(tree.defaultSections.map(s => [s.id, s.name]));
+      const serverPageMetaById = new Map(tree.defaultPages.map(p => [p.id, p]));
 
-      const result = await response.json();
+      let uploaded = 0;
+      let deleted = 0;
 
-      if (result.success) {
-        // Save new sync timestamp
-        await chrome.storage.local.set({
-          [STORAGE_KEYS.NOTES_SYNC_TIMESTAMP]: result.data.syncTimestamp
-        });
-
-        // Clear deleted note IDs after successful sync
-        if (deletedNoteIds.length > 0 && window.QuickNotesStorage && window.QuickNotesStorage.clearDeletedNotes) {
-          await window.QuickNotesStorage.clearDeletedNotes();
+      // 2. Apply local deletions. Best-effort — if the server returns
+      //    "Page not found" the row was never imported; treat as success.
+      for (const id of deletedNoteIds) {
+        try {
+          const resp = await authenticatedFetch('/sync/pages/delete', {
+            method: 'POST',
+            body: JSON.stringify({ scope: 'personal', id }),
+          });
+          const result = await resp.json();
+          if (result.success) deleted++;
+        } catch (err) {
+          logError('Skip delete (network)', { id, error: err?.message });
         }
-
-        log('Notes synced successfully', result.data.stats);
-        return {
-          success: true,
-          notes: result.data.notes,
-          stats: result.data.stats
-        };
-      } else {
-        logError('Sync failed', result.error);
-        return { success: false, error: result.error };
       }
+
+      // 3. Apply local upserts. Push notes that are newer than the
+      //    server copy (or absent from it). New notes — those without
+      //    a server-side counterpart — always push.
+      for (const note of localNotes) {
+        const serverCopy = note.id ? serverPageMetaById.get(note.id) : null;
+        const isNewOrChanged = !serverCopy ||
+          (note.updatedAt || 0) > (serverCopy.updatedAt || 0);
+        if (!isNewOrChanged) continue;
+
+        try {
+          const { sectionId } = await ensureSectionForFolder('personal', note.folder);
+          const resp = await authenticatedFetch('/sync/pages/upsert', {
+            method: 'POST',
+            body: JSON.stringify({
+              scope: 'personal',
+              id: note.id || undefined,
+              sectionId,
+              title: note.title || 'Untitled',
+              content: note.content || '',
+              isPinned: !!note.isPinned,
+            }),
+          });
+          const result = await resp.json();
+          if (result.success) uploaded++;
+        } catch (err) {
+          logError('Skip upsert (network)', { id: note.id, error: err?.message });
+        }
+      }
+
+      // 4. Re-fetch the tree to get the canonical post-merge view —
+      //    `withContent: true` brings page bodies along in one request
+      //    so callers get content alongside metadata, matching the old
+      //    /sync/notes single-call shape.
+      const merged = await fetchNotebookTree('personal', { withContent: true });
+      const mergedSectionNameById = new Map(merged.defaultSections.map(s => [s.id, s.name]));
+      const mergedNotes = merged.defaultPages.map(p =>
+        pageToFlatNote(p, mergedSectionNameById.get(p.sectionId) || 'General')
+      );
+
+      const syncTimestamp = merged.serverTimestamp || Math.floor(Date.now() / 1000);
+      await chrome.storage.local.set({ [STORAGE_KEYS.NOTES_SYNC_TIMESTAMP]: syncTimestamp });
+
+      if (deletedNoteIds.length > 0 && window.QuickNotesStorage?.clearDeletedNotes) {
+        await window.QuickNotesStorage.clearDeletedNotes();
+      }
+
+      const downloaded = mergedNotes.filter(n => (n.updatedAt || 0) > lastSyncTimestamp).length;
+      const stats = { uploaded, downloaded, deleted };
+      log('Notes synced successfully', stats);
+
+      return { success: true, notes: mergedNotes, stats };
     } catch (error) {
       logError('Sync error', error);
-      return { success: false, error: 'Network error during sync' };
+      return { success: false, error: error?.message || 'Network error during sync' };
     }
   }
 
@@ -611,11 +661,144 @@ const AccountService = (() => {
   }
 
   // ==========================================================================
+  // NOTES BRIDGE — flat shape ↔ notebook hierarchy
+  // ==========================================================================
+  //
+  // Migration 022 moved both personal and team notes to a hierarchical
+  // notebook → section → page model. The Quick Notes UI is still flat
+  // (folder + note). This bridge keeps the wire shape Quick Notes
+  // already speaks (`{id, title, content, folder, isPinned, createdAt,
+  // updatedAt}`) by translating to/from `/sync/notebooks/*` endpoints
+  // on the way in and out. Quick Notes consumers are unchanged.
+  //
+  // Identity: page.id maps 1:1 to note.id (the server-side importer
+  // preserved ids when promoting legacy rows). `folder` is materialized
+  // from the page's section name.
+  //
+  // Default notebook: one per (scope, owner). Picked as "first notebook,
+  // ordered by sort_order then created_at" — same order the importer
+  // creates it, so users see the notebook the importer made.
+
+  // In-flight cache of section-id-by-name, per scope. Refreshed every
+  // time we fetch the tree so we don't fan out section lookups when a
+  // user types a folder name we already know about.
+  const _notesCache = {
+    personal: { notebookId: null, sectionIdByName: new Map(), serverTimestamp: 0 },
+    team: { notebookId: null, sectionIdByName: new Map(), serverTimestamp: 0 },
+  };
+
+  async function fetchNotebookTree(scope, { withContent = false } = {}) {
+    const response = await authenticatedFetch('/sync/notebooks/tree', {
+      method: 'POST',
+      body: JSON.stringify({ scope, withContent }),
+    });
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to load notebooks');
+    }
+    const notebooks = result.data.notebooks || [];
+    const sections = result.data.sections || [];
+    const pages = result.data.pages || [];
+
+    // Pick the default notebook (first, by server's sort order). If the
+    // user has multiple notebooks (they created some in the portal), we
+    // still flatten everything into a single Quick Notes view — keyed
+    // off the first notebook only — to keep the flat UI usable. A
+    // follow-up PR will surface a notebook switcher.
+    const defaultNotebook = notebooks[0] || null;
+    const cache = _notesCache[scope];
+    cache.notebookId = defaultNotebook?.id || null;
+    cache.sectionIdByName = new Map();
+    cache.serverTimestamp = result.data.serverTimestamp || 0;
+
+    if (!defaultNotebook) {
+      return { notebooks, sections, pages, defaultNotebook: null, defaultSections: [], defaultPages: [] };
+    }
+
+    const defaultSections = sections.filter(s => s.notebookId === defaultNotebook.id);
+    for (const s of defaultSections) cache.sectionIdByName.set(s.name, s.id);
+    const sectionIds = new Set(defaultSections.map(s => s.id));
+    const defaultPages = pages.filter(p => sectionIds.has(p.sectionId));
+
+    return { notebooks, sections, pages, defaultNotebook, defaultSections, defaultPages };
+  }
+
+  function pageToFlatNote(page, sectionName) {
+    return {
+      id: page.id,
+      title: page.title,
+      // `content` only travels in the per-page response from /pages/get;
+      // tree responses omit it for payload size. Caller stitches in
+      // content via fetchPageContent when needed.
+      content: page.content ?? '',
+      folder: sectionName || 'General',
+      isPinned: !!page.isPinned,
+      createdAt: page.createdAt || page.created_at || null,
+      updatedAt: page.updatedAt || page.updated_at || null,
+    };
+  }
+
+  async function fetchPageContent(scope, pageId) {
+    const response = await authenticatedFetch('/sync/pages/get', {
+      method: 'POST',
+      body: JSON.stringify({ scope, id: pageId }),
+    });
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch page');
+    }
+    return result.data;
+  }
+
+  // Materialize a section for `folderName` in `scope`. Returns the
+  // section id, creating one (and the default notebook, if missing)
+  // on the fly. Cached in _notesCache so a hot loop of saves doesn't
+  // re-hit the server for the same folder.
+  async function ensureSectionForFolder(scope, folderName) {
+    const folder = (folderName || 'General').trim() || 'General';
+    const cache = _notesCache[scope];
+
+    if (cache.sectionIdByName.has(folder)) {
+      return { notebookId: cache.notebookId, sectionId: cache.sectionIdByName.get(folder) };
+    }
+
+    if (!cache.notebookId) {
+      // No notebook yet — create the default one. Picks the same name
+      // the server-side importer uses so the experience is consistent
+      // whether the user came in via the importer or via a fresh
+      // install with no legacy data.
+      const name = scope === 'team' ? 'Team' : 'Quick Notes';
+      const nbResp = await authenticatedFetch('/sync/notebooks/upsert', {
+        method: 'POST',
+        body: JSON.stringify({ scope, name, icon: 'notebook' }),
+      });
+      const nbResult = await nbResp.json();
+      if (!nbResult.success) throw new Error(nbResult.error || 'Failed to create notebook');
+      cache.notebookId = nbResult.data.id;
+    }
+
+    const secResp = await authenticatedFetch('/sync/sections/upsert', {
+      method: 'POST',
+      body: JSON.stringify({ scope, notebookId: cache.notebookId, name: folder }),
+    });
+    const secResult = await secResp.json();
+    if (!secResult.success) throw new Error(secResult.error || 'Failed to create section');
+    cache.sectionIdByName.set(folder, secResult.data.id);
+    return { notebookId: cache.notebookId, sectionId: secResult.data.id };
+  }
+
+  // ==========================================================================
   // TEAM NOTES (Shared across organization)
   // ==========================================================================
 
   /**
-   * Get all team notes for the organization
+   * Get all team notes for the organization.
+   *
+   * Migration 022 routes this through /sync/notebooks/tree under the hood —
+   * see the "NOTES BRIDGE" section above for the translation rules. Wire
+   * shape (`notes: [{id, title, content, folder, isPinned, ...}]`) preserved
+   * for Quick Notes consumers.
+   *
    * @returns {Promise<Object>} - Result with notes array
    */
   async function getTeamNotes() {
@@ -625,43 +808,37 @@ const AccountService = (() => {
 
     try {
       log('Fetching team notes...');
-
-      const response = await authenticatedFetch('/sync/team-notes', {
-        method: 'POST',
-        body: JSON.stringify({})
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        log('Team notes fetched', {
-          count: result.data.notes?.length || 0
-        });
-        return {
-          success: true,
-          notes: result.data.notes || [],
-          serverTimestamp: result.data.serverTimestamp
-        };
-      } else {
-        logError('Failed to fetch team notes', result.error);
-        return { success: false, error: result.error };
+      const tree = await fetchNotebookTree('team', { withContent: true });
+      if (!tree.defaultNotebook) {
+        return { success: true, notes: [], serverTimestamp: tree.serverTimestamp || Math.floor(Date.now() / 1000) };
       }
+
+      const sectionNameById = new Map(tree.defaultSections.map(s => [s.id, s.name]));
+      const notes = tree.defaultPages.map(p =>
+        pageToFlatNote(p, sectionNameById.get(p.sectionId) || 'General')
+      );
+
+      log('Team notes fetched', { count: notes.length });
+      return { success: true, notes, serverTimestamp: tree.serverTimestamp || Math.floor(Date.now() / 1000) };
     } catch (error) {
       logError('Team notes fetch error', error);
-      return { success: false, error: 'Network error. Please try again.' };
+      return { success: false, error: error?.message || 'Network error. Please try again.' };
     }
   }
 
   /**
-   * Save (create or update) a team note
+   * Save (create or update) a team note.
+   *
+   * Bridged onto /sync/notebooks (Migration 022). `folder` is materialized
+   * as a section under the default Team notebook — created on first use.
+   *
    * @param {Object} note - Note object { id?, title, content, folder?, isPinned? }
-   * @returns {Promise<Object>} - Result with saved note data
+   * @returns {Promise<Object>} - Result with saved note data (flat shape)
    */
   async function saveTeamNote(note) {
     if (!isLoggedIn()) {
       return { success: false, error: 'Not logged in' };
     }
-
     if (!note.title && !note.content) {
       return { success: false, error: 'Title or content is required' };
     }
@@ -669,37 +846,56 @@ const AccountService = (() => {
     try {
       log('Saving team note...', { id: note.id || 'new', folder: note.folder });
 
-      const response = await authenticatedFetch('/sync/team-notes/push', {
+      // Make sure the bridge cache is warm before we ask for a section —
+      // first save after a login may hit this path before any tree fetch.
+      if (!_notesCache.team.notebookId && _notesCache.team.sectionIdByName.size === 0) {
+        try { await fetchNotebookTree('team'); } catch { /* falls through; ensureSectionForFolder will create */ }
+      }
+
+      const { sectionId } = await ensureSectionForFolder('team', note.folder);
+
+      const response = await authenticatedFetch('/sync/pages/upsert', {
         method: 'POST',
         body: JSON.stringify({
-          id: note.id || null,
+          scope: 'team',
+          id: note.id || undefined,
+          sectionId,
           title: note.title || 'Untitled Note',
           content: note.content || '',
-          folder: note.folder || 'General',
-          isPinned: note.isPinned || false
-        })
+          isPinned: !!note.isPinned,
+        }),
       });
-
       const result = await response.json();
 
       if (result.success) {
         log('Team note saved', result.data);
+        // Re-shape response into the flat note contract callers expect.
         return {
           success: true,
-          data: result.data
+          data: {
+            id: result.data.id,
+            title: result.data.title,
+            content: result.data.content,
+            folder: note.folder || 'General',
+            isPinned: !!result.data.isPinned,
+            createdAt: result.data.createdAt,
+            updatedAt: result.data.updatedAt,
+          },
         };
-      } else {
-        logError('Failed to save team note', result.error);
-        return { success: false, error: result.error };
       }
+      logError('Failed to save team note', result.error);
+      return { success: false, error: result.error };
     } catch (error) {
       logError('Team note save error', error);
-      return { success: false, error: 'Network error. Please try again.' };
+      return { success: false, error: error?.message || 'Network error. Please try again.' };
     }
   }
 
   /**
-   * Delete a team note
+   * Delete a team note (soft delete on the server).
+   *
+   * Bridged onto /sync/pages/delete (Migration 022).
+   *
    * @param {string} noteId - ID of the note to delete
    * @returns {Promise<Object>} - Result with success/error
    */
@@ -707,7 +903,6 @@ const AccountService = (() => {
     if (!isLoggedIn()) {
       return { success: false, error: 'Not logged in' };
     }
-
     if (!noteId) {
       return { success: false, error: 'Note ID is required' };
     }
@@ -715,23 +910,21 @@ const AccountService = (() => {
     try {
       log('Deleting team note...', { id: noteId });
 
-      const response = await authenticatedFetch('/sync/team-notes/delete', {
+      const response = await authenticatedFetch('/sync/pages/delete', {
         method: 'POST',
-        body: JSON.stringify({ id: noteId })
+        body: JSON.stringify({ scope: 'team', id: noteId }),
       });
-
       const result = await response.json();
 
       if (result.success) {
         log('Team note deleted');
         return { success: true };
-      } else {
-        logError('Failed to delete team note', result.error);
-        return { success: false, error: result.error };
       }
+      logError('Failed to delete team note', result.error);
+      return { success: false, error: result.error };
     } catch (error) {
       logError('Team note delete error', error);
-      return { success: false, error: 'Network error. Please try again.' };
+      return { success: false, error: error?.message || 'Network error. Please try again.' };
     }
   }
 
