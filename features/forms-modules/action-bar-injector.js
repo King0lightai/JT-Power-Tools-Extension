@@ -103,14 +103,16 @@ const FormsActionBarInjector = (() => {
   }
 
   /**
-   * Find the open Popper-positioned overflow dropdown menu, if any. The
-   * popover is identified by the class signature
+   * Find the open Popper-positioned job-action overflow dropdown menu, if
+   * any. Identified by the wrapper class signature
    *   "z-50 overflow-auto overscroll-contain bg-white rounded-sm shadow-sm"
-   * combined with a `data-popper-placement` attribute, plus the presence
-   * of at least one menu-item-shaped child (a div[role="button"] or <a>
-   * that uses the JT menu-item Tailwind classes "block w-full"). The
-   * shape filter avoids false positives from any other Popper-positioned
-   * popover that happens to share the wrapper classes.
+   * plus a `data-popper-placement` attribute, AND at least one menu-item
+   * child styled with JT's action-menu hover class `hover:bg-blue-500`.
+   * That hover class is the distinguishing signal: other JT popovers
+   * (Add Cost Item's "From Budget / From Bills & Time", etc.) share the
+   * wrapper classes and use `block w-full` items too, but style hover with
+   * `hover:bg-gray-50`. Requiring `hover:bg-blue-500` keeps us locked to
+   * the action-menu shape and avoids false positives.
    *
    * @returns {Element|null}
    */
@@ -119,9 +121,9 @@ const FormsActionBarInjector = (() => {
       '[data-popper-placement][class*="overflow-auto"][class*="bg-white"][class*="rounded-sm"][class*="shadow-sm"]'
     );
     for (const el of candidates) {
-      const looksLikeMenu = el.querySelector('[role="button"][class*="block"][class*="w-full"]')
-                         || el.querySelector('a[class*="block"][class*="w-full"]');
-      if (looksLikeMenu) return el;
+      const looksLikeActionMenu = el.querySelector('[role="button"][class*="block"][class*="w-full"][class*="hover:bg-blue-500"]')
+                               || el.querySelector('a[class*="block"][class*="w-full"][class*="hover:bg-blue-500"]');
+      if (looksLikeActionMenu) return el;
     }
     return null;
   }

@@ -488,8 +488,11 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Selection Highlighting === */
-      .bg-blue-50,
-      .bg-blue-100 {
+      /* :not(.border-l-4) excludes JT text-alert containers — those keep
+         their Tailwind defaults so the alert visual (info / warning / etc.)
+         is never overpainted by the theme's selection wash. */
+      .bg-blue-50:not(.border-l-4),
+      .bg-blue-100:not(.border-l-4) {
         background-color: ${p.primary.selection} !important;
       }
 
@@ -518,31 +521,40 @@ const CustomThemeFeature = (() => {
         background-color: ${p.primary.selection} !important;
       }
 
-      /* === Alert Colors (Theme-Harmonized) === */
-      .bg-green-50 { background-color: ${p.alerts.green.bg} !important; }
-      .bg-yellow-50 { background-color: ${p.alerts.yellow.bg} !important; }
-      .bg-red-50 { background-color: ${p.alerts.red.bg} !important; }
-      .bg-orange-50 { background-color: ${p.alerts.orange.bg} !important; }
-      .bg-purple-50 { background-color: ${p.alerts.purple.bg} !important; }
-
-      /* v4.8.3 — unscoped .text-{color}-500 / .border-{color}-500 rules removed.
-         JT uses these classes for standalone status indicators (e.g. yellow "pending",
-         green "submitted", red "rejected") that should keep their vivid defaults
-         regardless of theme. The SCOPED rules at .bg-{color}-50 .text-{color}-500
-         remain unchanged — alert text inside alert pills still harmonizes with the
-         OKLCH theme. */
-
-      /* Alert body text */
-      .bg-green-50, .bg-yellow-50, .bg-red-50, .bg-orange-50, .bg-purple-50 {
-        color: ${p.alerts.bodyText};
+      /* === Alerts === */
+      /* JT text-alert containers (.border-l-4 + .bg-{color}-50) are
+         intentionally NOT theme-harmonized — they keep their Tailwind
+         defaults (light pastel bg + vivid colored text/border) so the
+         visual semantic (info / warning / error / success) reads
+         unambiguously regardless of the user's primary brand color.
+         Standalone .text-{color}-500 / .border-{color}-500 indicators
+         (status badges like "pending" / "submitted" / "rejected") also
+         keep their vivid defaults — already left untouched at the
+         unscoped-rules layer. The only override we DO need: pin the
+         alert body text to a dark color so it stays readable on the
+         pastel bg, since the theme's body-color rule (light grey on
+         dark themes) would otherwise inherit through. Header text
+         keeps its .text-{color}-500 class so it wins over inheritance
+         and stays vivid. */
+      .border-l-4.bg-blue-50,
+      .border-l-4.bg-green-50,
+      .border-l-4.bg-yellow-50,
+      .border-l-4.bg-red-50,
+      .border-l-4.bg-orange-50,
+      .border-l-4.bg-purple-50 {
+        color: #1f2937 !important; /* Tailwind gray-800 — readable on every pastel-50 bg */
       }
 
-      /* Keep header colored */
-      .bg-green-50 .text-green-500 { color: ${p.alerts.green.text} !important; }
-      .bg-yellow-50 .text-yellow-500 { color: ${p.alerts.yellow.text} !important; }
-      .bg-red-50 .text-red-500 { color: ${p.alerts.red.text} !important; }
-      .bg-orange-50 .text-orange-500 { color: ${p.alerts.orange.text} !important; }
-      .bg-purple-50 .text-purple-500 { color: ${p.alerts.purple.text} !important; }
+      /* Alert left-border accent — pin Tailwind's vivid color on the
+         accent stripe with high specificity (0,3,0) + !important so
+         theme cascade can never grey it out. Same hex values JT renders
+         on a default page; matches the header text color inside the alert. */
+      .border-l-4.bg-blue-50.border-blue-500 { border-color: #3b82f6 !important; }
+      .border-l-4.bg-green-50.border-green-500 { border-color: #22c55e !important; }
+      .border-l-4.bg-yellow-50.border-yellow-500 { border-color: #eab308 !important; }
+      .border-l-4.bg-red-50.border-red-500 { border-color: #ef4444 !important; }
+      .border-l-4.bg-orange-50.border-orange-500 { border-color: #f97316 !important; }
+      .border-l-4.bg-purple-50.border-purple-500 { border-color: #a855f7 !important; }
 
       /* === Focus States (Real Colors, Not Filters!) === */
       .focus\\:bg-white:focus,
@@ -692,10 +704,33 @@ const CustomThemeFeature = (() => {
          In DARK themes (Carbon, Charcoal) the pale yellow forces the themed
          light-grey text into near-invisibility, so we re-color the cell to
          a hue-harmonized dark olive (palette.alerts.yellow.bg, OKLCH
-         L=0.30 / C=0.10 / h=85) that supports light text without shouting. */
+         L=0.30 / C=0.10 / h=85) that supports light text without shouting.
+
+         Same story for bg-green-100 / bg-green-200 — JT uses these as the
+         "active document-item row" highlight. On dark themes Tailwind's
+         pale mint reads as cream/yellow against the dark surround and
+         bleaches the row's text-gray-400 body. We re-color to the themed
+         dark green so the highlight still says "active" without going
+         off-hue or losing body-text contrast. Light themes keep Tailwind
+         defaults. */
       ${p.meta.bgIsDark ? `
       .bg-yellow-100 {
         background-color: ${p.alerts.yellow.bg} !important;
+      }
+      .bg-green-100 {
+        background-color: ${p.alerts.green.bg} !important;
+      }
+      .bg-green-200,
+      .group-hover\\:bg-green-200:hover,
+      .group:hover .group-hover\\:bg-green-200 {
+        background-color: ${p.alerts.green.bgHover || p.alerts.green.bg} !important;
+      }
+      /* Signature canvas + other non-alert bg-orange-50 surfaces — pale
+         Tailwind #fff7ed reads as a bright white panel on dark themes.
+         :not(.border-l-4) keeps the orange text-alert containers at
+         their native pale bg. */
+      .bg-orange-50:not(.border-l-4) {
+        background-color: ${p.background.elevated} !important;
       }` : ''}
 
       .hover\\:text-gray-800:hover,

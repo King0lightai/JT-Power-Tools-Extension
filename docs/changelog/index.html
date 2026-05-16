@@ -50,11 +50,97 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.2 — Dark Mode + Custom Theme polish pass -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.2</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">May 16, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎨</span> Dark Mode &amp; Custom Theme Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text alerts no longer mangled by Dark Mode or Custom Theme</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread's text alerts &mdash; the &ldquo;Upon Signing&rdquo; / &ldquo;Your Project Journey&rdquo; / NOTICE-style boxes used heavily on HIA and PDA documents &mdash; were getting repainted into dark brown / dark green panels with mismatched colored text, then in some setups losing their left-border accent stripe to grey. Now the alert container, its left-border accent (vivid blue / green / yellow / red / orange / purple matching the header text), its pale Tailwind bg, and its dark body text are all pinned so the alert reads the same on every theme: identical to default JobTread, visual semantic (info / warning / error / success) intact</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Selected-row highlight actually stands out</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">On dense tables (cost-item list, line-item editor) the selected-row highlight was fading into the surrounding dark bg &mdash; you couldn't tell at a glance which row you'd clicked. Dark Mode opacity bumped from 20% to 40% on the base highlight (and proportionally on hover, focus-within, and group-hover variants); Custom Theme's primary-color mix bumped so 35% of your brand color shows through instead of 15%. Same hue, way more visible</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Active-row highlight on the document line-item editor stopped reading as bleached cream</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread marks the currently-active row in the &ldquo;Add / Edit Items&rdquo; document panel with a pale mint that, against a dark page, bleached the row's text into near-invisibility. Now darkened to a clear dark green that keeps the &ldquo;this row is active&rdquo; signal without crushing the body copy</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Bare borders and gray-border family no longer show as near-white frames</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Document template preview cards, table column separators, and any other JobTread surface using `.border-gray-300` (or a bare `.border` class) were rendering near-white frames in Dark Mode. Now darkened across the whole `.border-gray-100` through `.border-gray-400` family; mid `.border-gray-500` lifted slightly; dark `.border-gray-600` through `.border-gray-900` lightened so they don't vanish on the dark bg</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Signature canvas no longer renders as a bright white panel</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread's signature placeholder uses a pale-orange Tailwind bg which read as essentially white on dark themes &mdash; the canvas popped awkwardly against the surrounding dark UI. Now sits at a subtle dark elevation in Dark Mode and Custom Theme (light themes keep the Tailwind default). The dashed border still defines the draw area</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Other Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Forms button stopped leaking into the budget &ldquo;Add Cost Item&rdquo; popover</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Forms button was being appended to JobTread's budget &ldquo;From Budget / From Bills &amp; Time&rdquo; picker when it should only land in the mobile job-action overflow menu. Our menu detector matched any popover with the right wrapper classes; tightened the child filter so only the legitimate target qualifies</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Smart Resize stopped clamping the document line-item editor</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread renders the &ldquo;Add / Edit Items&rdquo; document editor as a full-bleed 12+-column panel that needs every horizontal pixel; clamping it to a saved sidebar width cut off the right-side columns. Smart Resize now ignores this panel entirely &mdash; no resize handle, no saved-width clamp &mdash; so it renders full-width as on default</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes no longer spams the console after extension reload</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">When the browser reloads or updates the extension while a JobTread tab is open, the content script becomes an orphan &mdash; still in memory but with no link back to the extension. Every keystroke used to fire a stack trace; now we detect the orphaned state, fail fast, and drop a one-click &ldquo;refresh now&rdquo; banner so you know what happened</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes team sync hit the right Worker again</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A recent backend migration moved the notebook sync endpoints onto a different Cloudflare Worker; the extension was still routing them to the legacy proxy and getting 404s back. Routing fixed &mdash; team notes sync end-to-end again</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🧹</span> Cleanup</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Removed the &ldquo;Coming v4.9&rdquo; placeholder block from the Theme tab</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The collapsed &ldquo;Per-Context &amp; Org Rollout&rdquo; accordion at the bottom of the Theme tab promised features that aren't shipping in this version. Removed; the Apply CTA now sits directly under the saved-theme slots with no dead UI between</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.1 — Document Sort + Side Panel + Polish Pass -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.1</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">May 13, 2026</span>
             </div>
 

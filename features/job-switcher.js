@@ -180,6 +180,35 @@ const SmartJobSwitcherFeature = (() => {
     'BUDGET', 'ESTIMATE', 'PURCHASE ORDER', 'INVOICE',
   ];
 
+  /**
+   * Full-bypass exclusions — sidebars whose header matches one of these
+   * patterns get NO resize handle and NO saved-width application. JT renders
+   * them as full-bleed wide-table editors (12+ columns, min-w-max rows) that
+   * need every available pixel of horizontal space; clamping them to a saved
+   * "sidebar width" breaks the layout. The header-text check fires after the
+   * 50ms render delay in startSidebarObserver(), so by the time we sample
+   * `headerText` the JT-rendered title is in place.
+   */
+  const IGNORE_HEADER_PATTERNS = [
+    'ADD / EDIT ITEMS',
+  ];
+
+  function shouldIgnoreSidebar(sidebar) {
+    const headers = sidebar.querySelectorAll('h1, h2, h3, [class*="font-bold"], [class*="font-semibold"]');
+    let headerText = '';
+    for (const header of headers) {
+      const text = (header.textContent || '').trim();
+      if (text.length >= 2 && text.length <= 80) {
+        headerText += ' ' + text;
+      }
+    }
+    headerText = headerText.toUpperCase();
+    for (const pattern of IGNORE_HEADER_PATTERNS) {
+      if (headerText.includes(pattern)) return true;
+    }
+    return false;
+  }
+
   // Push patterns — if any header matches these, push content
   const PUSH_HEADER_PATTERNS = [
     'JOB SWITCHER',
@@ -227,6 +256,15 @@ const SmartJobSwitcherFeature = (() => {
     if (enhancedSidebars.has(sidebar)) {
       return;
     }
+
+    // Full-bypass: certain wide-table editor sidebars (Add / Edit Items, etc.)
+    // need their natural full-bleed width and shouldn't be resized at all.
+    // Mark them as enhanced so future mutation observers don't reconsider.
+    if (shouldIgnoreSidebar(sidebar)) {
+      enhancedSidebars.add(sidebar);
+      return;
+    }
+
     enhancedSidebars.add(sidebar);
 
     // Classify push vs overlay by sidebar content keywords

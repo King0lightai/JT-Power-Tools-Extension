@@ -195,9 +195,15 @@
       base:   primary,
       hover:  shiftL(primary, bgIsDark ? +0.05 : -0.04),
       active: shiftL(primary, bgIsDark ? +0.10 : -0.08),
-      selection:       mix(primary, background, 0.85),
-      selectionHover:  mix(primary, background, 0.78),
-      selectionStrong: mix(primary, background, 0.7),
+      /* Selection blends — higher mix ratio toward bg = less primary showing.
+         Bumped saturation so selected rows actually stand out — the old
+         0.85 / 0.78 / 0.70 trio only let 15-30% primary through and the
+         selection vanished into the surrounding bg on dense tables (cost
+         items list, line-item editor). Current ratios let 35% / 45% / 58%
+         primary through respectively. */
+      selection:       mix(primary, background, 0.65),
+      selectionHover:  mix(primary, background, 0.55),
+      selectionStrong: mix(primary, background, 0.42),
     };
 
     // v4.8.3 — secondary auto-derived from primary in OKLCH space.
