@@ -26,11 +26,102 @@ const QuickNotesStorage = (() => {
     return typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync;
   }
 
+  // ─── Extension-orphan detection ──────────────────────────────
+  //
+  // When the extension is reloaded / updated while a content script is
+  // already running on a JobTread tab, the content script becomes an
+  // "orphan": it's still in memory, still wired to DOM events, but its
+  // link back to the extension is severed. Any chrome.storage call
+  // throws "Extension context invalidated" immediately.
+  //
+  // Without handling, this floods the console (every keystroke fires
+  // saveNotes via debounced sync) and the user has no idea their notes
+  // aren't persisting. Detection flow:
+  //   1. catch the specific error string
+  //   2. flip the module-level `isOrphaned` flag — subsequent calls
+  //      short-circuit instead of throwing again
+  //   3. log ONCE with a clear "refresh the tab" hint
+  //   4. drop a banner into the Quick Notes panel so the user notices
+  //      without having to open DevTools
+
+  let isOrphaned = false;
+  let orphanBannerShown = false;
+
+  function looksLikeOrphanError(err) {
+    if (!err) return false;
+    const msg = (err.message || String(err)).toLowerCase();
+    return msg.includes('extension context invalidated') ||
+           msg.includes('extension context was invalidated') ||
+           msg.includes('could not establish connection');
+  }
+
+  function markOrphaned() {
+    if (isOrphaned) return;
+    isOrphaned = true;
+    console.warn(
+      'Quick Notes: extension was reloaded — refresh this page (Cmd/Ctrl+R) to keep notes syncing. ' +
+      'Edits made now are NOT being saved.'
+    );
+    showOrphanBanner();
+  }
+
+  function showOrphanBanner() {
+    if (orphanBannerShown) return;
+    orphanBannerShown = true;
+    // Defer until DOM is ready and the panel is present.
+    const attach = () => {
+      const panel = document.querySelector('.quick-notes-panel, .jt-quick-notes-panel, [data-jt-quick-notes]');
+      const host = panel || document.body;
+      if (!host || document.getElementById('jt-quick-notes-orphan-banner')) return;
+      const banner = document.createElement('div');
+      banner.id = 'jt-quick-notes-orphan-banner';
+      banner.setAttribute('role', 'alert');
+      banner.style.cssText = [
+        'position:fixed', 'top:12px', 'right:12px', 'z-index:2147483647',
+        'max-width:340px', 'padding:12px 14px',
+        'background:#FE4C0D', 'color:#fff', 'border-radius:8px',
+        'box-shadow:0 6px 18px rgba(0,0,0,0.25)',
+        'font:500 13px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif',
+      ].join(';');
+      banner.innerHTML =
+        '<div style="font-weight:600;margin-bottom:4px;">Quick Notes paused</div>' +
+        '<div style="margin-bottom:10px;">The extension was reloaded. Edits won\'t save until you refresh this page.</div>' +
+        '<button type="button" style="background:#fff;color:#FE4C0D;border:0;padding:6px 12px;border-radius:6px;font-weight:600;cursor:pointer;font:inherit;">Refresh now</button>' +
+        '<button type="button" aria-label="Dismiss" style="position:absolute;top:6px;right:8px;background:transparent;border:0;color:#fff;font-size:18px;cursor:pointer;line-height:1;">&times;</button>';
+      host.appendChild(banner);
+      banner.querySelector('button:nth-of-type(1)').addEventListener('click', () => location.reload());
+      banner.querySelector('button:nth-of-type(2)').addEventListener('click', () => banner.remove());
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attach, { once: true });
+    } else {
+      attach();
+    }
+  }
+
+  // Cheap pre-flight check used by every read/write — if chrome.runtime.id
+  // is undefined the context is already gone; bail early to avoid the
+  // synchronous throw inside chrome.storage.sync.{get,set}().
+  function contextLooksValid() {
+    try {
+      return typeof chrome !== 'undefined' && !!chrome.runtime && !!chrome.runtime.id;
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Load notes from Chrome storage
    * @returns {Promise<Array>} Array of note objects
    */
   async function loadNotes() {
+    // Orphaned content script — fail fast (returns empty so callers
+    // don't blow up on undefined; the orphan banner already told the user).
+    if (isOrphaned || !contextLooksValid()) {
+      if (!isOrphaned) markOrphaned();
+      return [];
+    }
+
     // Fallback to localStorage if Chrome storage not available
     if (!isStorageAvailable()) {
       try {
@@ -46,14 +137,23 @@ const QuickNotesStorage = (() => {
       try {
         chrome.storage.sync.get([STORAGE_KEY], (result) => {
           if (chrome.runtime.lastError) {
-            console.error('Quick Notes Storage: Error loading notes:', chrome.runtime.lastError.message);
+            const msg = chrome.runtime.lastError.message;
+            if (looksLikeOrphanError({ message: msg })) {
+              markOrphaned();
+            } else {
+              console.error('Quick Notes Storage: Error loading notes:', msg);
+            }
             resolve([]);
             return;
           }
           resolve(result[STORAGE_KEY] || []);
         });
       } catch (error) {
-        console.error('Quick Notes Storage: Unexpected error loading notes:', error);
+        if (looksLikeOrphanError(error)) {
+          markOrphaned();
+        } else {
+          console.error('Quick Notes Storage: Unexpected error loading notes:', error);
+        }
         resolve([]);
       }
     });
@@ -65,6 +165,12 @@ const QuickNotesStorage = (() => {
    * @returns {Promise<boolean>} Success status
    */
   async function saveNotes(notes) {
+    // Orphaned content script — fail fast, no console spam.
+    if (isOrphaned || !contextLooksValid()) {
+      if (!isOrphaned) markOrphaned();
+      return false;
+    }
+
     // Fallback to localStorage if Chrome storage not available
     if (!isStorageAvailable()) {
       try {
@@ -80,14 +186,23 @@ const QuickNotesStorage = (() => {
       try {
         chrome.storage.sync.set({ [STORAGE_KEY]: notes }, () => {
           if (chrome.runtime.lastError) {
-            console.error('Quick Notes Storage: Error saving notes:', chrome.runtime.lastError.message);
+            const msg = chrome.runtime.lastError.message;
+            if (looksLikeOrphanError({ message: msg })) {
+              markOrphaned();
+            } else {
+              console.error('Quick Notes Storage: Error saving notes:', msg);
+            }
             resolve(false);
             return;
           }
           resolve(true);
         });
       } catch (error) {
-        console.error('Quick Notes Storage: Unexpected error saving notes:', error);
+        if (looksLikeOrphanError(error)) {
+          markOrphaned();
+        } else {
+          console.error('Quick Notes Storage: Unexpected error saving notes:', error);
+        }
         resolve(false);
       }
     });
@@ -616,6 +731,12 @@ const QuickNotesStorage = (() => {
     MIN_WIDTH,
     MAX_WIDTH,
     FOLDER_COLORS,
+
+    // Orphan-state probe — callers can short-circuit expensive work
+    // (e.g., the server sync chain) when the content script has lost
+    // its link to the extension. saveNotes/loadNotes already guard
+    // themselves, this is just for upstream optimization.
+    isOrphaned: () => isOrphaned,
 
     // Methods
     loadNotes,

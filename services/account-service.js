@@ -329,8 +329,21 @@ const AccountService = (() => {
       throw new Error('Not authenticated');
     }
 
-    // Route sync endpoints to the license proxy, all others to MCP server
-    const baseUrl = endpoint.startsWith('/sync/') ? SYNC_URL : API_URL;
+    // Route resolution:
+    //   - /sync/notebooks/*, /sync/sections/*, /sync/pages/* live on the
+    //     jobtread-mcp-server worker (Migration 022 + notebooks-handler.js).
+    //     The license-proxy worker doesn't know these endpoints and returns
+    //     "Unknown sync endpoint" 404s if asked.
+    //   - Legacy /sync/notes, /sync/templates, /sync/team-notes,
+    //     /sync/team-templates, /sync/saved-filters still live on the
+    //     license proxy until they're migrated.
+    //   - Everything else goes to the MCP server (auth, admin, etc.).
+    const isNotebooksSync = endpoint.startsWith('/sync/notebooks') ||
+                             endpoint.startsWith('/sync/sections') ||
+                             endpoint.startsWith('/sync/pages');
+    const baseUrl = isNotebooksSync
+      ? API_URL
+      : (endpoint.startsWith('/sync/') ? SYNC_URL : API_URL);
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
       ...options,
