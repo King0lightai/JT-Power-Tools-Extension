@@ -54,7 +54,7 @@ const KeyboardShortcutsFeature = (() => {
       color: '#ec4899', // pink
       shortcuts: [
         { label: 'Go to List View', keys: ['l'] },
-        { label: 'Go to Gantt View', keys: ['g'] },
+        { label: 'Go to Gantt View', keys: ['t'] },
         { label: 'Go to Month View', keys: ['m'] },
         { label: 'Go to Week View', keys: ['w'] },
         { label: 'Go to Day View', keys: ['d'] },
