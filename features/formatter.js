@@ -387,18 +387,25 @@ const FormatterFeature = (() => {
 
       // Exclude fields inside sidebar forms/panels with orange headers (Add Time Entry, Time Clock, etc.)
       // Exception: Budget and Catalog pages — their forms also have orange headers but SHOULD have the formatter
+      // Exception: Selection-group option editors (label.cursor-pointer.block + bold heading)
+      // live inside an orange-headered sidebar but their Description field should still
+      // get the formatter — same pattern as Cost Item Details.
       // Check drag-scroll-boundary FIRST (broader container that holds both the orange header
       // and the form — e.g. Time Clock has the header outside <form> but inside the boundary)
       // Then fall back to <form> for cases where the header IS inside the form
       if (!path.endsWith('/budget') && !path.includes('/catalog')) {
-        const sidebarContainer = field.closest('[data-is-drag-scroll-boundary="true"]') || field.closest('form');
-        if (sidebarContainer) {
-          const orangeHeader = sidebarContainer.querySelector('div.font-bold.text-jtOrange.uppercase');
-          if (orangeHeader) {
-            // Exception: Cost Item Details supports markdown — allow formatter there
-            const headerText = orangeHeader.textContent.trim().toLowerCase();
-            if (headerText !== 'cost item details') {
-              return false;
+        const isSelectionGroupField = Detection().isInSelectionGroupOption &&
+                                      Detection().isInSelectionGroupOption(field);
+        if (!isSelectionGroupField) {
+          const sidebarContainer = field.closest('[data-is-drag-scroll-boundary="true"]') || field.closest('form');
+          if (sidebarContainer) {
+            const orangeHeader = sidebarContainer.querySelector('div.font-bold.text-jtOrange.uppercase');
+            if (orangeHeader) {
+              // Exception: Cost Item Details supports markdown — allow formatter there
+              const headerText = orangeHeader.textContent.trim().toLowerCase();
+              if (headerText !== 'cost item details') {
+                return false;
+              }
             }
           }
         }

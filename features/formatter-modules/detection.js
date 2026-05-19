@@ -554,6 +554,7 @@ const FormatterDetection = (() => {
     hasNativeFormatter,
     isFormatterField,
     isInAddEditItemsTable,
+    isInSelectionGroupOption,
     detectActiveFormats
   };
 })();
