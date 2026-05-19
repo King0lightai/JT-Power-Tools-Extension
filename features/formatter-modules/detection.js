@@ -73,6 +73,27 @@ const FormatterDetection = (() => {
   }
 
   /**
+   * Check if a textarea is inside a JT selection-group option.
+   * Selection-group option descriptions live in the main document body
+   * (e.g. HIA / PDA "Furnish and install …" optional-scope items) and use
+   * a distinctive container: <label class="cursor-pointer block"> with a
+   * bold heading. The `cursor-pointer` class signals that clicking the
+   * label selects the item — a marker the surrounding doc metadata
+   * fields (Signature / Prepared By / etc.) don't carry. Without this
+   * exception the doc-page gate below strips formatter from selection
+   * descriptions because they're not in a sidebar.
+   * @param {HTMLTextAreaElement} textarea
+   * @returns {boolean}
+   */
+  function isInSelectionGroupOption(textarea) {
+    if (!textarea) return false;
+    const label = textarea.closest('label.cursor-pointer.block');
+    if (!label) return false;
+    const heading = label.querySelector(':scope > div.font-bold');
+    return Boolean(heading && heading.textContent.trim().length > 0);
+  }
+
+  /**
    * Check if the current page is a document-type page (documents, invoices, estimates, etc.)
    * These pages have JobTread's native formatter in the main area, so we only show our
    * formatter in sidebars on these pages.
@@ -235,8 +256,9 @@ const FormatterDetection = (() => {
     // JobTread has native formatter in the main document area
     if (isDocumentTypePage()) {
       const placeholder = textarea.getAttribute('placeholder');
-      // Allow sidebar fields and Message fields on document-type pages
-      if (!isInSidebar(textarea) && placeholder !== 'Message') {
+      // Allow sidebar fields, Message fields, and selection-group option
+      // descriptions (HIA / PDA optional-scope items in the main body)
+      if (!isInSidebar(textarea) && placeholder !== 'Message' && !isInSelectionGroupOption(textarea)) {
         return false;
       }
     }
