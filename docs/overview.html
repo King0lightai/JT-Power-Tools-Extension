@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JT Power Tools — The Complete Picture</title>
+<meta name="description" content="JT Power Tools is the all-in-one productivity layer for JobTread: a Chrome extension with 20+ features, an MCP server for AI assistants, a team knowledge base, an AI-driven vendor bills inbox, and an admin portal.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+
+<style>
+  :root {
+    --bg: #F5F1EA;
+    --surface: #FFFFFF;
+    --surface-inset: #EDE7DC;
+    --peach: #FDD9BE;
+    --ink: #1A1A1A;
+    --ink-muted: #5A5A5A;
+    --ink-subtle: #8A8A8A;
+    --ink-italic: #6B5E4E;
+    --border: #E3DCCF;
+    --border-strong: #1A1A1A;
+    --orange: #FE4C0D;
+    --orange-dark: #D94000;
+    --teal: #00C896;
+    --purple: #A855F7;
+    --navy: #14315F;
+    --hazard: #FFC43C;
+    --blue: #7AB5FF;
+    --font-display: 'Anton', Impact, 'Arial Black', sans-serif;
+    --font-sub: 'Oswald', 'Arial Narrow', sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 20px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  img, svg { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+
+  .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+
+  /* ─── Hero ───────────────────────────────────────────────── */
+  .hero {
+    padding: clamp(48px, 7vw, 96px) 0 clamp(48px, 6vw, 72px);
+    background: linear-gradient(180deg, var(--bg) 0%, var(--surface-inset) 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -120px;
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(254,76,13,0.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-sub); font-weight: 600;
+    font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 28px;
+  }
+  .hero-brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--orange); }
+  .hero-headline {
+    font-family: var(--font-display);
+    font-size: clamp(48px, 7.5vw, 112px);
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    margin: 0 0 24px;
+    max-width: 16ch;
+  }
+  .hero-headline .accent { color: var(--orange); }
+  .hero-headline .serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink-italic); }
+  .hero-lede {
+    font-size: clamp(18px, 1.5vw, 22px);
+    line-height: 1.5;
+    color: var(--ink-muted);
+    max-width: 60ch;
+    margin: 0 0 32px;
+  }
+  .hero-stats {
+    display: flex; flex-wrap: wrap; gap: clamp(20px, 4vw, 48px);
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .hero-stat .n {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 64px);
+    line-height: 1;
+    color: var(--ink);
+  }
+  .hero-stat .n .accent { color: var(--orange); }
+  .hero-stat .l {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--font-sub);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-subtle);
+  }
+
+  /* ─── Section base ────────────────────────────────────────── */
+  section { padding: clamp(64px, 8vw, 112px) 0; }
+  .section-head {
+    margin-bottom: clamp(40px, 5vw, 64px);
+    max-width: 880px;
+  }
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-sub); font-weight: 600;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 16px;
+  }
+  .section-tag::before {
+    content: ''; width: 32px; height: 1px; background: var(--orange);
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 72px);
+    line-height: 1;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    margin: 0 0 20px;
+  }
+  .section-title .accent { color: var(--orange); }
+  .section-title .serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink-italic); }
+  .section-lede {
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    max-width: 65ch;
+    margin: 0;
+  }
+
+  /* ─── Pillars ────────────────────────────────────────────── */
+  .pillars { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .pillar {
+    background: var(--surface);
+    padding: 32px 28px;
+  }
+  .pillar i {
+    font-size: 32px;
+    color: var(--orange);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .pillar h3 {
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 0 0 10px;
+  }
+  .pillar p {
+    font-size: 15px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* ─── Module section (the 6 areas) ───────────────────────── */
+  .modules { background: var(--bg); }
+  .module {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: clamp(32px, 5vw, 80px);
+    align-items: start;
+    padding: clamp(40px, 5vw, 64px) 0;
+    border-top: 1px solid var(--border);
+  }
+  .module:first-of-type { border-top: 0; padding-top: 0; }
+  .module-num {
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--orange);
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  .module-title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4vw, 56px);
+    line-height: 1;
+    text-transform: uppercase;
+    margin: 0 0 20px;
+  }
+  .module-title .accent { color: var(--orange); }
+  .module-kicker {
+    font-size: 18px;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    margin: 0 0 24px;
+  }
+  .module-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 24px;
+  }
+  .module-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font-sub);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+  }
+  .module-list {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: grid;
+    gap: 14px;
+  }
+  .module-list li {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 12px;
+    align-items: start;
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+  .module-list li i {
+    color: var(--orange);
+    font-size: 18px;
+    margin-top: 3px;
+  }
+  .module-list li strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .module-list li span.muted {
+    color: var(--ink-muted);
+  }
+
+  /* Visual card */
+  .module-visual {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 28px;
+    position: sticky;
+    top: 24px;
+  }
+  .visual-head {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .visual-head .lights {
+    display: inline-flex; gap: 6px;
+  }
+  .visual-head .lights span {
+    width: 10px; height: 10px; border-radius: 999px; background: var(--surface-inset);
+  }
+  .visual-head .title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-subtle);
+    letter-spacing: 0.04em;
+  }
+
+  /* Code-ish block */
+  .code-block {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 16px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .k { color: var(--orange); font-weight: 600; }
+  .code-block .s { color: var(--teal); }
+  .code-block .c { color: var(--ink-subtle); font-style: italic; }
+  .code-block .n { color: var(--purple); }
+
+  /* Chat-style preview */
+  .chat-bubble {
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .chat-bubble.user {
+    background: var(--peach);
+    border-color: rgba(254,76,13,0.25);
+  }
+  .chat-bubble.ai {
+    background: var(--surface);
+  }
+  .chat-bubble .author {
+    display: block;
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--orange);
+    margin-bottom: 6px;
+  }
+
+  /* Workflow flow */
+  .workflow {
+    display: grid;
+    gap: 12px;
+  }
+  .workflow-step {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 14px;
+  }
+  .workflow-step .num {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    background: var(--orange);
+    color: white;
+    border-radius: 999px;
+    font-family: var(--font-sub);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .workflow-step strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .workflow-step .meta {
+    color: var(--ink-muted);
+    font-size: 13.5px;
+  }
+
+  /* Feature grid (inside extension module) */
+  .feature-grid-mini {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .feature-chip {
+    padding: 12px 14px;
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 13.5px;
+  }
+  .feature-chip .name {
+    display: block;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .feature-chip .tier {
+    font-family: var(--font-sub);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-subtle);
+  }
+  .feature-chip .tier.free { color: var(--teal); }
+  .feature-chip .tier.ess { color: var(--blue); }
+  .feature-chip .tier.pro { color: var(--purple); }
+  .feature-chip .tier.power { color: var(--orange); }
+
+  /* Notes preview */
+  .notes-preview {
+    display: grid;
+    grid-template-columns: 0.7fr 0.9fr 1.4fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .notes-rail {
+    background: var(--surface);
+    padding: 12px;
+  }
+  .notes-rail h5 {
+    font-family: var(--font-sub);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-subtle);
+    margin: 0 0 10px;
+  }
+  .notes-rail .item {
+    padding: 6px 8px;
+    border-radius: 4px;
+    color: var(--ink-muted);
+    margin-bottom: 2px;
+  }
+  .notes-rail .item.active { background: var(--peach); color: var(--ink); font-weight: 600; }
+  .notes-rail .nested { padding-left: 20px; }
+  .notes-rail .editor-line { color: var(--ink); margin-bottom: 4px; }
+  .notes-rail .editor-h { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .notes-rail .editor-bullet { padding-left: 12px; color: var(--ink-muted); font-size: 12.5px; }
+
+  /* ─── Architecture diagram ───────────────────────────────── */
+  .arch {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .arch-diagram {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 40px;
+    position: relative;
+  }
+  .arch-block {
+    background: var(--surface-inset);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 20px;
+    text-align: center;
+  }
+  .arch-block.primary {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .arch-block.primary .arch-block-title { color: var(--bg); }
+  .arch-block.primary .arch-block-meta { color: rgba(245,241,234,0.7); }
+  .arch-block.accent {
+    background: var(--orange);
+    color: white;
+    border-color: var(--orange);
+  }
+  .arch-block.accent .arch-block-title { color: white; }
+  .arch-block.accent .arch-block-meta { color: rgba(255,255,255,0.85); }
+  .arch-block i {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .arch-block-title {
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .arch-block-meta {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .arch-row-label {
+    grid-column: 1 / -1;
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-subtle);
+    margin: 24px 0 -4px;
+    text-align: center;
+    position: relative;
+  }
+  .arch-row-label::before, .arch-row-label::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 80px;
+    height: 1px;
+    background: var(--border);
+  }
+  .arch-row-label::before { right: calc(50% + 100px); }
+  .arch-row-label::after { left: calc(50% + 100px); }
+
+  /* ─── Pricing ────────────────────────────────────────────── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .price-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 28px 24px;
+    position: relative;
+  }
+  .price-card.featured {
+    border: 2px solid var(--orange);
+    box-shadow: 0 12px 32px -16px rgba(254,76,13,0.35);
+  }
+  .price-card.featured::before {
+    content: 'Most popular';
+    position: absolute;
+    top: -10px; left: 24px;
+    padding: 4px 10px;
+    background: var(--orange);
+    color: white;
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 999px;
+  }
+  .price-tier {
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-subtle);
+    margin-bottom: 8px;
+  }
+  .price-amount {
+    font-family: var(--font-display);
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .price-amount .per {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-muted);
+  }
+  .price-card.featured .price-amount { color: var(--orange); }
+  .price-card.featured .price-amount .per { color: var(--ink-muted); }
+  .price-blurb {
+    color: var(--ink-muted);
+    font-size: 14px;
+    margin: 12px 0 18px;
+    min-height: 40px;
+  }
+  .price-features {
+    list-style: none;
+    padding: 0; margin: 0 0 20px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .price-features li {
+    display: flex; align-items: start; gap: 8px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    color: var(--ink-muted);
+  }
+  .price-features li i {
+    color: var(--orange);
+    font-size: 14px;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .price-features li strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ─── Bottom CTA ─────────────────────────────────────────── */
+  .cta {
+    background: var(--ink);
+    color: var(--bg);
+    text-align: center;
+  }
+  .cta .section-title { color: var(--bg); }
+  .cta .section-lede { color: rgba(245,241,234,0.75); max-width: 60ch; margin: 0 auto; }
+  .cta-buttons {
+    display: flex; gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 36px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 28px;
+    font-family: var(--font-sub);
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: white;
+  }
+  .btn-primary:hover {
+    background: var(--orange-dark);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid rgba(245,241,234,0.3);
+    color: var(--bg);
+  }
+  .btn-ghost:hover {
+    border-color: var(--bg);
+  }
+
+  /* ─── Footer ─────────────────────────────────────────────── */
+  footer {
+    background: var(--surface-inset);
+    border-top: 1px solid var(--border);
+    padding: 40px 0;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--ink-subtle);
+  }
+  footer a { color: var(--orange); font-weight: 500; }
+  footer .links { margin-bottom: 12px; }
+  footer .links a { margin: 0 10px; }
+
+  /* ─── Pull quote ─────────────────────────────────────────── */
+  .pull {
+    background: var(--peach);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: clamp(48px, 6vw, 80px) 0;
+  }
+  .pull blockquote {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(28px, 3.5vw, 44px);
+    line-height: 1.3;
+    color: var(--ink);
+    margin: 0;
+    max-width: 900px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pull blockquote::before { content: '"'; color: var(--orange); font-size: 1.2em; vertical-align: -0.1em; }
+  .pull blockquote::after { content: '"'; color: var(--orange); font-size: 1.2em; vertical-align: -0.1em; }
+
+  /* ─── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 820px) {
+    .module { grid-template-columns: 1fr; }
+    .module-visual { position: static; }
+    .arch-diagram { grid-template-columns: 1fr; }
+    .arch-row-label::before, .arch-row-label::after { display: none; }
+    .feature-grid-mini { grid-template-columns: 1fr; }
+    .notes-preview { grid-template-columns: 1fr; }
+    .notes-preview .notes-rail { border-bottom: 1px solid var(--border); }
+  }
+
+  @media print {
+    .hero, section { padding: 32px 0; page-break-inside: avoid; }
+    .module-visual { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── HERO ────────────────────────────────────────────────── -->
+<header class="hero">
+  <div class="container">
+    <span class="hero-brand"><span class="dot"></span>JT Power Tools · Project Overview</span>
+    <h1 class="hero-headline">
+      JobTread, <span class="serif">supercharged</span> <span class="accent">end to end.</span>
+    </h1>
+    <p class="hero-lede">
+      A six-layer productivity stack built on top of JobTread. A browser extension for the UI, an MCP server for AI, a team knowledge base, an AI-driven vendor bills inbox, a custom-CSS engine, and an admin portal that ties it all together. Built by construction professionals, for construction professionals.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="n"><span class="accent">20+</span></span>
+        <span class="l">Extension features</span>
+      </div>
+      <div class="hero-stat">
+        <span class="n"><span class="accent">30+</span></span>
+        <span class="l">MCP tools for AI</span>
+      </div>
+      <div class="hero-stat">
+        <span class="n"><span class="accent">6</span></span>
+        <span class="l">Integrated layers</span>
+      </div>
+      <div class="hero-stat">
+        <span class="n">$0<span style="font-size:0.6em">–</span><span class="accent">$30</span></span>
+        <span class="l">Per company, per month</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ─── PILLARS ─────────────────────────────────────────────── -->
+<section class="pillars">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-tag">What it does</span>
+      <h2 class="section-title">Four <span class="accent">outcomes.</span></h2>
+      <p class="section-lede">
+        Every feature in the stack earns its keep by hitting at least one of these. Nothing is in the box just to pad a feature list.
+      </p>
+    </div>
+    <div class="pillar-grid">
+      <div class="pillar">
+        <i class="ph ph-lightning"></i>
+        <h3>Cut Clicks</h3>
+        <p>Keyboard shortcuts, smart job switching, sticky headers, dark mode, formatter shortcuts — daily friction stripped out of JobTread's UI.</p>
+      </div>
+      <div class="pillar">
+        <i class="ph ph-brain"></i>
+        <h3>Connect AI</h3>
+        <p>An MCP server gives Claude, ChatGPT, Cursor, and Gemini direct, read-write access to your jobs, budgets, schedules, and documents.</p>
+      </div>
+      <div class="pillar">
+        <i class="ph ph-tray-arrow-down"></i>
+        <h3>Automate Intake</h3>
+        <p>Vendor bills arrive at a forwarded email address. An AI reads the PDF, matches the job + vendor + PO, and posts the bill into JobTread.</p>
+      </div>
+      <div class="pillar">
+        <i class="ph ph-buildings"></i>
+        <h3>Brand &amp; Operate</h3>
+        <p>Org logo replacement, custom themes, custom CSS tweaks, team notes, and a portal that gives admins control over the whole stack.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PULL QUOTE ──────────────────────────────────────────── -->
+<aside class="pull">
+  <div class="container">
+    <blockquote>
+      You'll always know what's happening in JobTread, what's next, and what it costs. The tools just make sure none of that takes longer than it should.
+    </blockquote>
+  </div>
+</aside>
+
+<!-- ─── MODULES ─────────────────────────────────────────────── -->
+<section class="modules">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-tag">The Stack</span>
+      <h2 class="section-title">Six layers, <span class="serif">one</span> <span class="accent">platform.</span></h2>
+      <p class="section-lede">
+        Each layer stands on its own. Together, they cover everything from a faster click in the UI to a fully autonomous bills-approval agent.
+      </p>
+    </div>
+
+    <!-- ── 1. Extension ───────────────────────────── -->
+    <div class="module">
+      <div>
+        <div class="module-num">01 / 06</div>
+        <h3 class="module-title">The <span class="accent">Extension</span></h3>
+        <p class="module-kicker">
+          A Chrome &amp; Firefox extension that runs alongside JobTread and fixes the small things that pile up: dark mode, rich text editing, keyboard navigation, sticky headers, smarter filters. Twenty-plus features, each independently toggleable.
+        </p>
+        <div class="module-tags">
+          <span class="module-tag"><i class="ph ph-puzzle-piece"></i>Chrome MV3</span>
+          <span class="module-tag"><i class="ph ph-firefox-logo"></i>Firefox</span>
+          <span class="module-tag"><i class="ph ph-globe"></i>app.jobtread.com</span>
+        </div>
+        <ul class="module-list">
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Modular by design.</strong> <span class="muted">Every feature is a self-contained module with its own init / cleanup — toggle anything on or off without a page reload.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Tiered cleanly.</strong> <span class="muted">Free features are genuinely free. Paid tiers add power-user tools, not paywalled essentials.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Built for JT's React app.</strong> <span class="muted">Every feature is tested against JobTread's real DOM and respects its update cycles — no broken layouts after JT ships.</span></div>
+          </li>
+        </ul>
+      </div>
+      <aside class="module-visual">
+        <div class="visual-head">
+          <span class="lights"><span></span><span></span><span></span></span>
+          <span class="title">popup.html · 16 features visible</span>
+        </div>
+        <div class="feature-grid-mini">
+          <div class="feature-chip"><span class="name">Dark Mode</span><span class="tier free">Free</span></div>
+          <div class="feature-chip"><span class="name">Text Formatter</span><span class="tier free">Free</span></div>
+          <div class="feature-chip"><span class="name">Budget Hierarchy</span><span class="tier free">Free</span></div>
+          <div class="feature-chip"><span class="name">Kanban Filter</span><span class="tier free">Free</span></div>
+          <div class="feature-chip"><span class="name">Smart Job Switcher</span><span class="tier ess">Essential</span></div>
+          <div class="feature-chip"><span class="name">Quick Notes</span><span class="tier ess">Essential</span></div>
+          <div class="feature-chip"><span class="name">Freeze Header</span><span class="tier ess">Essential</span></div>
+          <div class="feature-chip"><span class="name">PDF Markup</span><span class="tier ess">Essential</span></div>
+          <div class="feature-chip"><span class="name">Schedule Checkboxes</span><span class="tier pro">Pro</span></div>
+          <div class="feature-chip"><span class="name">Custom Theme</span><span class="tier pro">Pro</span></div>
+          <div class="feature-chip"><span class="name">Preview Mode</span><span class="tier pro">Pro</span></div>
+          <div class="feature-chip"><span class="name">Availability Filter</span><span class="tier pro">Pro</span></div>
+          <div class="feature-chip"><span class="name">Job Switcher Filter</span><span class="tier power">Power</span></div>
+          <div class="feature-chip"><span class="name">Budget Changelog</span><span class="tier power">Power</span></div>
+          <div class="feature-chip"><span class="name">Task Type Filter</span><span class="tier power">Power</span></div>
+          <div class="feature-chip"><span class="name">Org Logo</span><span class="tier power">Power</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ── 2. MCP Server ──────────────────────────── -->
+    <div class="module">
+      <div>
+        <div class="module-num">02 / 06</div>
+        <h3 class="module-title">The <span class="accent">MCP Server</span></h3>
+        <p class="module-kicker">
+          An <strong>Model Context Protocol</strong> server that gives any AI assistant — Claude, ChatGPT, Cursor, Gemini, Copilot — direct read-write access to your JobTread data. Hosted on Cloudflare Workers, multi-org by default, with permission tiers so the AI only sees what it should.
+        </p>
+        <div class="module-tags">
+          <span class="module-tag"><i class="ph ph-robot"></i>Claude · ChatGPT · Cursor</span>
+          <span class="module-tag"><i class="ph ph-cloud"></i>Cloudflare Workers</span>
+          <span class="module-tag"><i class="ph ph-shield-check"></i>Permission tiers</span>
+        </div>
+        <ul class="module-list">
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Rich context tools.</strong> <span class="muted">Single calls return a job + budget + schedule + documents + activity together — no manual stitching, no context bloat.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Full write surface.</strong> <span class="muted">Create jobs, tasks, comments, daily logs, cost items, time entries, documents, payments, and webhooks — every safe op exposed.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Context-mode indexing.</strong> <span class="muted">Big payloads get auto-indexed into an FTS5 knowledge base so the AI can recover details after compaction — up to 98% context savings.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Multi-org safe.</strong> <span class="muted">Per-org grant keys mean a single AI client can switch between organizations without crossing the streams.</span></div>
+          </li>
+        </ul>
+      </div>
+      <aside class="module-visual">
+        <div class="visual-head">
+          <span class="lights"><span></span><span></span><span></span></span>
+          <span class="title">claude · session_active</span>
+        </div>
+        <div class="chat-bubble user">
+          <span class="author">You</span>
+          Which open jobs have invoices more than 30 days past due, and which PM owns them?
+        </div>
+        <div class="chat-bubble ai">
+          <span class="author">Claude</span>
+          Pulled <strong>jt_financial_context</strong> with <code>section: overdue</code>. Three jobs over 30 days:<br>
+          <strong>· Thompson Kitchen</strong> — $14,200 (43d) — PM: Sarah<br>
+          <strong>· Henderson ADU</strong> — $8,750 (38d) — PM: Marcus<br>
+          <strong>· Wright Basement</strong> — $5,400 (31d) — PM: Sarah<br>
+          Want me to draft follow-up emails or post a comment on each job?
+        </div>
+        <div class="chat-bubble user">
+          <span class="author">You</span>
+          Post a comment on each tagging the PM.
+        </div>
+      </aside>
+    </div>
+
+    <!-- ── 3. Notes ────────────────────────────────── -->
+    <div class="module">
+      <div>
+        <div class="module-num">03 / 06</div>
+        <h3 class="module-title">The <span class="accent">Notes</span> Layer</h3>
+        <p class="module-kicker">
+          A real knowledge base that lives inside the portal — three-pane notebook / section / page layout, personal and team scopes, markdown editor with live preview, full-text search, AI-readable. Stop dropping notes into Slack and losing them.
+        </p>
+        <div class="module-tags">
+          <span class="module-tag"><i class="ph ph-notebook"></i>Notebooks · Sections · Pages</span>
+          <span class="module-tag"><i class="ph ph-markdown-logo"></i>Markdown</span>
+          <span class="module-tag"><i class="ph ph-users-three"></i>Personal + Team</span>
+        </div>
+        <ul class="module-list">
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Personal &amp; team scopes.</strong> <span class="muted">Private scratchpads, or shared playbooks the whole team can edit. Pinned pages bubble to the top of each section.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>AI sees your notes.</strong> <span class="muted">The MCP exposes <code>jt_notes</code> and <code>team_notebooks</code> so an AI agent can pull the right SOP before answering a question.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>In-extension Quick Notes too.</strong> <span class="muted">A floating notepad on every JobTread page, synced to the same backend as the portal — start a note on a job, finish it at your desk.</span></div>
+          </li>
+        </ul>
+      </div>
+      <aside class="module-visual">
+        <div class="visual-head">
+          <span class="lights"><span></span><span></span><span></span></span>
+          <span class="title">notes.team · sop / sales / discovery-call</span>
+        </div>
+        <div class="notes-preview">
+          <div class="notes-rail">
+            <h5>Notebooks</h5>
+            <div class="item">Operations</div>
+            <div class="item active">Sales SOPs</div>
+            <div class="item nested">Discovery</div>
+            <div class="item nested">Estimating</div>
+            <div class="item">Production</div>
+          </div>
+          <div class="notes-rail">
+            <h5>Pages</h5>
+            <div class="item">Pre-call checklist</div>
+            <div class="item active">Discovery script</div>
+            <div class="item">Objection handling</div>
+            <div class="item">Closing language</div>
+          </div>
+          <div class="notes-rail">
+            <h5>Discovery script</h5>
+            <div class="editor-h">Opening (5 min)</div>
+            <div class="editor-line">Greet by first name. Set the agenda.</div>
+            <div class="editor-bullet">· What brought you here today?</div>
+            <div class="editor-bullet">· What's the project, in your words?</div>
+            <div class="editor-bullet">· What's the timeline driving this?</div>
+            <div class="editor-h" style="margin-top:8px;">Budget conversation</div>
+            <div class="editor-bullet">· What range have you been thinking?</div>
+            <div class="editor-bullet">· What would make this a "yes"?</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ── 4. Vendor Bills ────────────────────────── -->
+    <div class="module">
+      <div>
+        <div class="module-num">04 / 06</div>
+        <h3 class="module-title">The <span class="accent">Vendor Bills</span> Inbox</h3>
+        <p class="module-kicker">
+          Vendors email their invoices to a forwarding address. PDFs are parsed and queued. An AI agent reads each one, matches the job and vendor, finds any open PO, and posts the bill into JobTread with the right cost coding and QBO routing. Your AP clerk reviews — they don't re-type.
+        </p>
+        <div class="module-tags">
+          <span class="module-tag"><i class="ph ph-envelope-simple"></i>Email forwarding</span>
+          <span class="module-tag"><i class="ph ph-file-pdf"></i>PDF parsing</span>
+          <span class="module-tag"><i class="ph ph-link"></i>QBO routing</span>
+        </div>
+        <ul class="module-list">
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Forward-and-forget.</strong> <span class="muted">Approved-sender allowlist keeps junk out. Every PDF lands in your inbox queue, waiting for AI review.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>AI matches everything.</strong> <span class="muted">Job (from the PO marker), vendor (from the letterhead), open POs, and cost codes — all resolved before the bill posts.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>QBO routing built in.</strong> <span class="muted">Bills vs. card purchases land in the right QBO document type. Bank/CC account, billable flag, ignore flag — all controllable per-bill.</span></div>
+          </li>
+        </ul>
+      </div>
+      <aside class="module-visual">
+        <div class="visual-head">
+          <span class="lights"><span></span><span></span><span></span></span>
+          <span class="title">bills.inbox · workflow</span>
+        </div>
+        <div class="workflow">
+          <div class="workflow-step">
+            <span class="num">1</span>
+            <div>
+              <strong>Vendor emails the invoice</strong>
+              <span class="meta">Sent to <code>bills-yourorg@bills.jtpowertools.com</code></span>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <span class="num">2</span>
+            <div>
+              <strong>PDF lands in the queue</strong>
+              <span class="meta">Approved-sender check, PDF stored, text extracted</span>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <span class="num">3</span>
+            <div>
+              <strong>AI reads &amp; matches</strong>
+              <span class="meta">Job · Vendor · Open POs · Cost codes</span>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <span class="num">4</span>
+            <div>
+              <strong>Bill posts into JobTread</strong>
+              <span class="meta">Draft document with PDF attached, line items coded, QBO routed</span>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <span class="num">5</span>
+            <div>
+              <strong>AP clerk reviews &amp; approves</strong>
+              <span class="meta">Five seconds per bill instead of five minutes</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ── 5. Portal ───────────────────────────────── -->
+    <div class="module">
+      <div>
+        <div class="module-num">05 / 06</div>
+        <h3 class="module-title">The <span class="accent">Portal</span></h3>
+        <p class="module-kicker">
+          The admin dashboard. Manage your account, your team, your org branding, your MCP keys, your bills settings, your tweaks, and your notes — all in one place at <code>app.jtpowertools.com</code>. Per-org grant keys mean multi-org operators don't trip over themselves.
+        </p>
+        <div class="module-tags">
+          <span class="module-tag"><i class="ph ph-gear"></i>Admin dashboard</span>
+          <span class="module-tag"><i class="ph ph-key"></i>API keys</span>
+          <span class="module-tag"><i class="ph ph-users-three"></i>Team management</span>
+        </div>
+        <ul class="module-list">
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>One-touch MCP setup.</strong> <span class="muted">Generate an endpoint URL, copy it into Claude / ChatGPT / Cursor, done. Step-by-step guides for every supported client.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Team roles &amp; invites.</strong> <span class="muted">Add teammates, set roles, see who's connected, revoke access in one click.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Org-wide branding.</strong> <span class="muted">Upload your logo once — every team member sees it replace the JT logo on their JobTread tabs.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Bills configuration.</strong> <span class="muted">Set default cost codes, cost types, and tax handling so the AI knows how to code an incoming bill.</span></div>
+          </li>
+        </ul>
+      </div>
+      <aside class="module-visual">
+        <div class="visual-head">
+          <span class="lights"><span></span><span></span><span></span></span>
+          <span class="title">app.jtpowertools.com · dashboard</span>
+        </div>
+        <div class="code-block"><span class="c"># Portal sections</span>
+<span class="k">/account</span>      <span class="c">→ profile, password, plan</span>
+<span class="k">/mcp</span>          <span class="c">→ endpoint, guides, status</span>
+<span class="k">/api-keys</span>     <span class="c">→ grant keys per org</span>
+<span class="k">/team</span>         <span class="c">→ members, roles, invites</span>
+<span class="k">/tweaks</span>       <span class="c">→ custom CSS + JS tweaks</span>
+<span class="k">/forms</span>        <span class="c">→ form templates + submissions</span>
+<span class="k">/notes</span>        <span class="c">→ personal + team knowledge</span>
+<span class="k">/bills</span>        <span class="c">→ inbox, senders, settings</span>
+<span class="k">/branding</span>     <span class="c">→ org logo &amp; theme</span></div>
+      </aside>
+    </div>
+
+    <!-- ── 6. Tweaks + Forms ──────────────────────── -->
+    <div class="module">
+      <div>
+        <div class="module-num">06 / 06</div>
+        <h3 class="module-title"><span class="accent">Tweaks</span> &amp; <span class="accent">Forms</span></h3>
+        <p class="module-kicker">
+          For teams who want to go further. <strong>Tweaks</strong> let admins ship custom CSS to every team member's browser — change spacing, colors, or hide UI you never use. <strong>Forms</strong> turn JobTread into a real intake engine — custom forms, custom validation, structured submissions.
+        </p>
+        <div class="module-tags">
+          <span class="module-tag"><i class="ph ph-magic-wand"></i>Custom CSS tweaks</span>
+          <span class="module-tag"><i class="ph ph-clipboard-text"></i>Form templates</span>
+          <span class="module-tag"><i class="ph ph-shield"></i>Sanitized + scoped</span>
+        </div>
+        <ul class="module-list">
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Org-published, user-toggleable.</strong> <span class="muted">Admin publishes a tweak once; every team member sees it instantly with the option to opt out per machine.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Safe by default.</strong> <span class="muted">Tweak CSS is sanitized server-side. No <code>javascript:</code> URIs, no <code>expression()</code>, no escape hatches.</span></div>
+          </li>
+          <li>
+            <i class="ph-fill ph-check-circle"></i>
+            <div><strong>Forms with teeth.</strong> <span class="muted">Build intake forms with conditional fields and validation. Submissions land in the portal and can post back into JobTread as comments, tasks, or jobs.</span></div>
+          </li>
+        </ul>
+      </div>
+      <aside class="module-visual">
+        <div class="visual-head">
+          <span class="lights"><span></span><span></span><span></span></span>
+          <span class="title">tweak · hide-empty-cost-codes.css</span>
+        </div>
+        <div class="code-block"><span class="c">/* Hide cost code rows with no spend.
+   Tightens the budget view for our PM team. */</span>
+<span class="n">.budget-row</span>:has(<span class="n">.actual-cost-value</span>[<span class="k">data-zero</span>=<span class="s">"true"</span>]) {
+  <span class="k">display</span>: <span class="s">none</span>;
+}
+
+<span class="n">.budget-row</span>:has(<span class="n">.budgeted-cost-value</span>[<span class="k">data-zero</span>=<span class="s">"true"</span>])
+  <span class="n">.budget-row</span>:has(<span class="n">.actual-cost-value</span>[<span class="k">data-zero</span>=<span class="s">"true"</span>]) {
+  <span class="k">opacity</span>: <span class="s">0.5</span>;
+}</div>
+      </aside>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── ARCHITECTURE ────────────────────────────────────────── -->
+<section class="arch">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-tag">How it fits together</span>
+      <h2 class="section-title">One <span class="accent">stack.</span></h2>
+      <p class="section-lede">
+        The user never thinks about which layer they're touching. Whether they click a button in JT, chat with Claude, or forward an invoice — the same backend serves it all.
+      </p>
+    </div>
+
+    <div class="arch-diagram">
+      <!-- Row 1: Users -->
+      <div class="arch-row-label">The People</div>
+      <div class="arch-block">
+        <i class="ph ph-user-circle"></i>
+        <div class="arch-block-title">PMs &amp; Crew</div>
+        <div class="arch-block-meta">Daily JobTread work, faster</div>
+      </div>
+      <div class="arch-block">
+        <i class="ph ph-currency-dollar"></i>
+        <div class="arch-block-title">Office &amp; AP</div>
+        <div class="arch-block-meta">Bills, budgets, books</div>
+      </div>
+      <div class="arch-block">
+        <i class="ph ph-brain"></i>
+        <div class="arch-block-title">AI Agents</div>
+        <div class="arch-block-meta">Claude, ChatGPT, Cursor</div>
+      </div>
+
+      <!-- Row 2: Interfaces -->
+      <div class="arch-row-label">The Surfaces</div>
+      <div class="arch-block primary">
+        <i class="ph ph-puzzle-piece"></i>
+        <div class="arch-block-title">Browser Extension</div>
+        <div class="arch-block-meta">Chrome &amp; Firefox · runs on app.jobtread.com</div>
+      </div>
+      <div class="arch-block primary">
+        <i class="ph ph-browsers"></i>
+        <div class="arch-block-title">Web Portal</div>
+        <div class="arch-block-meta">app.jtpowertools.com · admin + team</div>
+      </div>
+      <div class="arch-block primary">
+        <i class="ph ph-plug"></i>
+        <div class="arch-block-title">MCP Endpoint</div>
+        <div class="arch-block-meta">Open standard · any AI client</div>
+      </div>
+
+      <!-- Row 3: Backend -->
+      <div class="arch-row-label">The Backbone</div>
+      <div class="arch-block accent">
+        <i class="ph ph-cloud"></i>
+        <div class="arch-block-title">Cloudflare Workers</div>
+        <div class="arch-block-meta">MCP server · Bills processor · Auth</div>
+      </div>
+      <div class="arch-block accent">
+        <i class="ph ph-database"></i>
+        <div class="arch-block-title">D1 + R2 + KV</div>
+        <div class="arch-block-meta">Notes · Bills · Tweaks · Forms</div>
+      </div>
+      <div class="arch-block accent">
+        <i class="ph ph-graph"></i>
+        <div class="arch-block-title">JobTread Pave API</div>
+        <div class="arch-block-meta">System of record · every read &amp; write</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ─────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-tag">Pricing</span>
+      <h2 class="section-title">Honest <span class="accent">tiers.</span></h2>
+      <p class="section-lede">
+        Per company, per month. No per-seat tax. Cancel any time. The free tier isn't a trial — it's permanent and full-featured for what's in it.
+      </p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-tier">Free</div>
+        <div class="price-amount">$0<span class="per">/forever</span></div>
+        <p class="price-blurb">Daily-driver quality-of-life features. No license, no signup.</p>
+        <ul class="price-features">
+          <li><i class="ph ph-check"></i><span><strong>Dark Mode</strong> with neutral greys</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Rich text formatter</strong> for messages</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Budget hierarchy</strong> shading</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Kanban filter</strong> for empty columns</span></li>
+          <li><i class="ph ph-check"></i><span>10 features total</span></li>
+        </ul>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">Essential</div>
+        <div class="price-amount">$10<span class="per">/mo per co</span></div>
+        <p class="price-blurb">The daily wins: faster job switching, persistent notes, sticky headers.</p>
+        <ul class="price-features">
+          <li><i class="ph ph-check"></i><span><strong>Everything in Free</strong>, plus:</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Smart Job Switcher</strong> (J+S)</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Quick Notes</strong> synced across devices</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Freeze Header</strong> for big tables</span></li>
+          <li><i class="ph ph-check"></i><span><strong>PDF markup</strong> + reverse threads</span></li>
+        </ul>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">$20<span class="per">/mo per co</span></div>
+        <p class="price-blurb">Customization &amp; workflow features for PMs and team leads.</p>
+        <ul class="price-features">
+          <li><i class="ph ph-check"></i><span><strong>Everything in Essential</strong>, plus:</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Schedule checkboxes</strong> from calendar</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Custom themes</strong> (HSL palettes)</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Preview Mode</strong> for descriptions</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Availability filter</strong> on schedule</span></li>
+        </ul>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-tier">Power User</div>
+        <div class="price-amount">$30<span class="per">/mo per co</span></div>
+        <p class="price-blurb">The full stack. AI integration, portal, notes, bills inbox, branding.</p>
+        <ul class="price-features">
+          <li><i class="ph ph-check"></i><span><strong>Everything in Pro</strong>, plus:</span></li>
+          <li><i class="ph ph-check"></i><span><strong>MCP Server</strong> — AI access to JT</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Vendor Bills Inbox</strong> with AI processing</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Team Notes</strong> &amp; knowledge base</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Org Logo</strong> branding</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Tweaks &amp; Forms</strong> engine</span></li>
+          <li><i class="ph ph-check"></i><span><strong>Budget Changelog</strong> with CSV export</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ─────────────────────────────────────────────────── -->
+<section class="cta">
+  <div class="container">
+    <div class="section-head" style="margin: 0 auto; text-align: center;">
+      <span class="section-tag" style="color: var(--orange);">Get started</span>
+      <h2 class="section-title">Install free. <span class="accent">Upgrade when you're ready.</span></h2>
+      <p class="section-lede">
+        The extension installs in 30 seconds. The free tier alone makes JobTread noticeably better. Upgrade when a feature pays for itself — most companies see ROI on the first vendor bill they don't have to re-type.
+      </p>
+    </div>
+    <div class="cta-buttons">
+      <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn-primary" target="_blank" rel="noopener">
+        <i class="ph ph-download-simple"></i>
+        Install on Chrome
+      </a>
+      <a href="https://jtpowertools.com" class="btn btn-ghost" target="_blank" rel="noopener">
+        <i class="ph ph-arrow-square-out"></i>
+        jtpowertools.com
+      </a>
+      <a href="https://app.jtpowertools.com" class="btn btn-ghost" target="_blank" rel="noopener">
+        <i class="ph ph-user"></i>
+        Open the Portal
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="links">
+      <a href="https://jtpowertools.com">Website</a>·
+      <a href="https://app.jtpowertools.com">Portal</a>·
+      <a href="https://jtpowertools.com/changelog.html">Changelog</a>·
+      <a href="https://jtpowertools.com/documentation.html">Docs</a>·
+      <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn">Chrome Web Store</a>
+    </div>
+    <div>JT Power Tools — built for JobTread, by people who use JobTread every day.</div>
+  </div>
+</footer>
+
+</body>
+</html>
