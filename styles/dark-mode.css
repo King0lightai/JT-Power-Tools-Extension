@@ -133,55 +133,9 @@ div.border-l div.select-none.break-inside-avoid {
 /* Note: Task card backgrounds/text are handled by contrast-fix.js to preserve selected state */
 
 /* === General Styles === */
-/* Global border color — universal selector (specificity 0,0,1). Loses to
-   any Tailwind .border-{color}-* class (0,1,0) — those are handled below. */
+/* Global border color */
 *, ::backdrop, ::file-selector-button, :after, :before {
     border-color: #464646;
-}
-
-/* Class-level border default — JT's Tailwind build defines .border with a
-   default border-color (gray-200 / #e5e7eb in Tailwind 3), which beats the
-   universal * rule on specificity and leaves the wrapper-around-card
-   pattern (`.bg-gray-200 .p-5 .border`) showing a near-white frame in dark
-   mode. This explicit rule wins over JT's because we cascade later. Placed
-   BEFORE the .border-{color}-* overrides so the more-specific color
-   modifiers (border-gray-300, border-red-500, etc.) still take precedence
-   when both classes are present. */
-.border,
-.border-t,
-.border-b,
-.border-l,
-.border-r,
-.border-x,
-.border-y,
-.border-2,
-.border-t-2,
-.border-b-2,
-.border-l-2,
-.border-r-2 {
-    border-color: #464646;
-}
-
-/* Tailwind gray border family — JT uses these for table column separators
-   and card outlines. Light variants get darkened so they read as subtle
-   dividers on the dark bg; dark variants get LIGHTENED so they're still
-   visible against the (already-dark) dark-mode bg instead of vanishing. */
-.border-gray-100,
-.border-gray-200,
-.border-gray-300,
-.border-gray-400 {
-    border-color: #464646;
-}
-
-.border-gray-500 {
-    border-color: #5a5a5a;
-}
-
-.border-gray-600,
-.border-gray-700,
-.border-gray-800,
-.border-gray-900 {
-    border-color: #6a6a6a;
 }
 
 /* Transparent border */
@@ -249,20 +203,47 @@ div.border-l div.select-none.break-inside-avoid {
     background-color: #46442e;
 }
 
-/* Signature canvas + any other non-alert bg-orange-50 surface — Tailwind's
-   pale `#fff7ed` reads as a bright white panel on a dark page. The
-   :not(.border-l-4) keeps it scoped away from JT's orange text-alerts
-   (which we leave at the native pale bg per the alert design rule). */
-.bg-orange-50:not(.border-l-4) {
-    background-color: #353535;
+.bg-slate-50 {
+    background-color: #2b2b2b;
 }
 
-/* Green row-highlight (active document-item row uses bg-green-100;
-   group-hover swaps to bg-green-200). Tailwind defaults #dcfce7 / #bbf7d0
-   render as pale mint on the dark page — high enough lightness to read
-   as cream/yellow against the dark surround and to bleach the row's
-   text-gray-400 body copy. Darkening to a clear green keeps the "this row
-   is active" signal unambiguous and recovers contrast on the body text. */
+.bg-blue-100,
+.bg-blue-50 {
+    background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
+}
+
+/* SVG fill colors for dark mode - used by checkbox/radio circle interiors */
+.fill-blue-50 {
+    fill: #2c2c2c; /* Match dark mode background so checkbox circle interior is dark */
+}
+
+/* Alert background colors for dark mode */
+.bg-green-50 {
+    background-color: #1a3a2e; /* Dark green for green alerts */
+}
+
+.bg-yellow-50 {
+    background-color: #4a3a1a; /* Dark yellow/amber for yellow alerts */
+}
+
+.bg-red-50 {
+    background-color: #4a1f1f; /* Dark red for red alerts */
+}
+
+.bg-orange-50 {
+    background-color: #4a2a1a; /* Dark orange for orange alerts */
+}
+
+.bg-purple-50 {
+    background-color: #3a2a4a; /* Dark purple for purple alerts */
+}
+
+/* Active document-item row — JT marks the active line-item row with
+   bg-green-100 (base) and group-hover:bg-green-200 (hover). Tailwind's
+   pale mint reads as cream/yellow on the dark page and bleaches the
+   row's text-gray-400 body copy. Darken to a clear green so the
+   "this row is active" signal stays unambiguous and body text recovers
+   contrast. */
 .bg-green-100 {
     background-color: #1f3a2a;
 }
@@ -273,105 +254,78 @@ div.border-l div.select-none.break-inside-avoid {
     background-color: #2a5040;
 }
 
-.bg-slate-50 {
-    background-color: #2b2b2b;
-}
-
-/* :not(.border-l-4) excludes JT's text-alert containers — those keep their
-   native Tailwind styling (light bg + colored text) so the alert reads the
-   same in dark mode as it does on a default page.
-   Opacity bumped from 0.20 → 0.40 so the selected row actually stands out
-   against the dark base; at 0.20 the highlight vanished on dense tables. */
-.bg-blue-100:not(.border-l-4),
-.bg-blue-50:not(.border-l-4) {
-    background-color: rgba(59, 130, 246, 0.4);
-}
-
-/* Alert body text — must be explicitly dark to be readable on the light
-   pastel bg, because the global `body { color: #e0e0e0 }` cascade would
-   otherwise leave alert body copy nearly invisible on bg-{color}-50.
-   Header text inside the alert uses its own `.text-{color}-500` class
-   so it wins over inheritance and stays vivid. */
-.border-l-4.bg-blue-50,
-.border-l-4.bg-green-50,
-.border-l-4.bg-yellow-50,
-.border-l-4.bg-red-50,
-.border-l-4.bg-orange-50,
-.border-l-4.bg-purple-50 {
-    color: #1f2937 !important; /* Tailwind gray-800 — readable on every pastel-50 bg */
-}
-
-/* Alert left-border accent — guarantee Tailwind's vivid color lands on the
-   accent stripe. The `:not(.border-l-4)` scoping on the per-color rules
-   above SHOULD be enough, but in practice a stray earlier rule (the global
-   `*` border-color reset, future cascading rules, or JT's own Tailwind
-   build quirks) can still leak through and grey the stripe out. Pinning
-   the colors here with high specificity (0,3,0) + !important closes that
-   door. Values are Tailwind's blue/green/yellow/red/orange/purple-500. */
-.border-l-4.bg-blue-50.border-blue-500 { border-color: #3b82f6 !important; }
-.border-l-4.bg-green-50.border-green-500 { border-color: #22c55e !important; }
-.border-l-4.bg-yellow-50.border-yellow-500 { border-color: #eab308 !important; }
-.border-l-4.bg-red-50.border-red-500 { border-color: #ef4444 !important; }
-.border-l-4.bg-orange-50.border-orange-500 { border-color: #f97316 !important; }
-.border-l-4.bg-purple-50.border-purple-500 { border-color: #a855f7 !important; }
-
-/* SVG fill colors for dark mode - used by checkbox/radio circle interiors */
-.fill-blue-50 {
-    fill: #2c2c2c; /* Match dark mode background so checkbox circle interior is dark */
-}
-
-/* Alert containers (.border-l-4 + .bg-{color}-50 + .border-{color}-500)
-   are intentionally NOT recolored in dark mode — they keep their Tailwind
-   defaults so the visual semantic (info / warning / error / success) stays
-   unambiguous, INCLUDING the left-border accent stripe.
-   - :not(.border-l-4) excludes the alert CONTAINER itself, which carries
-     both .border-l-4 and .border-{color}-500 on the same element — without
-     this, the rule would repaint the accent stripe (e.g. green alert's
-     left edge from vivid #22c55e to #34d399).
-   - :not(.border-l-4 *) excludes text/border indicators that live INSIDE
-     an alert (the colored header text + svg icon stroke).
-   Standalone .text-{color}-500 / .border-{color}-500 markers (badges,
-   pills, icon strokes outside alerts) still get the dark shift. */
-.text-green-500:not(.border-l-4):not(.border-l-4 *),
-.border-green-500:not(.border-l-4):not(.border-l-4 *) {
+/* Alert text and border colors for dark mode */
+.text-green-500,
+.border-green-500 {
     color: #34d399;
     border-color: #34d399;
 }
 
-.text-yellow-500:not(.border-l-4):not(.border-l-4 *),
-.border-yellow-500:not(.border-l-4):not(.border-l-4 *) {
+.text-yellow-500,
+.border-yellow-500 {
     color: #fbbf24;
     border-color: #fbbf24;
 }
 
-.text-red-500:not(.border-l-4):not(.border-l-4 *),
-.border-red-500:not(.border-l-4):not(.border-l-4 *) {
+.text-red-500,
+.border-red-500 {
     color: #f87171;
     border-color: #f87171;
 }
 
-.text-orange-500:not(.border-l-4):not(.border-l-4 *),
-.border-orange-500:not(.border-l-4):not(.border-l-4 *) {
+.text-orange-500,
+.border-orange-500 {
     color: #fb923c;
     border-color: #fb923c;
 }
 
-.text-purple-500:not(.border-l-4):not(.border-l-4 *),
-.border-purple-500:not(.border-l-4):not(.border-l-4 *) {
+.text-purple-500,
+.border-purple-500 {
     color: #a78bfa;
     border-color: #a78bfa;
+}
+
+/* Alert body text should be white in dark mode, not colored */
+/* Target direct text content inside alert containers */
+.bg-green-50,
+.bg-yellow-50,
+.bg-red-50,
+.bg-orange-50,
+.bg-purple-50 {
+    color: #ffffff;
+}
+
+/* Keep the header/title colored (override the white text for header elements) */
+.bg-green-50 .text-green-500 {
+    color: #34d399 !important;
+}
+
+.bg-yellow-50 .text-yellow-500 {
+    color: #fbbf24 !important;
+}
+
+.bg-red-50 .text-red-500 {
+    color: #f87171 !important;
+}
+
+.bg-orange-50 .text-orange-500 {
+    color: #fb923c !important;
+}
+
+.bg-purple-50 .text-purple-500 {
+    color: #a78bfa !important;
 }
 
 /* Sticky columns need solid colors to prevent see-through when scrolling */
 /* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
 .sticky[style*="left"].bg-blue-50,
 .sticky[style*="left"].bg-blue-100 {
-    background-color: #355789 !important; /* Solid blend of #2c2c2c + 40% blue — matches the bumped selection opacity */
+    background-color: #2f3d54 !important; /* Solid blend of #2c2c2c + 20% blue */
 }
 
 .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
 .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-    background-color: #355789 !important; /* Solid blend for sticky columns — matches the bumped selection opacity */
+    background-color: #2f3d54 !important; /* Solid blend for sticky columns */
 }
 
 .sticky[style*="top: 0px"].bg-blue-50,
@@ -380,7 +334,7 @@ div.border-l div.select-none.break-inside-avoid {
 .sticky[style*="top:0px"].bg-blue-100,
 .sticky[style*="top: 0"].bg-blue-50,
 .sticky[style*="top: 0"].bg-blue-100 {
-    background-color: #355789 !important; /* Solid blend for sticky rows at top: 0 only — matches the bumped selection opacity */
+    background-color: #2f3d54 !important; /* Solid blend for sticky rows at top: 0 only */
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
@@ -493,7 +447,7 @@ div.border-l div.select-none.break-inside-avoid {
 }
 
 .focus-within\:bg-blue-50:focus-within {
-    background-color: rgba(59, 130, 246, 0.5); /* Focus-within sits a notch above the base selection (0.4) for emphasis */
+    background-color: rgba(59, 130, 246, 0.3); /* Blue with 30% opacity for selection in dark mode */
 }
 
 .focus\:bg-gray-100 {
@@ -541,12 +495,12 @@ div.border-l div.select-none.break-inside-avoid {
 
 .hover\:bg-blue-50 {
     &:hover {
-        background-color: rgba(59, 130, 246, 0.35); /* Hover on unselected — slightly under the base selection (0.4) */
+        background-color: rgba(59, 130, 246, 0.25); /* Blue with 25% opacity for hover in dark mode */
     }
 }
 
 .hover\:bg-blue-100:hover {
-    background-color: rgba(59, 130, 246, 0.55); /* Hover on already-selected — punchier than base selection */
+    background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for hover in dark mode */
 }
 
 /* === Active Styles === */
@@ -562,7 +516,7 @@ div.border-l div.select-none.break-inside-avoid {
 }
 
 .group-hover\/row\:bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.55); /* Row-group hover on selected — same punch as direct hover */
+    background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for group hover in dark mode */
 }
 
 .group:hover .group-hover\:text-gray-800 {
