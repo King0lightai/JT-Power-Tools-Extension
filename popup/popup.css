@@ -2233,7 +2233,11 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
   flex: 1;
   min-width: 0;
   padding: 7px 10px;
-  background: var(--bg-canvas, #fff);
+  /* --bg-sunken is the "deeper than card surface" variable defined in
+     both light + dark themes (popup.css:64 / :117). Earlier draft used
+     a nonexistent --bg-canvas with a hardcoded #fff fallback — that
+     fired in dark mode and gave white-on-white. */
+  background: var(--bg-sunken);
   border: 1px solid var(--rule);
   border-radius: var(--r-sm);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
@@ -2244,8 +2248,12 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
   user-select: all;
   text-overflow: ellipsis;
 }
-.job-email-card .je-value:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-.job-email-card .je-value::placeholder { color: var(--fg-muted, #888); font-style: italic; }
+.job-email-card .je-value:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+.job-email-card .je-value::placeholder { color: var(--fg-subtle); font-style: italic; }
 
 .job-email-card .je-copy-btn {
   display: inline-flex;
