@@ -66,6 +66,27 @@
       <div class="tab-content active" id="tab-features">
         <div class="features-section">
 
+          <!-- Job Email Card — only visible on a JT job page when on Power User tier.
+               JS toggles `.is-visible` based on active-tab URL + tier check. -->
+          <div class="job-email-card" id="jobEmailCard">
+            <div class="je-header">
+              <i class="ph ph-envelope-simple je-icon"></i>
+              <div class="je-headings">
+                <h3 class="je-title">This Job's Email</h3>
+                <p class="je-hint">BCC this on any email to land it on the job. Paste into a custom field so the team can use it.</p>
+              </div>
+            </div>
+            <div class="je-body">
+              <input type="text" id="jobEmailValue" class="je-value" readonly placeholder="Loading…">
+              <button class="je-copy-btn" id="jobEmailCopy" disabled title="Copy to clipboard">
+                <i class="ph ph-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+            <div class="je-meta" id="jobEmailMeta"></div>
+            <div class="je-error" id="jobEmailError"></div>
+          </div>
+
           <!-- Master Toggle -->
           <div class="master-toggle-bar">
             <div class="master-toggle-info">
@@ -321,17 +342,6 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="forms" data-feature="forms">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="feature-item premium" id="jobEmailPillFeature">
-                <div class="feature-info">
-                  <h3>Job Email Pill <i class="ph ph-envelope-simple feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span> <span class="badge new">New</span></h3>
-                  <p>Floating pill on every JT job page showing its per-job email address. Click to copy — then paste into a custom field so the whole team can BCC mail to the job. First click also provisions the address.</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="jobEmailPill" data-feature="jobEmailPill">
                   <span class="slider"></span>
                 </label>
               </div>

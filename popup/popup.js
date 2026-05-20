@@ -1726,6 +1726,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize feature help icons - open guide on click
   initFeatureHelpLinks();
 
+  // Initialize Job Email card — Power User + active tab on /jobs/<id>.
+  // Fire-and-forget so it doesn't block the rest of popup init.
+  initJobEmailCard(tier).catch((err) => console.error('JobEmail card init failed:', err));
+
   // Determine if user has access to different tiers
   const hasProFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'dragDrop');
   const hasEssentialFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'quickNotes');
@@ -4220,4 +4224,129 @@ function showAccountError(formType, message) {
     start();
   }
 })();
+
+// ════════════════════════════════════════════════════════════════════════
+// Job Email Card
+// ════════════════════════════════════════════════════════════════════════
+//
+// Shown above the Features list when:
+//   1. The account is on a Power User license tier, AND
+//   2. The active browser tab is on a `/jobs/<id>` URL.
+//
+// Hidden in every other case (free/pro tier, not on a job page, not
+// logged in to the extension). Provisions the per-job email address
+// via /admin/job-email/address on first open and copies it to the
+// clipboard on click. The server endpoint is get-or-create, so opening
+// the popup on a job whose address already exists is a fast read.
+
+const JT_JOB_URL_RE = /^https:\/\/app\.jobtread\.com\/jobs\/([^/?#]+)/i;
+const JOB_EMAIL_ENDPOINT = '/admin/job-email/address';
+
+async function initJobEmailCard(tier) {
+  const card = document.getElementById('jobEmailCard');
+  if (!card) return;
+
+  // Tier gate — Power User only. Free/Pro accounts never see the card.
+  if (!tier || typeof LicenseService === 'undefined' ||
+      !LicenseService.tierHasFeature(tier, 'mcpAccess')) {
+    return;
+  }
+
+  // Need a logged-in AccountService — that's what carries the portal
+  // JWT used to authenticate /admin/job-email/* calls.
+  if (typeof AccountService === 'undefined' ||
+      typeof AccountService.isLoggedIn !== 'function' ||
+      !AccountService.isLoggedIn()) {
+    return;
+  }
+
+  // Resolve the active tab's URL, then check whether it's a JT job page.
+  const tab = await new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      resolve((tabs && tabs[0]) || null);
+    });
+  });
+  const url = tab && tab.url;
+  const match = url && JT_JOB_URL_RE.exec(url);
+  if (!match) return;
+  const jobId = match[1];
+
+  // Wire copy button BEFORE the fetch so the user can interact the
+  // moment the value lands. The button starts disabled until fetch
+  // completes (or fails) so we don't copy an empty string.
+  const valueEl = document.getElementById('jobEmailValue');
+  const copyBtn = document.getElementById('jobEmailCopy');
+  const metaEl = document.getElementById('jobEmailMeta');
+  const errorEl = document.getElementById('jobEmailError');
+
+  copyBtn.addEventListener('click', async () => {
+    const text = valueEl && valueEl.value;
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      copyBtn.classList.add('is-copied');
+      const span = copyBtn.querySelector('span');
+      const original = span ? span.textContent : 'Copy';
+      if (span) span.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.classList.remove('is-copied');
+        if (span) span.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('JobEmail clipboard write failed:', err);
+      showJobEmailError('Clipboard permission denied. Select + Ctrl+C instead.');
+    }
+  });
+
+  card.classList.add('is-visible');
+
+  try {
+    const response = await AccountService.authenticatedFetch(JOB_EMAIL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId }),
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      // 403 means the server's tier gate rejected us — the LicenseService
+      // tier check above said otherwise, so we treat this as a stale local
+      // license cache. Hide the card and let the Account tab handle it.
+      if (response.status === 403) {
+        card.classList.remove('is-visible');
+        return;
+      }
+      throw new Error(payload && payload.error
+        ? payload.error
+        : 'HTTP ' + response.status);
+    }
+
+    valueEl.value = payload.address || '';
+    valueEl.placeholder = '';
+    copyBtn.disabled = !payload.address;
+
+    const parts = [];
+    if (payload.autoPost === false) {
+      parts.push('Auto-post OFF — emails parked for manual review');
+    } else {
+      parts.push('Auto-post ON');
+    }
+    if (typeof payload.emailCount === 'number') {
+      parts.push(payload.emailCount + ' received');
+    }
+    metaEl.textContent = parts.join('  ·  ');
+  } catch (err) {
+    console.error('JobEmail fetch failed:', err);
+    showJobEmailError(err && err.message
+      ? err.message
+      : 'Could not load job email address');
+  }
+}
+
+function showJobEmailError(message) {
+  const errorEl = document.getElementById('jobEmailError');
+  if (!errorEl) return;
+  errorEl.textContent = message;
+  errorEl.classList.add('is-visible');
+}
 

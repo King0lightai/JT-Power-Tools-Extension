@@ -50,7 +50,6 @@ const JTDefaults = (() => {
     jobAccessCollapse: false,
     orgLogo: false,
     forms: false,
-    jobEmailPill: true,     // on by default — no harm if not Power User (pill stays hidden)
 
     // Pro Features - Schedule & Calendar
     availabilityFilter: false,
