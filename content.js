@@ -297,7 +297,12 @@ async function initializeFeature(featureKey) {
     const FeatureClass = module.feature();
 
     if (!FeatureClass) {
-      console.error(`JT-Tools: ${module.name} not found on window`);
+      // Soft failure: the feature's script never registered itself on window
+      // (most commonly because it's not listed in the active manifest's
+      // content_scripts). The rest of the extension stays functional —
+      // this feature's popup toggle just won't do anything until the
+      // script load issue is fixed.
+      console.warn(`JT-Tools: ${module.name} not found on window — skipping (script not loaded)`);
       return;
     }
 
@@ -511,49 +516,51 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false; // Synchronous response
 });
 
-// Wait for all features to be available on window
+/**
+ * Wait for feature modules to register themselves on window.
+ *
+ * Resolves as soon as every entry in `featureModules` has a matching
+ * `window.X` global, OR after the configured timeout — whichever comes
+ * first. Always returns a result (never throws) so the caller can
+ * proceed regardless: features that did load get initialized, features
+ * that didn't are logged and skipped.
+ *
+ * @returns {Promise<{ready: boolean, missing: string[]}>}
+ *   - ready: true if all registered features are available on window
+ *   - missing: friendly names of features that never showed up (empty when ready)
+ */
 async function waitForFeatures(
   maxAttempts = window.JTDefaults?.TIMING?.FEATURE_LOAD_MAX_ATTEMPTS || 100,
   delayMs = window.JTDefaults?.TIMING?.FEATURE_LOAD_DELAY || 150
 ) {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const allAvailable = Object.values(featureModules).every(module => {
-      const feature = module.feature();
-      return feature !== null && feature !== undefined;
-    });
+  const getMissing = () =>
+    Object.entries(featureModules)
+      .filter(([, module]) => !module.feature())
+      .map(([, module]) => module.name);
 
-    if (allAvailable) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const missing = getMissing();
+
+    if (missing.length === 0) {
       console.log(`JT-Tools: All features loaded (attempt ${attempt + 1})`);
-      return true;
+      return { ready: true, missing: [] };
     }
 
     // Only log every 10 attempts to reduce console spam
     if (attempt % 10 === 0 || attempt < 5) {
       console.log(`JT-Tools: Waiting for features... (attempt ${attempt + 1}/${maxAttempts})`);
-
-      // Log which features are missing
-      Object.entries(featureModules).forEach(([key, module]) => {
-        const feature = module.feature();
-        if (!feature) {
-          console.log(`  - ${module.name} not yet available`);
-        }
-      });
+      missing.forEach(name => console.log(`  - ${name} not yet available`));
     }
 
     await new Promise(resolve => setTimeout(resolve, delayMs));
   }
 
-  console.error('JT-Tools: Timeout waiting for all features to load');
-
-  // Log which features failed to load
-  Object.entries(featureModules).forEach(([key, module]) => {
-    const feature = module.feature();
-    if (!feature) {
-      console.error(`  - ${module.name} FAILED to load`);
-    }
-  });
-
-  return false;
+  const missing = getMissing();
+  console.warn(
+    `JT-Tools: Timed out waiting for ${missing.length} feature(s) — ` +
+    `proceeding with the rest. Missing: ${missing.join(', ')}`
+  );
+  return { ready: false, missing };
 }
 
 // Initialize on page load
@@ -577,14 +584,19 @@ async function waitForFeatures(
     window.OrgDetector.init();
   }
 
-  // Wait for all feature scripts to be ready
-  const featuresReady = await waitForFeatures();
+  // Wait for feature scripts to register on window. We always proceed to
+  // initialization — features that loaded get init'd, missing ones are
+  // logged and skipped. A single broken script must not silently kill
+  // the rest of the extension.
+  const { ready, missing } = await waitForFeatures();
 
-  if (featuresReady) {
-    // Initialize all enabled features
-    await initializeAllFeatures();
+  await initializeAllFeatures();
+
+  if (ready) {
     console.log('JT Power Tools: Ready!');
   } else {
-    console.error('JT Power Tools: Failed to initialize - features not loaded');
+    console.log(
+      `JT Power Tools: Ready (with ${missing.length} feature(s) unavailable: ${missing.join(', ')})`
+    );
   }
 })();
