@@ -176,6 +176,11 @@ const featureModules = {
     feature: () => window.FormsFeature,
     instance: null
   },
+  jobEmailPill: {
+    name: 'Job Email Pill',
+    feature: () => window.JobEmailPillFeature,
+    instance: null
+  },
   // fileDragToFolder: {
   //   name: 'Files Drag to Folder',
   //   feature: () => window.FileDragToFolderFeature,
@@ -191,7 +196,7 @@ let currentSettings = window.JTDefaults
       dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
-      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
+      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false, jobEmailPill: true,
       pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
       budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
       jobAccessCollapse: false, orgLogo: false,
