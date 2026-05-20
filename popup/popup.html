@@ -66,27 +66,6 @@
       <div class="tab-content active" id="tab-features">
         <div class="features-section">
 
-          <!-- Job Email Card — only visible on a JT job page when on Power User tier.
-               JS toggles `.is-visible` based on active-tab URL + tier check. -->
-          <div class="job-email-card" id="jobEmailCard">
-            <div class="je-header">
-              <i class="ph ph-envelope-simple je-icon"></i>
-              <div class="je-headings">
-                <h3 class="je-title">This Job's Email</h3>
-                <p class="je-hint">BCC this on any email to land it on the job. Paste into a custom field so the team can use it.</p>
-              </div>
-            </div>
-            <div class="je-body">
-              <input type="text" id="jobEmailValue" class="je-value" readonly placeholder="Loading…">
-              <button class="je-copy-btn" id="jobEmailCopy" disabled title="Copy to clipboard">
-                <i class="ph ph-copy"></i>
-                <span>Copy</span>
-              </button>
-            </div>
-            <div class="je-meta" id="jobEmailMeta"></div>
-            <div class="je-error" id="jobEmailError"></div>
-          </div>
-
           <!-- Master Toggle -->
           <div class="master-toggle-bar">
             <div class="master-toggle-info">
@@ -771,6 +750,31 @@
                   <i class="ph ph-check-circle"></i>
                   <span>Active</span>
                 </div>
+              </div>
+
+              <!-- Job Email card — only visible when:
+                   (a) account is on a Power User tier
+                   (b) active browser tab is on a /jobs/<id> route
+                   (c) Email-to-Job is ENABLED for the company in the portal
+                   popup.js initJobEmailCard() handles all three checks and
+                   toggles the .is-visible class. -->
+              <div class="job-email-card" id="jobEmailCard">
+                <div class="je-header">
+                  <i class="ph ph-envelope-simple je-icon"></i>
+                  <div class="je-headings">
+                    <h3 class="je-title">This Job's Email</h3>
+                    <p class="je-hint">BCC this on any email to land it on the job. Paste into a custom field so the team can use it.</p>
+                  </div>
+                </div>
+                <div class="je-body">
+                  <input type="text" id="jobEmailValue" class="je-value" readonly placeholder="Loading…">
+                  <button class="je-copy-btn" id="jobEmailCopy" disabled title="Copy to clipboard">
+                    <i class="ph ph-copy"></i>
+                    <span>Copy</span>
+                  </button>
+                </div>
+                <div class="je-meta" id="jobEmailMeta"></div>
+                <div class="je-error" id="jobEmailError"></div>
               </div>
             </div>
 

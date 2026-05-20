@@ -2166,17 +2166,21 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
 .jt-tweaks-import-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── Job Email Card ────────────────────────────────────────────────
-   Shown above the master toggle on the Features tab when the active
-   tab is on a JT job page AND the account is Power User tier. JS in
-   popup.js toggles visibility via the `.is-visible` class and
-   populates the value/meta/error slots. */
+   Lives in the Account tab inside the `account-logged-in` block. JS
+   in popup.js shows it only when:
+     (a) the account is Power User tier
+     (b) the active browser tab is on /jobs/<id>
+     (c) Email-to-Job is enabled for the company in the portal
+   `.is-visible` toggles the display; default is hidden. */
 
 .job-email-card {
   display: none;
-  padding: 12px 16px 14px;
+  margin-top: 12px;
+  padding: 12px 14px 14px;
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--rule);
+  border: 1px solid var(--rule);
   border-left: 3px solid var(--accent);
+  border-radius: var(--r-md, 6px);
 }
 .job-email-card.is-visible { display: block; }
 
