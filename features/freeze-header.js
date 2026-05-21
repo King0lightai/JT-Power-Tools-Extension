@@ -257,10 +257,17 @@ const FreezeHeaderFeature = (() => {
       top: 0px !important;
     }
 
-    /* Popup sticky elements with bottom positioning should also be preserved */
+    /* Popup sticky elements with bottom positioning should be preserved:
+       cancel the inherited `top: <toolbarBottom>` from rule above so the
+       inline `bottom` value JT set takes effect naturally. We must NOT
+       slam `bottom: 0` here — JT often uses `bottom: 46px` (or similar)
+       to reserve space for the popup's own action-bar footer
+       (Delete / Cancel / Done). Forcing `bottom: 0` would stick the
+       inner element flush with the modal bottom, covering those buttons
+       — that was the Selection Group editor "table bleeds over bottom
+       bar" bug. Leave the inline bottom alone. */
     .jt-freeze-header-active .shadow-lg.rounded-sm .sticky[style*="bottom"],
     .jt-freeze-header-active [class*="max-w-"] .sticky[style*="bottom"] {
-      bottom: 0px !important;
       top: unset !important;
     }
 
