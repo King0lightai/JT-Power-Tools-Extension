@@ -1275,8 +1275,21 @@ const FreezeHeaderFeature = (() => {
       // wrappers within their drag-scroll-boundary containers.
       if (sidebar.classList.contains('jt-fullpage-sidebar')) continue;
 
-      applySidebarPosition(sidebar, toolbarBottom);
-      observeSidebarStyle(sidebar);
+      // Detect a sticky bottom action bar inside this sidebar (Save /
+      // Cancel / Discard buttons that JT pins to the bottom with
+      // inline style="bottom: 0px"). When present, reserve space for
+      // it in the max-height calc so the scrollable table area can't
+      // bleed over the bar and cover the buttons. Same probe + offset
+      // math used by the edit-items-panel branch below — hoisting it
+      // here fixes the Selection Group editor and any other drag-
+      // boundary sidebar with a sticky footer. No-ops (bottomBarHeight = 0)
+      // for sidebars without a sticky bottom bar — preserves the existing
+      // behavior for Cost Item Details, Task Details, Update Task, etc.
+      const bottomBar = sidebar.querySelector('.sticky[style*="bottom: 0"], .sticky[style*="bottom:0"]');
+      const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 0;
+
+      applySidebarPosition(sidebar, toolbarBottom, bottomBarHeight);
+      observeSidebarStyle(sidebar, bottomBarHeight);
     }
 
     // --- 2) Top-level edit-items-panels (Documents page Add/Edit Items) ---
