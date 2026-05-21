@@ -389,7 +389,14 @@ const AccountService = (() => {
         return { success: false, error: 'Not authenticated' };
       }
 
-      const response = await fetch(`${API_URL}/auth/update-grant-key`, {
+      // Endpoint is /admin/update-grant-key (handled by admin.js,
+      // not auth-handler.js — admin actions live under /admin/*).
+      // Previously called /auth/update-grant-key which 404'd silently,
+      // causing the popup to look like it succeeded while D1 never
+      // actually updated. The downstream effect: features that use
+      // licenses.grant_key_encrypted (job email auto-post, etc.) kept
+      // using the OLD key — looked like the rotate "didn't land".
+      const response = await fetch(`${API_URL}/admin/update-grant-key`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -398,15 +405,27 @@ const AccountService = (() => {
         body: JSON.stringify({ grantKey })
       });
 
-      const result = await response.json();
+      // Parse body as text first, then JSON if possible — mirrors the
+      // portal's api.js hardening so a 404 returning "Not Found"
+      // doesn't crash with the cryptic "Unexpected token N..." error.
+      const text = await response.text();
+      let result = null;
+      if (text) {
+        try { result = JSON.parse(text); }
+        catch { /* not JSON */ }
+      }
 
-      if (result.success) {
+      // Success is determined by HTTP status, NOT a body `success`
+      // field — the server returns `{ message: "..." }` on success
+      // (no `success: true` wrapper) and `{ error: "..." }` on failure.
+      if (response.ok) {
         log('Grant key updated successfully');
         return { success: true };
-      } else {
-        logError('Grant key update failed', result.error);
-        return { success: false, error: result.error };
       }
+
+      const errMsg = (result && result.error) || text || `HTTP ${response.status}`;
+      logError('Grant key update failed', errMsg);
+      return { success: false, error: errMsg };
     } catch (error) {
       logError('Grant key update error', error);
       return { success: false, error: 'Network error. Please try again.' };
