@@ -50,11 +50,91 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.3 — Email-to-Job, Firefox restored, resilience pass -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.3</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">May 20, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📧</span> Email-to-Job (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Every job gets its own email address &mdash; BCC it and the email lands on the job's activity feed automatically</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Open any JobTread job, click the extension icon, and the Account tab shows a copy-friendly address like <code>pat-12345@jtptbills.com</code> (derived from the first 3 letters of the job name + its number). Paste that into a job custom field and the whole team can BCC it on any thread &mdash; from Outlook, Gmail, anywhere &mdash; and the message auto-posts as an internal-team comment on the job. Subject becomes the comment title; signatures and quoted reply chains get stripped before posting; real file attachments (PDFs, photos) upload to JobTread and attach to the comment</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Reply threads stay grouped in the JT activity feed</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">When a customer or sub replies to a thread you already landed on the job, the reply nests as a sub-comment under the original instead of becoming a new parallel comment. The Activity feed reads like the actual conversation rather than scattered fragments</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Forwarded threads explode into one comment per message</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Forward a long back-and-forth (Outlook or Gmail) to the job address and the parser splits it into individual messages &mdash; your intro lands as the parent comment, each historical message as a nested reply with its own From / Sent / Subject header. No more single-comment-with-everything-crammed-into-it</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Admin opt-in toggle in the portal</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New <strong>Email to Job</strong> section in the portal sidebar (admin / owner only). One company-wide toggle to enable or disable the feature for your whole license. Disabling stops new mail and new provisioning instantly but leaves existing parked emails and history intact &mdash; soft kill, not destructive. Use it to keep sensitive jobs (legal disputes, etc.) on a human-approved workflow if needed</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> Automations (Power User &mdash; bring your own agent)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Subscribe your own AI or backend to Power Tools events via signed webhooks</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New <strong>Automations</strong> tab in the portal lets you register an HTTPS endpoint that receives signed POSTs when an event fires for one of your orgs. First event shipping: <code>bill.received</code> &mdash; the moment a vendor email lands in your bills inbox, your agent gets pinged. Build a Cloudflare Worker / Lambda / anything-reachable-on-https that auto-categorizes, matches POs, or routes to QuickBooks. Payloads sign with HMAC-SHA256 so your agent can verify it actually came from us. Per-connection delivery log surfaces the last 50 attempts so you can answer &ldquo;did my agent get this?&rdquo; without ssh'ing into logs</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🦊</span> Firefox: Extension Restored</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">All features now load on Firefox &mdash; not just Text Formatter and a handful of others</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Firefox manifest was missing four script entries that Chrome had. Because the extension's loader waited for every feature module to register before starting any of them, a single missing module silently killed the entire extension on page load &mdash; every feature stayed dormant until you toggled it off and back on in the popup. The four missing scripts have been added, AND the loader is now defensive: if any feature module fails to load (now or in the future), only that one feature is skipped and the rest of the extension keeps working</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Portal &amp; Extension Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Rotating an extension grant key in the portal actually works</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Rotate button on the API Keys page was failing with a cryptic JSON-parse error &mdash; the backend route didn't exist, the frontend was choking on the 404 response, and a sibling Disable/Enable button was hitting the same kind of missing endpoint. The rotate endpoint is now live (same safety: refuses to repoint a row at a different org's key), and the API client now surfaces clean error messages for any non-JSON failure across every endpoint, not just this one</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Sign-in and password handling now uses the correct license id everywhere</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">For accounts that existed in both the legacy and current account tables, the API key auth path was using the legacy id &mdash; which silently broke any feature that linked data to your license (per-job email addresses, forms, tweaks, notebooks all started returning constraint errors when accessed via the extension). The lookup now prefers the canonical record, with a graceful fallback for older accounts</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.2 — Dark Mode + Custom Theme polish pass -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.2</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">May 16, 2026</span>
             </div>
 
