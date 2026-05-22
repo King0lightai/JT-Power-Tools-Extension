@@ -2174,34 +2174,36 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
    `.is-visible` toggles the display; default is hidden. */
 
 .job-email-card {
+  position: relative;
   display: none;
   margin-top: 12px;
   padding: 12px 14px 14px;
   background: var(--bg-surface);
   border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
   border-radius: var(--r-md, 6px);
+  overflow: hidden;
 }
 .job-email-card.is-visible { display: block; }
 
-.job-email-card .je-header {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 10px;
+/* Subtle gradient accent on the left edge — replaces the heavy 3px bar */
+.job-email-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.job-email-card .je-icon {
-  width: 26px;
-  height: 26px;
-  flex: 0 0 auto;
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-radius: var(--r-sm);
+.job-email-card .je-head {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .job-email-card .je-headings { min-width: 0; flex: 1; }
@@ -2209,95 +2211,149 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
 .job-email-card .je-title {
   margin: 0 0 2px;
   font-family: var(--ff-display);
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--fg-strong);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .job-email-card .je-hint {
   margin: 0;
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.35;
   color: var(--fg-muted, #6b6b6b);
 }
 
-.job-email-card .je-body {
+/* Address container — the hero. Input + copy button share one bordered shell
+   so it reads as a single object instead of two adjacent controls. */
+.job-email-card .je-address {
   display: flex;
-  gap: 6px;
-  align-items: stretch;
+  align-items: center;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.job-email-card .je-address:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.job-email-card .je-address-icon {
+  flex: 0 0 auto;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--fg-muted);
 }
 
 .job-email-card .je-value {
   flex: 1;
   min-width: 0;
-  padding: 7px 10px;
-  /* --bg-sunken is the "deeper than card surface" variable defined in
-     both light + dark themes (popup.css:64 / :117). Earlier draft used
-     a nonexistent --bg-canvas with a hardcoded #fff fallback — that
-     fired in dark mode and gave white-on-white. */
-  background: var(--bg-sunken);
-  border: 1px solid var(--rule);
-  border-radius: var(--r-sm);
+  padding: 9px 6px 9px 0;
+  background: transparent;
+  border: none;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--fg-strong);
   cursor: text;
   user-select: all;
   text-overflow: ellipsis;
 }
-.job-email-card .je-value:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-  border-color: var(--accent);
+.job-email-card .je-value:focus { outline: none; }
+.job-email-card .je-value::placeholder {
+  color: var(--fg-subtle);
+  font-style: italic;
+  font-weight: 400;
 }
-.job-email-card .je-value::placeholder { color: var(--fg-subtle); font-style: italic; }
 
+/* Icon-only copy button sits INSIDE the address shell — ghosted by default,
+   pops on hover. Cleaner than a solid orange brick next to the address. */
 .job-email-card .je-copy-btn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3px;
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 60ms ease;
+}
+.job-email-card .je-copy-btn i { font-size: 14px; }
+.job-email-card .je-copy-btn:hover:not(:disabled) {
+  background: var(--bg-surface);
+  color: var(--fg-strong);
+  border-color: var(--rule);
+}
+.job-email-card .je-copy-btn:active:not(:disabled) { transform: translateY(1px); }
+.job-email-card .je-copy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.job-email-card .je-copy-btn.is-copied {
+  background: color-mix(in srgb, #22a06b 14%, var(--bg-surface));
+  color: #15803d;
+  border-color: color-mix(in srgb, #22a06b 30%, var(--rule));
+}
+
+/* Status chips — replaces the ` · `-separated text. Each fact gets its own
+   pill so state reads at a glance. Lives in the header top-right. */
+.job-email-card .je-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex-shrink: 0;
+  min-height: 18px;
+  justify-content: flex-end;
+}
+
+.job-email-card .je-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 12px;
-  background: var(--accent);
-  color: var(--accent-fg);
-  border: 1px solid var(--accent);
-  border-radius: var(--r-sm);
-  font-family: var(--ff-body, inherit);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, transform 60ms ease;
-}
-.job-email-card .je-copy-btn:hover:not(:disabled) {
-  background: var(--accent-ink);
-  border-color: var(--accent-ink);
-}
-.job-email-card .je-copy-btn:active:not(:disabled) { transform: translateY(1px); }
-.job-email-card .je-copy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.job-email-card .je-copy-btn.is-copied {
-  background: #22a06b;
-  border-color: #22a06b;
-}
-.job-email-card .je-copy-btn i { font-size: 14px; }
-
-.job-email-card .je-meta {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--fg-muted, #6b6b6b);
-  min-height: 14px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--fg-muted);
   font-feature-settings: 'tnum';
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.job-email-card .je-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.job-email-card .je-chip.is-on {
+  background: color-mix(in srgb, #22a06b 12%, var(--bg-surface));
+  border-color: color-mix(in srgb, #22a06b 32%, var(--rule));
+  color: #15803d;
+}
+
+.job-email-card .je-chip.is-off {
+  background: color-mix(in srgb, #f59e0b 10%, var(--bg-surface));
+  border-color: color-mix(in srgb, #f59e0b 32%, var(--rule));
+  color: #b45309;
 }
 
 .job-email-card .je-error {
   display: none;
-  margin-top: 8px;
-  padding: 7px 10px;
+  margin-top: 10px;
+  padding: 8px 10px;
   background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(220, 38, 38, 0.3);
   border-radius: var(--r-sm);
-  font-size: 11px;
+  font-size: 11.5px;
   color: #b91c1c;
 }
 .job-email-card .je-error.is-visible { display: block; }

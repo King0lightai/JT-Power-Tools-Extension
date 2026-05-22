@@ -113,6 +113,42 @@
             </div>
 
             <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📋</span> Forms &mdash; Admin Toggle Moved to Portal (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Forms is now a company-wide admin decision instead of a per-user popup toggle</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Forms on/off switch moved out of the extension popup and into the JT Power Tools Portal &mdash; mirroring the Email-to-Job pattern. One owner or admin flip applies to the whole team. New <strong>Company-wide toggle</strong> card at the top of the portal's Forms section shows the current state, a count of active vs. archived templates, and a single switch. Disabling hides the per-job drawer + blocks new template / instance writes; every existing template and filled-instance row stays intact, so flipping back ON restores the full feature set (soft kill, not destructive). Backfill on rollout: any license with at least one non-archived template stays enabled automatically &mdash; you don't have to touch the toggle if you're already using Forms</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✉️</span> Per-Job Email Card &mdash; Visual Polish</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">The email card in the extension popup got a cleaner, more focused look</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Cleaner card with the address itself promoted to a single bordered &ldquo;hero&rdquo; container, an icon-only copy button tucked inside it (instead of a giant orange Copy button parked beside it), and the status info (<strong>Auto-post ON</strong> / <strong>OFF</strong>, count of received emails) rendered as compact pill chips that read at a glance. Copy feedback flips the icon for 1.5s with a green tint instead of swapping &ldquo;Copy&rdquo; &harr; &ldquo;Copied!&rdquo; text. Dark mode and Custom Theme still work via the existing color tokens</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📐</span> Message Dialogs &mdash; Expand Field Button</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Expand the message textarea for long messages instead of scrolling a tiny window</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread caps the message textarea on <em>New Job Message</em>, reply forms, and the Send Estimate / Send CO modals at ~20% of the viewport &mdash; fine for a one-liner, painful for the multi-paragraph notes PMs actually send. Added a third button to the existing template toolbar (now <strong>Expand</strong> &middot; <strong>Templates ▾</strong> &middot; <strong>Settings</strong>) that toggles the textarea between the default height and ~70% of the viewport &mdash; about 3.5&times; more room before scrolling kicks in. Icon flips between &ldquo;expand&rdquo; and &ldquo;collapse&rdquo; arrows; keyboard accessible (Enter / Space)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
                 <h3 class="category-title"><span class="category-icon">🐛</span> Portal &amp; Extension Fixes</h3>
                 <ul class="change-list">
                     <li class="change-item">
@@ -125,6 +161,12 @@
                         <span class="feature-name">Sign-in and password handling now uses the correct license id everywhere</span>
                         <ul class="sub-list">
                             <li class="sub-item">For accounts that existed in both the legacy and current account tables, the API key auth path was using the legacy id &mdash; which silently broke any feature that linked data to your license (per-job email addresses, forms, tweaks, notebooks all started returning constraint errors when accessed via the extension). The lookup now prefers the canonical record, with a graceful fallback for older accounts</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Portal toggle switches now show the track, not just a floating thumb</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Email-to-Job and new Forms toggle switches in the portal were rendering as a lone white circle with no visible gray track behind it &mdash; the CSS referenced two variables that don't exist in the portal token set (a leftover from a different design system). Both toggles now use the same pill-slider styling as the popup feature toggles: solid gray track when off, brand orange when on, thumb slides smoothly. Status badges next to the toggles also picked up proper pill styling (green when enabled, neutral when disabled)</li>
                         </ul>
                     </li>
                 </ul>

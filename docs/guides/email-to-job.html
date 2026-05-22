@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email to Job — JT Power Tools</title>
+  <meta name="description" content="Give every JobTread job its own email address. BCC anyone and the message lands on the job's activity feed as an internal-team comment.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/email-to-job.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/email-to-job.html">
+  <meta property="og:title" content="Email to Job — JT Power Tools">
+  <meta property="og:description" content="Give every JobTread job its own email address. BCC anyone and the message lands on the job's activity feed as an internal-team comment.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
+
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon"><i class="ph ph-envelope-simple"></i></span>
+          <span class="tier power">Power User</span>
+        </div>
+        <h1 class="g-title"><span>Land email</span> <span class="serif">on the job.</span></h1>
+        <p class="g-lede">Every JobTread job gets its own email address. BCC anyone you want — customer, sub, inspector, supplier — and the message auto-posts to that job's activity feed as an internal-team comment. Subject becomes the title, signatures get stripped, attachments come along, reply threads stay grouped.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>JobTread tracks email <em>replies</em> to its own notifications, but it can't capture a thread you start from Outlook or Gmail. So the email that actually moves the job — the homeowner's "are we still on for Thursday?", the sub's revised bid, the inspector's red-tag photo — lives in your inbox while the job record stays half-empty. Email-to-Job fixes that.</p>
+          <p>Each job gets a unique address like <code>pat-12345@jtptbills.com</code>. Add it as a BCC on any email from anywhere. The message lands on the job's activity feed as a <strong>team-internal comment</strong> (customers and trade partners don't see it), with:</p>
+          <ul class="g-tips">
+            <li><strong>Subject as the comment title</strong> — easy to scan in the feed.</li>
+            <li><strong>Signature stripped</strong> — no "Sent from my iPhone" / boilerplate sign-off / quoted reply chain.</li>
+            <li><strong>Attachments included</strong> — PDFs, photos, contracts upload to JobTread and attach to the comment.</li>
+            <li><strong>Reply threads grouped</strong> — when someone replies to a thread you already landed, the reply nests under the original comment instead of becoming a new parallel thread.</li>
+            <li><strong>Forwarded threads exploded</strong> — forward a 6-message back-and-forth and the parser splits it: your intro lands as the parent comment, each historical message as a nested reply with its own From / Sent / Subject header.</li>
+          </ul>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on (admin / owner only)</h2>
+          <p>Email-to-Job is opt-in per company. An owner or admin on your license flips a single toggle from the JT Power Tools Portal — that decision applies to everyone on the team.</p>
+          <ol class="g-steps">
+            <li>Sign in at <a href="https://app.jtpowertools.com/">app.jtpowertools.com</a>.</li>
+            <li>Open the <strong>Email to Job</strong> section in the portal sidebar.</li>
+            <li>Flip the <strong>Company-wide toggle</strong> to ON.</li>
+          </ol>
+          <p>That's it. Any Power User on your team can now provision per-job email addresses from inside the extension.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Provision an address for a job</h2>
+          <ol class="g-steps">
+            <li>Open the JobTread job in your browser.</li>
+            <li>Click the JT Power Tools icon in the toolbar. The popup shows a <strong>This Job's Email</strong> card with the address (auto-generated from the first 3 letters of the job name + its number — e.g. <code>pat-12345@jtptbills.com</code>).</li>
+            <li>Click the copy icon to grab the address.</li>
+            <li>Paste it into a custom field on the job (we use one called "Job Email") so the whole team can find it. Or add it directly to your address book / contact group.</li>
+          </ol>
+          <p>The first popup open per job <em>creates</em> the address; every subsequent open is a fast read. Each address is unique to its job — no chance of one job's email landing on another.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Use it on a real email</h2>
+          <ol class="g-steps">
+            <li>Compose an email in Outlook / Gmail / Apple Mail — anywhere.</li>
+            <li>BCC the job's address. (BCC, not CC — the recipient never sees it.)</li>
+            <li>Send.</li>
+            <li>Open the job's Activity feed in JobTread. Your message is there, posted as a team-internal comment.</li>
+          </ol>
+          <p>If the customer or sub later replies to that thread (without BCC'ing the job address), their reply also lands — as long as it's part of the same conversation. The parser uses the email's threading headers to find the original comment and nest the reply under it.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Forwarded threads</h2>
+          <p>You can also <strong>forward</strong> an existing thread to the job address — say a 6-message back-and-forth that started before you knew about Email-to-Job. The parser handles common forward formats (Outlook, Gmail, Apple Mail) and splits them:</p>
+          <ul class="g-tips">
+            <li>Your intro (whatever you typed above the quoted thread) becomes the <strong>parent comment</strong>, with the email's subject as the title.</li>
+            <li>Each historical message becomes a <strong>nested reply</strong> under that parent, with its own From / Sent / Subject header inline.</li>
+          </ul>
+          <p>Capped at 20 segments per forward to bound spam. If the parser can't find thread markers, it falls back to a single comment with the whole body.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Privacy &amp; visibility</h2>
+          <ul class="g-tips">
+            <li><strong>Team-only.</strong> Every comment created by Email-to-Job is posted with team-internal visibility. Your customers and trade partners <em>do not see them</em> on their job portals.</li>
+            <li><strong>Signature stripping.</strong> The parser removes boilerplate sign-offs ("Best, Pat" / "Sent from my iPhone" / etc.) and quoted reply chains before posting. The comment shows only what was said in the most recent message.</li>
+            <li><strong>Spam mitigation.</strong> Each address embeds a random token. If you start getting spam on one, an admin can rotate the token from the portal — keeps the job address but invalidates the old one.</li>
+            <li><strong>Forensic R2 storage.</strong> Every original MIME message is stored in Cloudflare R2 for audit. Disabling the feature stops new mail and blocks new provisioning instantly but leaves existing parked emails + history intact.</li>
+          </ul>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li><strong>Power User tier required</strong> for individual users to provision per-job addresses. Free / Pro tier members on the same license can still <em>view</em> the resulting comments inside JobTread — they just can't generate the address themselves.</li>
+            <li><strong>One address per job</strong>, persistent for the life of the job. Rotation is admin-only and rare.</li>
+            <li><strong>Custom alias support.</strong> Don't like the auto-generated <code>pat-12345@</code> format? Admins can set a vanity alias per job via the MCP server. (UI for this is coming.)</li>
+            <li><strong>Inbound only.</strong> The address receives mail; it doesn't send. To <em>send</em> a JT comment as an email to someone, use JobTread's existing comment-with-recipients flow.</li>
+            <li><strong>Soft kill.</strong> Disabling the company-wide toggle later doesn't delete anything. All historical parked emails and posted comments stay where they are. Flip the toggle back ON and provisioning resumes.</li>
+          </ul>
+        </div>
+
+        <div class="g-section">
+          <h2>Troubleshooting</h2>
+          <ul class="g-tips">
+            <li><strong>The address card doesn't appear in the popup.</strong> Three things gate it: (1) you're signed in to the extension, (2) you're on a Power User tier, (3) your license admin has enabled the company toggle in the portal. If any of those are missing, the card stays hidden.</li>
+            <li><strong>Email sent but didn't land on the job.</strong> Check that you BCC'd the <em>exact</em> address (it's case-insensitive but spelling matters). Also confirm with your admin that Email-to-Job is enabled. If both check out, contact <a href="/support/">support</a> — the original message is preserved in R2 so we can trace any drop.</li>
+            <li><strong>Reply landed as a new parent comment instead of nesting.</strong> The threading is based on the email's <code>In-Reply-To</code> header. Some webmail clients strip it on replies. The fallback is a parallel comment — content is still captured, just not visually grouped.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/reverse-thread-order.html">Reverse Thread Order</a> — newest comment on top</li>
+            <li><a href="/guides/character-counter.html">Message Counter &amp; Templates</a> — save common replies</li>
+            <li><a href="/guides/premium.html">Plans &amp; Licensing</a> — Power User tier</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
+</body>
+</html>

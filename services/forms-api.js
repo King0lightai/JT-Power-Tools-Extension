@@ -127,10 +127,55 @@ const FormsApi = (() => {
     return postJson('/admin/forms/instances/upsert', payload);
   }
 
+  /**
+   * Migration 029 gate. Returns true if the caller's license has the
+   * company-wide Forms toggle ON. Used by features/forms.js to decide
+   * whether to mount the per-job drawer at all. Any failure (network,
+   * auth, license inactive) returns false so a transient hiccup can't
+   * silently enable a feature the company hasn't sanctioned.
+   *
+   * Caches the result for COMPANY_TOGGLE_TTL_MS on success only — we
+   * don't want a "true" answer to stick around for hours if the admin
+   * just turned it off. Failures don't cache so the next attempt can
+   * retry immediately.
+   */
+  const COMPANY_TOGGLE_TTL_MS = 60 * 1000;
+  let toggleCache = null; // { value: boolean, expiresAt: number }
+
+  async function isCompanyEnabled() {
+    const now = Date.now();
+    if (toggleCache && toggleCache.expiresAt > now) {
+      return toggleCache.value;
+    }
+    const svc = requireAccountService();
+    try {
+      const response = await svc.authenticatedFetch('/admin/forms/enabled', {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        log('isCompanyEnabled: non-ok', response.status);
+        return false;
+      }
+      const payload = await response.json().catch(() => null);
+      const enabled = !!(payload && payload.enabled);
+      toggleCache = { value: enabled, expiresAt: now + COMPANY_TOGGLE_TTL_MS };
+      return enabled;
+    } catch (err) {
+      log('isCompanyEnabled: error', err);
+      return false;
+    }
+  }
+
+  function clearCompanyEnabledCache() {
+    toggleCache = null;
+  }
+
   return {
     listTemplates,
     listInstancesByJob,
-    upsertInstance
+    upsertInstance,
+    isCompanyEnabled,
+    clearCompanyEnabledCache
   };
 })();
 

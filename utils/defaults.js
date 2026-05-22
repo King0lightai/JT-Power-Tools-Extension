@@ -49,7 +49,10 @@ const JTDefaults = (() => {
     taskTypeFilter: false,
     jobAccessCollapse: false,
     orgLogo: false,
-    forms: false,
+    // Forms toggle moved from popup to portal (Migration 029). Default
+    // true so content.js still loads features/forms.js; the feature
+    // self-gates on the server-side company flag.
+    forms: true,
 
     // Pro Features - Schedule & Calendar
     availabilityFilter: false,

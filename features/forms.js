@@ -878,6 +878,25 @@ const FormsFeature = (() => {
       return;
     }
 
+    // Migration 029 company-wide gate. The Forms toggle moved from the
+    // extension popup to the JT Power Tools Portal — an admin / owner
+    // on the license has to flip the toggle ON before the per-job
+    // drawer mounts for anyone. Failure modes (network, auth) treat as
+    // OFF so we never silently enable a feature the company hasn't
+    // sanctioned. Cached for 60s inside FormsApi.
+    if (typeof window.FormsApi.isCompanyEnabled === 'function') {
+      try {
+        const enabled = await window.FormsApi.isCompanyEnabled();
+        if (!enabled) {
+          log('init: company toggle is OFF — skipping mount');
+          return;
+        }
+      } catch (err) {
+        console.warn('FormsFeature: company-enabled check failed, skipping mount', err);
+        return;
+      }
+    }
+
     injectStylesheet();
 
     try {

@@ -401,6 +401,19 @@ const CharacterCounterFeature = (() => {
       border-bottom-left-radius: 0;
     }
 
+    /* When the expand button is present, the dropdown becomes the middle button —
+       strip its radii and right border so the three pieces read as one pill */
+    .jt-templates-only .jt-template-dropdown-btn:not(:first-child) {
+      border-radius: 0;
+      border-right: none;
+    }
+
+    /* Expand button on message dialogs — toggles the textarea max-height
+       (default 20vh from Tailwind's max-h-[20vh] → 70vh when expanded) */
+    .jt-message-expanded {
+      max-height: 70vh !important;
+    }
+
     /* Separator between buttons and counter */
     .jt-signature-separator {
       width: 1px;
@@ -2373,6 +2386,45 @@ const CharacterCounterFeature = (() => {
     // Phosphor-style gear icon
     settingsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
+    // Create Expand button — toggles the textarea's outer container between
+    // the default Tailwind max-h-[20vh] and a larger 70vh so long messages
+    // don't force the user to scroll a tiny window
+    const EXPAND_ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+    const COLLAPSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+    const expandBtn = document.createElement('div');
+    expandBtn.setAttribute('role', 'button');
+    expandBtn.setAttribute('tabindex', '0');
+    expandBtn.className = 'jt-native-btn jt-expand-btn';
+    expandBtn.title = 'Expand message field';
+    expandBtn.innerHTML = EXPAND_ICON;
+
+    let isFieldExpanded = false;
+    const getTextareaContainer = () =>
+      field.closest('.border.rounded-b-sm, .rounded-sm.border');
+
+    const handleExpandToggle = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const textareaContainer = getTextareaContainer();
+      if (!textareaContainer) return;
+      isFieldExpanded = !isFieldExpanded;
+      if (isFieldExpanded) {
+        textareaContainer.classList.add('jt-message-expanded');
+        expandBtn.innerHTML = COLLAPSE_ICON;
+        expandBtn.title = 'Collapse message field';
+      } else {
+        textareaContainer.classList.remove('jt-message-expanded');
+        expandBtn.innerHTML = EXPAND_ICON;
+        expandBtn.title = 'Expand message field';
+      }
+    };
+    expandBtn.addEventListener('click', handleExpandToggle);
+    expandBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleExpandToggle(e);
+      }
+    });
+
     // Create TWO separate containers:
     // 1. Counter container (goes on LEFT side, after upload buttons)
     // 2. Templates container (goes on RIGHT side, next to Send button)
@@ -2382,9 +2434,10 @@ const CharacterCounterFeature = (() => {
     counterContainer.className = 'jt-signature-container jt-counter-only';
     counterContainer.appendChild(counter);
 
-    // Templates container (dropdown + settings button)
+    // Templates container (expand + dropdown + settings button — joined as one pill)
     const templatesContainer = document.createElement('div');
     templatesContainer.className = 'jt-signature-container jt-templates-only';
+    templatesContainer.appendChild(expandBtn);
     templatesContainer.appendChild(dropdownBtn);
     templatesContainer.appendChild(settingsBtn);
 
@@ -2584,6 +2637,10 @@ const CharacterCounterFeature = (() => {
       // Focus/blur listeners are anonymous so they'll be garbage collected
       // Cleanup dropdown
       dropdownCleanup();
+      // Reset expanded-state class on the textarea container so the next
+      // re-init starts collapsed even if the modal is still open
+      const expandedContainer = getTextareaContainer();
+      if (expandedContainer) expandedContainer.classList.remove('jt-message-expanded');
       // Remove the group wrapper if counter is inside one (inline toolbar layout)
       const group = counterContainer.closest('.jt-counter-templates-group');
       if (group) group.remove();

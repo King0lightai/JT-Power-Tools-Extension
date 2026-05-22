@@ -702,7 +702,9 @@ async function loadSettings() {
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
-    setCheckbox('forms', settings.forms !== undefined ? settings.forms : false);
+    // Forms toggle removed — see Migration 029. The on/off decision is
+    // admin-managed in the portal; this popup never reads or writes
+    // settings.forms anymore.
 
     // Reconcile storage with current access: if a feature is stored as true
     // but can't actually run given the current tier or portal session state,
@@ -734,7 +736,6 @@ async function loadSettings() {
       if (settings.customFieldFilter) featuresToDisable.push('customFieldFilter');
       if (settings.budgetChangelog) featuresToDisable.push('budgetChangelog');
       if (settings.taskTypeFilter) featuresToDisable.push('taskTypeFilter');
-      if (settings.forms) featuresToDisable.push('forms');
     }
 
     if (featuresToDisable.length > 0) {
@@ -947,7 +948,10 @@ async function getCurrentSettings() {
     orgLogo: true,
     tweakEngine: getCheckboxValue('tweakEngine', defaultSettings.tweakEngine !== undefined ? defaultSettings.tweakEngine : true),
     inspectForAi: getCheckboxValue('inspectForAi', defaultSettings.inspectForAi !== undefined ? defaultSettings.inspectForAi : false),
-    forms: getCheckboxValue('forms', defaultSettings.forms !== undefined ? defaultSettings.forms : false),
+    // forms: removed from popup — admin-controlled in the portal.
+    // We pass `true` so the content script still loads features/forms.js;
+    // the feature self-gates on the server-side company toggle.
+    forms: true,
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes
@@ -4285,12 +4289,19 @@ async function initJobEmailCard(tier) {
     try {
       await navigator.clipboard.writeText(text);
       copyBtn.classList.add('is-copied');
-      const span = copyBtn.querySelector('span');
-      const original = span ? span.textContent : 'Copy';
-      if (span) span.textContent = 'Copied!';
+      copyBtn.title = 'Copied!';
+      const icon = copyBtn.querySelector('i');
+      if (icon) {
+        icon.classList.remove('ph-copy');
+        icon.classList.add('ph-check');
+      }
       setTimeout(() => {
         copyBtn.classList.remove('is-copied');
-        if (span) span.textContent = original;
+        copyBtn.title = 'Copy to clipboard';
+        if (icon) {
+          icon.classList.remove('ph-check');
+          icon.classList.add('ph-copy');
+        }
       }, 1500);
     } catch (err) {
       console.error('JobEmail clipboard write failed:', err);
@@ -4325,16 +4336,7 @@ async function initJobEmailCard(tier) {
     valueEl.placeholder = '';
     copyBtn.disabled = !payload.address;
 
-    const parts = [];
-    if (payload.autoPost === false) {
-      parts.push('Auto-post OFF — emails parked for manual review');
-    } else {
-      parts.push('Auto-post ON');
-    }
-    if (typeof payload.emailCount === 'number') {
-      parts.push(payload.emailCount + ' received');
-    }
-    metaEl.textContent = parts.join('  ·  ');
+    renderJobEmailChips(metaEl, payload);
   } catch (err) {
     console.error('JobEmail fetch failed:', err);
     showJobEmailError(err && err.message
@@ -4348,5 +4350,34 @@ function showJobEmailError(message) {
   if (!errorEl) return;
   errorEl.textContent = message;
   errorEl.classList.add('is-visible');
+}
+
+// Render the meta line as status chips instead of a `·`-separated string.
+// Each fact gets its own pill so state reads at a glance (auto-post on/off,
+// inbound mail count). DOM construction is manual — no innerHTML — to keep
+// the popup CSP happy and dodge any escaping pitfalls.
+function renderJobEmailChips(container, payload) {
+  if (!container) return;
+  container.textContent = '';
+
+  const autoPostOn = payload.autoPost !== false;
+  const autoChip = document.createElement('span');
+  autoChip.className = 'je-chip ' + (autoPostOn ? 'is-on' : 'is-off');
+  autoChip.title = autoPostOn
+    ? 'Inbound emails auto-post to the job as comments'
+    : 'Inbound emails are parked for manual review';
+  const dot = document.createElement('span');
+  dot.className = 'je-chip-dot';
+  autoChip.appendChild(dot);
+  autoChip.appendChild(document.createTextNode(autoPostOn ? 'Auto-post on' : 'Auto-post off'));
+  container.appendChild(autoChip);
+
+  if (typeof payload.emailCount === 'number') {
+    const countChip = document.createElement('span');
+    countChip.className = 'je-chip';
+    const n = payload.emailCount;
+    countChip.textContent = n.toLocaleString() + (n === 1 ? ' email' : ' emails');
+    container.appendChild(countChip);
+  }
 }
 

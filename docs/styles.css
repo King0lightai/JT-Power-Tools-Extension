@@ -2053,6 +2053,215 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Email-to-Job announcement demo visual (v4.9.3)
+   ═══════════════════════════════════════════════════════════
+   Reuses the .s-tweaks section skeleton for the announcement layout
+   (tape, meta strip, headline, lede, mini cards, pull quote). This
+   block styles only the email-specific demo on the right side of the
+   two-column hero grid: an address card mockup → arrow → resulting
+   JT comment. Mirrors the popup's polished email card so the
+   marketing site shows what the extension actually ships. */
+.s-emailtojob-demo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 8px;
+}
+
+/* Address card — mirrors the popup's job-email-card layout */
+.s-emailtojob-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 12px);
+  padding: 16px 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.s-emailtojob-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--orange) 0%, transparent 100%);
+  opacity: 0.7;
+}
+.s-emailtojob-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.s-emailtojob-card-label {
+  font-family: var(--font-sub);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.s-emailtojob-card-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #22c55e 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, #22c55e 32%, var(--border));
+  color: #15803d;
+  font-family: var(--font-sub);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.s-emailtojob-card-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.s-emailtojob-card-address {
+  display: flex;
+  align-items: center;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 4px 4px 4px 10px;
+  gap: 8px;
+}
+.s-emailtojob-card-address > i {
+  font-size: 16px;
+  color: var(--ink-subtle);
+  flex-shrink: 0;
+}
+.s-emailtojob-card-value {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.s-emailtojob-card-copy {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm, 6px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink-subtle);
+  font-size: 14px;
+}
+
+/* Arrow — visual link between the address card and the resulting comment */
+.s-emailtojob-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-muted);
+  font-family: var(--font-sub);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.s-emailtojob-arrow i {
+  font-size: 22px;
+  color: var(--orange);
+}
+
+/* JT comment mockup — what the email becomes inside JobTread */
+.s-emailtojob-comment {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 12px);
+  padding: 16px 18px;
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.s-emailtojob-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.s-emailtojob-comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--orange) 15%, var(--surface-inset));
+  color: var(--orange-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sub);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.s-emailtojob-comment-author {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.s-emailtojob-comment-time {
+  font-size: 11px;
+  color: var(--ink-subtle);
+  margin-top: 2px;
+}
+.s-emailtojob-comment-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  margin: 6px 0 6px;
+}
+.s-emailtojob-comment-body {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  margin: 0 0 10px;
+}
+.s-emailtojob-comment-attach {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm, 6px);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+.s-emailtojob-comment-attach i {
+  font-size: 13px;
+  color: var(--ink-subtle);
+}
+
+/* Tablet — collapse the demo onto its own row below the headline */
+@media (max-width: 960px) {
+  .s-emailtojob-demo { padding: 0; }
+}
+
+/* Phone — tighter address card, smaller mono font */
+@media (max-width: 560px) {
+  .s-emailtojob-card-value { font-size: 12px; }
+  .s-emailtojob-comment-title { font-size: 13px; }
+}
+
 /* Pro card — orange border + "New in v4.7.0" pill badge + highlighted
    Tweaks bullet. Mirrors the Power User featured-badge anatomy so the
    two cards have parallel visual treatment, just in brand orange. */

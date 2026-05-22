@@ -25,7 +25,10 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
       taskTypeFilter: false,
       jobAccessCollapse: false,
       orgLogo: false,
-      forms: false,
+      // Forms always loads in the content script but self-gates on the
+      // server-side company toggle (Migration 029). Admins control the
+      // on/off decision in the JT Power Tools Portal, not here.
+      forms: true,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };

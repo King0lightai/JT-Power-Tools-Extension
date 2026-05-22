@@ -314,16 +314,12 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="formsFeature">
-                <div class="feature-info">
-                  <h3>Forms <i class="ph ph-clipboard-text feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span> <span class="badge new">New</span></h3>
-                  <p>Per-job intake forms. Adds a Forms button to the JT job action bar that opens a fillable side drawer. Build templates in the portal, fill on the job, print to PDF, or hand off to AI via MCP.</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="forms" data-feature="forms">
-                  <span class="slider"></span>
-                </label>
-              </div>
+              <!-- Forms toggle removed — the on/off decision is now a
+                   company-wide admin choice in the JT Power Tools Portal
+                   (Migration 029, /admin/forms/toggle). The Forms feature
+                   module still loads here when the user is signed in +
+                   Power User + their license has the company toggle ON;
+                   see features/forms.js init() for the new gate. -->
 
               <!-- Saved for a later version
               <div class="feature-item premium" id="fileDragToFolderFeature">
@@ -759,22 +755,21 @@
                    popup.js initJobEmailCard() handles all three checks and
                    toggles the .is-visible class. -->
               <div class="job-email-card" id="jobEmailCard">
-                <div class="je-header">
-                  <i class="ph ph-envelope-simple je-icon"></i>
+                <div class="je-head">
                   <div class="je-headings">
                     <h3 class="je-title">This Job's Email</h3>
-                    <p class="je-hint">BCC this on any email to land it on the job. Paste into a custom field so the team can use it.</p>
+                    <p class="je-hint">BCC this on any email to land it on the job.</p>
                   </div>
+                  <div class="je-chips" id="jobEmailMeta" aria-live="polite"></div>
                 </div>
-                <div class="je-body">
+                <div class="je-address">
+                  <i class="ph ph-envelope-simple je-address-icon" aria-hidden="true"></i>
                   <input type="text" id="jobEmailValue" class="je-value" readonly placeholder="Loading…">
-                  <button class="je-copy-btn" id="jobEmailCopy" disabled title="Copy to clipboard">
-                    <i class="ph ph-copy"></i>
-                    <span>Copy</span>
+                  <button class="je-copy-btn" id="jobEmailCopy" disabled title="Copy to clipboard" aria-label="Copy email address">
+                    <i class="ph ph-copy" aria-hidden="true"></i>
                   </button>
                 </div>
-                <div class="je-meta" id="jobEmailMeta"></div>
-                <div class="je-error" id="jobEmailError"></div>
+                <div class="je-error" id="jobEmailError" role="alert"></div>
               </div>
             </div>
 
