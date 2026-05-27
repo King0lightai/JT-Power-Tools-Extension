@@ -140,29 +140,54 @@ const FormsApi = (() => {
    * retry immediately.
    */
   const COMPANY_TOGGLE_TTL_MS = 60 * 1000;
+  // Bound the gate check so a slow/stalled network (or auth handshake) can't
+  // hold up Forms' init(). On timeout we fail closed — treat as OFF, same as a
+  // network error — and the next page navigation retries with a fresh attempt.
+  const COMPANY_TOGGLE_TIMEOUT_MS = 4000;
   let toggleCache = null; // { value: boolean, expiresAt: number }
+
+  async function fetchCompanyEnabled(now, signal) {
+    const svc = requireAccountService();
+    const response = await svc.authenticatedFetch('/admin/forms/enabled', {
+      method: 'GET',
+      signal,
+    });
+    if (!response.ok) {
+      log('isCompanyEnabled: non-ok', response.status);
+      return false;
+    }
+    const payload = await response.json().catch(() => null);
+    const enabled = !!(payload && payload.enabled);
+    toggleCache = { value: enabled, expiresAt: now + COMPANY_TOGGLE_TTL_MS };
+    return enabled;
+  }
 
   async function isCompanyEnabled() {
     const now = Date.now();
     if (toggleCache && toggleCache.expiresAt > now) {
       return toggleCache.value;
     }
-    const svc = requireAccountService();
+
+    const controller = new AbortController();
+    let timer;
+    const timeout = new Promise(resolve => {
+      timer = setTimeout(() => {
+        controller.abort();
+        log('isCompanyEnabled: timed out — failing closed');
+        resolve(false);
+      }, COMPANY_TOGGLE_TIMEOUT_MS);
+    });
+
     try {
-      const response = await svc.authenticatedFetch('/admin/forms/enabled', {
-        method: 'GET',
-      });
-      if (!response.ok) {
-        log('isCompanyEnabled: non-ok', response.status);
-        return false;
-      }
-      const payload = await response.json().catch(() => null);
-      const enabled = !!(payload && payload.enabled);
-      toggleCache = { value: enabled, expiresAt: now + COMPANY_TOGGLE_TTL_MS };
-      return enabled;
-    } catch (err) {
-      log('isCompanyEnabled: error', err);
-      return false;
+      return await Promise.race([
+        fetchCompanyEnabled(now, controller.signal).catch(err => {
+          log('isCompanyEnabled: error', err);
+          return false;
+        }),
+        timeout,
+      ]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 

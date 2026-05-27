@@ -367,24 +367,27 @@ function cleanupFeature(featureKey) {
 }
 
 // Initialize all enabled features
+//
+// Features init concurrently, not one-at-a-time. Each feature's init() is
+// independent and wraps its own errors (see initializeFeature), so running
+// them in parallel means a feature that's slow to start — e.g. one that awaits
+// a network round-trip in init() like the Forms company-toggle gate — can no
+// longer delay or block the features after it. A sequential await-loop here let
+// a single slow/hanging init() stall every later feature, so they appeared to
+// "load forever" or never mount at all.
 async function initializeAllFeatures() {
   console.log('JT-Tools: Initializing features based on settings...');
 
+  // Every enabled feature, plus the two always-on internal features that
+  // aren't user-toggleable. A Set de-dupes so each feature kicks off once.
+  const keysToInit = new Set();
   for (const [key, enabled] of Object.entries(currentSettings)) {
-    if (enabled && featureModules[key]) {
-      await initializeFeature(key);
-    }
+    if (enabled && featureModules[key]) keysToInit.add(key);
   }
+  if (featureModules.helpSidebarSupport) keysToInit.add('helpSidebarSupport');
+  if (featureModules.keyboardShortcuts) keysToInit.add('keyboardShortcuts');
 
-  // Always enable Help Sidebar Support (not user-toggleable)
-  if (featureModules.helpSidebarSupport) {
-    await initializeFeature('helpSidebarSupport');
-  }
-
-  // Always enable Keyboard Shortcuts enhancement (not user-toggleable)
-  if (featureModules.keyboardShortcuts) {
-    await initializeFeature('keyboardShortcuts');
-  }
+  await Promise.allSettled([...keysToInit].map(key => initializeFeature(key)));
 
   console.log('JT-Tools: All enabled features initialized');
 }
