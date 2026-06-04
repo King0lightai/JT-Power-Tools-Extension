@@ -56,6 +56,14 @@ const ContrastFixFeature = (() => {
       debouncedUpdate.cancel();
       debouncedUpdate = null;
     }
+
+    // Revert the current-date highlight (marker class + inline backgroundColor)
+    // so the date cell doesn't stay colored after the feature is toggled off,
+    // and the marker class doesn't block re-highlighting on re-enable.
+    document.querySelectorAll('.jt-current-date-enhanced').forEach(td => {
+      td.classList.remove('jt-current-date-enhanced');
+      td.style.backgroundColor = '';
+    });
   }
 
   // Parse RGB string to values

@@ -1,7 +1,9 @@
-// JobTread Schedule Feature Module (Refactored)
-// Main orchestrator - coordinates task completion modules
-// NOTE: Drag & drop functionality DISABLED as of Jan 2026 - JobTread now has native drag & drop
-// This module now only handles: Task Completion checkboxes & Action Items completion
+// Task Completion Checkboxes Feature Module
+// Main orchestrator - coordinates the task-completion + action-items checkbox modules.
+// Drag & drop was removed Jun 2026 (JobTread shipped native schedule drag & drop); the
+// drag/drop machinery modules were deleted and this file was renamed from drag-drop.js.
+// NOTE: the global is intentionally kept as `window.DragDropFeature` and the settings key
+// as `dragDrop` so no storage migration / content.js change is needed (file-level rename only).
 
 const DragDropFeature = (() => {
   // Feature state

@@ -5,6 +5,7 @@ const ActionItemsCompletion = (() => {
   // Feature state
   let isActive = false;
   let observer = null;
+  let debounceTimer = null;
 
   // Track which action items have checkboxes added
   const processedItems = new WeakSet();
@@ -22,9 +23,30 @@ const ActionItemsCompletion = (() => {
     // Add checkboxes to action items
     addCompletionCheckboxes();
 
-    // Watch for changes to the Action Items card
-    observer = new MutationObserver(() => {
-      addCompletionCheckboxes();
+    // Watch for changes to the Action Items card. The previous observer ran the
+    // full card scan on EVERY DOM mutation page-wide and re-fired on its own
+    // checkbox inserts. Now we (a) ignore mutations whose only added nodes are
+    // our own checkboxes, (b) require at least one added element, and
+    // (c) debounce, so the scan runs at most once per quiet 200ms window.
+    observer = new MutationObserver((mutations) => {
+      let relevant = false;
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE &&
+              !(node.classList && node.classList.contains('jt-action-item-checkbox'))) {
+            relevant = true;
+            break;
+          }
+        }
+        if (relevant) break;
+      }
+      if (!relevant) return;
+
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+        addCompletionCheckboxes();
+      }, 200);
     });
 
     observer.observe(document.body, {
@@ -541,6 +563,12 @@ const ActionItemsCompletion = (() => {
     }
 
     isActive = false;
+
+    // Clear any pending debounced scan
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
 
     // Disconnect observer
     if (observer) {

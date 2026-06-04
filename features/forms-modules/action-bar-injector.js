@@ -111,8 +111,15 @@ const FormsActionBarInjector = (() => {
    * That hover class is the distinguishing signal: other JT popovers
    * (Add Cost Item's "From Budget / From Bills & Time", etc.) share the
    * wrapper classes and use `block w-full` items too, but style hover with
-   * `hover:bg-gray-50`. Requiring `hover:bg-blue-500` keeps us locked to
-   * the action-menu shape and avoids false positives.
+   * `hover:bg-gray-50`.
+   *
+   * On top of that we require a JOB-route anchor (`a[href*="/jobs/"]`) — the
+   * relocated job actions always include Time Entry / Task / To-Do, which
+   * link to `/jobs/{id}/…` sub-routes. Plenty of unrelated selection
+   * dropdowns (assignee, status, cost-code pickers, etc.) reuse the same
+   * blue-hover item styling but never link to job sub-routes, so this extra
+   * check keeps us locked to the job-action menu and stops Forms from
+   * leaking into every other dropdown.
    *
    * @returns {Element|null}
    */
@@ -123,7 +130,8 @@ const FormsActionBarInjector = (() => {
     for (const el of candidates) {
       const looksLikeActionMenu = el.querySelector('[role="button"][class*="block"][class*="w-full"][class*="hover:bg-blue-500"]')
                                || el.querySelector('a[class*="block"][class*="w-full"][class*="hover:bg-blue-500"]');
-      if (looksLikeActionMenu) return el;
+      const hasJobActionLink = el.querySelector('a[href*="/jobs/"]');
+      if (looksLikeActionMenu && hasJobActionLink) return el;
     }
     return null;
   }
@@ -142,6 +150,12 @@ const FormsActionBarInjector = (() => {
     btn.setAttribute('tabindex', '0');
     btn.setAttribute('data-jt-forms-trigger', 'true');
     btn.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0';
+    // Mount hidden, then reveal on the next stable frame (see revealButton).
+    // visibility:hidden — NOT display:none — so the button still reserves its
+    // flex slot: siblings settle around it while hidden and the reveal causes
+    // no layout shift. This kills the load-time flash where the button popped
+    // in mid-hydration as JT re-rendered the action bar.
+    btn.style.visibility = 'hidden';
     // Icon — clipboard-with-lines, matching JT's stroke-icon style
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg> Forms';
     btn.addEventListener('click', (e) => {
@@ -203,11 +217,13 @@ const FormsActionBarInjector = (() => {
     if (!isOnJobPage()) {
       // Off a job page — pull the button if we left one behind on the
       // previous route. The MutationObserver keeps running so we'll
-      // re-evaluate on the next route change.
+      // re-evaluate on the next route change. Also sweep any menu entry,
+      // since the observer no longer calls tryInjectMenu() unconditionally.
       if (injected && injected.parentElement) {
         injected.parentElement.removeChild(injected);
         injected = null;
       }
+      removeMenuInjected();
       return false;
     }
 
@@ -243,8 +259,28 @@ const FormsActionBarInjector = (() => {
       bar.appendChild(btn);
     }
     injected = btn;
+    revealButton(btn);
     log('injected');
     return true;
+  }
+
+  /**
+   * Reveal a freshly-injected inline button once layout has settled. Two
+   * rAFs guarantee a style/layout pass after insertion (a single rAF can
+   * share the same paint frame as the append on some engines). The
+   * isConnected guard means a button JT's React wiped before the reveal —
+   * common during initial hydration churn — simply never shows; the
+   * observer's re-inject builds a fresh hidden one. Net effect: no flash,
+   * regardless of how many times the bar re-renders on load.
+   *
+   * @param {HTMLElement} btn
+   */
+  function revealButton(btn) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (btn && btn.isConnected) btn.style.visibility = '';
+      });
+    });
   }
 
   /**
@@ -307,22 +343,32 @@ const FormsActionBarInjector = (() => {
     if (active) stop();
     onClickHandler = onClick;
     active = true;
+    // tryInject() places the inline button when the bar has room, OR
+    // delegates to the overflow menu when the bar is collapsed. We never
+    // call tryInjectMenu() directly — menu injection must only happen in
+    // collapsed mode, otherwise Forms ends up in BOTH the toolbar and the
+    // "⋯" dropdown (and leaks into other open selection dropdowns).
     tryInject();
-    tryInjectMenu();
     observer = new MutationObserver(() => {
       if (!active) return;
       const bar = findBar();
-      // Re-inject inline if our button is gone OR if the bar exists but
-      // our button is detached from it (likely a React re-render).
-      // tryInject() itself handles the collapsed-mode branching.
-      if (!injected || !document.body.contains(injected) || (bar && !bar.contains(injected))) {
+      // Case 1 — our inline button is missing or detached from the bar
+      // (a React re-render), or we're in collapsed mode where `injected` is
+      // null (so this is always true, letting tryInject()'s collapsed branch
+      // catch the Popper.js popover mount when the hamburger is tapped).
+      const inlineStale = !injected || !document.body.contains(injected) || (bar && !bar.contains(injected));
+      // Case 2 — the button is still sitting inline, but JT has SINCE
+      // collapsed the bar (the viewport narrowed and Forms would be the only
+      // action left in the toolbar). Re-run so tryInject()'s collapsed branch
+      // relocates it into the dropdown. Don't null `injected` here — that
+      // branch needs the live reference to pull the inline button first.
+      const shouldRelocate = bar && injected && bar.contains(injected) && isBarCollapsed(bar);
+      if (inlineStale) {
         injected = null;
         tryInject();
+      } else if (shouldRelocate) {
+        tryInject();
       }
-      // Always try the menu path — it's a single querySelector +
-      // early-return when the popover isn't open. This is what catches
-      // the Popper.js mount when the user taps the hamburger.
-      tryInjectMenu();
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }

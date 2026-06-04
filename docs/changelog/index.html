@@ -50,11 +50,91 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.5 — Native-style job filter, formatter & theme fixes, stability pass -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.5</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">June 3, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🗂️</span> Job Switcher &mdash; Native-Style Filtered Results</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom-field-filtered job results now look like JobTread's own job switcher</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The job you're currently on is marked with a green checkmark and a soft blue highlight &mdash; and that highlight now follows you as you click between jobs without re-opening the filter. Each row shows the job name plus its customer / location only; the redundant blue job-number line was removed for a cleaner, native read</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✏️</span> Text Formatter Fix</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Numbered &amp; bullet list continuation no longer gets dropped on save</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Pressing Enter inside a numbered or bullet list (budget descriptions, messages, etc.) continued the list on screen, but JobTread's editor wasn't always registering the new line &mdash; so it could vanish when you saved. The list now continues reliably and the change sticks</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🌙</span> Dark Mode &amp; Custom Theme Fix</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Today's-date highlight no longer lingers after turning a theme off</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The blue current-date cell on the schedule used to stay colored after you toggled Dark Mode or a Custom Theme off (and wouldn't re-highlight when turned back on). It now reverts cleanly</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Stability &amp; Performance</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Memory-leak and observer cleanup pass across several features</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Tightened event-listener and observer cleanup that wasn't being released &mdash; the Text Formatter toolbar (outside-click listeners + resize observer), the Forms signature pad's resize listener, and the Character Counter's paste handler. The Action Items checkbox watcher is now far lighter (it no longer re-scans the whole page on every change), and link URLs typed into Quick Notes are sanitized</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> AI / MCP (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Your AI can now build Forms templates, and time entries respect custom types</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The <code>jt_forms</code> tool gained form-builder operations (create / update / archive / revert templates), so a connected agent can author forms, not just fill them. Time-entry creation now resolves each org's custom time-entry types per team member instead of assuming a "Standard" type, and several <code>jt_files</code> operations that rejected their documented ID parameters now work</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🧹</span> Under the Hood</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Removed the legacy Schedule drag-and-drop code now that JobTread ships it natively</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The old drag-to-reschedule modules were already disabled in favor of JobTread's native drag-and-drop; they've now been removed. The task-completion checkboxes that lived alongside them are unchanged</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.3 — Email-to-Job, Firefox restored, resilience pass -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.3</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">May 20, 2026</span>
             </div>
 

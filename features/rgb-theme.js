@@ -100,6 +100,14 @@ const CustomThemeFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
+
+    // Revert the current-date highlight (marker class + inline backgroundColor)
+    // so date cells don't keep the theme's primary color after the theme is
+    // turned off or switched, and re-highlighting isn't blocked on re-enable.
+    document.querySelectorAll('.jt-current-date-enhanced').forEach(td => {
+      td.classList.remove('jt-current-date-enhanced');
+      td.style.backgroundColor = '';
+    });
   }
 
   // Update colors dynamically

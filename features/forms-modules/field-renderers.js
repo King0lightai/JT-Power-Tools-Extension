@@ -482,7 +482,16 @@ const FormsFieldRenderers = (() => {
         });
       });
 
-      resizeHandler = () => resizeSignatureCanvas(canvas, pad);
+      // Self-removing: when the drawer closes (or the form switches), the
+      // canvas is detached. Drop the listener then instead of resizing a dead
+      // canvas on every window resize for the life of the page.
+      resizeHandler = () => {
+        if (!canvas.isConnected) {
+          window.removeEventListener('resize', resizeHandler);
+          return;
+        }
+        resizeSignatureCanvas(canvas, pad);
+      };
       window.addEventListener('resize', resizeHandler);
     }).catch((err) => {
       console.error('FormsFieldRenderers: failed to load signature_pad', err);

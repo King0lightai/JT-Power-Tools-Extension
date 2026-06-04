@@ -47,6 +47,15 @@ const DarkModeFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
+
+    // Revert the current-date highlight: remove the marker class AND the inline
+    // backgroundColor we set in highlightCurrentDate. Without this the date cell
+    // stays blue after dark mode is toggled off, and the marker class blocks
+    // re-highlighting on re-enable.
+    document.querySelectorAll('.jt-dark-mode-date-enhanced').forEach(td => {
+      td.classList.remove('jt-dark-mode-date-enhanced');
+      td.style.backgroundColor = '';
+    });
   }
 
   // Inject dark mode CSS

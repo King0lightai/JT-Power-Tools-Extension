@@ -1181,14 +1181,22 @@ const FormatterToolbar = (() => {
       colorDropdown.classList.toggle('jt-color-dropdown-visible');
     });
 
-    document.addEventListener('click', (e) => {
+    // Self-removing: this is a document-level listener but the toolbar it serves
+    // is per-field. Once the toolbar is detached (field/dialog removed by React),
+    // drop the listener instead of leaking one on `document` per toolbar created.
+    const onDocClick = (e) => {
+      if (!toolbar.isConnected) {
+        document.removeEventListener('click', onDocClick);
+        return;
+      }
       if (!e.target.closest('.jt-formatter-toolbar')) {
         toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
           menu.classList.remove('jt-dropdown-visible');
         });
         colorDropdown.classList.remove('jt-color-dropdown-visible');
       }
-    });
+    };
+    document.addEventListener('click', onDocClick);
   }
 
   /**
@@ -1220,12 +1228,18 @@ const FormatterToolbar = (() => {
       moreDropdown.classList.toggle('jt-more-dropdown-visible');
     });
 
-    // Close more dropdown when clicking outside
-    document.addEventListener('click', (e) => {
+    // Close more dropdown when clicking outside (self-removing once the toolbar
+    // is detached, so we don't leak a document listener per toolbar created).
+    const onDocClick = (e) => {
+      if (!toolbar.isConnected) {
+        document.removeEventListener('click', onDocClick);
+        return;
+      }
       if (!e.target.closest('.jt-more-group')) {
         moreDropdown.classList.remove('jt-more-dropdown-visible');
       }
-    });
+    };
+    document.addEventListener('click', onDocClick);
 
     // Close more dropdown after clicking a button inside it
     moreDropdown.querySelectorAll('button[data-format]').forEach(btn => {
@@ -1344,12 +1358,18 @@ const FormatterToolbar = (() => {
       }
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
+    // Close dropdown when clicking outside (self-removing once the toolbar is
+    // detached, so we don't leak a document listener per toolbar created).
+    const onDocClick = (e) => {
+      if (!toolbar.isConnected) {
+        document.removeEventListener('click', onDocClick);
+        return;
+      }
       if (!e.target.closest('.jt-overflow-menu')) {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
-    });
+    };
+    document.addEventListener('click', onDocClick);
 
     // Close dropdown after clicking a button inside it
     overflowDropdown.addEventListener('click', (e) => {
@@ -1368,6 +1388,13 @@ const FormatterToolbar = (() => {
     // Watch for resize
     if (window.ResizeObserver) {
       const resizeObserver = new ResizeObserver(() => {
+        // Self-disconnect once the toolbar is detached so the observer and the
+        // toolbar it closes over can be garbage-collected.
+        if (!toolbar.isConnected) {
+          resizeObserver.disconnect();
+          toolbar._resizeObserver = null;
+          return;
+        }
         updateToolbarOverflow(toolbar);
       });
       resizeObserver.observe(toolbar);
@@ -1737,6 +1764,10 @@ const FormatterToolbar = (() => {
             budgetScrollCleanup();
             budgetScrollCleanup = null;
           }
+          if (toolbar._resizeObserver) {
+            toolbar._resizeObserver.disconnect();
+            toolbar._resizeObserver = null;
+          }
           toolbar.remove();
           return;
         }
@@ -1822,6 +1853,10 @@ const FormatterToolbar = (() => {
         if (budgetScrollCleanup) {
           budgetScrollCleanup();
           budgetScrollCleanup = null;
+        }
+        if (activeToolbar._resizeObserver) {
+          activeToolbar._resizeObserver.disconnect();
+          activeToolbar._resizeObserver = null;
         }
         activeToolbar.remove();
       } else if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {

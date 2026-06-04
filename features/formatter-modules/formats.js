@@ -632,13 +632,14 @@ const FormatterFormats = (() => {
       const lineContent = numberedListMatch[2];
 
       // If the line is empty (just the number), exit list mode
+      let newValue;
+      let newCursorPos;
       if (lineContent.trim() === '') {
         // Remove the empty list item and exit
         const before = text.substring(0, lineStart);
         const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
-
-        field.value = before + after;
-        field.setSelectionRange(lineStart, lineStart);
+        newValue = before + after;
+        newCursorPos = lineStart;
       } else {
         // Insert next number on new line
         const nextNumber = currentNumber + 1;
@@ -646,16 +647,17 @@ const FormatterFormats = (() => {
         const after = text.substring(start);
 
         const newText = `\n${nextNumber}. `;
-        field.value = before + newText + after;
-
-        // Position cursor after the new number
-        const newCursorPos = start + newText.length;
-        field.setSelectionRange(newCursorPos, newCursorPos);
+        newValue = before + newText + after;
+        newCursorPos = start + newText.length;
       }
 
-      // Trigger change events using native setter
+      // Set the new value via the native setter ONLY. Do NOT assign field.value
+      // first — that runs React's instance-level setter and updates its
+      // _valueTracker, after which the dispatched 'input' event looks unchanged
+      // and React silently drops the edit (list continuation lost on save).
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-      nativeInputValueSetter.call(field, field.value);
+      nativeInputValueSetter.call(field, newValue);
+      field.setSelectionRange(newCursorPos, newCursorPos);
 
       // Dispatch only input event (not change to avoid breaking React state)
       const inputEvent = new Event('input', { bubbles: true });
@@ -673,29 +675,29 @@ const FormatterFormats = (() => {
       const lineContent = bulletListMatch[1];
 
       // If the line is empty (just the bullet), exit list mode
+      let newValue;
+      let newCursorPos;
       if (lineContent.trim() === '') {
         // Remove the empty list item and exit
         const before = text.substring(0, lineStart);
         const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
-
-        field.value = before + after;
-        field.setSelectionRange(lineStart, lineStart);
+        newValue = before + after;
+        newCursorPos = lineStart;
       } else {
         // Insert new bullet on new line
         const before = text.substring(0, start);
         const after = text.substring(start);
 
         const newText = `\n- `;
-        field.value = before + newText + after;
-
-        // Position cursor after the new bullet
-        const newCursorPos = start + newText.length;
-        field.setSelectionRange(newCursorPos, newCursorPos);
+        newValue = before + newText + after;
+        newCursorPos = start + newText.length;
       }
 
-      // Trigger change events using native setter
+      // Set the new value via the native setter ONLY (see numbered-list note above):
+      // assigning field.value first updates React's _valueTracker and the edit is dropped.
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-      nativeInputValueSetter.call(field, field.value);
+      nativeInputValueSetter.call(field, newValue);
+      field.setSelectionRange(newCursorPos, newCursorPos);
 
       // Dispatch only input event (not change to avoid breaking React state)
       const inputEvent = new Event('input', { bubbles: true });

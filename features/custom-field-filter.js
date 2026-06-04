@@ -87,6 +87,11 @@ const CustomFieldFilterFeature = (() => {
     // Start observing for sidebar to add filter UI
     startSidebarObserver();
 
+    // Keep the selected-job highlight in sync as the user switches jobs. Our
+    // row clicks dispatch popstate (and browser back/forward fire it), so this
+    // moves the green check + bg-blue-50 to the new job without a full re-render.
+    window.addEventListener('popstate', updateSelectedJobHighlight);
+
     console.log('CustomFieldFilter: Activated');
   }
 
@@ -105,6 +110,9 @@ const CustomFieldFilterFeature = (() => {
 
     // Remove click-outside listener
     document.removeEventListener('click', handleClickOutside);
+
+    // Remove the job-switch highlight sync listener
+    window.removeEventListener('popstate', updateSelectedJobHighlight);
 
     // Remove any injected UI
     const existingFilter = document.getElementById('jt-custom-field-filter');
@@ -1610,21 +1618,30 @@ const CustomFieldFilterFeature = (() => {
       return;
     }
 
+    // The currently-open job (from the URL) is highlighted like native JT.
+    const currentJobId = (window.location.pathname.match(/^\/jobs\/([^\/]+)/) || [])[1] || null;
+
     const jobItemsHtml = jobs.map(job => {
       const isClosed = job.status === 'Closed' || job.closedOn;
       const loc = job.location;
       const locName = loc ? (loc.name || '') : '';
       const locAddr = loc ? (loc.formattedAddress || loc.address || '') : '';
       const locDisplay = locName && locAddr ? `${locName} / ${locAddr}` : (locName || locAddr);
+      // Match native JT result rows:
+      //  - the open job gets bg-blue-50 + a VISIBLE green check (others keep an
+      //    invisible check as a spacer so the text columns stay aligned)
+      //  - the customer/location is the cyan line; the bold line shows the job
+      //    name only (no job number)
+      const isSelected = currentJobId && job.id === currentJobId;
+      const jobName = job.name || 'Unnamed Job';
 
       return `
-      <div role="button" tabindex="0" class="relative cursor-pointer p-2 flex items-center gap-2 border-t hover:bg-gray-50" data-job-id="${escapeAttr(job.id)}">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] shrink-0 text-xl text-green-500 invisible" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+      <div role="button" tabindex="0" class="relative cursor-pointer p-2 flex items-center gap-2 border-t ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}" data-job-id="${escapeAttr(job.id)}">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] shrink-0 text-xl text-green-500 ${isSelected ? '' : 'invisible'}" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
         <div class="grow min-w-0">
-          ${locDisplay ? `<div class="text-gray-400 text-xs uppercase truncate" title="${escapeAttr(locDisplay)}">${escapeHtml(locDisplay)}</div>` : ''}
-          <div class="text-cyan-500 text-xs font-bold uppercase truncate">${escapeHtml(job.number || '')}</div>
+          ${locDisplay ? `<div class="text-cyan-500 text-xs font-bold uppercase truncate" title="${escapeAttr(locDisplay)}">${escapeHtml(locDisplay)}</div>` : ''}
           <div class="flex gap-2">
-            <div class="grow min-w-0 font-bold truncate">${escapeHtml(job.name || 'Unnamed Job')}</div>
+            <div class="grow min-w-0 font-bold truncate">${escapeHtml(jobName)}</div>
             ${isClosed ? '<div class="shrink-0 text-gray-500">Closed</div>' : ''}
           </div>
         </div>
@@ -1689,6 +1706,26 @@ const CustomFieldFilterFeature = (() => {
 
       scrollObserver.observe(sentinel);
     }
+  }
+
+  /**
+   * Re-apply the "selected job" highlight (green check + bg-blue-50) to the row
+   * matching the currently-open job. Called on popstate so switching jobs keeps
+   * the highlight current without re-rendering the whole list — our row clicks
+   * dispatch popstate, and browser back/forward fire it natively.
+   */
+  function updateSelectedJobHighlight() {
+    const currentJobId = (window.location.pathname.match(/^\/jobs\/([^\/]+)/) || [])[1] || null;
+    document.querySelectorAll('[data-job-id]').forEach(row => {
+      // Only touch our rendered rows — they carry the green-check spacer svg as
+      // a direct child. This guards against any unrelated [data-job-id] element.
+      const check = row.querySelector(':scope > svg.text-green-500');
+      if (!check) return;
+      const isSelected = !!currentJobId && row.dataset.jobId === currentJobId;
+      row.classList.toggle('bg-blue-50', isSelected);
+      row.classList.toggle('hover:bg-gray-50', !isSelected);
+      check.classList.toggle('invisible', !isSelected);
+    });
   }
 
   /**

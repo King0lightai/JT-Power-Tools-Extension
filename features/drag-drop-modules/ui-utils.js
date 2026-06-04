@@ -1,5 +1,6 @@
 // UI Utilities Module
-// Handles notifications and DOM setup for draggable elements
+// Shared toast notification used by Task Completion checkboxes and File Drag-to-Folder.
+// (Drag & drop helpers were removed Jun 2026 — JobTread has native schedule drag & drop.)
 
 const UIUtils = (() => {
   /**
@@ -86,126 +87,9 @@ const UIUtils = (() => {
     }, 3000);
   }
 
-  /**
-   * Make schedule items draggable
-   * @param {Object} handlers - Event handlers {onDragStart, onDragEnd}
-   */
-  function makeScheduleItemsDraggable(handlers) {
-    // Get selectors based on current view (normal or availability)
-    const selectors = window.ViewDetector ? window.ViewDetector.getSelectorsForCurrentView() : {
-      scheduleItems: 'div.cursor-pointer[style*="background-color"]',
-      viewType: 'normal'
-    };
-
-    const scheduleItems = document.querySelectorAll(selectors.scheduleItems);
-
-    scheduleItems.forEach(item => {
-      // Always ensure draggable attribute and cursor are set
-      item.setAttribute('draggable', 'true');
-      item.style.cursor = 'grab';
-
-      // Remove old event listeners if they exist to prevent duplicates
-      // Note: We can't remove specific listeners without references, so we mark items
-      if (!item.hasAttribute('data-jt-drag-initialized')) {
-        item.setAttribute('data-jt-drag-initialized', 'true');
-
-        if (handlers.onDragStart) {
-          item.addEventListener('dragstart', handlers.onDragStart);
-        }
-        if (handlers.onDragEnd) {
-          item.addEventListener('dragend', handlers.onDragEnd);
-        }
-      }
-    });
-  }
-
-  /**
-   * Make date cells droppable
-   * @param {Object} handlers - Event handlers {onDragOver, onDrop, onDragLeave, onDragEnter}
-   */
-  function makeDateCellsDroppable(handlers) {
-    // Get selectors based on current view (normal or availability)
-    const selectors = window.ViewDetector ? window.ViewDetector.getSelectorsForCurrentView() : {
-      dateCells: 'td.group.text-xs',
-      viewType: 'normal'
-    };
-
-    const dateCells = document.querySelectorAll(selectors.dateCells);
-
-    dateCells.forEach((cell) => {
-      // Skip user name cells in availability view (first column)
-      if (selectors.viewType === 'availability') {
-        // Check if this cell contains user info (avatar and name)
-        const hasUserInfo = cell.querySelector('div.relative.bg-cover.bg-center') ||
-                           cell.querySelector('div.font-bold.truncate');
-        if (hasUserInfo) {
-          return; // Skip this cell
-        }
-      }
-
-      if (!cell.classList.contains('jt-drop-enabled')) {
-        cell.classList.add('jt-drop-enabled');
-
-        // Mark weekends if WeekendUtils is available
-        if (window.WeekendUtils && window.WeekendUtils.isWeekendCell(cell)) {
-          cell.classList.add('jt-weekend-cell');
-        }
-
-        if (handlers.onDragOver) {
-          cell.addEventListener('dragover', handlers.onDragOver);
-        }
-        if (handlers.onDrop) {
-          cell.addEventListener('drop', handlers.onDrop);
-        }
-        if (handlers.onDragLeave) {
-          cell.addEventListener('dragleave', handlers.onDragLeave);
-        }
-        if (handlers.onDragEnter) {
-          cell.addEventListener('dragenter', handlers.onDragEnter);
-        }
-
-      }
-    });
-  }
-
-  /**
-   * Initialize drag and drop on the page
-   * @param {Object} handlers - All event handlers
-   */
-  function initDragAndDrop(handlers) {
-    makeScheduleItemsDraggable(handlers);
-    makeDateCellsDroppable(handlers);
-  }
-
-  /**
-   * Cleanup draggable attributes and drop zone classes
-   */
-  function cleanupDragDrop() {
-    // Remove draggable attributes and event listeners
-    const scheduleItems = document.querySelectorAll('div.cursor-pointer[draggable="true"]');
-    scheduleItems.forEach(item => {
-      item.removeAttribute('draggable');
-      item.removeAttribute('data-jt-drag-initialized');
-      item.style.cursor = '';
-      // Note: We can't easily remove event listeners without references
-      // But since we're likely reloading the page, this is acceptable
-    });
-
-    // Remove drop zone classes
-    const dateCells = document.querySelectorAll('td.jt-drop-enabled');
-    dateCells.forEach(cell => {
-      cell.classList.remove('jt-drop-enabled');
-      cell.classList.remove('jt-weekend-cell');
-    });
-  }
-
   // Public API
   return {
-    showNotification,
-    makeScheduleItemsDraggable,
-    makeDateCellsDroppable,
-    initDragAndDrop,
-    cleanupDragDrop
+    showNotification
   };
 })();
 

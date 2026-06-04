@@ -453,8 +453,8 @@ const QuickNotesEditor = (() => {
           }
           parent.removeChild(linkElement);
         } else {
-          // Update link
-          linkElement.setAttribute('href', newUrl);
+          // Update link — sanitize to block javascript:/data: and other unsafe URLs
+          linkElement.setAttribute('href', window.Sanitizer ? window.Sanitizer.sanitizeURL(newUrl) : newUrl);
         }
       }
     } else if (selectedText) {
@@ -463,7 +463,7 @@ const QuickNotesEditor = (() => {
 
       if (url && url.trim() !== '' && url !== 'https://') {
         const linkEl = document.createElement('a');
-        linkEl.href = url;
+        linkEl.href = window.Sanitizer ? window.Sanitizer.sanitizeURL(url) : url;
         linkEl.target = '_blank';
         linkEl.rel = 'noopener noreferrer';
         linkEl.textContent = selectedText;
@@ -484,7 +484,7 @@ const QuickNotesEditor = (() => {
         const url = prompt('Enter link URL:', 'https://');
         if (url && url.trim() !== '' && url !== 'https://') {
           const linkEl = document.createElement('a');
-          linkEl.href = url;
+          linkEl.href = window.Sanitizer ? window.Sanitizer.sanitizeURL(url) : url;
           linkEl.target = '_blank';
           linkEl.rel = 'noopener noreferrer';
           linkEl.textContent = linkText;

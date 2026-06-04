@@ -2249,6 +2249,20 @@ const CharacterCounterFeature = (() => {
   }
 
   /**
+   * Check if a field lives inside a pop-up window (a JobTread modal dialog).
+   * Pop-ups are the message compose dialogs and document-sending modals
+   * (Send Estimate, Send Invoice, etc.), which render inside a
+   * shadow-lg / [role="dialog"] / .modal container. Inline message fields —
+   * the activity-feed reply box and the Daily Log sidebar Notes field — are
+   * message fields too, but are NOT pop-up windows.
+   * @param {HTMLElement} field - The textarea element
+   * @returns {boolean}
+   */
+  function isInPopupWindow(field) {
+    return !!field.closest('[role="dialog"], .modal, .shadow-lg');
+  }
+
+  /**
    * Determine the character limit for a field
    * @param {HTMLElement} field - The textarea or input element
    * @returns {number} The character limit
@@ -2322,6 +2336,12 @@ const CharacterCounterFeature = (() => {
     const maxLength = getFieldLimit(field);
     const isMessage = true; // Always true now since we only process messages
 
+    // The expand toggle only belongs in pop-up windows (message compose dialogs
+    // and document-sending modals). Inline message fields — the activity-feed
+    // reply box and the Daily Log sidebar Notes field — match isMessageTextarea
+    // too, but the expand button is excluded there.
+    const inPopupWindow = isInPopupWindow(field);
+
     // Create container (wraps buttons and counter)
     const container = document.createElement('div');
     container.className = 'jt-signature-container';
@@ -2388,42 +2408,46 @@ const CharacterCounterFeature = (() => {
 
     // Create Expand button — toggles the textarea's outer container between
     // the default Tailwind max-h-[20vh] and a larger 70vh so long messages
-    // don't force the user to scroll a tiny window
-    const EXPAND_ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
-    const COLLAPSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
-    const expandBtn = document.createElement('div');
-    expandBtn.setAttribute('role', 'button');
-    expandBtn.setAttribute('tabindex', '0');
-    expandBtn.className = 'jt-native-btn jt-expand-btn';
-    expandBtn.title = 'Expand message field';
-    expandBtn.innerHTML = EXPAND_ICON;
-
-    let isFieldExpanded = false;
+    // don't force the user to scroll a tiny window. Only built for pop-up
+    // windows; inline message fields don't get an expand toggle.
     const getTextareaContainer = () =>
       field.closest('.border.rounded-b-sm, .rounded-sm.border');
 
-    const handleExpandToggle = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const textareaContainer = getTextareaContainer();
-      if (!textareaContainer) return;
-      isFieldExpanded = !isFieldExpanded;
-      if (isFieldExpanded) {
-        textareaContainer.classList.add('jt-message-expanded');
-        expandBtn.innerHTML = COLLAPSE_ICON;
-        expandBtn.title = 'Collapse message field';
-      } else {
-        textareaContainer.classList.remove('jt-message-expanded');
-        expandBtn.innerHTML = EXPAND_ICON;
-        expandBtn.title = 'Expand message field';
-      }
-    };
-    expandBtn.addEventListener('click', handleExpandToggle);
-    expandBtn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        handleExpandToggle(e);
-      }
-    });
+    let expandBtn = null;
+    if (inPopupWindow) {
+      const EXPAND_ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+      const COLLAPSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+      expandBtn = document.createElement('div');
+      expandBtn.setAttribute('role', 'button');
+      expandBtn.setAttribute('tabindex', '0');
+      expandBtn.className = 'jt-native-btn jt-expand-btn';
+      expandBtn.title = 'Expand message field';
+      expandBtn.innerHTML = EXPAND_ICON;
+
+      let isFieldExpanded = false;
+      const handleExpandToggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const textareaContainer = getTextareaContainer();
+        if (!textareaContainer) return;
+        isFieldExpanded = !isFieldExpanded;
+        if (isFieldExpanded) {
+          textareaContainer.classList.add('jt-message-expanded');
+          expandBtn.innerHTML = COLLAPSE_ICON;
+          expandBtn.title = 'Collapse message field';
+        } else {
+          textareaContainer.classList.remove('jt-message-expanded');
+          expandBtn.innerHTML = EXPAND_ICON;
+          expandBtn.title = 'Expand message field';
+        }
+      };
+      expandBtn.addEventListener('click', handleExpandToggle);
+      expandBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleExpandToggle(e);
+        }
+      });
+    }
 
     // Create TWO separate containers:
     // 1. Counter container (goes on LEFT side, after upload buttons)
@@ -2434,10 +2458,11 @@ const CharacterCounterFeature = (() => {
     counterContainer.className = 'jt-signature-container jt-counter-only';
     counterContainer.appendChild(counter);
 
-    // Templates container (expand + dropdown + settings button — joined as one pill)
+    // Templates container (expand + dropdown + settings button — joined as one pill).
+    // The expand button is only present in pop-up windows.
     const templatesContainer = document.createElement('div');
     templatesContainer.className = 'jt-signature-container jt-templates-only';
-    templatesContainer.appendChild(expandBtn);
+    if (expandBtn) templatesContainer.appendChild(expandBtn);
     templatesContainer.appendChild(dropdownBtn);
     templatesContainer.appendChild(settingsBtn);
 
@@ -2484,10 +2509,12 @@ const CharacterCounterFeature = (() => {
     // Store dropdown cleanup reference
     const dropdownCleanup = dropdown.cleanup;
 
-    // Attach event listeners
+    // Attach event listeners. The paste handler is stored in a named ref so
+    // cleanup() can actually remove it — an inline arrow can't be unregistered.
+    const pasteHandler = () => setTimeout(updateCounter, 0);
     field.addEventListener('input', updateCounter);
     field.addEventListener('keyup', updateCounter);
-    field.addEventListener('paste', () => setTimeout(updateCounter, 0));
+    field.addEventListener('paste', pasteHandler);
 
     // Show/hide counter on focus/blur (except for message dialogs which are always visible)
     if (!isMessage) {
@@ -2633,7 +2660,7 @@ const CharacterCounterFeature = (() => {
     field._jtCounterCleanup = () => {
       field.removeEventListener('input', updateCounter);
       field.removeEventListener('keyup', updateCounter);
-      field.removeEventListener('paste', updateCounter);
+      field.removeEventListener('paste', pasteHandler);
       // Focus/blur listeners are anonymous so they'll be garbage collected
       // Cleanup dropdown
       dropdownCleanup();

@@ -12,6 +12,13 @@ const FreezeHeaderFeature = (() => {
   let urlCheckInterval = null;
   let sidebarStyleObservers = [];
 
+  // Orange-header titles of read-only fullpage overlays that slide in inside a
+  // drag-scroll-boundary (own internal sticky header, no Save/Cancel footer).
+  // These must keep JT's native positioning — never push them below the frozen
+  // toolbar. Distinct from job-specific edit panels (Update Task, Cost Item
+  // Details), which carry other titles and DO need freeze positioning.
+  const FULLPAGE_OVERLAY_TITLES = ['HISTORY'];
+
   // CSS for sticky header - targets the specific JobTread structure
   const STICKY_STYLES = `
     /* Freeze Header Styles */
@@ -1054,10 +1061,19 @@ const FreezeHeaderFeature = (() => {
   function findAndMarkFullpageSidebars() {
     const overlays = document.querySelectorAll('.absolute.inset-0 .overflow-y-auto.overscroll-contain.sticky');
     for (const el of overlays) {
-      // Skip sidebars inside drag-scroll-boundary containers — these are job-specific
-      // sidebars (Update Task, Cost Item Details, etc.) that need freeze-header positioning,
-      // not fullpage overlays like History or Selection Details
-      if (el.closest('[data-is-drag-scroll-boundary="true"]')) continue;
+      // Most drag-scroll-boundary sidebars are job-specific edit panels (Update
+      // Task, Cost Item Details, etc.) that DO need freeze-header positioning.
+      // But some read-only overlays — the History panel most notably — also
+      // slide in inside a drag boundary, with their own internal sticky header,
+      // and must keep JT's native positioning (pushing them down drops the
+      // header and leaves a gap). Recognize those by their orange header title
+      // so we mark them fullpage instead of letting adjustDragBoundarySidebars()
+      // push them down. Job-specific edit panels never match these titles.
+      if (el.closest('[data-is-drag-scroll-boundary="true"]')) {
+        const header = el.querySelector('div.font-bold.text-jtOrange.uppercase');
+        const headerText = header ? header.textContent.trim().toUpperCase() : '';
+        if (!FULLPAGE_OVERLAY_TITLES.includes(headerText)) continue;
+      }
 
       if (!el.classList.contains('jt-fullpage-sidebar')) {
         el.classList.add('jt-fullpage-sidebar');
@@ -1333,8 +1349,12 @@ const FreezeHeaderFeature = (() => {
    */
   function observeSidebarStyle(sidebar, bottomBarHeight = 0) {
     const obs = new MutationObserver(() => {
-      // Stop adjusting if this sidebar was later marked as global
-      if (sidebar.classList.contains('jt-global-sidebar')) {
+      // Stop adjusting if this sidebar was later marked as global or fullpage —
+      // both keep JT's native positioning, so we must not keep re-applying the
+      // frozen-toolbar offset (this is what re-dropped the History header even
+      // after findAndMarkFullpageSidebars cleared the inline styles).
+      if (sidebar.classList.contains('jt-global-sidebar') ||
+          sidebar.classList.contains('jt-fullpage-sidebar')) {
         obs.disconnect();
         return;
       }
@@ -1718,6 +1738,19 @@ const FreezeHeaderFeature = (() => {
   function removeFreezeHeader() {
     document.body.classList.remove('jt-freeze-header-active');
 
+    // Clear the inline top/max-height we wrote with !important on drag-boundary
+    // sidebars and edit panels. Done BEFORE the marker classes are removed
+    // (so .jt-edit-items-panel is still selectable) and before observers are
+    // torn down. Without this, leaving a job page leaves stale offsets behind.
+    document.querySelectorAll(
+      '[data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky, .jt-edit-items-panel'
+    ).forEach(el => {
+      if (el.style.getPropertyPriority('top') === 'important') {
+        el.style.removeProperty('top');
+        el.style.removeProperty('max-height');
+      }
+    });
+
     // Remove marker classes
     document.querySelectorAll('.jt-top-header').forEach(el => {
       el.classList.remove('jt-top-header');
@@ -1827,6 +1860,13 @@ const FreezeHeaderFeature = (() => {
       if (shouldUpdate) {
         // Skip all freeze header logic on catalog pages
         if (isCatalogPage()) return;
+
+        // Freeze header is job-pages-only. Without this gate the marking and
+        // adjustDragBoundarySidebars() below run on org-level pages too (e.g.
+        // /schedule), where they push down drag-boundary overlays like the
+        // History panel — the URL-change handler already gates on isJobPage(),
+        // but this MutationObserver path did not.
+        if (!isJobPage()) return;
 
         // Mark global sidebars IMMEDIATELY (no debounce) so CSS :not(.jt-global-sidebar)
         // exclusions are in place before the browser applies broad positioning rules.
