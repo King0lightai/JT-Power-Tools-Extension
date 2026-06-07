@@ -271,8 +271,11 @@ const TweakEngineFeature = (() => {
     if (Array.isArray(tweak.actions)) {
       for (let i = 0; i < tweak.actions.length; i++) {
         const action = tweak.actions[i];
-        if (action.type !== 'onEvent') continue;
-        registerOnEventAction(action, i, tweak);
+        if (action.type === 'onEvent') {
+          registerOnEventAction(action, i, tweak);
+        } else if (action.type === 'confirmBeforeAction') {
+          registerConfirmBeforeAction(action, i, tweak);
+        }
       }
     }
 
@@ -348,6 +351,73 @@ const TweakEngineFeature = (() => {
     // Capture phase so we fire BEFORE JT's own React-attached handlers,
     // which is required for preventDefault to actually block JT's
     // mousedown→drag handoff.
+    document.addEventListener(action.event, handler, { capture: true });
+    tweakEventListeners.push({
+      tweakId: tweak.id,
+      target: document,
+      event: action.event,
+      handler,
+      useCapture: true
+    });
+  }
+
+  /**
+   * confirmBeforeAction — the "warn before action" verb. Where onEvent fires
+   * unconditional side effects, this GATES the action behind a confirm() so a
+   * React SPA can ask "are you sure?" before its delegated handler runs.
+   *
+   * React routes the real action through a single delegated synthetic listener
+   * on the root container. A native listener's preventDefault() doesn't stop
+   * React's handler (it isn't a "default action"), and stopPropagation alone
+   * can only BLOCK — never conditionally proceed. So we intercept in the
+   * CAPTURE phase at `document` (above React's root) and use the SYNCHRONOUS
+   * native confirm(): on cancel we preventDefault + stopImmediatePropagation
+   * (React never sees the event); on OK we do nothing and let the event keep
+   * propagating, so the original action runs untouched. A styled async dialog
+   * can't gate a synchronous event without block-then-re-dispatch (a future v2).
+   *
+   * Being document-delegated, this survives React re-renders with no
+   * re-wrapping — the whole reason it beats poking at fiber handlers.
+   */
+  function registerConfirmBeforeAction(action, actionIndex, tweak) {
+    const handler = (e) => {
+      let matched;
+      try {
+        matched = e.target && e.target.closest && e.target.closest(action.selector);
+      } catch {
+        return;
+      }
+      if (!matched) return;
+
+      let proceed;
+      try {
+        proceed = window.confirm(action.confirm);
+      } catch (err) {
+        // confirm() unavailable/blocked — fail SAFE (block the action) and
+        // surface it, rather than silently letting a guarded action through.
+        proceed = false;
+        recordDiagnostic(tweak.id, {
+          lastError: `action[${actionIndex}] confirm failed: ${err.message}`,
+          lastErrorAt: Date.now()
+        });
+      }
+
+      if (!proceed) {
+        // Cancelled — block the event so React's delegated handler and the
+        // browser's default both stay dormant.
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') {
+          e.stopImmediatePropagation();
+        }
+      }
+      // Confirmed → return without stopping; the event continues to React and
+      // the original action proceeds.
+    };
+
+    // Capture phase at document so we run BEFORE React's root-delegated
+    // handler. Tracked in tweakEventListeners so teardown removes it (same
+    // lifecycle as onEvent).
     document.addEventListener(action.event, handler, { capture: true });
     tweakEventListeners.push({
       tweakId: tweak.id,
@@ -512,9 +582,9 @@ const TweakEngineFeature = (() => {
     return function applyOnce() {
       let totalMatches = 0;
       tweak.actions.forEach((action, i) => {
-        // onEvent actions are wired separately in registerOnEventAction —
-        // they don't run during the per-element apply loop.
-        if (action.type === 'onEvent') return;
+        // onEvent + confirmBeforeAction are wired separately as delegated
+        // document listeners — they don't run during the per-element apply loop.
+        if (action.type === 'onEvent' || action.type === 'confirmBeforeAction') return;
         let matches;
         try {
           matches = document.querySelectorAll(action.selector);

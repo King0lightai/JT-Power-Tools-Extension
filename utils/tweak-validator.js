@@ -47,8 +47,13 @@
  * Returns: { ok: true } or { ok: false, errors: [{ field, reason }, ...] }
  */
 const TweakValidator = (() => {
-  const ALLOWED_VERBS = new Set(['addClass', 'removeClass', 'setStyle', 'hide', 'show', 'setText', 'onEvent', 'moveBefore', 'moveAfter', 'sortChildren']);
+  const ALLOWED_VERBS = new Set(['addClass', 'removeClass', 'setStyle', 'hide', 'show', 'setText', 'onEvent', 'confirmBeforeAction', 'moveBefore', 'moveAfter', 'sortChildren']);
   const ALLOWED_EVENTS = new Set(['click', 'dblclick', 'mousedown', 'dragstart']);
+  // confirmBeforeAction gates these events behind a confirm() before React's
+  // handler runs. Restricted to events that gate cleanly — where the value /
+  // state hasn't already mutated by the time the event dispatches (so e.g.
+  // 'change' is excluded: the input has already changed before it fires).
+  const ALLOWED_CONFIRM_EVENTS = new Set(['click', 'dblclick', 'submit']);
   const ALLOWED_SORT_KEYS = new Set(['text', 'number', 'date']);
   const ALLOWED_SORT_DIRECTIONS = new Set(['asc', 'desc']);
   const EXTENSION_UI_PREFIXES = ['.jt-tools-', '.jt-popup-', '.jt-tweak-edit-'];
@@ -135,10 +140,10 @@ const TweakValidator = (() => {
     // V1.7: nested onEvent inside then[] is forbidden — chains run only
     // pure DOM-mutation verbs so we don't recursively register listeners
     // (and keep the chain semantics simple: fire → mutate, no event-loops).
-    if (inThen && action.type === 'onEvent') {
+    if (inThen && (action.type === 'onEvent' || action.type === 'confirmBeforeAction')) {
       errors.push({
         field: `${fieldPath}.type`,
-        reason: 'onEvent is not allowed inside then[] — chains are pure DOM-mutation actions only'
+        reason: `${action.type} is not allowed inside then[] — chains are pure DOM-mutation actions only`
       });
       return;
     }
@@ -222,6 +227,14 @@ const TweakValidator = (() => {
       const hasSideEffect = action.preventDefault === true || action.stopPropagation === true || action.alert !== undefined || hasThen;
       if (!hasSideEffect) {
         errors.push({ field: fieldPath, reason: 'onEvent must have at least one side effect (preventDefault, stopPropagation, alert, or then[])' });
+      }
+    }
+    if (action.type === 'confirmBeforeAction') {
+      if (!ALLOWED_CONFIRM_EVENTS.has(action.event)) {
+        errors.push({ field: `${fieldPath}.event`, reason: `event "${action.event}" is not allowed for confirmBeforeAction (allowed: ${[...ALLOWED_CONFIRM_EVENTS].join(', ')})` });
+      }
+      if (typeof action.confirm !== 'string' || action.confirm.length < 1 || action.confirm.length > MAX_TEXT_LEN) {
+        errors.push({ field: `${fieldPath}.confirm`, reason: `confirm must be a string 1..${MAX_TEXT_LEN} chars (the warning shown before the action runs)` });
       }
     }
     if (action.type === 'moveBefore' || action.type === 'moveAfter') {
