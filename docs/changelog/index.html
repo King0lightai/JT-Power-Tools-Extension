@@ -50,11 +50,31 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.6 — confirmBeforeAction Tweak verb (warn-before-action on React) -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.6</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">June 4, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🛡️</span> Tweaks &mdash; &ldquo;Warn Before Action&rdquo; on React Pages (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">New <code>confirmBeforeAction</code> tweak verb pops a confirmation before a destructive click or form submit &mdash; and it actually works on JobTread</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Have your AI build a tweak like &ldquo;ask me before deleting&rdquo; and it now reliably intercepts the button/submit, shows an &ldquo;Are you sure?&rdquo; prompt, and only lets the action through if you confirm &mdash; otherwise it's blocked. The previous building block (<code>onEvent</code>) could only ever block or notify, never &ldquo;ask, then proceed if confirmed,&rdquo; because JobTread (like every React app) routes the real action through a handler a plain click-blocker can't gate. <code>confirmBeforeAction</code> closes that gap, and stays inside the safe closed-verb model (plain-text prompt, no custom code) so tweaks remain review-safe</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.5 — Native-style job filter, formatter & theme fixes, stability pass -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.5</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">June 3, 2026</span>
             </div>
 
