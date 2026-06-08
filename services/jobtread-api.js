@@ -106,9 +106,13 @@ const JobTreadAPI = (() => {
       if (window.GrantKeyResolver) {
         return await window.GrantKeyResolver.getGrantKey();
       }
-      // Legacy path: only when resolver isn't loaded at all
-      const result = await chrome.storage.sync.get(STORAGE_KEYS.API_KEY);
-      return result[STORAGE_KEYS.API_KEY] || null;
+      // Legacy path: only when resolver isn't loaded at all.
+      // Grant key now lives in chrome.storage.local; fall back to the legacy
+      // sync location for installs not yet migrated by the service worker.
+      const local = await chrome.storage.local.get(STORAGE_KEYS.API_KEY);
+      if (local[STORAGE_KEYS.API_KEY]) return local[STORAGE_KEYS.API_KEY];
+      const synced = await chrome.storage.sync.get(STORAGE_KEYS.API_KEY);
+      return synced[STORAGE_KEYS.API_KEY] || null;
     } catch (error) {
       if (DEBUG) console.error('JobTreadAPI: Error getting API key:', error);
       return null;
@@ -122,7 +126,9 @@ const JobTreadAPI = (() => {
    */
   async function setApiKey(apiKey) {
     try {
-      await chrome.storage.sync.set({ [STORAGE_KEYS.API_KEY]: apiKey });
+      // Stored in chrome.storage.local (device-local), NOT sync — a raw grant
+      // key must never replicate to Google's cloud or other devices.
+      await chrome.storage.local.set({ [STORAGE_KEYS.API_KEY]: apiKey });
       console.log('JobTreadAPI: API key saved');
       return true;
     } catch (error) {
@@ -861,6 +867,8 @@ const JobTreadAPI = (() => {
    */
   async function clearConfig() {
     try {
+      // Grant key now lives in local; also clear the legacy sync copies.
+      await chrome.storage.local.remove([STORAGE_KEYS.API_KEY]);
       await chrome.storage.sync.remove([
         STORAGE_KEYS.API_KEY,
         STORAGE_KEYS.ORG_ID

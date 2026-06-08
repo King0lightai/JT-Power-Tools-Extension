@@ -359,7 +359,13 @@ const BudgetChangelogFeature = (() => {
         if (proKey) return proKey;
       }
 
-      // Legacy: JobTreadAPI storage (jtToolsApiKey in sync storage)
+      // Legacy: JobTreadAPI storage. The grant key now lives in
+      // chrome.storage.local; fall back to the legacy sync location for installs
+      // not yet migrated by the service worker.
+      const localApiResult = await chrome.storage.local.get('jtToolsApiKey');
+      if (localApiResult.jtToolsApiKey) {
+        return localApiResult.jtToolsApiKey;
+      }
       const apiResult = await chrome.storage.sync.get('jtToolsApiKey');
       if (apiResult.jtToolsApiKey) {
         return apiResult.jtToolsApiKey;

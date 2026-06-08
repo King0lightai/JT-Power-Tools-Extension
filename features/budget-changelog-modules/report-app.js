@@ -626,10 +626,16 @@ const BudgetReportApp = (() => {
 
     function esc(text) {
       if (!text && text !== 0) return '';
-      var s = String(text);
-      var d = document.createElement('div');
-      d.textContent = s;
-      return d.innerHTML;
+      // Escape all five HTML-sensitive chars, INCLUDING quotes, so the result is
+      // safe in both text and attribute contexts. The previous textContent→innerHTML
+      // approach did not escape " or ', which would become an injection point if a
+      // caller ever interpolated esc() output into an attr="..." value.
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // ---- Word-level diff ----

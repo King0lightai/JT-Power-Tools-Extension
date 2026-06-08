@@ -80,6 +80,24 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // Clean up legacy per-user org logo config
     chrome.storage.sync.remove('orgLogos');
 
+    // Security: move the raw JobTread grant key out of chrome.storage.sync
+    // (which replicates to Google's cloud + every signed-in device) into
+    // chrome.storage.local (device-local), then delete the cloud copy. Runs on
+    // install + update; no-op once migrated.
+    try {
+      const syncApi = await chrome.storage.sync.get('jtToolsApiKey');
+      if (syncApi.jtToolsApiKey) {
+        const localApi = await chrome.storage.local.get('jtToolsApiKey');
+        if (!localApi.jtToolsApiKey) {
+          await chrome.storage.local.set({ jtToolsApiKey: syncApi.jtToolsApiKey });
+        }
+        await chrome.storage.sync.remove('jtToolsApiKey');
+        console.log('JT Power Tools: Migrated JobTread grant key from sync to local storage');
+      }
+    } catch (migrateError) {
+      console.error('JT Power Tools: Grant key storage migration failed:', migrateError);
+    }
+
     // On update, merge with existing settings and show release notes
     if (details.reason === 'update') {
       try {

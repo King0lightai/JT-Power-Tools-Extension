@@ -285,17 +285,20 @@ const CustomThemeFeature = (() => {
       /* === Task Cards === */
       /* Overlay on task cards to blend with theme while preserving selection state */
       /* Covers all schedule task cards: month, week/day, availability, and task type filter row */
-      /* Exclude .rounded-full (assignee avatars) — they use background-image for photos */
-      td div[style*="background-color"]:not(.rounded-full),
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full),
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full),
+      /* Exclude user icons / photo avatars from the theme overlay + recolor:
+         .rounded-full = round avatars; [style*="background-image"] = any element
+         showing a photo (square rounded-sm avatars, image tiles). Real task cards
+         set a solid background-color only — never a background-image. */
+      td div[style*="background-color"]:not(.rounded-full):not([style*="background-image"]),
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full):not([style*="background-image"]),
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full):not([style*="background-image"]),
       .jt-ttf-task-card[style*="background-color"] {
         position: relative !important;
       }
 
-      td div[style*="background-color"]:not(.rounded-full)::before,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full)::before,
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full)::before,
+      td div[style*="background-color"]:not(.rounded-full):not([style*="background-image"])::before,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full):not([style*="background-image"])::before,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full):not([style*="background-image"])::before,
       .jt-ttf-task-card[style*="background-color"]::before {
         content: '' !important;
         position: absolute !important;
@@ -307,21 +310,21 @@ const CustomThemeFeature = (() => {
       }
 
       /* Ensure text and content stays above the overlay */
-      td div[style*="background-color"]:not(.rounded-full) > *,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full) > *,
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full) > *,
+      td div[style*="background-color"]:not(.rounded-full):not([style*="background-image"]) > *,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full):not([style*="background-image"]) > *,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full):not([style*="background-image"]) > *,
       .jt-ttf-task-card[style*="background-color"] > * {
         position: relative !important;
         z-index: 1 !important;
       }
 
       /* Force readable text on task cards */
-      td div[style*="background-color"]:not(.rounded-full),
-      td div[style*="background-color"]:not(.rounded-full) *,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full),
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full) *,
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full),
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full) *,
+      td div[style*="background-color"]:not(.rounded-full):not([style*="background-image"]),
+      td div[style*="background-color"]:not(.rounded-full):not([style*="background-image"]) *,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full):not([style*="background-image"]),
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full):not([style*="background-image"]) *,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full):not([style*="background-image"]),
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full):not([style*="background-image"]) *,
       .jt-ttf-task-card[style*="background-color"],
       .jt-ttf-task-card[style*="background-color"] * {
         color: ${p.text.primary} !important;
@@ -910,6 +913,34 @@ const CustomThemeFeature = (() => {
         --jt-notes-border: ${p.border.default};
         --jt-notes-primary: ${p.primary.base};
         --jt-notes-input-bg: ${p.background.muted};
+      }
+
+      /* Quick Notes pop-outs (folder color picker, table context menu) render at
+         document.body level — outside .jt-quick-notes-panel — so they never
+         inherit the --jt-notes-* vars above. Theme them explicitly via the
+         body-level .jt-custom-theme scope, the same way Character Counter themes
+         its dropdowns. Mirrors the existing dark-mode overrides for these. */
+      .jt-custom-theme .jt-folder-color-picker,
+      .jt-custom-theme .jt-note-table-context-menu {
+        background: ${p.background.elevated} !important;
+        border-color: ${p.border.default} !important;
+      }
+
+      .jt-custom-theme .jt-color-picker-header {
+        color: ${p.text.muted} !important;
+      }
+
+      .jt-custom-theme .jt-table-menu-item {
+        color: ${p.text.primary} !important;
+      }
+
+      .jt-custom-theme .jt-table-menu-item:hover {
+        background: ${p.states.hover} !important;
+      }
+
+      .jt-custom-theme .jt-color-swatch.selected {
+        border-color: ${p.text.primary} !important;
+        box-shadow: 0 0 0 2px ${p.background.elevated}, 0 0 0 4px ${p.text.primary} !important;
       }
 
       /* === Preview Button === */

@@ -196,7 +196,8 @@ const AccountService = (() => {
         const result = await response.json();
 
         if (response.ok) {
-          // Portal returns flat: { accessToken, expiresIn, user }
+          // Portal returns flat: { accessToken, expiresIn, user } and, when
+          // refresh-token rotation is enabled, also a new { refreshToken }.
           accessToken = result.accessToken;
           tokenExpiry = Date.now() + (result.expiresIn * 1000);
 
@@ -205,12 +206,21 @@ const AccountService = (() => {
             currentUser = result.user;
           }
 
-          // Store updated data
-          await chrome.storage.local.set({
+          const storeUpdate = {
             [STORAGE_KEYS.ACCESS_TOKEN]: accessToken,
             [STORAGE_KEYS.TOKEN_EXPIRY]: tokenExpiry,
             [STORAGE_KEYS.USER_DATA]: currentUser
-          });
+          };
+
+          // Refresh-token rotation: if the server issued a new refresh token,
+          // persist it and drop the old one (the server has now invalidated it).
+          // Backward compatible — pre-rotation responses omit refreshToken.
+          if (result.refreshToken) {
+            refreshToken = result.refreshToken;
+            storeUpdate[STORAGE_KEYS.REFRESH_TOKEN] = refreshToken;
+          }
+
+          await chrome.storage.local.set(storeUpdate);
 
           log('Token refreshed');
           return { success: true };

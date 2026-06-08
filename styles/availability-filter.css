@@ -886,3 +886,306 @@ body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
 .jt-custom-theme tr.jt-avail-visible > td:first-child::before {
   background: var(--jt-theme-primary, #3B82F6);
 }
+
+/* Custom-theme completion for the saved-views popover (header + footer bg) */
+.jt-custom-theme .jt-avail-saved-views-header,
+.jt-custom-theme .jt-avail-saved-views-actions {
+  background: var(--jt-theme-background-subtle, #F8FAFC);
+}
+
+.jt-custom-theme .jt-avail-saved-view-name {
+  color: var(--jt-theme-text, #334155);
+}
+
+/* ========================================================================
+   Searchable Assignee Dropdown (replaces the inline pill drawer)
+   ======================================================================== */
+
+.jt-avail-chip-caret {
+  font-size: 8px;
+  margin-left: 3px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.jt-avail-assignee-dropdown {
+  position: fixed;
+  min-width: 220px;
+  max-width: 300px;
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  z-index: 99999;
+  display: none;
+  overflow: hidden;
+}
+
+.jt-avail-assignee-dropdown.open {
+  display: block;
+  animation: jt-avail-dropdown-fade-in 0.15s ease;
+}
+
+.jt-avail-add-header {
+  padding: 8px;
+  border-bottom: 1px solid #E2E8F0;
+  background: #F8FAFC;
+}
+
+.jt-avail-add-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid #CBD5E1;
+  border-radius: 4px;
+  outline: none;
+  color: #334155;
+  background: #ffffff;
+}
+
+.jt-avail-add-search:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.jt-avail-add-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  border-bottom: 1px solid #F1F5F9;
+  font-size: 10px;
+  color: #64748B;
+}
+
+.jt-avail-add-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.jt-avail-add-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.jt-avail-add-action {
+  background: none;
+  border: 1px solid #CBD5E1;
+  border-radius: 3px;
+  color: #64748B;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.jt-avail-add-action:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  color: #334155;
+}
+
+/* Locked-height scrollable list */
+.jt-avail-add-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.jt-avail-add-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #334155;
+  transition: background 0.1s ease;
+}
+
+.jt-avail-add-option.hidden {
+  display: none;
+}
+
+.jt-avail-add-option:hover,
+.jt-avail-add-option.highlighted {
+  background: #F1F5F9;
+}
+
+.jt-avail-add-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 1px solid #CBD5E1;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #ffffff;
+}
+
+.jt-avail-add-option.active .jt-avail-add-check {
+  background: #3B82F6;
+  border-color: #3B82F6;
+}
+
+.jt-avail-add-check svg {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.jt-avail-add-option.active .jt-avail-add-check svg {
+  opacity: 1;
+}
+
+.jt-avail-add-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jt-avail-add-empty {
+  padding: 14px 12px;
+  text-align: center;
+  font-style: italic;
+  color: #94A3B8;
+  font-size: 12px;
+}
+
+/* ---- Dark mode ---- */
+body.jt-dark-mode .jt-avail-assignee-dropdown,
+.dark .jt-avail-assignee-dropdown {
+  background: #2c2c2c;
+  border-color: #404040;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+body.jt-dark-mode .jt-avail-add-header,
+.dark .jt-avail-add-header {
+  background: #252525;
+  border-bottom-color: #404040;
+}
+
+body.jt-dark-mode .jt-avail-add-search,
+.dark .jt-avail-add-search {
+  background: #333333;
+  border-color: #505050;
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-avail-add-search:focus,
+.dark .jt-avail-add-search:focus {
+  border-color: #60A5FA;
+}
+
+body.jt-dark-mode .jt-avail-add-toolbar,
+.dark .jt-avail-add-toolbar {
+  border-bottom-color: #404040;
+  color: #b0b0b0;
+}
+
+body.jt-dark-mode .jt-avail-add-action,
+.dark .jt-avail-add-action {
+  background: #333333;
+  border-color: #505050;
+  color: #b0b0b0;
+}
+
+body.jt-dark-mode .jt-avail-add-action:hover,
+.dark .jt-avail-add-action:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-avail-add-option,
+.dark .jt-avail-add-option {
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-avail-add-option:hover,
+body.jt-dark-mode .jt-avail-add-option.highlighted,
+.dark .jt-avail-add-option:hover,
+.dark .jt-avail-add-option.highlighted {
+  background: #3a3a3a;
+}
+
+body.jt-dark-mode .jt-avail-add-check,
+.dark .jt-avail-add-check {
+  background: #333333;
+  border-color: #505050;
+}
+
+body.jt-dark-mode .jt-avail-add-option.active .jt-avail-add-check,
+.dark .jt-avail-add-option.active .jt-avail-add-check {
+  background: #60A5FA;
+  border-color: #60A5FA;
+  color: #1f2937;
+}
+
+body.jt-dark-mode .jt-avail-add-empty,
+.dark .jt-avail-add-empty {
+  color: #a0a0a0;
+}
+
+/* ---- Custom (RGB) theme ---- */
+.jt-custom-theme .jt-avail-assignee-dropdown {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-color: var(--jt-theme-border, #E2E8F0);
+}
+
+.jt-custom-theme .jt-avail-add-header {
+  background: var(--jt-theme-background-subtle, #F8FAFC);
+  border-bottom-color: var(--jt-theme-border, #E2E8F0);
+}
+
+.jt-custom-theme .jt-avail-add-search {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-color: var(--jt-theme-border, #CBD5E1);
+  color: var(--jt-theme-text, #334155);
+}
+
+.jt-custom-theme .jt-avail-add-search:focus {
+  border-color: var(--jt-theme-primary, #3B82F6);
+}
+
+.jt-custom-theme .jt-avail-add-toolbar {
+  border-bottom-color: var(--jt-theme-border-subtle, #F1F5F9);
+  color: var(--jt-theme-text-secondary, #64748B);
+}
+
+.jt-custom-theme .jt-avail-add-action {
+  border-color: var(--jt-theme-border, #CBD5E1);
+  color: var(--jt-theme-text-secondary, #64748B);
+}
+
+.jt-custom-theme .jt-avail-add-action:hover {
+  background: var(--jt-theme-background-muted, #F1F5F9);
+  border-color: var(--jt-theme-border-strong, #94A3B8);
+  color: var(--jt-theme-text, #334155);
+}
+
+.jt-custom-theme .jt-avail-add-option {
+  color: var(--jt-theme-text, #334155);
+}
+
+.jt-custom-theme .jt-avail-add-option:hover,
+.jt-custom-theme .jt-avail-add-option.highlighted {
+  background: var(--jt-theme-background-subtle, #F1F5F9);
+}
+
+.jt-custom-theme .jt-avail-add-check {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-color: var(--jt-theme-border, #CBD5E1);
+}
+
+.jt-custom-theme .jt-avail-add-option.active .jt-avail-add-check {
+  background: var(--jt-theme-primary, #3B82F6);
+  border-color: var(--jt-theme-primary, #3B82F6);
+}
+
+.jt-custom-theme .jt-avail-add-empty {
+  color: var(--jt-theme-text-secondary, #94A3B8);
+}

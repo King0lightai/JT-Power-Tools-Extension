@@ -19,6 +19,15 @@ const AvailabilityFilterFeature = (() => {
   const STORAGE_KEY = 'jtAvailabilityFilterSelections';
   const SAVED_VIEWS_KEY = 'jtAvailabilityFilterSavedViews';
 
+  // Persist to chrome.storage.LOCAL, not sync. Each saved view stores a full
+  // snapshot of every category + assignee on/off state; on an org with a large
+  // VENDOR list this easily exceeds sync's 8KB-per-item quota
+  // (QUOTA_BYTES_PER_ITEM = 8192), making set() reject and the save silently
+  // fail. local has a ~10MB budget and no per-item cap. Trade-off: views no
+  // longer roam across devices — acceptable given the data size and that the
+  // alternative was "saves don't persist at all."
+  const filterStore = chrome.storage.local;
+
   // Track current filters
   // Structure: { categories: { 'INTERNAL': true }, assignees: { 'INTERNAL': { '01 Field': true } } }
   let currentFilters = {
@@ -41,6 +50,28 @@ const AvailabilityFilterFeature = (() => {
 
   // Track global click listener for cleanup
   let _outsideClickHandler = null;
+
+  // Perf: signature of the last-built assignee set. JT re-renders the whole
+  // assignment table on every week switch, but the people don't change — so
+  // we skip the expensive chip rebuild when the set is identical and only
+  // re-hide rows. requestAnimationFrame coalesces the burst of mutations into
+  // one applyFilters() that runs BEFORE the next paint, so filtered rows never
+  // flash visible.
+  let _lastSignature = null;
+  let _rafId = null;
+
+  // Searchable assignee dropdown (singleton popover appended to body). ONE
+  // element is reused for every category — repopulated on open — which avoids
+  // the orphaned-node accumulation that per-category dropdowns would cause
+  // across rebuilds. Replaces the old inline pill drawer.
+  let _assigneeDropdown = null;
+  let _assigneeDropdownCategory = null;
+  let _assigneeAnchorChip = null;
+  let _assigneeHighlightIndex = -1;
+  // Bound scroll/resize handler that keeps the open dropdown glued to its
+  // anchor chip (and closes it if the chip scrolls out of view) so the popup
+  // stays locked to the header instead of floating over the scrolling grid.
+  let _assigneeReposition = null;
 
   /**
    * Check if we're on the Schedule Availability view
@@ -73,6 +104,22 @@ const AvailabilityFilterFeature = (() => {
     }
 
     return false;
+  }
+
+  /**
+   * A "navigation key" for the current URL with the transient `taskId` param
+   * removed. Opening/closing a task sidebar only toggles ?taskId=, which is
+   * NOT a real navigation — using this key for URL-change detection keeps the
+   * filter bar from tearing down and rebuilding every time a task opens.
+   */
+  function navKeyIgnoringTask(href) {
+    try {
+      const u = new URL(href);
+      u.searchParams.delete('taskId');
+      return `${u.pathname}?${u.searchParams.toString()}`;
+    } catch (e) {
+      return href;
+    }
   }
 
   /**
@@ -228,9 +275,34 @@ const AvailabilityFilterFeature = (() => {
     return clean;
   }
 
+  /**
+   * One-time migration: earlier versions stored selections + saved views in
+   * chrome.storage.sync, where large payloads hit the 8KB/item quota and
+   * failed to save. Copy any existing sync data into local on first run so
+   * users don't lose previously-saved views. Only copies keys not already
+   * present in local (local always wins once it exists).
+   */
+  async function migrateFromSyncIfNeeded() {
+    try {
+      const local = await chrome.storage.local.get([STORAGE_KEY, SAVED_VIEWS_KEY]);
+      const missing = local[STORAGE_KEY] === undefined || local[SAVED_VIEWS_KEY] === undefined;
+      if (!missing) return;
+      const sync = await chrome.storage.sync.get([STORAGE_KEY, SAVED_VIEWS_KEY]);
+      const toSet = {};
+      if (local[STORAGE_KEY] === undefined && sync[STORAGE_KEY] !== undefined) toSet[STORAGE_KEY] = sync[STORAGE_KEY];
+      if (local[SAVED_VIEWS_KEY] === undefined && sync[SAVED_VIEWS_KEY] !== undefined) toSet[SAVED_VIEWS_KEY] = sync[SAVED_VIEWS_KEY];
+      if (Object.keys(toSet).length > 0) {
+        await chrome.storage.local.set(toSet);
+        console.log('AvailabilityFilter: Migrated saved data from sync → local');
+      }
+    } catch (error) {
+      console.error('AvailabilityFilter: Migration from sync failed (non-fatal):', error);
+    }
+  }
+
   async function loadFilterSelections() {
     try {
-      const result = await chrome.storage.sync.get([STORAGE_KEY]);
+      const result = await filterStore.get([STORAGE_KEY]);
       if (result[STORAGE_KEY]) {
         const saved = result[STORAGE_KEY];
         currentFilters = {
@@ -264,7 +336,7 @@ const AvailabilityFilterFeature = (() => {
    */
   async function saveFilterSelections() {
     try {
-      await chrome.storage.sync.set({ [STORAGE_KEY]: currentFilters });
+      await filterStore.set({ [STORAGE_KEY]: currentFilters });
       console.log('AvailabilityFilter: Saved filter selections');
     } catch (error) {
       console.error('AvailabilityFilter: Error saving filter selections:', error);
@@ -276,7 +348,7 @@ const AvailabilityFilterFeature = (() => {
    */
   async function loadSavedViews() {
     try {
-      const result = await chrome.storage.sync.get([SAVED_VIEWS_KEY]);
+      const result = await filterStore.get([SAVED_VIEWS_KEY]);
       return result[SAVED_VIEWS_KEY] || [];
     } catch (error) {
       console.error('AvailabilityFilter: Error loading saved views:', error);
@@ -297,7 +369,7 @@ const AvailabilityFilterFeature = (() => {
         createdAt: new Date().toISOString()
       };
       views.push(newView);
-      await chrome.storage.sync.set({ [SAVED_VIEWS_KEY]: views });
+      await filterStore.set({ [SAVED_VIEWS_KEY]: views });
       console.log('AvailabilityFilter: Saved new view:', viewName);
       return newView;
     } catch (error) {
@@ -313,7 +385,7 @@ const AvailabilityFilterFeature = (() => {
     try {
       const views = await loadSavedViews();
       const filteredViews = views.filter(v => v.id !== viewId);
-      await chrome.storage.sync.set({ [SAVED_VIEWS_KEY]: filteredViews });
+      await filterStore.set({ [SAVED_VIEWS_KEY]: filteredViews });
       console.log('AvailabilityFilter: Deleted view:', viewId);
       return true;
     } catch (error) {
@@ -438,8 +510,16 @@ const AvailabilityFilterFeature = (() => {
         e.stopPropagation();
         const viewName = prompt('Enter a name for this view:');
         if (viewName && viewName.trim()) {
-          await saveNewView(viewName.trim());
-          // Close dropdown after save
+          const saved = await saveNewView(viewName.trim());
+          if (saved) {
+            // Refresh the list so the new view shows immediately
+            const listContainer = viewsDropdown.querySelector('.jt-avail-saved-views-list');
+            if (listContainer) await renderSavedViewsList(listContainer, viewsDropdown);
+          } else {
+            // Don't fail silently — the old code swallowed storage errors,
+            // which is exactly why "saves" appeared to vanish.
+            alert('Could not save this view — a storage error occurred. Open the console (F12) for details.');
+          }
           viewsDropdown.classList.remove('open');
         }
       });
@@ -453,6 +533,13 @@ const AvailabilityFilterFeature = (() => {
       // Check both the original container (button) and the dropdown itself (now on body)
       if (!e.target.closest('.jt-avail-saved-views-container') && !e.target.closest('.jt-avail-saved-views-dropdown')) {
         viewsDropdown.classList.remove('open');
+      }
+      // Close the assignee dropdown on any outside click. Inside-clicks
+      // (dropdown + category chips) stopPropagation, so they never reach here.
+      if (_assigneeDropdown && _assigneeDropdown.classList.contains('open') &&
+          !e.target.closest('.jt-avail-assignee-dropdown') &&
+          !e.target.closest('.category-chip')) {
+        closeAssigneeDropdown();
       }
     };
     document.addEventListener('click', _outsideClickHandler);
@@ -490,6 +577,10 @@ const AvailabilityFilterFeature = (() => {
    * Create the filter UI container — compact single-row layout
    */
   function createFilterUI(categories, assigneesByCategory) {
+    // A rebuild recreates the category chips, so any open dropdown's anchor
+    // would dangle — close it first.
+    closeAssigneeDropdown();
+
     // Preserve collapsed state from existing container before removing
     if (filterContainer) {
       _isCollapsed = filterContainer.classList.contains('collapsed');
@@ -510,7 +601,9 @@ const AvailabilityFilterFeature = (() => {
       activeAssignees += catAssignees.filter(a => catFilters[a] !== false).length;
     });
 
-    // Build compact inline chips — category chips with counts, inline
+    // Build compact inline chips — each category chip is now a dropdown
+    // TRIGGER (caret affordance). Clicking opens a searchable, scrollable
+    // assignee picker (see openAssigneeDropdown) instead of an inline pill row.
     let chipsHtml = '';
     categories.forEach(cat => {
       const isCatActive = currentFilters.categories[cat] !== false;
@@ -518,21 +611,22 @@ const AvailabilityFilterFeature = (() => {
       const catAssigneeFilters = currentFilters.assignees[cat] || {};
       const activeChildCount = categoryAssignees.filter(a => catAssigneeFilters[a] !== false).length;
       const someChildrenActive = activeChildCount > 0 && activeChildCount < categoryAssignees.length;
+      const hasAssignees = categoryAssignees.length > 0;
 
       chipsHtml += `
         <button class="jt-avail-filter-chip category-chip ${isCatActive ? 'active' : ''} ${someChildrenActive ? 'partial' : ''}"
                 data-type="category"
                 data-value="${escapeHtml(cat)}"
-                title="Toggle all ${escapeHtml(cat)}">
-          ${categoryAssignees.length > 0 ? `
-            <span class="jt-avail-filter-expand-arrow" data-category="${escapeHtml(cat)}">▸</span>
-          ` : ''}
+                ${hasAssignees ? 'data-has-assignees="1" aria-haspopup="listbox" aria-expanded="false"' : ''}
+                title="${hasAssignees ? `Filter ${escapeHtml(cat)} assignees` : escapeHtml(cat)}">
           ${escapeHtml(cat)}
-          ${categoryAssignees.length > 0 ? `<span class="jt-avail-role-count">${activeChildCount}/${categoryAssignees.length}</span>` : ''}
+          ${hasAssignees ? `<span class="jt-avail-role-count">${activeChildCount}/${categoryAssignees.length}</span>` : ''}
+          ${hasAssignees ? `<span class="jt-avail-chip-caret" aria-hidden="true">▾</span>` : ''}
         </button>`;
     });
 
-    // Build the compact filter HTML — single row
+    // Build the compact filter HTML — single row (no inline drawer; assignee
+    // selection lives in the popover dropdown built lazily on body).
     let html = `
       <div class="jt-avail-filter-bar ${_isCollapsed ? 'collapsed' : ''}">
         <div class="jt-avail-bar-row">
@@ -569,37 +663,6 @@ const AvailabilityFilterFeature = (() => {
             </div>
           </div>
         </div>
-        <div class="jt-avail-bar-drawer">
-    `;
-
-    // Drawer: per-category expandable assignee rows
-    categories.forEach(cat => {
-      const categoryAssignees = assigneesByCategory[cat] || [];
-      if (categoryAssignees.length === 0) return;
-
-      const catAssigneeFilters = currentFilters.assignees[cat] || {};
-      let assigneeChipsHtml = '';
-      categoryAssignees.forEach(assignee => {
-        const isChildActive = catAssigneeFilters[assignee] !== false;
-        assigneeChipsHtml += `
-          <button class="jt-avail-filter-chip assignee-chip ${isChildActive ? 'active' : ''}"
-                  data-type="assignee"
-                  data-category="${escapeHtml(cat)}"
-                  data-value="${escapeHtml(assignee)}"
-                  title="Toggle ${escapeHtml(assignee)}">
-            ${escapeHtml(assignee)}
-          </button>`;
-      });
-
-      html += `
-        <div class="jt-avail-filter-roles collapsed" data-category="${escapeHtml(cat)}">
-          <span class="jt-avail-drawer-label" data-category="${escapeHtml(cat)}" title="Select/deselect all ${escapeHtml(cat)}">${escapeHtml(cat)}</span>
-          ${assigneeChipsHtml}
-        </div>`;
-    });
-
-    html += `
-        </div>
       </div>
     `;
 
@@ -618,6 +681,251 @@ const AvailabilityFilterFeature = (() => {
    * Escape HTML to prevent XSS - delegates to shared Sanitizer utility
    */
   const escapeHtml = (text) => Sanitizer.escapeHTML(text);
+
+  // ========================================================================
+  // Searchable assignee dropdown (replaces the inline pill drawer)
+  // ========================================================================
+
+  /**
+   * Lazily build the singleton dropdown and wire its permanent listeners:
+   * type-to-filter, keyboard nav (↑/↓/Enter/Esc), option toggling, All/None.
+   * Lives on document.body to escape the filter bar's stacking/overflow.
+   */
+  function ensureAssigneeDropdown() {
+    if (_assigneeDropdown && document.body.contains(_assigneeDropdown)) return _assigneeDropdown;
+
+    const dd = document.createElement('div');
+    dd.className = 'jt-avail-assignee-dropdown';
+    dd.innerHTML = `
+      <div class="jt-avail-add-header">
+        <input type="text" class="jt-avail-add-search" placeholder="Search…" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="jt-avail-add-toolbar">
+        <span class="jt-avail-add-count"></span>
+        <span class="jt-avail-add-actions">
+          <button type="button" class="jt-avail-add-action" data-action="all">All</button>
+          <button type="button" class="jt-avail-add-action" data-action="none">None</button>
+        </span>
+      </div>
+      <div class="jt-avail-add-list" role="listbox" aria-multiselectable="true"></div>
+    `;
+    document.body.appendChild(dd);
+
+    const search = dd.querySelector('.jt-avail-add-search');
+    const list = dd.querySelector('.jt-avail-add-list');
+
+    search.addEventListener('input', () => filterAssigneeOptions(search.value));
+
+    search.addEventListener('keydown', (e) => {
+      const visible = getVisibleOptions();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (visible.length) setHighlight(Math.min(_assigneeHighlightIndex + 1, visible.length - 1), visible);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (visible.length) setHighlight(Math.max(_assigneeHighlightIndex - 1, 0), visible);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const opt = visible[_assigneeHighlightIndex] || visible[0];
+        if (opt) toggleAssigneeOption(opt.dataset.value, opt);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        const anchor = _assigneeAnchorChip; // closeAssigneeDropdown() nulls it
+        closeAssigneeDropdown();
+        if (anchor) anchor.focus();
+      }
+    });
+
+    list.addEventListener('click', (e) => {
+      const opt = e.target.closest('.jt-avail-add-option');
+      if (opt) toggleAssigneeOption(opt.dataset.value, opt);
+    });
+
+    dd.querySelectorAll('.jt-avail-add-action').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setCategoryAll(_assigneeDropdownCategory, btn.dataset.action === 'all');
+      });
+    });
+
+    // Inside-clicks must not reach the document outside-close handler
+    dd.addEventListener('click', (e) => e.stopPropagation());
+
+    _assigneeDropdown = dd;
+    return dd;
+  }
+
+  function getVisibleOptions() {
+    if (!_assigneeDropdown) return [];
+    return Array.from(_assigneeDropdown.querySelectorAll('.jt-avail-add-option:not(.hidden)'));
+  }
+
+  function setHighlight(index, visible) {
+    visible = visible || getVisibleOptions();
+    _assigneeHighlightIndex = index;
+    visible.forEach((opt, i) => opt.classList.toggle('highlighted', i === index));
+    if (visible[index]) visible[index].scrollIntoView({ block: 'nearest' });
+  }
+
+  function filterAssigneeOptions(term) {
+    if (!_assigneeDropdown) return;
+    const q = (term || '').trim().toLowerCase();
+    _assigneeDropdown.querySelectorAll('.jt-avail-add-option').forEach(opt => {
+      const match = !q || (opt.dataset.value || '').toLowerCase().includes(q);
+      opt.classList.toggle('hidden', !match);
+    });
+    const visible = getVisibleOptions();
+    setHighlight(visible.length ? 0 : -1, visible);
+  }
+
+  /** Render the option rows for one category from currentFilters. */
+  function populateAssigneeDropdown(category) {
+    const dd = ensureAssigneeDropdown();
+    const search = dd.querySelector('.jt-avail-add-search');
+    const list = dd.querySelector('.jt-avail-add-list');
+
+    const assignees = Array.from(detectedAssigneesByCategory[category] || []).sort();
+    const catFilters = currentFilters.assignees[category] || {};
+
+    search.placeholder = `Search ${category}…`;
+    search.value = '';
+
+    let rows = '';
+    assignees.forEach(a => {
+      const active = catFilters[a] !== false;
+      rows += `
+        <div class="jt-avail-add-option ${active ? 'active' : ''}" role="option" aria-selected="${active}" data-value="${escapeHtml(a)}" title="${escapeHtml(a)}">
+          <span class="jt-avail-add-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+          <span class="jt-avail-add-label">${escapeHtml(a)}</span>
+        </div>`;
+    });
+    list.innerHTML = rows || '<div class="jt-avail-add-empty">No assignees</div>';
+    updateAssigneeDropdownCount();
+    _assigneeHighlightIndex = -1;
+  }
+
+  function updateAssigneeDropdownCount() {
+    if (!_assigneeDropdown || !_assigneeDropdownCategory) return;
+    const countEl = _assigneeDropdown.querySelector('.jt-avail-add-count');
+    if (!countEl) return;
+    const assignees = Array.from(detectedAssigneesByCategory[_assigneeDropdownCategory] || []);
+    const catFilters = currentFilters.assignees[_assigneeDropdownCategory] || {};
+    const active = assignees.filter(a => catFilters[a] !== false).length;
+    countEl.textContent = `${active} / ${assignees.length}`;
+  }
+
+  /**
+   * Recompute the dropdown's position from its anchor chip's CURRENT rect.
+   * Called on open and on every scroll/resize so the popup tracks the chip.
+   * If the chip has scrolled out of view, close the popup so it never floats
+   * detached over the schedule grid.
+   */
+  function positionAssigneeDropdown() {
+    if (!_assigneeDropdown || !_assigneeAnchorChip) return;
+    const rect = _assigneeAnchorChip.getBoundingClientRect();
+    // Anchor scrolled off-screen (or detached) → don't leave the popup floating.
+    if (rect.width === 0 || rect.bottom <= 0 || rect.top >= window.innerHeight) {
+      closeAssigneeDropdown();
+      return;
+    }
+    const ddWidth = _assigneeDropdown.offsetWidth || 240;
+    let left = rect.left;
+    if (left + ddWidth > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - ddWidth - 8);
+    }
+    _assigneeDropdown.style.top = `${rect.bottom + 4}px`;
+    _assigneeDropdown.style.left = `${left}px`;
+  }
+
+  /** Position under the anchor chip (clamped to viewport) and reveal. */
+  function openAssigneeDropdown(category, chipEl) {
+    const dd = ensureAssigneeDropdown();
+    _assigneeDropdownCategory = category;
+    _assigneeAnchorChip = chipEl;
+
+    if (filterContainer) {
+      filterContainer.querySelectorAll('.category-chip[aria-haspopup]').forEach(c => c.setAttribute('aria-expanded', 'false'));
+    }
+    if (chipEl) chipEl.setAttribute('aria-expanded', 'true');
+
+    populateAssigneeDropdown(category);
+    dd.classList.add('open'); // show before measuring
+    positionAssigneeDropdown();
+
+    // Keep the popup glued to its chip as the page / schedule grid scrolls.
+    // capture:true catches scroll events from JobTread's nested scroll
+    // containers, not just window. rAF-throttled to stay smooth. Same function
+    // reference each time, so re-adding on a category switch is a no-op.
+    if (!_assigneeReposition) {
+      let raf = null;
+      _assigneeReposition = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => { raf = null; positionAssigneeDropdown(); });
+      };
+    }
+    window.addEventListener('scroll', _assigneeReposition, true);
+    window.addEventListener('resize', _assigneeReposition);
+
+    const search = dd.querySelector('.jt-avail-add-search');
+    if (search) setTimeout(() => search.focus(), 0);
+  }
+
+  function closeAssigneeDropdown() {
+    if (_assigneeReposition) {
+      window.removeEventListener('scroll', _assigneeReposition, true);
+      window.removeEventListener('resize', _assigneeReposition);
+    }
+    if (_assigneeDropdown) _assigneeDropdown.classList.remove('open');
+    if (_assigneeAnchorChip) _assigneeAnchorChip.setAttribute('aria-expanded', 'false');
+    _assigneeDropdownCategory = null;
+    _assigneeAnchorChip = null;
+    _assigneeHighlightIndex = -1;
+  }
+
+  /**
+   * Toggle one assignee's visibility from the dropdown, then sync the option
+   * row, the count, the category chip, the table rows, and storage in place —
+   * no rebuild.
+   */
+  function toggleAssigneeOption(value, optEl) {
+    const category = _assigneeDropdownCategory;
+    if (!category) return;
+    if (!currentFilters.assignees[category]) currentFilters.assignees[category] = {};
+
+    const next = currentFilters.assignees[category][value] === false; // hidden → show
+    currentFilters.assignees[category][value] = next;
+    currentFilters.categories[category] = Object.values(currentFilters.assignees[category]).some(v => v === true);
+
+    if (optEl) {
+      optEl.classList.toggle('active', next);
+      optEl.setAttribute('aria-selected', String(next));
+    }
+    updateAssigneeDropdownCount();
+    updateChipStates();
+    applyFilters();
+    saveFilterSelections();
+  }
+
+  /** All / None for the open category. */
+  function setCategoryAll(category, newState) {
+    if (!category) return;
+    if (!currentFilters.assignees[category]) currentFilters.assignees[category] = {};
+    Array.from(detectedAssigneesByCategory[category] || []).forEach(a => {
+      currentFilters.assignees[category][a] = newState;
+    });
+    currentFilters.categories[category] = newState;
+
+    if (_assigneeDropdown) {
+      _assigneeDropdown.querySelectorAll('.jt-avail-add-option').forEach(opt => {
+        opt.classList.toggle('active', newState);
+        opt.setAttribute('aria-selected', String(newState));
+      });
+    }
+    updateAssigneeDropdownCount();
+    updateChipStates();
+    applyFilters();
+    saveFilterSelections();
+  }
 
   /**
    * Setup event listeners for filter UI
@@ -643,83 +951,22 @@ const AvailabilityFilterFeature = (() => {
     // Setup saved views functionality
     setupSavedViewsListeners();
 
-    // Expand arrows inside category chips — toggle assignee drawer
-    const expandArrows = filterContainer.querySelectorAll('.jt-avail-filter-expand-arrow');
-    expandArrows.forEach(arrow => {
-      arrow.addEventListener('click', (e) => {
-        e.stopPropagation(); // Don't trigger chip toggle
-        const category = arrow.dataset.category;
-        const rolesContainer = filterContainer.querySelector(`.jt-avail-filter-roles[data-category="${category}"]`);
-        if (rolesContainer) {
-          rolesContainer.classList.toggle('collapsed');
-          arrow.classList.toggle('expanded');
-        }
-      });
-    });
-
-    // Category chip clicks — ONLY toggle the assignee drawer open/closed
+    // Category chip clicks → open the searchable assignee dropdown for that
+    // category (or close it if it's already showing this category). Chips with
+    // no assignees just no-op.
     const categoryChips = filterContainer.querySelectorAll('.jt-avail-filter-chip.category-chip');
     categoryChips.forEach(chip => {
-      chip.addEventListener('click', () => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!chip.dataset.hasAssignees) return;
         const category = chip.dataset.value;
-        const rolesContainer = filterContainer.querySelector(`.jt-avail-filter-roles[data-category="${category}"]`);
-        const arrow = chip.querySelector('.jt-avail-filter-expand-arrow');
-        if (rolesContainer) {
-          // If the main bar is collapsed, expand it first so the drawer is visible
-          const bar = filterContainer.querySelector('.jt-avail-filter-bar');
-          if (bar && bar.classList.contains('collapsed')) {
-            bar.classList.remove('collapsed');
-            _isCollapsed = false;
-          }
-          rolesContainer.classList.toggle('collapsed');
-          if (arrow) arrow.classList.toggle('expanded');
+        const isOpenForThis = _assigneeDropdownCategory === category &&
+          _assigneeDropdown && _assigneeDropdown.classList.contains('open');
+        if (isOpenForThis) {
+          closeAssigneeDropdown();
+        } else {
+          openAssigneeDropdown(category, chip);
         }
-      });
-    });
-
-    // Drawer label clicks — select/deselect ALL assignees in that category
-    const drawerLabels = filterContainer.querySelectorAll('.jt-avail-drawer-label[data-category]');
-    drawerLabels.forEach(label => {
-      label.addEventListener('click', () => {
-        const category = label.dataset.category;
-        const newState = !currentFilters.categories[category];
-        currentFilters.categories[category] = newState;
-
-        if (currentFilters.assignees[category]) {
-          Object.keys(currentFilters.assignees[category]).forEach(assignee => {
-            currentFilters.assignees[category][assignee] = newState;
-          });
-        }
-
-        updateChipStates();
-        applyFilters();
-        saveFilterSelections();
-      });
-    });
-
-    // Assignee chip clicks - toggle individual assignee
-    const assigneeChips = filterContainer.querySelectorAll('.jt-avail-filter-chip.assignee-chip');
-    assigneeChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        const category = chip.dataset.category;
-        const assignee = chip.dataset.value;
-
-        // Ensure the category's assignees object exists
-        if (!currentFilters.assignees[category]) {
-          currentFilters.assignees[category] = {};
-        }
-
-        // Toggle assignee state
-        currentFilters.assignees[category][assignee] = !currentFilters.assignees[category][assignee];
-
-        // Update category state based on children
-        const anyAssigneeActive = Object.values(currentFilters.assignees[category]).some(v => v === true);
-        currentFilters.categories[category] = anyAssigneeActive;
-
-        // Update all chip visuals
-        updateChipStates();
-        applyFilters();
-        saveFilterSelections();
       });
     });
 
@@ -757,17 +1004,8 @@ const AvailabilityFilterFeature = (() => {
   function updateChipStates() {
     if (!filterContainer) return;
 
-    // Update assignee chips
-    const assigneeChips = filterContainer.querySelectorAll('.jt-avail-filter-chip.assignee-chip');
-    assigneeChips.forEach(chip => {
-      const category = chip.dataset.category;
-      const assignee = chip.dataset.value;
-      const catAssignees = currentFilters.assignees[category] || {};
-      const isActive = catAssignees[assignee] !== false;
-      chip.classList.toggle('active', isActive);
-    });
-
-    // Update category chips with partial state
+    // Assignee selection now lives in the dropdown, not inline chips — update
+    // the category chips (active + partial + count) to reflect currentFilters.
     const categoryChips = filterContainer.querySelectorAll('.jt-avail-filter-chip.category-chip');
     categoryChips.forEach(chip => {
       const category = chip.dataset.value;
@@ -1100,6 +1338,34 @@ const AvailabilityFilterFeature = (() => {
   }
 
   /**
+   * Stable signature of the detected assignee set. When this is unchanged
+   * across a re-render (the common case on a week switch — same people, new
+   * week), we can re-hide rows without tearing down and rebuilding every chip.
+   */
+  function computeSignature(categories, assigneesByCategory) {
+    return categories
+      .map(c => `${c}:${(assigneesByCategory[c] || []).join(',')}`)
+      .join('|');
+  }
+
+  /**
+   * Fast path: coalesce a burst of DOM mutations into a single applyFilters()
+   * that runs before the next paint. This is what kills the week-switch flash —
+   * JT re-adds all rows (unclassed = visible), and we re-hide the filtered ones
+   * in the same frame, before the browser paints them.
+   */
+  function requestApplyFilters() {
+    if (!isActiveState || _applyingView) return;
+    if (_rafId) return; // already scheduled this frame
+    _rafId = requestAnimationFrame(() => {
+      _rafId = null;
+      if (!isActiveState) return;
+      if (!isAvailabilityView()) return;
+      applyFilters();
+    });
+  }
+
+  /**
    * Main function to scan page and build/update filter UI
    */
   function scanAndBuildFilter() {
@@ -1130,6 +1396,16 @@ const AvailabilityFilterFeature = (() => {
     // Initialize filter states for new items
     initializeFilterStates(categories, assigneesByCategory);
 
+    // Skip the expensive chip rebuild when the assignee set is unchanged
+    // (week switches re-render rows but keep the same people). Just re-apply
+    // row visibility — the chips already reflect currentFilters.
+    const signature = computeSignature(categories, assigneesByCategory);
+    if (filterContainer && document.body.contains(filterContainer) && signature === _lastSignature) {
+      applyFilters();
+      return;
+    }
+    _lastSignature = signature;
+
     // Create or update the filter UI
     createFilterUI(categories, assigneesByCategory);
 
@@ -1148,6 +1424,9 @@ const AvailabilityFilterFeature = (() => {
 
     isActiveState = true;
     console.log('AvailabilityFilter: Initializing...');
+
+    // Move any legacy sync-stored data into local before reading (see filterStore note)
+    await migrateFromSyncIfNeeded();
 
     // Load saved filter selections
     await loadFilterSelections();
@@ -1201,6 +1480,10 @@ const AvailabilityFilterFeature = (() => {
       }
 
       if (shouldUpdate) {
+        // Fast path first: re-hide filtered rows before the next paint so a
+        // week switch doesn't flash the full unfiltered list. Then the
+        // debounced rebuild reconciles the chip UI only if the set changed.
+        requestApplyFilters();
         debouncedScanAndBuild();
       }
     });
@@ -1210,23 +1493,30 @@ const AvailabilityFilterFeature = (() => {
       subtree: true
     });
 
-    // Watch for URL changes (SPA navigation)
-    let lastUrl = location.href;
+    // Watch for URL changes (SPA navigation). Compare with the transient
+    // `taskId` param stripped — opening/closing a task sidebar toggles
+    // ?taskId= and must NOT be treated as navigation, or the whole filter bar
+    // tears down and rebuilds every time a task opens (visually jarring).
+    let lastNavKey = navKeyIgnoringTask(location.href);
     urlCheckInterval = setInterval(() => {
       if (!isActiveState) {
         clearInterval(urlCheckInterval);
         return;
       }
 
-      if (location.href !== lastUrl) {
-        lastUrl = location.href;
+      const navKey = navKeyIgnoringTask(location.href);
+      if (navKey !== lastNavKey) {
+        lastNavKey = navKey;
         console.log('AvailabilityFilter: URL changed, rescanning...');
 
         // Remove existing UI when navigating away
+        closeAssigneeDropdown();
         if (filterContainer) {
           filterContainer.remove();
           filterContainer = null;
         }
+        // Force a full rebuild on the next scan (new page context)
+        _lastSignature = null;
 
         // Small delay to let page content load
         setTimeout(scanAndBuildFilter, 500);
@@ -1266,6 +1556,13 @@ const AvailabilityFilterFeature = (() => {
     }
     debouncedScanAndBuild = null;
 
+    // Cancel any pending fast-apply frame and reset the rebuild signature
+    if (_rafId) {
+      cancelAnimationFrame(_rafId);
+      _rafId = null;
+    }
+    _lastSignature = null;
+
     // Remove global click listener
     if (_outsideClickHandler) {
       document.removeEventListener('click', _outsideClickHandler);
@@ -1277,6 +1574,15 @@ const AvailabilityFilterFeature = (() => {
       filterContainer.remove();
       filterContainer = null;
     }
+
+    // Remove the singleton assignee dropdown (lives on document.body).
+    // closeAssigneeDropdown() detaches its scroll/resize listeners first.
+    closeAssigneeDropdown();
+    if (_assigneeDropdown) {
+      _assigneeDropdown.remove();
+      _assigneeDropdown = null;
+    }
+    _assigneeReposition = null;
 
     // Remove filters from DOM
     removeFilters();

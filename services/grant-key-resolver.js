@@ -123,6 +123,12 @@ const GrantKeyResolver = (() => {
         return proResult.jtpro_grant_key;
       }
 
+      // Grant key now lives in chrome.storage.local; fall back to the legacy
+      // sync location for installs not yet migrated by the service worker.
+      const localApi = await chrome.storage.local.get(['jtToolsApiKey']);
+      if (localApi.jtToolsApiKey) {
+        return localApi.jtToolsApiKey;
+      }
       const apiResult = await chrome.storage.sync.get(['jtToolsApiKey']);
       if (apiResult.jtToolsApiKey) {
         return apiResult.jtToolsApiKey;

@@ -70,6 +70,22 @@ const TaskTypeFilterFeature = (() => {
     return /\/jobs\/[^/]+\/schedule/.test(window.location.pathname);
   }
 
+  /**
+   * A "navigation key" for the current URL with the transient `taskId` param
+   * removed. Opening/closing a task sidebar only toggles ?taskId=, which is
+   * NOT a real navigation — using this key for change-detection keeps the
+   * feature from reloading every time a task sidebar opens.
+   */
+  function navKeyIgnoringTask(href) {
+    try {
+      const u = new URL(href);
+      u.searchParams.delete('taskId');
+      return `${u.pathname}?${u.searchParams.toString()}`;
+    } catch (e) {
+      return href;
+    }
+  }
+
   // ─── TABLE DETECTION ─────────────────────────────────────
 
   /**
@@ -617,34 +633,24 @@ const TaskTypeFilterFeature = (() => {
     const jobName = task.job ? (task.job.name || '') : '';
     const jobNumber = task.job ? (task.job.number || '') : '';
     const jobLabel = jobNumber ? `${jobName} ${jobNumber}` : jobName;
-    const onJobSchedule = isJobLevelSchedule();
 
+    // Click-to-open is DISABLED for now. JobTread opens a task sidebar from
+    // ?taskId only on page load (not reactively on client-side history nav),
+    // and there's no native unassigned-task element to click — so every
+    // approach we tried either failed to open the sidebar or forced a full
+    // page reload. Until JT supports it, the card is a passive, informative
+    // chip: it shows the unassigned task + job on hover but does nothing on
+    // click. (openTaskSidebar is retained below for when we revisit this.)
     const card = document.createElement('div');
-    card.className = `jt-ttf-task-card${onJobSchedule ? ' jt-ttf-readonly' : ' cursor-pointer'}`;
+    card.className = 'jt-ttf-task-card jt-ttf-readonly';
     card.style.backgroundColor = bgColor;
     card.setAttribute('data-task-id', task.id);
-    card.setAttribute('title', onJobSchedule
-      ? `${task.name}\n${jobLabel}${typeName ? '\nType: ' + typeName : ''}\n\nGo to the global Schedule to interact with unassigned tasks`
-      : `${task.name}\n${jobLabel}${typeName ? '\nType: ' + typeName : ''}`);
+    card.setAttribute('title', `${task.name}\n${jobLabel}${typeName ? '\nType: ' + typeName : ''}`);
 
     card.innerHTML = `
       <div class="jt-ttf-task-name">${Sanitizer.escapeHTML(task.name)}</div>
       <div class="jt-ttf-task-job">${Sanitizer.escapeHTML(jobLabel)}</div>
     `;
-
-    if (onJobSchedule) {
-      // On job-level schedule, show a message instead of navigating
-      card.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showJobLevelMessage();
-      });
-    } else {
-      // On global schedule, open task sidebar
-      card.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openTaskSidebar(task.id);
-      });
-    }
 
     return card;
   }
@@ -676,35 +682,38 @@ const TaskTypeFilterFeature = (() => {
   }
 
   /**
-   * Open the task sidebar by navigating to the current schedule URL with ?taskId=
-   * JT's SPA router picks up the taskId param and opens the sidebar automatically.
+   * Open the task sidebar by adding ?taskId=<id> to the current URL. JT's SPA
+   * router picks up the taskId param and opens the sidebar.
    *
-   * We push the target URL directly (staying on /schedule the entire time) so the
-   * schedule grid never unmounts — no flash or full-page re-render.  If a sidebar
-   * is already open for a different task, we clear the old taskId first so React
-   * detects the param change.
+   * CRITICAL: preserve the OTHER query params — notably ?view=<savedViewId>.
+   * The availability saved-view URL looks like
+   *   /schedule?view=22PGZ2Aw3fAH&taskId=22PYYaA6UvM3
+   * The old code rebuilt the URL as `${path}?taskId=${id}`, which wiped the
+   * `view` param. JT then navigated away from the saved view (the flicker) and
+   * the sidebar never opened. We now mutate only the taskId param via
+   * URLSearchParams so the view (and anything else) survives.
+   *
+   * Staying on the same path means the schedule grid never unmounts — no flash.
+   * If a sidebar is already open for a different task, we clear taskId first
+   * (keeping other params) so React detects the change.
    */
   function openTaskSidebar(taskId) {
     if (!taskId) return;
 
-    const currentPath = window.location.pathname;
-    const targetUrl = `${currentPath}?taskId=${taskId}`;
-    const scrollY = window.scrollY;
+    // Build the target URL preserving existing params (notably ?view=).
+    const params = new URLSearchParams(window.location.search);
+    params.set('taskId', taskId);
+    const targetUrl = `${window.location.pathname}?${params.toString()}`;
 
-    // If there's already a taskId in the URL, clear it first so React sees a change
-    if (window.location.search.includes('taskId=')) {
-      window.history.replaceState(null, '', currentPath);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    }
-
-    // Push the target URL — React Router picks up the popstate and opens the sidebar
-    // without unmounting the schedule grid (no navigate-to-home flash)
-    requestAnimationFrame(() => {
-      window.history.pushState(null, '', targetUrl);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-      // Restore scroll in case of any jump
-      requestAnimationFrame(() => window.scrollTo(0, scrollY));
-    });
+    // Mirror the Job Switcher's instant client-side navigation EXACTLY — it
+    // updates the page with no refresh by doing a synchronous pushState with
+    // an empty-object state, then dispatching a popstate that also carries
+    // `{ state: {} }`. (Earlier attempts here used requestAnimationFrame + a
+    // null state + a clear-first step, or a synthetic anchor click — none of
+    // which JT's router picked up, so the sidebar only opened on refresh / the
+    // anchor triggered a full reload.)
+    window.history.pushState({}, '', targetUrl);
+    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
   }
 
   /**
@@ -947,10 +956,15 @@ const TaskTypeFilterFeature = (() => {
       attributes: false
     });
 
-    let lastUrl = window.location.href;
+    // Compare URLs IGNORING the taskId param — opening/closing a task sidebar
+    // adds/removes ?taskId=, and we must NOT treat that as a navigation
+    // (otherwise opening any task wipes our state and re-fetches, which the
+    // user sees as a jarring reload). Path / ?view= / date changes still count.
+    let lastNavKey = navKeyIgnoringTask(window.location.href);
     urlCheckInterval = setInterval(() => {
-      if (window.location.href !== lastUrl) {
-        lastUrl = window.location.href;
+      const key = navKeyIgnoringTask(window.location.href);
+      if (key !== lastNavKey) {
+        lastNavKey = key;
         removeInjectedRows();
         unassignedTasks = [];
         tasksByType = {};
