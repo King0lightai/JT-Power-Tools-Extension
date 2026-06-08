@@ -1392,8 +1392,10 @@ const PreviewModeFeature = (() => {
     // Icons [!icon:name] - render as actual SVG icons
     result = result.replace(/\[!icon:(\w+)\]/g, (match, iconName) => renderInlineIcon(iconName));
 
-    // Inline colors [!color:green] text - process before other formatting
-    result = result.replace(/\[!color:(\w+)\]\s*(.+?)(?=\[!color:|$)/g, '<span class="jt-color-$1">$2</span>');
+    // Color is intentionally NOT handled here. JobTread only renders [!color:xxx]
+    // when it's at the front of a line (a "return") — see the line-start handler
+    // in markdownToHTML. A mid-paragraph color code renders as literal text in JT,
+    // so we leave it untouched to keep the preview faithful.
 
     // Links [text](url) - sanitize URL and attr-escape before href interpolation
     result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
