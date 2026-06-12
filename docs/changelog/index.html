@@ -53,8 +53,69 @@
         <!-- Version 4.9.6 — confirmBeforeAction Tweak verb (warn-before-action on React) -->
         <div class="version-section">
             <div class="version-header">
-                <span class="version-number">v4.9.6</span>
+                <span class="version-number">v4.9.7</span>
                 <span class="version-badge">Current</span>
+                <span class="version-date">June 11, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🖼️</span> Custom Org Logo &mdash; Loading Again</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed the custom organization logo not appearing in the top bar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A recent security update was a little too strict and rejected some valid logo image links (for example, ones with a space in the file name), which made the logo silently disappear. It loads reliably again.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">↕️</span> Document Sort &mdash; Now on Customer &amp; Vendor Tabs</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Click a column header to sort documents on Customer and Vendor pages, not just inside a job</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The same clickable Name / Job / Subject / Status / Amount sorting you already had on a job's Documents tab now works on the Customer &rsaquo; Documents and Vendor &rsaquo; Documents tabs too. The first click still force-loads every row, so the sort covers the whole list &mdash; not just what's on screen.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔐</span> Stay Signed In</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed being unexpectedly signed out of your JT Power Tools account when refreshing a JobTread page</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A login-token race between the popup, the background worker, and your open tabs could wipe your saved session on an ordinary page refresh. Your sign-in now stays put.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> Polish &amp; Under the Hood</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode now matches JobTread's color rendering exactly</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A <code>[!color:red]</code> code only previews as colored when it's at the start of a line &mdash; the same rule JobTread itself follows &mdash; so the preview no longer shows color where the saved text won't.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Reliability and accuracy improvements to the JobTread AI integration</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A round of behind-the-scenes fixes to how the AI assistant reads budgets, payments, schedules, and documents &mdash; more accurate dollar figures and member/task lookups.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.6</span>
                 <span class="version-date">June 4, 2026</span>
             </div>
 
