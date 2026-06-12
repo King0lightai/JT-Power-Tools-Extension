@@ -1,28 +1,37 @@
 // Document Sort Feature Module
-// Adds clickable sort arrows to the column headers of the Job > Documents
-// table. JT lazy-loads more rows as you scroll, so the first click on a
-// column header force-loads every row (scrolls to the bottom in a loop
-// until no new rows arrive) before sorting — otherwise the user would
-// only see the visible window sorted, with unloaded rows sitting in
-// their original positions further down.
+// Adds clickable sort arrows to the column headers of the Documents table.
+// Works on three views that share the same table component:
+//   • Job > Documents       (/jobs/.../documents)
+//   • Customer > Documents   (/customers/.../documents)
+//   • Vendor > Documents     (/vendors/.../documents)
+// JT lazy-loads more rows as you scroll, so the first click on a column
+// header force-loads every row (scrolls to the bottom in a loop until no
+// new rows arrive) before sorting — otherwise the user would only see the
+// visible window sorted, with unloaded rows sitting in their original
+// positions further down.
 //
-// DOM signature this feature targets (Job > Documents tab only):
+// DOM signature this feature targets. The Job view shows the linked
+// account as "Account"; the Customer/Vendor views replace it with a "Job"
+// column (shifting Name to index 1). Both are 5-column sticky tables:
 //   <div class="sticky z-30" style="top: 48px;">
 //     <div class="overflow-auto overscroll-x-none scrollbar-none">
 //       <div class="flex min-w-max">
-//         <div ...bg-gray-700...>Name</div>      <!-- 250px -->
-//         <div ...bg-gray-700...>Account</div>   <!-- 250px -->
-//         <div ...bg-gray-700...>Subject</div>   <!-- 150px -->
-//         <div ...bg-gray-700...>Status</div>    <!-- 150px -->
-//         <div ...bg-gray-700...>Amount</div>    <!-- 150px right-aligned -->
+//         <!-- Job view:            Name | Account | Subject | Status | Amount -->
+//         <!-- Customer/Vendor view: Job  | Name    | Subject | Status | Amount -->
+//         <div ...bg-gray-700...>...</div>  x5
 //       </div>
 //     </div>
 //   </div>
 //   <div class="overflow-auto overscroll-x-none scrollbar-none">
-//     <a href="/jobs/.../documents/...">...</a>  <!-- rows -->
-//     <a href="/jobs/.../documents/...">...</a>
+//     <a href="/jobs/.../documents/...">...</a>  <!-- rows (always job-scoped,
+//     <a href="/jobs/.../documents/...">...</a>        even in customer/vendor views) -->
 //     ...
 //   </div>
+//
+// Per-index sort extraction is compatible across both layouts: indices 0
+// and 1 are always a bold primary line (Name/Account/Job all render that
+// way) and indices 2/3/4 (Subject/Status/Amount) are identical — so the
+// comparator needs no per-layout branching.
 
 const DocumentSortFeature = (() => {
   let isActive = false;
@@ -34,9 +43,16 @@ const DocumentSortFeature = (() => {
   let activeDirection = null;      // 'asc' | 'desc' | null
   let loadInFlight = false;        // Guard against concurrent force-loads
 
-  // Column index → expected header text. All five must match to qualify
-  // as the documents table (defensive against other sticky tables).
-  const EXPECTED_HEADERS = ['Name', 'Account', 'Subject', 'Status', 'Amount'];
+  // Known documents-table column layouts. A sticky table must match one of
+  // these header sets exactly to qualify (defensive against other 5-column
+  // sticky tables like budgets/payments). The Job > Documents tab shows the
+  // linked account as "Account"; the Customer/Vendor > Documents tabs replace
+  // it with the "Job" column (shifting Name to index 1).
+  const KNOWN_LAYOUTS = [
+    ['Name', 'Account', 'Subject', 'Status', 'Amount'], // Job > Documents
+    ['Job', 'Name', 'Subject', 'Status', 'Amount'],     // Customer/Vendor > Documents
+  ];
+  const COLUMN_COUNT = 5;
 
   // Status enum order. Lower = sorts earlier in ascending direction.
   // Unknown statuses get a higher value than any known one so they fall
@@ -118,7 +134,7 @@ const DocumentSortFeature = (() => {
     mountedRowsContainer = rowsContainer;
 
     const cells = getHeaderCells(header);
-    if (cells.length !== EXPECTED_HEADERS.length) {
+    if (cells.length !== COLUMN_COUNT) {
       // Defensive: signature changed mid-detection
       mountedHeader = null;
       mountedRowsContainer = null;
@@ -167,9 +183,11 @@ const DocumentSortFeature = (() => {
     const candidates = document.querySelectorAll('div.sticky.z-30');
     for (const candidate of candidates) {
       const cells = getHeaderCells(candidate);
-      if (cells.length !== EXPECTED_HEADERS.length) continue;
+      if (cells.length !== COLUMN_COUNT) continue;
       const headerTexts = cells.map(c => extractHeaderText(c));
-      const matches = EXPECTED_HEADERS.every((expected, idx) => headerTexts[idx] === expected);
+      const matches = KNOWN_LAYOUTS.some(layout =>
+        layout.every((expected, idx) => headerTexts[idx] === expected)
+      );
       if (matches) return candidate;
     }
     return null;
@@ -198,13 +216,16 @@ const DocumentSortFeature = (() => {
   function findRowsContainer(header) {
     // The rows container is the next sibling `<div class="overflow-auto
     // overscroll-x-none scrollbar-none">` after the sticky header.
-    // (NOT sticky itself.)
+    // (NOT sticky itself.) Rows are document links; today every view —
+    // including Customer/Vendor — renders them job-scoped
+    // (/jobs/.../documents/...), but we match on `/documents/` alone so a
+    // future account-scoped path wouldn't silently break detection.
     let sibling = header.nextElementSibling;
     while (sibling) {
       if (
         !sibling.classList.contains('sticky') &&
         sibling.classList.contains('overflow-auto') &&
-        sibling.querySelector(':scope > a[href*="/jobs/"][href*="/documents/"]')
+        sibling.querySelector(':scope > a[href*="/documents/"]')
       ) {
         return sibling;
       }

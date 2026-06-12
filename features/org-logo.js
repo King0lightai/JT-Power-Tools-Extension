@@ -105,19 +105,31 @@ const OrgLogoFeature = (() => {
       const svgs = switcher.querySelectorAll('svg');
       let logoUrl = resolved.logoUrl;
 
-      // Restrict to HTTPS only. The portal is the admin-controlled source of
-      // this URL, but defense-in-depth: reject javascript:/data:/blob:/http:
-      // schemes and URLs with attribute-breaking chars before setting img.src.
+      // Validate before assigning to img.src. The portal is the admin-controlled
+      // source, but defense-in-depth: require an absolute https:// URL and reject
+      // every other scheme (javascript:/data:/blob:/http:, relative, etc.).
+      //
+      // We parse with the URL constructor here rather than Sanitizer.sanitizeURL.
+      // sanitizeURL is tuned for interpolating into an HTML attribute *string* and
+      // rejects any URL containing whitespace or quote/angle chars (they'd break
+      // out of attr="..."). But we assign to the img.src *property*, not an
+      // attribute string, so those chars are harmless — and rejecting them was
+      // dropping legitimate logo URLs (e.g. a storage path with a space), which
+      // is what broke this feature after the URL-hardening pass. The URL
+      // constructor validates structure and yields a normalized, percent-encoded
+      // href that is safe to assign directly.
       if (logoUrl) {
-        const isHttps = typeof logoUrl === 'string' && /^https:\/\//i.test(logoUrl.trim());
-        const safe = isHttps && typeof Sanitizer !== 'undefined'
-          ? Sanitizer.sanitizeURL(logoUrl, null)
-          : null;
-        if (!safe) {
+        let parsed = null;
+        try {
+          parsed = new URL(String(logoUrl).trim());
+        } catch (_) {
+          parsed = null;
+        }
+        if (parsed && parsed.protocol === 'https:') {
+          logoUrl = parsed.href;
+        } else {
           console.warn('OrgLogo: Rejecting non-HTTPS or malformed logo URL:', logoUrl);
           logoUrl = null;
-        } else {
-          logoUrl = safe;
         }
       }
 
