@@ -413,8 +413,13 @@ async function handleFetchExtensionGrantKey(orgName) {
         const refreshData = await refreshResponse.json();
         accessToken = refreshData.accessToken;
 
-        // Store the new tokens
-        const tokenUpdate = { jtAccountAccessToken: accessToken };
+        // Store the new tokens. Expiry must be persisted too — without it,
+        // AccountService.isTokenExpiringSoon() reads a stale value and forces
+        // a token rotation on every page load.
+        const tokenUpdate = {
+          jtAccountAccessToken: accessToken,
+          jtAccountTokenExpiry: Date.now() + ((refreshData.expiresIn || 900) * 1000)
+        };
         if (refreshData.refreshToken) {
           tokenUpdate.jtAccountRefreshToken = refreshData.refreshToken;
         }

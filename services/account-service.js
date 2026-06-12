@@ -37,12 +37,44 @@ const AccountService = (() => {
   let refreshToken = null;
   let tokenExpiry = null;
   let refreshPromise = null;
+  let storageSyncAttached = false;
+
+  /**
+   * Keep this context's in-memory auth state in sync with chrome.storage.
+   * Refresh tokens are single-use (rotated by the server on every refresh):
+   * when any other context — popup, service worker, another tab — rotates
+   * them, this context must pick up the new values or its next refresh
+   * attempt 401s. Also propagates logout (cleared keys) across contexts.
+   */
+  function setupStorageSync() {
+    if (storageSyncAttached) return;
+    if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.onChanged) return;
+
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName !== 'local') return;
+      if (STORAGE_KEYS.ACCESS_TOKEN in changes) {
+        accessToken = changes[STORAGE_KEYS.ACCESS_TOKEN].newValue || null;
+      }
+      if (STORAGE_KEYS.REFRESH_TOKEN in changes) {
+        refreshToken = changes[STORAGE_KEYS.REFRESH_TOKEN].newValue || null;
+      }
+      if (STORAGE_KEYS.TOKEN_EXPIRY in changes) {
+        tokenExpiry = changes[STORAGE_KEYS.TOKEN_EXPIRY].newValue || null;
+      }
+      if (STORAGE_KEYS.USER_DATA in changes) {
+        currentUser = changes[STORAGE_KEYS.USER_DATA].newValue || null;
+      }
+    });
+    storageSyncAttached = true;
+  }
 
   /**
    * Initialize the service - load stored tokens
    */
   async function init() {
     try {
+      setupStorageSync();
+
       const stored = await chrome.storage.local.get([
         STORAGE_KEYS.ACCESS_TOKEN,
         STORAGE_KEYS.REFRESH_TOKEN,
@@ -181,16 +213,49 @@ const AccountService = (() => {
       return refreshPromise;
     }
 
-    if (!refreshToken) {
-      return { success: false, error: 'No refresh token' };
-    }
-
     refreshPromise = (async () => {
       try {
+        // Re-read auth state from storage right before refreshing. Storage is
+        // the source of truth: refresh tokens are single-use (the server
+        // rotates them on every /auth/refresh), and another context — popup,
+        // service worker, or another tab's content script — may have rotated
+        // the token after this context cached its copy at init. Refreshing
+        // with that stale copy 401s, and the failure path used to wipe the
+        // whole session.
+        const stored = await chrome.storage.local.get([
+          STORAGE_KEYS.ACCESS_TOKEN,
+          STORAGE_KEYS.REFRESH_TOKEN,
+          STORAGE_KEYS.TOKEN_EXPIRY,
+          STORAGE_KEYS.USER_DATA
+        ]);
+        if (stored[STORAGE_KEYS.REFRESH_TOKEN]) {
+          refreshToken = stored[STORAGE_KEYS.REFRESH_TOKEN];
+        }
+
+        // If another context already refreshed and left a fresh access token
+        // in storage, adopt it and skip the network call entirely — no
+        // rotation churn.
+        const storedExpiry = stored[STORAGE_KEYS.TOKEN_EXPIRY] || null;
+        if (stored[STORAGE_KEYS.ACCESS_TOKEN] && storedExpiry &&
+            (storedExpiry - Date.now()) >= REFRESH_THRESHOLD) {
+          accessToken = stored[STORAGE_KEYS.ACCESS_TOKEN];
+          tokenExpiry = storedExpiry;
+          if (stored[STORAGE_KEYS.USER_DATA]) {
+            currentUser = stored[STORAGE_KEYS.USER_DATA];
+          }
+          log('Adopted fresh token refreshed by another context');
+          return { success: true };
+        }
+
+        if (!refreshToken) {
+          return { success: false, error: 'No refresh token' };
+        }
+
+        const tokenUsed = refreshToken;
         const response = await fetch(`${API_URL}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken })
+          body: JSON.stringify({ refreshToken: tokenUsed })
         });
 
         const result = await response.json();
@@ -225,7 +290,27 @@ const AccountService = (() => {
           log('Token refreshed');
           return { success: true };
         } else {
-          // Refresh failed - clear auth data
+          // Refresh failed. If another context rotated the token while our
+          // request was in flight, the session is still alive under the new
+          // token — adopt it instead of logging the user out. Only clear auth
+          // data when the token currently in storage is the one the server
+          // just rejected.
+          const recheck = await chrome.storage.local.get([
+            STORAGE_KEYS.ACCESS_TOKEN,
+            STORAGE_KEYS.REFRESH_TOKEN,
+            STORAGE_KEYS.TOKEN_EXPIRY
+          ]);
+          const currentStored = recheck[STORAGE_KEYS.REFRESH_TOKEN] || null;
+          if (currentStored && currentStored !== tokenUsed) {
+            refreshToken = currentStored;
+            if (recheck[STORAGE_KEYS.ACCESS_TOKEN]) {
+              accessToken = recheck[STORAGE_KEYS.ACCESS_TOKEN];
+              tokenExpiry = recheck[STORAGE_KEYS.TOKEN_EXPIRY] || null;
+            }
+            log('Refresh raced with another context; adopted rotated token');
+            return { success: true };
+          }
+
           logError('Token refresh failed', result.error);
           await clearAuthData();
           return { success: false, error: result.error || 'Token refresh failed' };
