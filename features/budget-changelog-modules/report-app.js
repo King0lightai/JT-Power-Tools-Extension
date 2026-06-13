@@ -9,9 +9,9 @@ const BudgetReportApp = (() => {
    * @returns {string} Complete HTML document
    */
   function generate(diff, options = {}) {
-    var jobName = options.jobName || getJobName();
-    var data = serializeData(diff, options, jobName);
-    var dataJson = JSON.stringify(data).replace(/<\//g, '<\\/');
+    const jobName = options.jobName || getJobName();
+    const data = serializeData(diff, options, jobName);
+    const dataJson = JSON.stringify(data).replace(/<\//g, '<\\/');
     return '<!DOCTYPE html>\n' +
       '<html lang="en">\n' +
       '<head>\n' +
@@ -47,32 +47,32 @@ const BudgetReportApp = (() => {
     if (!jobName) {
       jobName = options.jobName || getJobName();
     }
-    var items = [];
+    const items = [];
 
     // Flatten added items
     if (diff.added) {
-      for (var i = 0; i < diff.added.length; i++) {
-        var entry = diff.added[i];
-        var item = entry.item || entry;
+      for (let i = 0; i < diff.added.length; i++) {
+        const entry = diff.added[i];
+        const item = entry.item || entry;
         items.push(Object.assign({}, flattenItem(item), { _type: 'added' }));
       }
     }
 
     // Flatten removed items
     if (diff.removed) {
-      for (var i = 0; i < diff.removed.length; i++) {
-        var entry = diff.removed[i];
-        var item = entry.item || entry;
+      for (let i = 0; i < diff.removed.length; i++) {
+        const entry = diff.removed[i];
+        const item = entry.item || entry;
         items.push(Object.assign({}, flattenItem(item), { _type: 'removed' }));
       }
     }
 
     // Flatten modified items
     if (diff.modified) {
-      for (var i = 0; i < diff.modified.length; i++) {
-        var mod = diff.modified[i];
-        var oldItem = mod.oldItem || {};
-        var newItem = mod.newItem || mod.item || {};
+      for (let i = 0; i < diff.modified.length; i++) {
+        const mod = diff.modified[i];
+        const oldItem = mod.oldItem || {};
+        const newItem = mod.newItem || mod.item || {};
         items.push({
           _type: 'modified',
           old: flattenItem(oldItem),
@@ -94,9 +94,9 @@ const BudgetReportApp = (() => {
 
     // Flatten unchanged items
     if (diff.unchanged) {
-      for (var i = 0; i < diff.unchanged.length; i++) {
-        var entry = diff.unchanged[i];
-        var item = entry.item || entry;
+      for (let i = 0; i < diff.unchanged.length; i++) {
+        const entry = diff.unchanged[i];
+        const item = entry.item || entry;
         items.push(Object.assign({}, flattenItem(item), { _type: 'unchanged' }));
       }
     }
@@ -147,11 +147,11 @@ const BudgetReportApp = (() => {
    * @returns {string} Job name
    */
   function getJobName() {
-    var jobHeader = document.querySelector('h1, [class*="job-name"], [class*="jobName"]');
+    const jobHeader = document.querySelector('h1, [class*="job-name"], [class*="jobName"]');
     if (jobHeader) {
       return jobHeader.textContent ? jobHeader.textContent.trim() : 'Budget';
     }
-    var title = document.title;
+    const title = document.title;
     if (title && title.includes('-')) {
       return title.split('-')[0].trim();
     }
@@ -437,11 +437,11 @@ const BudgetReportApp = (() => {
    * @param {Object} data - Serialized report data from serializeData()
    */
   function renderReport(data) {
-    var allItems = data.items;
-    var summary = data.summary;
-    var opts = data.options;
+    const allItems = data.items;
+    const summary = data.summary;
+    const opts = data.options;
 
-    var state = {
+    const state = {
       searchQuery: '',
       activeTypes: ['added', 'removed', 'modified', 'unchanged'],
       activeGroups: [],
@@ -455,21 +455,21 @@ const BudgetReportApp = (() => {
     };
 
     // Build group index
-    var groupNames = extractCostGroups(allItems);
+    const groupNames = extractCostGroups(allItems);
     state.allGroupNames = groupNames;
     state.activeGroups = groupNames.slice();
 
     // Auto-collapse if large dataset
-    var totalCount = allItems.length;
+    const totalCount = allItems.length;
     if (totalCount > 200) {
       groupNames.forEach(function(g) { state.collapsedGroups[g] = true; });
     }
 
     function extractCostGroups(items) {
-      var set = {};
+      const set = {};
       items.forEach(function(entry) {
-        var item = entry._type === 'modified' ? entry.new : entry;
-        var h = item.hierarchy;
+        const item = entry._type === 'modified' ? entry.new : entry;
+        const h = item.hierarchy;
         if (h && h.length > 0) {
           set[h[0]] = true;
         }
@@ -483,13 +483,13 @@ const BudgetReportApp = (() => {
     }
 
     function getGroupName(entry) {
-      var item = getItemData(entry);
+      const item = getItemData(entry);
       return (item.hierarchy && item.hierarchy.length > 0) ? item.hierarchy[0] : 'Ungrouped';
     }
 
     function getHierarchyPath(entry) {
-      var item = getItemData(entry);
-      var h = item.hierarchy || [];
+      const item = getItemData(entry);
+      const h = item.hierarchy || [];
       return h.length > 1 ? h.slice(0, -1).join(' > ') : (h[0] || 'Root');
     }
 
@@ -500,12 +500,12 @@ const BudgetReportApp = (() => {
         if (state.activeTypes.indexOf(entry._type) === -1) return false;
 
         // Group filter
-        var g = getGroupName(entry);
+        const g = getGroupName(entry);
         if (state.activeGroups.indexOf(g) === -1) return false;
 
         // Threshold filter
         if (state.threshold > 0) {
-          var costD = 0, priceD = 0;
+          let costD = 0, priceD = 0;
           if (entry._type === 'added') {
             costD = entry.extendedCost || 0;
             priceD = entry.extendedPrice || 0;
@@ -525,9 +525,9 @@ const BudgetReportApp = (() => {
 
         // Search filter
         if (state.searchQuery) {
-          var q = state.searchQuery.toLowerCase();
-          var item = getItemData(entry);
-          var searchable = (item.name + ' ' + item.description + ' ' + item.costCode + ' ' + item.costType + ' ' + getHierarchyPath(entry)).toLowerCase();
+          const q = state.searchQuery.toLowerCase();
+          const item = getItemData(entry);
+          const searchable = (item.name + ' ' + item.description + ' ' + item.costCode + ' ' + item.costType + ' ' + getHierarchyPath(entry)).toLowerCase();
           if (searchable.indexOf(q) === -1) return false;
         }
 
@@ -537,10 +537,10 @@ const BudgetReportApp = (() => {
 
     // ---- Grouping ----
     function groupByHierarchy(items) {
-      var groups = {};
-      var order = [];
+      const groups = {};
+      const order = [];
       items.forEach(function(entry) {
-        var g = getGroupName(entry);
+        const g = getGroupName(entry);
         if (!groups[g]) { groups[g] = []; order.push(g); }
         groups[g].push(entry);
       });
@@ -550,11 +550,11 @@ const BudgetReportApp = (() => {
     // ---- Sorting ----
     function sortItems(items, col, dir) {
       if (!col) return items;
-      var sorted = items.slice();
-      var mult = dir === 'desc' ? -1 : 1;
+      const sorted = items.slice();
+      const mult = dir === 'desc' ? -1 : 1;
       sorted.sort(function(a, b) {
-        var va = getSortValue(a, col);
-        var vb = getSortValue(b, col);
+        const va = getSortValue(a, col);
+        const vb = getSortValue(b, col);
         if (va === vb) return 0;
         if (va === null || va === undefined) return 1;
         if (vb === null || vb === undefined) return -1;
@@ -565,7 +565,7 @@ const BudgetReportApp = (() => {
     }
 
     function getSortValue(entry, col) {
-      var item = getItemData(entry);
+      const item = getItemData(entry);
       switch (col) {
         case 'name': return item.name;
         case 'type': return entry._type;
@@ -587,7 +587,7 @@ const BudgetReportApp = (() => {
       if (entry._type === 'added') return entry.extendedCost || 0;
       if (entry._type === 'removed') return -(entry.extendedCost || 0);
       if (entry._type === 'modified') {
-        for (var i = 0; i < entry.changes.length; i++) {
+        for (let i = 0; i < entry.changes.length; i++) {
           if (entry.changes[i].field === 'extendedCost') return entry.changes[i].delta || 0;
         }
       }
@@ -598,7 +598,7 @@ const BudgetReportApp = (() => {
       if (entry._type === 'added') return entry.extendedPrice || 0;
       if (entry._type === 'removed') return -(entry.extendedPrice || 0);
       if (entry._type === 'modified') {
-        for (var i = 0; i < entry.changes.length; i++) {
+        for (let i = 0; i < entry.changes.length; i++) {
           if (entry.changes[i].field === 'extendedPrice') return entry.changes[i].delta || 0;
         }
       }
@@ -608,14 +608,14 @@ const BudgetReportApp = (() => {
     // ---- Formatting ----
     function fmtCurrency(n) {
       if (n === null || n === undefined) return '-';
-      var prefix = n < 0 ? '-' : '';
-      var abs = Math.abs(n);
+      const prefix = n < 0 ? '-' : '';
+      const abs = Math.abs(n);
       return prefix + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function fmtDelta(n) {
       if (n === null || n === undefined || n === 0) return '-';
-      var prefix = n > 0 ? '+' : '';
+      const prefix = n > 0 ? '+' : '';
       return prefix + fmtCurrency(n);
     }
 
@@ -643,31 +643,31 @@ const BudgetReportApp = (() => {
       if (!oldText && !newText) return '';
       if (!oldText) return '<span class="diff-add">' + esc(newText) + '</span>';
       if (!newText) return '<span class="diff-del">' + esc(oldText) + '</span>';
-      var oldWords = oldText.split(/\s+/);
-      var newWords = newText.split(/\s+/);
-      var result = lcsWordDiff(oldWords, newWords);
+      const oldWords = oldText.split(/\s+/);
+      const newWords = newText.split(/\s+/);
+      const result = lcsWordDiff(oldWords, newWords);
       return result;
     }
 
     function lcsWordDiff(oldW, newW) {
       // Simple LCS-based word diff
-      var m = oldW.length, n = newW.length;
+      const m = oldW.length, n = newW.length;
       // For very long texts, fall back to simple diff
       if (m * n > 100000) {
         return '<span class="diff-del">' + esc(oldW.join(' ')) + '</span> <span class="diff-add">' + esc(newW.join(' ')) + '</span>';
       }
-      var dp = [];
-      for (var i = 0; i <= m; i++) {
+      const dp = [];
+      for (let i = 0; i <= m; i++) {
         dp[i] = [];
-        for (var j = 0; j <= n; j++) {
+        for (let j = 0; j <= n; j++) {
           if (i === 0 || j === 0) dp[i][j] = 0;
           else if (oldW[i - 1] === newW[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
           else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
         }
       }
       // Backtrack to build diff
-      var parts = [];
-      var ci = m, cj = n;
+      const parts = [];
+      let ci = m, cj = n;
       while (ci > 0 || cj > 0) {
         if (ci > 0 && cj > 0 && oldW[ci - 1] === newW[cj - 1]) {
           parts.unshift({ type: 'same', word: esc(oldW[ci - 1]) });
@@ -681,16 +681,16 @@ const BudgetReportApp = (() => {
         }
       }
       // Merge consecutive same-type runs
-      var html = '';
-      var i = 0;
+      let html = '';
+      let i = 0;
       while (i < parts.length) {
-        var t = parts[i].type;
-        var words = [];
+        const t = parts[i].type;
+        const words = [];
         while (i < parts.length && parts[i].type === t) {
           words.push(parts[i].word);
           i++;
         }
-        var joined = words.join(' ');
+        const joined = words.join(' ');
         if (t === 'del') html += '<span class="diff-del">' + joined + '</span> ';
         else if (t === 'add') html += '<span class="diff-add">' + joined + '</span> ';
         else html += joined + ' ';
@@ -700,7 +700,7 @@ const BudgetReportApp = (() => {
 
     // ---- DOM helpers ----
     function el(tag, attrs, children) {
-      var e = document.createElement(tag);
+      const e = document.createElement(tag);
       if (attrs) {
         Object.keys(attrs).forEach(function(k) {
           if (k === 'className') e.className = attrs[k];
@@ -722,19 +722,19 @@ const BudgetReportApp = (() => {
 
     // ---- Debounce ----
     function debounce(fn, ms) {
-      var timer;
+      let timer;
       return function() {
-        var ctx = this, args = arguments;
+        const ctx = this, args = arguments;
         clearTimeout(timer);
         timer = setTimeout(function() { fn.apply(ctx, args); }, ms);
       };
     }
 
     // ---- Open dropdown management ----
-    var openDropdown = null;
+    let openDropdown = null;
     document.addEventListener('click', function(e) {
       if (openDropdown && !openDropdown.contains(e.target)) {
-        var panel = openDropdown.querySelector('.dropdown-panel');
+        const panel = openDropdown.querySelector('.dropdown-panel');
         if (panel) panel.classList.remove('open');
         openDropdown = null;
       }
@@ -744,19 +744,19 @@ const BudgetReportApp = (() => {
     // RENDER
     // ================================================================
     function render() {
-      var app = document.getElementById('app');
+      const app = document.getElementById('app');
       app.innerHTML = '';
       app.appendChild(renderToolbar());
-      var container = el('div', { className: 'report-container' });
+      const container = el('div', { className: 'report-container' });
       container.appendChild(renderHeader());
       if (!data.hasChanges) {
         container.appendChild(renderNoChanges());
       } else {
         container.appendChild(renderSummary());
         container.appendChild(renderMiniStats());
-        var filtered = applyFilters(allItems);
-        var sorted = sortItems(filtered, state.sortColumn, state.sortDirection);
-        var grouped = groupByHierarchy(sorted);
+        const filtered = applyFilters(allItems);
+        const sorted = sortItems(filtered, state.sortColumn, state.sortDirection);
+        const grouped = groupByHierarchy(sorted);
         container.appendChild(renderTable(grouped));
       }
       container.appendChild(renderFooter());
@@ -765,10 +765,10 @@ const BudgetReportApp = (() => {
 
     // ---- Toolbar ----
     function renderToolbar() {
-      var toolbar = el('div', { className: 'report-toolbar' });
+      const toolbar = el('div', { className: 'report-toolbar' });
 
       // Search
-      var searchInput = el('input', {
+      const searchInput = el('input', {
         type: 'text', placeholder: 'Search items...',
         value: state.searchQuery
       });
@@ -782,9 +782,9 @@ const BudgetReportApp = (() => {
       toolbar.appendChild(el('span', { textContent: '|', style: 'color:#d1d5db;margin:0 2px;' }));
 
       // Type chips
-      var chipSection = el('div', { className: 'toolbar-section' });
-      var allActive = state.activeTypes.length === 4;
-      var allChip = el('span', {
+      const chipSection = el('div', { className: 'toolbar-section' });
+      const allActive = state.activeTypes.length === 4;
+      const allChip = el('span', {
         className: 'chip chip-all ' + (allActive ? 'active' : 'inactive'),
         textContent: 'All'
       });
@@ -795,21 +795,21 @@ const BudgetReportApp = (() => {
       });
       chipSection.appendChild(allChip);
 
-      var types = [
+      const types = [
         { key: 'added', label: 'Added', cls: 'chip-added' },
         { key: 'removed', label: 'Removed', cls: 'chip-removed' },
         { key: 'modified', label: 'Modified', cls: 'chip-modified' },
         { key: 'unchanged', label: 'Unchanged', cls: 'chip-unchanged' }
       ];
       types.forEach(function(t) {
-        var isActive = state.activeTypes.indexOf(t.key) !== -1;
-        var chip = el('span', {
+        const isActive = state.activeTypes.indexOf(t.key) !== -1;
+        const chip = el('span', {
           className: 'chip ' + t.cls + ' ' + (isActive ? 'active' : 'inactive'),
           textContent: t.label,
           'data-type': t.key
         });
         chip.addEventListener('click', function() {
-          var idx = state.activeTypes.indexOf(t.key);
+          const idx = state.activeTypes.indexOf(t.key);
           if (idx !== -1) state.activeTypes.splice(idx, 1);
           else state.activeTypes.push(t.key);
           renderContent();
@@ -823,12 +823,12 @@ const BudgetReportApp = (() => {
       toolbar.appendChild(el('span', { textContent: '|', style: 'color:#d1d5db;margin:0 2px;' }));
 
       // Cost group dropdown
-      var groupDD = el('div', { className: 'dropdown-wrap' });
-      var groupBtn = el('button', { className: 'btn', textContent: 'Groups (' + state.activeGroups.length + ')' });
+      const groupDD = el('div', { className: 'dropdown-wrap' });
+      const groupBtn = el('button', { className: 'btn', textContent: 'Groups (' + state.activeGroups.length + ')' });
       groupBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var p = groupDD.querySelector('.dropdown-panel');
-        var isOpen = p.classList.contains('open');
+        const p = groupDD.querySelector('.dropdown-panel');
+        const isOpen = p.classList.contains('open');
         if (openDropdown && openDropdown !== groupDD) {
           openDropdown.querySelector('.dropdown-panel').classList.remove('open');
         }
@@ -836,17 +836,17 @@ const BudgetReportApp = (() => {
         openDropdown = isOpen ? null : groupDD;
       });
       groupDD.appendChild(groupBtn);
-      var groupPanel = el('div', { className: 'dropdown-panel' });
+      const groupPanel = el('div', { className: 'dropdown-panel' });
       // Select All / Clear All
-      var selectAllItem = el('div', { className: 'dropdown-item', style: 'font-weight:600;border-bottom:1px solid #e5e7eb;margin-bottom:4px;padding-bottom:8px;' });
-      var selectAllLink = el('span', { textContent: 'Select All', style: 'color:#06b6d4;cursor:pointer;margin-right:12px;' });
+      const selectAllItem = el('div', { className: 'dropdown-item', style: 'font-weight:600;border-bottom:1px solid #e5e7eb;margin-bottom:4px;padding-bottom:8px;' });
+      const selectAllLink = el('span', { textContent: 'Select All', style: 'color:#06b6d4;cursor:pointer;margin-right:12px;' });
       selectAllLink.addEventListener('click', function(e) {
         e.stopPropagation();
         state.activeGroups = state.allGroupNames.slice();
         renderContent();
         updateGroupDropdown(groupPanel, groupBtn);
       });
-      var clearAllLink = el('span', { textContent: 'Clear All', style: 'color:#ef4444;cursor:pointer;' });
+      const clearAllLink = el('span', { textContent: 'Clear All', style: 'color:#ef4444;cursor:pointer;' });
       clearAllLink.addEventListener('click', function(e) {
         e.stopPropagation();
         state.activeGroups = [];
@@ -857,12 +857,12 @@ const BudgetReportApp = (() => {
       selectAllItem.appendChild(clearAllLink);
       groupPanel.appendChild(selectAllItem);
       state.allGroupNames.forEach(function(g) {
-        var item = el('label', { className: 'dropdown-item' });
-        var cb = el('input', { type: 'checkbox' });
+        const item = el('label', { className: 'dropdown-item' });
+        const cb = el('input', { type: 'checkbox' });
         cb.checked = state.activeGroups.indexOf(g) !== -1;
         cb.addEventListener('change', function(e) {
           e.stopPropagation();
-          var idx = state.activeGroups.indexOf(g);
+          const idx = state.activeGroups.indexOf(g);
           if (cb.checked && idx === -1) state.activeGroups.push(g);
           else if (!cb.checked && idx !== -1) state.activeGroups.splice(idx, 1);
           groupBtn.textContent = 'Groups (' + state.activeGroups.length + ')';
@@ -876,7 +876,7 @@ const BudgetReportApp = (() => {
       toolbar.appendChild(groupDD);
 
       // Threshold
-      var threshInput = el('input', {
+      const threshInput = el('input', {
         type: 'number', placeholder: 'Min $ change', min: '0', step: '1',
         value: state.threshold > 0 ? String(state.threshold) : ''
       });
@@ -890,8 +890,8 @@ const BudgetReportApp = (() => {
       toolbar.appendChild(el('span', { textContent: '|', style: 'color:#d1d5db;margin:0 2px;' }));
 
       // View toggle
-      var viewSection = el('div', { className: 'toolbar-section' });
-      var deltaBtn = el('button', {
+      const viewSection = el('div', { className: 'toolbar-section' });
+      const deltaBtn = el('button', {
         className: 'btn' + (state.viewMode === 'delta' ? ' active' : ''),
         textContent: 'Delta'
       });
@@ -901,7 +901,7 @@ const BudgetReportApp = (() => {
         sideBySideBtn.className = 'btn';
         renderContent();
       });
-      var sideBySideBtn = el('button', {
+      const sideBySideBtn = el('button', {
         className: 'btn' + (state.viewMode === 'sideBySide' ? ' active' : ''),
         textContent: 'Side by Side'
       });
@@ -916,13 +916,13 @@ const BudgetReportApp = (() => {
       toolbar.appendChild(viewSection);
 
       // Expand All / Collapse All
-      var expandBtn = el('button', { className: 'btn', textContent: 'Expand All' });
+      const expandBtn = el('button', { className: 'btn', textContent: 'Expand All' });
       expandBtn.addEventListener('click', function() {
         state.collapsedGroups = {};
         renderContent();
       });
       toolbar.appendChild(expandBtn);
-      var collapseBtn = el('button', { className: 'btn', textContent: 'Collapse All' });
+      const collapseBtn = el('button', { className: 'btn', textContent: 'Collapse All' });
       collapseBtn.addEventListener('click', function() {
         state.allGroupNames.forEach(function(g) { state.collapsedGroups[g] = true; });
         renderContent();
@@ -933,12 +933,12 @@ const BudgetReportApp = (() => {
       toolbar.appendChild(el('span', { textContent: '|', style: 'color:#d1d5db;margin:0 2px;' }));
 
       // Export dropdown
-      var exportDD = el('div', { className: 'dropdown-wrap' });
-      var exportBtn = el('button', { className: 'btn', textContent: 'Export' });
+      const exportDD = el('div', { className: 'dropdown-wrap' });
+      const exportBtn = el('button', { className: 'btn', textContent: 'Export' });
       exportBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var p = exportDD.querySelector('.dropdown-panel');
-        var isOpen = p.classList.contains('open');
+        const p = exportDD.querySelector('.dropdown-panel');
+        const isOpen = p.classList.contains('open');
         if (openDropdown && openDropdown !== exportDD) {
           openDropdown.querySelector('.dropdown-panel').classList.remove('open');
         }
@@ -946,12 +946,12 @@ const BudgetReportApp = (() => {
         openDropdown = isOpen ? null : exportDD;
       });
       exportDD.appendChild(exportBtn);
-      var exportPanel = el('div', { className: 'dropdown-panel', style: 'min-width:120px;' });
-      var csvItem = el('div', { className: 'dropdown-item', textContent: 'CSV' });
+      const exportPanel = el('div', { className: 'dropdown-panel', style: 'min-width:120px;' });
+      const csvItem = el('div', { className: 'dropdown-item', textContent: 'CSV' });
       csvItem.addEventListener('click', function() { exportCSV(); });
-      var copyItem = el('div', { className: 'dropdown-item', textContent: 'Copy Summary' });
+      const copyItem = el('div', { className: 'dropdown-item', textContent: 'Copy Summary' });
       copyItem.addEventListener('click', function() { copyToClipboard(); });
-      var printItem = el('div', { className: 'dropdown-item', textContent: 'Print' });
+      const printItem = el('div', { className: 'dropdown-item', textContent: 'Print' });
       printItem.addEventListener('click', function() { printReport(); });
       exportPanel.appendChild(csvItem);
       exportPanel.appendChild(copyItem);
@@ -963,16 +963,16 @@ const BudgetReportApp = (() => {
     }
 
     function updateToolbarChips() {
-      var chips = document.querySelectorAll('.chip[data-type]');
+      const chips = document.querySelectorAll('.chip[data-type]');
       chips.forEach(function(c) {
-        var t = c.getAttribute('data-type');
+        const t = c.getAttribute('data-type');
         if (state.activeTypes.indexOf(t) !== -1) {
           c.classList.remove('inactive'); c.classList.add('active');
         } else {
           c.classList.remove('active'); c.classList.add('inactive');
         }
       });
-      var allChip = document.querySelector('.chip-all');
+      const allChip = document.querySelector('.chip-all');
       if (allChip) {
         if (state.activeTypes.length === 4) {
           allChip.classList.remove('inactive'); allChip.classList.add('active');
@@ -984,7 +984,7 @@ const BudgetReportApp = (() => {
 
     function updateGroupDropdown(panel, btn) {
       btn.textContent = 'Groups (' + state.activeGroups.length + ')';
-      var checkboxes = panel.querySelectorAll('input[type=checkbox]');
+      const checkboxes = panel.querySelectorAll('input[type=checkbox]');
       state.allGroupNames.forEach(function(g, i) {
         if (checkboxes[i]) checkboxes[i].checked = state.activeGroups.indexOf(g) !== -1;
       });
@@ -992,10 +992,10 @@ const BudgetReportApp = (() => {
 
     // ---- Partial re-render (content only, keep toolbar) ----
     function renderContent() {
-      var container = document.querySelector('.report-container');
+      const container = document.querySelector('.report-container');
       if (!container) { render(); return; }
       // Preserve header, rebuild everything after
-      var header = container.querySelector('.report-header');
+      const header = container.querySelector('.report-header');
       container.innerHTML = '';
       if (header) container.appendChild(header);
       else container.appendChild(renderHeader());
@@ -1004,9 +1004,9 @@ const BudgetReportApp = (() => {
       } else {
         container.appendChild(renderSummary());
         container.appendChild(renderMiniStats());
-        var filtered = applyFilters(allItems);
-        var sorted = sortItems(filtered, state.sortColumn, state.sortDirection);
-        var grouped = groupByHierarchy(sorted);
+        const filtered = applyFilters(allItems);
+        const sorted = sortItems(filtered, state.sortColumn, state.sortDirection);
+        const grouped = groupByHierarchy(sorted);
         container.appendChild(renderTable(grouped));
       }
       container.appendChild(renderFooter());
@@ -1014,10 +1014,10 @@ const BudgetReportApp = (() => {
 
     // ---- Header ----
     function renderHeader() {
-      var hdr = el('div', { className: 'report-header' });
+      const hdr = el('div', { className: 'report-header' });
       hdr.appendChild(el('h1', null, 'Budget Changelog'));
       hdr.appendChild(el('p', { className: 'subtitle' }, esc(opts.jobName)));
-      var dr = el('div', { className: 'date-range' });
+      const dr = el('div', { className: 'date-range' });
       dr.appendChild(el('span', { className: 'date-badge' }, esc(opts.oldDate)));
       dr.appendChild(el('span', null, '\u2192'));
       dr.appendChild(el('span', { className: 'date-badge' }, esc(opts.newDate)));
@@ -1027,7 +1027,7 @@ const BudgetReportApp = (() => {
 
     // ---- No changes ----
     function renderNoChanges() {
-      var wrap = el('div', { className: 'no-changes' });
+      const wrap = el('div', { className: 'no-changes' });
       wrap.appendChild(el('div', { className: 'check-icon', textContent: '\u2714' }));
       wrap.appendChild(el('h2', null, 'No Changes Detected'));
       wrap.appendChild(el('p', null, 'These two budget backups are identical.'));
@@ -1036,26 +1036,26 @@ const BudgetReportApp = (() => {
 
     // ---- Summary cards ----
     function renderSummary() {
-      var grid = el('div', { className: 'summary-grid' });
+      const grid = el('div', { className: 'summary-grid' });
 
       // Cost Change
-      var costCard = el('div', { className: 'summary-card' });
-      var costClass = summary.costChange >= 0 ? 'green' : 'red';
+      const costCard = el('div', { className: 'summary-card' });
+      const costClass = summary.costChange >= 0 ? 'green' : 'red';
       costCard.appendChild(el('div', { className: 'card-value ' + costClass, textContent: fmtDelta(summary.costChange) }));
       costCard.appendChild(el('div', { className: 'card-label', textContent: 'Total Cost Change' }));
       costCard.appendChild(el('div', { className: 'card-sub', textContent: fmtCurrency(summary.oldTotalCost) + ' \u2192 ' + fmtCurrency(summary.newTotalCost) }));
       grid.appendChild(costCard);
 
       // Price Change
-      var priceCard = el('div', { className: 'summary-card' });
-      var priceClass = summary.priceChange >= 0 ? 'green' : 'red';
+      const priceCard = el('div', { className: 'summary-card' });
+      const priceClass = summary.priceChange >= 0 ? 'green' : 'red';
       priceCard.appendChild(el('div', { className: 'card-value ' + priceClass, textContent: fmtDelta(summary.priceChange) }));
       priceCard.appendChild(el('div', { className: 'card-label', textContent: 'Total Price Change' }));
       priceCard.appendChild(el('div', { className: 'card-sub', textContent: fmtCurrency(summary.oldTotalPrice) + ' \u2192 ' + fmtCurrency(summary.newTotalPrice) }));
       grid.appendChild(priceCard);
 
       // Added
-      var addedCard = el('div', { className: 'summary-card' });
+      const addedCard = el('div', { className: 'summary-card' });
       addedCard.appendChild(el('div', { className: 'card-value green', textContent: '+' + summary.addedCount }));
       addedCard.appendChild(el('div', { className: 'card-label', textContent: 'Items Added' }));
       addedCard.addEventListener('click', function() {
@@ -1066,7 +1066,7 @@ const BudgetReportApp = (() => {
       grid.appendChild(addedCard);
 
       // Removed
-      var removedCard = el('div', { className: 'summary-card' });
+      const removedCard = el('div', { className: 'summary-card' });
       removedCard.appendChild(el('div', { className: 'card-value red', textContent: '-' + summary.removedCount }));
       removedCard.appendChild(el('div', { className: 'card-label', textContent: 'Items Removed' }));
       removedCard.addEventListener('click', function() {
@@ -1081,14 +1081,14 @@ const BudgetReportApp = (() => {
 
     // ---- Mini stats ----
     function renderMiniStats() {
-      var wrap = el('div', { className: 'mini-stats' });
-      var items = [
+      const wrap = el('div', { className: 'mini-stats' });
+      const items = [
         { val: summary.modifiedCount, lbl: 'Items Modified' },
         { val: summary.unchangedCount || 0, lbl: 'Items Unchanged' },
         { val: summary.addedCount + summary.removedCount + summary.modifiedCount, lbl: 'Total Changes' }
       ];
       items.forEach(function(s) {
-        var d = el('div');
+        const d = el('div');
         d.appendChild(el('div', { className: 'mini-val', textContent: String(s.val) }));
         d.appendChild(el('div', { className: 'mini-lbl', textContent: s.lbl }));
         wrap.appendChild(d);
@@ -1098,18 +1098,18 @@ const BudgetReportApp = (() => {
 
     // ---- Table ----
     function renderTable(grouped) {
-      var wrap = el('div', { className: 'report-table-wrap' });
-      var table = el('table', { className: 'report-table' });
+      const wrap = el('div', { className: 'report-table-wrap' });
+      const table = el('table', { className: 'report-table' });
 
       // Header
-      var thead = el('thead');
-      var headerRow = el('tr');
-      var columns = getColumns();
+      const thead = el('thead');
+      const headerRow = el('tr');
+      const columns = getColumns();
       columns.forEach(function(col) {
-        var th = el('th', { className: col.cls || '' });
+        const th = el('th', { className: col.cls || '' });
         th.appendChild(document.createTextNode(col.label));
         if (col.sortable) {
-          var arrow = el('span', { className: 'sort-arrow' + (state.sortColumn === col.key ? ' active' : '') });
+          const arrow = el('span', { className: 'sort-arrow' + (state.sortColumn === col.key ? ' active' : '') });
           if (state.sortColumn === col.key) {
             arrow.textContent = state.sortDirection === 'asc' ? ' \u25B2' : ' \u25BC';
           } else {
@@ -1133,9 +1133,9 @@ const BudgetReportApp = (() => {
       table.appendChild(thead);
 
       // Body
-      var tbody = el('tbody');
+      const tbody = el('tbody');
       if (grouped.order.length === 0) {
-        var emptyRow = el('tr');
+        const emptyRow = el('tr');
         emptyRow.appendChild(el('td', {
           colspan: String(columns.length), className: 'empty-state',
           textContent: 'No items match the current filters.'
@@ -1143,27 +1143,27 @@ const BudgetReportApp = (() => {
         tbody.appendChild(emptyRow);
       } else {
         grouped.order.forEach(function(groupName) {
-          var items = grouped.groups[groupName];
-          var isCollapsed = !!state.collapsedGroups[groupName];
+          const items = grouped.groups[groupName];
+          const isCollapsed = !!state.collapsedGroups[groupName];
 
           // Group subtotals
-          var groupCost = 0, groupPrice = 0;
+          let groupCost = 0, groupPrice = 0;
           items.forEach(function(entry) {
-            var item = getItemData(entry);
+            const item = getItemData(entry);
             groupCost += item.extendedCost || 0;
             groupPrice += item.extendedPrice || 0;
           });
 
           // Group header row
-          var ghRow = el('tr', { className: 'group-header' });
-          var ghCell = el('td', { colspan: String(columns.length) });
-          var caret = el('span', { className: 'caret' + (isCollapsed ? ' collapsed' : ''), textContent: '\u25BC' });
+          const ghRow = el('tr', { className: 'group-header' });
+          const ghCell = el('td', { colspan: String(columns.length) });
+          const caret = el('span', { className: 'caret' + (isCollapsed ? ' collapsed' : ''), textContent: '\u25BC' });
           ghCell.appendChild(caret);
           ghCell.appendChild(document.createTextNode(' ' + groupName + ' (' + items.length + ' items) \u2014 Cost: ' + fmtCurrency(groupCost) + ' | Price: ' + fmtCurrency(groupPrice)));
           ghRow.appendChild(ghCell);
           ghRow.addEventListener('click', function() {
             state.collapsedGroups[groupName] = !state.collapsedGroups[groupName];
-            var rows = tbody.querySelectorAll('tr[data-group="' + groupName + '"]');
+            const rows = tbody.querySelectorAll('tr[data-group="' + groupName + '"]');
             rows.forEach(function(r) {
               if (state.collapsedGroups[groupName]) {
                 r.classList.add('group-collapsed');
@@ -1216,11 +1216,11 @@ const BudgetReportApp = (() => {
     }
 
     function renderItemRow(entry, tbody, columns, groupName, isCollapsed) {
-      var item = getItemData(entry);
-      var className = 'row-' + entry._type + ' clickable-row group-item';
+      const item = getItemData(entry);
+      let className = 'row-' + entry._type + ' clickable-row group-item';
       if (isCollapsed) className += ' group-collapsed';
-      var tr = el('tr', { className: className, 'data-group': groupName || '' });
-      var rowId = item.uniqueKey || (item.name + '_' + entry._type);
+      const tr = el('tr', { className: className, 'data-group': groupName || '' });
+      const rowId = item.uniqueKey || (item.name + '_' + entry._type);
 
       if (state.viewMode === 'sideBySide') {
         renderSideBySideRow(tr, entry, item);
@@ -1230,11 +1230,11 @@ const BudgetReportApp = (() => {
 
       tr.addEventListener('click', function() {
         state.expandedRows[rowId] = !state.expandedRows[rowId];
-        var detailRow = tr.nextElementSibling;
+        const detailRow = tr.nextElementSibling;
         if (detailRow && detailRow.classList.contains('detail-row')) {
           detailRow.remove();
         } else {
-          var dr = buildDetailRow(entry, columns.length);
+          const dr = buildDetailRow(entry, columns.length);
           tr.parentNode.insertBefore(dr, tr.nextSibling);
         }
       });
@@ -1242,7 +1242,7 @@ const BudgetReportApp = (() => {
 
       // Show detail if was expanded
       if (state.expandedRows[rowId]) {
-        var dr = buildDetailRow(entry, columns.length);
+        const dr = buildDetailRow(entry, columns.length);
         if (isCollapsed) dr.classList.add('group-collapsed');
         dr.setAttribute('data-group', groupName || '');
         tbody.appendChild(dr);
@@ -1251,16 +1251,16 @@ const BudgetReportApp = (() => {
 
     function renderDeltaRow(tr, entry, item) {
       // Type
-      var typeCell = el('td');
+      const typeCell = el('td');
       typeCell.appendChild(el('span', { className: 'type-badge ' + entry._type, textContent: entry._type }));
       tr.appendChild(typeCell);
 
       // Name + description change hint
-      var nameCell = el('td');
+      const nameCell = el('td');
       nameCell.appendChild(document.createTextNode(item.name));
       if (entry._type === 'modified' && entry.changes) {
-        var descChange = null;
-        for (var ci = 0; ci < entry.changes.length; ci++) {
+        let descChange = null;
+        for (let ci = 0; ci < entry.changes.length; ci++) {
           if (entry.changes[ci].field === 'description') {
             descChange = entry.changes[ci];
             break;
@@ -1291,22 +1291,22 @@ const BudgetReportApp = (() => {
       tr.appendChild(el('td', { className: 'num', textContent: fmtCurrency(item.extendedPrice) }));
 
       // Cost Delta
-      var cd = getCostDelta(entry);
-      var cdClass = cd > 0 ? 'delta-pos' : cd < 0 ? 'delta-neg' : 'delta-zero';
+      const cd = getCostDelta(entry);
+      const cdClass = cd > 0 ? 'delta-pos' : cd < 0 ? 'delta-neg' : 'delta-zero';
       tr.appendChild(el('td', { className: cdClass, textContent: fmtDelta(cd) }));
 
       // Price Delta
-      var pd = getPriceDelta(entry);
-      var pdClass = pd > 0 ? 'delta-pos' : pd < 0 ? 'delta-neg' : 'delta-zero';
+      const pd = getPriceDelta(entry);
+      const pdClass = pd > 0 ? 'delta-pos' : pd < 0 ? 'delta-neg' : 'delta-zero';
       tr.appendChild(el('td', { className: pdClass, textContent: fmtDelta(pd) }));
     }
 
     function renderSideBySideRow(tr, entry, item) {
-      var oldItem = entry._type === 'modified' ? entry.old : (entry._type === 'removed' ? item : null);
-      var newItem = entry._type === 'modified' ? entry.new : (entry._type === 'added' ? item : item);
+      const oldItem = entry._type === 'modified' ? entry.old : (entry._type === 'removed' ? item : null);
+      const newItem = entry._type === 'modified' ? entry.new : (entry._type === 'added' ? item : item);
 
       // Type
-      var typeCell = el('td');
+      const typeCell = el('td');
       typeCell.appendChild(el('span', { className: 'type-badge ' + entry._type, textContent: entry._type }));
       tr.appendChild(typeCell);
 
@@ -1331,15 +1331,15 @@ const BudgetReportApp = (() => {
     }
 
     function buildDetailRow(entry, colSpan) {
-      var tr = el('tr', { className: 'detail-row' });
-      var td = el('td', { colspan: String(colSpan) });
-      var item = getItemData(entry);
+      const tr = el('tr', { className: 'detail-row' });
+      const td = el('td', { colspan: String(colSpan) });
+      const item = getItemData(entry);
 
-      var content = el('div', { className: 'detail-content' });
+      const content = el('div', { className: 'detail-content' });
 
       // Left: item details
-      var left = el('div');
-      var details = [
+      const left = el('div');
+      const details = [
         { label: 'Group', value: getHierarchyPath(entry) },
         { label: 'Cost Code', value: item.costCode },
         { label: 'Cost Type', value: item.costType },
@@ -1350,7 +1350,7 @@ const BudgetReportApp = (() => {
       }
       details.forEach(function(d) {
         if (d.value) {
-          var row = el('div', { style: 'margin-bottom:4px;' });
+          const row = el('div', { style: 'margin-bottom:4px;' });
           row.appendChild(el('span', { className: 'detail-label', textContent: d.label + ': ' }));
           row.appendChild(el('span', { className: 'detail-value', textContent: d.value }));
           left.appendChild(row);
@@ -1360,22 +1360,22 @@ const BudgetReportApp = (() => {
 
       // Right: changes (for modified items)
       if (entry._type === 'modified' && entry.changes) {
-        var right = el('div');
+        const right = el('div');
         right.appendChild(el('div', { className: 'detail-label', textContent: 'Changes:', style: 'margin-bottom:6px;' }));
-        var list = el('div', { className: 'changes-list' });
+        const list = el('div', { className: 'changes-list' });
         entry.changes.forEach(function(change) {
           if (change.type === 'text' && change.field === 'description') {
-            var descRow = el('div', { style: 'margin-bottom:8px;' });
+            const descRow = el('div', { style: 'margin-bottom:8px;' });
             descRow.appendChild(el('div', { className: 'field-name', textContent: 'Description:' }));
-            var diffHtml = wordDiff(change.oldValue || '', change.newValue || '');
+            const diffHtml = wordDiff(change.oldValue || '', change.newValue || '');
             descRow.appendChild(el('div', { className: 'desc-diff', innerHTML: diffHtml }));
             list.appendChild(descRow);
             return;
           }
-          var ce = el('div', { className: 'change-entry' });
+          const ce = el('div', { className: 'change-entry' });
           ce.appendChild(el('span', { className: 'field-name', textContent: change.label + ':' }));
-          var oldDisplay = change.oldValue;
-          var newDisplay = change.newValue;
+          let oldDisplay = change.oldValue;
+          let newDisplay = change.newValue;
           if (change.isCurrency) {
             oldDisplay = fmtCurrency(change.oldValue);
             newDisplay = fmtCurrency(change.newValue);
@@ -1405,15 +1405,15 @@ const BudgetReportApp = (() => {
 
     // ---- Export CSV ----
     function exportCSV() {
-      var filtered = applyFilters(allItems);
-      var sorted = sortItems(filtered, state.sortColumn, state.sortDirection);
-      var rows = [['Group', 'Name', 'Type', 'Qty', 'Unit', 'Unit Cost', 'Ext Cost', 'Unit Price', 'Ext Price', 'Cost Delta', 'Price Delta', 'Description'].join(',')];
+      const filtered = applyFilters(allItems);
+      const sorted = sortItems(filtered, state.sortColumn, state.sortDirection);
+      const rows = [['Group', 'Name', 'Type', 'Qty', 'Unit', 'Unit Cost', 'Ext Cost', 'Unit Price', 'Ext Price', 'Cost Delta', 'Price Delta', 'Description'].join(',')];
       sorted.forEach(function(entry) {
-        var item = getItemData(entry);
-        var g = getGroupName(entry);
-        var cd = getCostDelta(entry);
-        var pd = getPriceDelta(entry);
-        var row = [
+        const item = getItemData(entry);
+        const g = getGroupName(entry);
+        const cd = getCostDelta(entry);
+        const pd = getPriceDelta(entry);
+        const row = [
           csvEsc(g), csvEsc(item.name), csvEsc(entry._type),
           item.quantity != null ? item.quantity : '',
           csvEsc(item.unit || ''),
@@ -1426,10 +1426,10 @@ const BudgetReportApp = (() => {
         ];
         rows.push(row.join(','));
       });
-      var csv = rows.join('\n');
-      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
+      const csv = rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
       a.href = url;
       a.download = 'budget-changelog-' + new Date().toISOString().slice(0, 10) + '.csv';
       a.style.display = 'none';
@@ -1440,7 +1440,7 @@ const BudgetReportApp = (() => {
     }
 
     function csvEsc(val) {
-      var s = String(val || '');
+      const s = String(val || '');
       if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
         return '"' + s.replace(/"/g, '""') + '"';
       }
@@ -1449,7 +1449,7 @@ const BudgetReportApp = (() => {
 
     // ---- Copy to clipboard ----
     function copyToClipboard() {
-      var lines = [];
+      const lines = [];
       lines.push('BUDGET CHANGELOG');
       lines.push('Job: ' + opts.jobName);
       lines.push('Comparing: ' + opts.oldDate + ' -> ' + opts.newDate);
@@ -1460,21 +1460,21 @@ const BudgetReportApp = (() => {
       lines.push('  Added: ' + summary.addedCount + ' | Removed: ' + summary.removedCount + ' | Modified: ' + summary.modifiedCount);
       lines.push('');
 
-      var filtered = applyFilters(allItems);
+      const filtered = applyFilters(allItems);
       filtered.forEach(function(entry) {
-        var item = getItemData(entry);
-        var prefix = entry._type === 'added' ? '+' : entry._type === 'removed' ? '-' : '~';
+        const item = getItemData(entry);
+        const prefix = entry._type === 'added' ? '+' : entry._type === 'removed' ? '-' : '~';
         lines.push(prefix + ' ' + item.name + ' (' + entry._type + ')');
         if (item.extendedCost != null) lines.push('    Cost: ' + fmtCurrency(item.extendedCost));
         if (item.extendedPrice != null) lines.push('    Price: ' + fmtCurrency(item.extendedPrice));
       });
 
-      var text = lines.join('\n');
+      const text = lines.join('\n');
       navigator.clipboard.writeText(text).then(function() {
         showToast('Summary copied to clipboard!');
       }).catch(function() {
         // Fallback
-        var ta = document.createElement('textarea');
+        const ta = document.createElement('textarea');
         ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
         document.body.appendChild(ta); ta.select();
         try { document.execCommand('copy'); showToast('Summary copied!'); }
@@ -1484,9 +1484,9 @@ const BudgetReportApp = (() => {
     }
 
     function showToast(msg) {
-      var existing = document.querySelector('.report-toast');
+      const existing = document.querySelector('.report-toast');
       if (existing) existing.remove();
-      var toast = el('div', {
+      const toast = el('div', {
         className: 'report-toast',
         textContent: msg,
         style: 'position:fixed;bottom:24px;right:24px;background:#374151;color:white;padding:10px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;transition:opacity 0.3s;'
@@ -1499,7 +1499,7 @@ const BudgetReportApp = (() => {
     // ---- Print ----
     function printReport() {
       // Expand all groups temporarily
-      var savedCollapsed = JSON.parse(JSON.stringify(state.collapsedGroups));
+      const savedCollapsed = JSON.parse(JSON.stringify(state.collapsedGroups));
       state.collapsedGroups = {};
       renderContent();
       setTimeout(function() {

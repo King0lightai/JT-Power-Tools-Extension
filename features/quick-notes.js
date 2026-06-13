@@ -15,6 +15,7 @@ const QuickNotesFeature = (() => {
   let notesButton = null;
   let buttonObserver = null;
   let periodicCheckInterval = null;
+  let retryInjectInterval = null;
   let notes = [];  // Personal notes (My Notes)
   let teamNotes = []; // Team notes (shared)
   let activeTab = 'my'; // 'my' or 'team'
@@ -2131,13 +2132,21 @@ const QuickNotesFeature = (() => {
     if (!injected) {
       let attempts = 0;
       const maxAttempts = 10; // 10 * 500ms = 5 seconds
-      const retryInterval = setInterval(() => {
+      retryInjectInterval = setInterval(() => {
         attempts++;
+
+        // Stop retrying if the feature was cleaned up mid-retry
+        if (!isActive) {
+          clearInterval(retryInjectInterval);
+          retryInjectInterval = null;
+          return;
+        }
 
         injected = injectQuickNotesButton();
 
         if (injected || attempts >= maxAttempts) {
-          clearInterval(retryInterval);
+          clearInterval(retryInjectInterval);
+          retryInjectInterval = null;
         }
       }, 500);
     }
@@ -2633,6 +2642,13 @@ const QuickNotesFeature = (() => {
     if (periodicCheckInterval) {
       clearInterval(periodicCheckInterval);
       periodicCheckInterval = null;
+    }
+
+    // Clear button injection retry interval (fix memory leak — could keep
+    // firing and re-inject the button after the feature was disabled)
+    if (retryInjectInterval) {
+      clearInterval(retryInjectInterval);
+      retryInjectInterval = null;
     }
 
     // Disconnect observer
