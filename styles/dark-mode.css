@@ -717,7 +717,7 @@ div.border-l div.select-none.break-inside-avoid {
 }
 
 .jt-alert-dropdown-item.active {
-    background: #1e3a5f !important; /* Darker blue for dark mode */
+    background: #1a2e4a !important; /* Darker blue for dark mode */
 }
 
 .jt-alert-subject {
@@ -787,7 +787,7 @@ div.border-l div.select-none.break-inside-avoid {
 
 /* === Preview Mode Alert Dark Mode === */
 .jt-preview-content .bg-blue-50 {
-    background-color: #1e3a5f !important;
+    background-color: #1a2e4a !important;
 }
 
 .jt-preview-content .bg-yellow-50 {

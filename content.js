@@ -16,9 +16,6 @@
 
 console.log('JT Power Tools: Content script loaded');
 
-// Current license tier (cached for performance)
-let currentTier = null;
-
 /**
  * Feature module registry
  * Maps feature keys to their configuration and window references
@@ -69,6 +66,11 @@ const featureModules = {
   budgetHierarchy: {
     name: 'Budget Hierarchy Shading',
     feature: () => window.BudgetHierarchyFeature,
+    instance: null
+  },
+  compactBudgetRows: {
+    name: 'Auto Expand Budget Row',
+    feature: () => window.CompactBudgetRowsFeature,
     instance: null
   },
   quickNotes: {
@@ -187,18 +189,18 @@ const featureModules = {
 let currentSettings = window.JTDefaults
   ? window.JTDefaults.getDefaultSettings()
   : {
-      // Inline fallback if JTDefaults not loaded (should not happen)
-      dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
-      darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
-      quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
-      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
-      pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
-      budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
-      jobAccessCollapse: false, orgLogo: false,
-      inspectForAi: false, tweakEngine: true, forms: true,
-      themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
-      savedThemes: [null, null, null]
-    };
+    // Inline fallback if JTDefaults not loaded (should not happen)
+    dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, compactBudgetRows: false,
+    quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
+    characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
+    pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
+    budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
+    jobAccessCollapse: false, orgLogo: false,
+    inspectForAi: false, tweakEngine: true, forms: true,
+    themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
+    savedThemes: [null, null, null]
+  };
 
 /**
  * Load settings from storage with error handling

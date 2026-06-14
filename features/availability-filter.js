@@ -36,11 +36,8 @@ const AvailabilityFilterFeature = (() => {
   };
 
   // Track detected assignee data - per category
-  let detectedCategories = new Set();
+  const detectedCategories = new Set();
   let detectedAssigneesByCategory = {}; // e.g., { 'INTERNAL': Set(['01 Field', ...]), 'VENDOR': Set(['ABC Co', ...]) }
-
-  // Track collapsed state (hidden rows are collapsed to minimal height instead of display:none)
-  let useCollapseMode = true;
 
   // Guard flag: prevents observer-triggered rebuild from clobbering a saved view application
   let _applyingView = false;
@@ -627,7 +624,7 @@ const AvailabilityFilterFeature = (() => {
 
     // Build the compact filter HTML — single row (no inline drawer; assignee
     // selection lives in the popover dropdown built lazily on body).
-    let html = `
+    const html = `
       <div class="jt-avail-filter-bar ${_isCollapsed ? 'collapsed' : ''}">
         <div class="jt-avail-bar-row">
           <span class="jt-avail-bar-title">Assignees</span>

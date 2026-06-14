@@ -27,18 +27,7 @@ const CustomThemeFeature = (() => {
   // Use shared ColorUtils module
   const {
     hexToRgb,
-    rgbToHex,
-    hexToHsl,
-    hslToHex,
-    hexToRgba,
-    getLuminance,
-    isDark,
-    getContrastText,
-    adjustLightness,
-    adjustSaturation,
-    setLightness,
-    setSaturation,
-    blendColors
+    getContrastText
   } = window.ColorUtils || {};
 
   // Initialize the feature
@@ -172,7 +161,7 @@ const CustomThemeFeature = (() => {
   function injectThemeCSS() {
     // Use the pre-generated palette
     const p = palette;
-    const { primary, background, text } = currentColors;
+    const { primary } = currentColors;
 
     // Get contrast text for primary color (changes per-theme so not cached)
     const primaryText = getContrastText(primary);
@@ -1214,7 +1203,7 @@ const CustomThemeFeature = (() => {
 
     currentDateDivs.forEach(dateDiv => {
       // Find the parent td cell
-      let tdCell = dateDiv.closest('td');
+      const tdCell = dateDiv.closest('td');
 
       if (tdCell && !tdCell.classList.contains('jt-current-date-enhanced')) {
         // Add custom class to prevent re-processing

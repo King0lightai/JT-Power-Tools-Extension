@@ -448,29 +448,6 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Create SVG icon for line tool
-   */
-  function createLineIcon() {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', '2');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    svg.setAttribute('class', 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]');
-
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', '5');
-    line.setAttribute('y1', '19');
-    line.setAttribute('x2', '19');
-    line.setAttribute('y2', '5');
-    svg.appendChild(line);
-
-    return svg;
-  }
-
-  /**
    * Create SVG icon for eraser tool
    */
   function createEraserIcon() {
@@ -699,102 +676,6 @@ const PDFMarkupToolsFeature = (() => {
 
   // Note: Old setOpacitySlider() and openMoreOptionsAndSetPresets() functions removed
   // Replaced by setSliderValue() and configureHighlightSettings()
-
-  /**
-   * Find and click JobTread's color picker to set a specific color
-   * @deprecated Use setHighlightPresets() instead for highlight tool
-   */
-  function setJobTreadColor(hexColor) {
-    // Convert hex to RGB
-    const rgb = hexToRgb(hexColor);
-    if (!rgb) {
-      console.error('PDF Markup Tools: Invalid hex color');
-      return;
-    }
-
-    // Look for the color picker button (appears when a drawing tool is active)
-    // Structure: div.w-7.h-7.border with background-color style
-    const colorPicker = document.querySelector('.w-7.h-7.border.flex.items-center.justify-center.rounded-sm.border-gray-300.shadow-xs.self-center.cursor-pointer');
-
-    if (colorPicker) {
-      colorPicker.click();
-
-      // Wait for color picker modal to open and render RGB inputs
-      setTimeout(() => {
-        setRgbValues(rgb.r, rgb.g, rgb.b);
-      }, 200);
-    }
-  }
-
-  /**
-   * Convert hex color to RGB
-   */
-  function hexToRgb(hex) {
-    // Remove # if present
-    hex = hex.replace('#', '');
-
-    // Parse hex values
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-
-    if (isNaN(r) || isNaN(g) || isNaN(b)) {
-      return null;
-    }
-
-    return { r, g, b };
-  }
-
-  /**
-   * Set RGB values in JobTread's color picker
-   */
-  function setRgbValues(r, g, b) {
-    // Find all number inputs in the color picker area
-    const allInputs = Array.from(document.querySelectorAll('input[type="number"], input[type="text"]'));
-
-    // Filter to likely RGB inputs (value should be 0-255)
-    const rgbInputs = allInputs.filter(input => {
-      const value = parseInt(input.value);
-      return !isNaN(value) && value >= 0 && value <= 255 && input.parentElement;
-    });
-
-    if (rgbInputs.length >= 3) {
-      // Assume first 3 inputs are R, G, B in order
-      const [rInput, gInput, bInput] = rgbInputs.slice(0, 3);
-
-      setInputValue(rInput, r);
-      setInputValue(gInput, g);
-      setInputValue(bInput, b);
-
-      showNotification(`Color set to yellow (RGB: ${r}, ${g}, ${b})`);
-    } else {
-      showNotification('Please manually select yellow color', 'info');
-    }
-  }
-
-  /**
-   * Set input value and trigger React events
-   */
-  function setInputValue(input, value) {
-    // Set the value using React's way
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    ).set;
-
-    nativeInputValueSetter.call(input, value);
-
-    // Dispatch events to trigger React's change detection
-    const inputEvent = new Event('input', { bubbles: true });
-    input.dispatchEvent(inputEvent);
-
-    const changeEvent = new Event('change', { bubbles: true });
-    input.dispatchEvent(changeEvent);
-
-    // Also trigger blur to ensure value is committed
-    const blurEvent = new Event('blur', { bubbles: true });
-    input.dispatchEvent(blurEvent);
-  }
 
   /**
    * Show a notification to the user
@@ -1146,37 +1027,6 @@ const PDFMarkupToolsFeature = (() => {
   // their save/undo system
 
   /**
-   * Handle line tool click - activates JobTread's arrow/line tool for straight lines
-   */
-  function handleLineClick() {
-    const lineBtn = document.querySelector('[data-jt-tool="line"]');
-    if (!lineBtn) return;
-
-    const wasActive = lineBtn.classList.contains('active');
-
-    if (!wasActive) {
-      // Activate JobTread's arrow/line tool (not freedraw)
-      const success = activateJobTreadTool('line');
-
-      if (success) {
-        deactivateOtherTools('line');
-        lineBtn.classList.add('active');
-        showNotification('Line tool activated');
-      } else {
-        showNotification('Could not activate line tool', 'error');
-      }
-    } else {
-      // Deactivate - click select tool to exit drawing mode
-      lineBtn.classList.remove('active');
-      const buttons = findJobTreadButtons();
-      if (buttons && buttons.select) {
-        buttons.select.click();
-      }
-      showNotification('Line tool deactivated');
-    }
-  }
-
-  /**
    * Handle eraser tool click
    * Activates JobTread's select tool so user can click annotations to select them,
    * then press Delete key to remove them
@@ -1254,47 +1104,6 @@ const PDFMarkupToolsFeature = (() => {
     // Use mouseup instead of click - fires after JT's mousedown/mouseup
     // selection logic has completed, before React re-renders
     document.addEventListener('mouseup', deleteClickHandler, false);
-  }
-
-  /**
-   * Find and click the delete button that appears when an annotation is selected
-   * The delete button has a trash icon with paths: M10 11v6, M14 11v6, M19 6v14...
-   */
-  function clickDeleteButton() {
-    // Look for the delete button by its trash icon SVG paths
-    // The trash icon has distinctive paths: "M10 11v6" and "M14 11v6"
-    const allButtons = document.querySelectorAll('div[role="button"]');
-
-    for (const btn of allButtons) {
-      const svg = btn.querySelector('svg');
-      if (!svg) continue;
-
-      const paths = svg.querySelectorAll('path');
-      let hasTrashIcon = false;
-
-      for (const path of paths) {
-        const d = path.getAttribute('d') || '';
-        // Check for the distinctive trash can paths
-        if (d.includes('M10 11v6') || d.includes('M14 11v6') || d.includes('M19 6v14')) {
-          hasTrashIcon = true;
-          break;
-        }
-      }
-
-      if (hasTrashIcon) {
-        btn.click();
-        return true;
-      }
-    }
-
-    // Fallback: Look for red delete button (old selector)
-    const redDeleteButton = document.querySelector('div[role="button"].text-red-500');
-    if (redDeleteButton) {
-      redDeleteButton.click();
-      return true;
-    }
-
-    return false;
   }
 
   /**
@@ -2042,14 +1851,6 @@ const PDFMarkupToolsFeature = (() => {
     }
 
     return results;
-  }
-
-  /**
-   * Find the first available takeoff toolbar (for backward compat).
-   */
-  function findTakeoffToolbar() {
-    const all = findAllTakeoffToolbars();
-    return all.length > 0 ? all[0] : null;
   }
 
   /**

@@ -162,19 +162,6 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is a budget custom field (custom fields on the budget page)
-   * DEPRECATED: Budget custom fields now use embedded toolbar like all other non-budget-table fields
-   * Only budget table Description fields get the floating expanded toolbar
-   * @param {HTMLTextAreaElement} field
-   * @returns {boolean} Always returns false - only isBudgetTableField determines floating toolbar
-   */
-  function isBudgetCustomField(field) {
-    // Always return false - only budget table Description fields get floating toolbar
-    // All other fields (including custom fields on budget page) get embedded toolbar
-    return false;
-  }
-
-  /**
    * Check if a field is inside a sidebar/panel (NOT a modal)
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
@@ -242,107 +229,6 @@ const FormatterToolbar = (() => {
         }
       }
       parent = parent.parentElement;
-    }
-
-    return null;
-  }
-
-  /**
-   * Find the containing column/panel for a field to use for toolbar width constraints
-   * This handles sidebar fields, job overview columns, and other contained layouts
-   * @param {HTMLTextAreaElement} field
-   * @returns {HTMLElement|null}
-   */
-  function findContainingColumn(field) {
-    if (!field) return null;
-
-    // Check for custom field form first - these fields are in constrained columns
-    const customFieldForm = field.closest('form.rounded-sm');
-    if (customFieldForm && customFieldForm.classList.contains('border') &&
-        customFieldForm.classList.contains('divide-y')) {
-      return customFieldForm;
-    }
-
-    // Try drag-scroll-boundary first (JobTread sidebars)
-    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
-    if (dragScrollContainer) return dragScrollContainer;
-
-    // Try common sidebar/panel patterns
-    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
-    if (sidebar) return sidebar;
-
-    // Look for a parent container that has constrained width
-    // This catches job overview columns and similar layouts
-    let parent = field.parentElement;
-    const viewportWidth = window.innerWidth;
-
-    while (parent && parent !== document.body) {
-      const rect = parent.getBoundingClientRect();
-      const style = window.getComputedStyle(parent);
-
-      // Look for containers that:
-      // 1. Have a width less than 90% of viewport (constrained column)
-      // 2. Are tall enough to be a meaningful container (not just a small wrapper)
-      // 3. Have overflow handling or are a scroll container
-      const isConstrainedWidth = rect.width < viewportWidth * 0.9;
-      const isTallEnough = rect.height > 150;
-      const hasOverflow = style.overflowY === 'auto' || style.overflowY === 'scroll' ||
-                          style.overflow === 'auto' || style.overflow === 'scroll';
-      const isFlexColumn = style.display === 'flex' && style.flexDirection === 'column';
-
-      if (isConstrainedWidth && isTallEnough && (hasOverflow || isFlexColumn)) {
-        return parent;
-      }
-
-      // Also check for fixed/absolute positioned containers
-      if (style.position === 'fixed' || style.position === 'absolute') {
-        if (rect.width < viewportWidth * 0.8 && rect.height > 200) {
-          return parent;
-        }
-      }
-
-      parent = parent.parentElement;
-    }
-
-    return null;
-  }
-
-  /**
-   * Find the label element for a field (to embed toolbar after it)
-   * @param {HTMLTextAreaElement} field
-   * @returns {HTMLElement|null}
-   */
-  function findFieldLabel(field) {
-    // Check for associated label via id
-    if (field.id) {
-      const label = document.querySelector(`label[for="${field.id}"]`);
-      if (label) return label;
-    }
-
-    // Look for label as previous sibling or parent's previous sibling
-    let element = field.previousElementSibling;
-    while (element) {
-      if (element.tagName === 'LABEL' || element.classList.contains('label') ||
-          element.textContent.includes('Description') || element.textContent.includes('Notes')) {
-        return element;
-      }
-      element = element.previousElementSibling;
-    }
-
-    // Check parent for label
-    const parent = field.parentElement;
-    if (parent) {
-      element = parent.previousElementSibling;
-      while (element) {
-        if (element.tagName === 'LABEL' || element.classList.contains('label') ||
-            element.textContent.includes('Description') || element.textContent.includes('Notes')) {
-          return element;
-        }
-        // Also check if it's a wrapper containing a label
-        const innerLabel = element.querySelector('label, .label');
-        if (innerLabel) return innerLabel;
-        element = element.previousElementSibling;
-      }
     }
 
     return null;
@@ -1132,127 +1018,6 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Setup dropdown handlers
-   * @param {HTMLElement} toolbar
-   */
-  function setupDropdowns(toolbar) {
-    const dropdownGroups = toolbar.querySelectorAll('.jt-dropdown-group');
-    dropdownGroups.forEach(group => {
-      const btn = group.querySelector('.jt-dropdown-btn');
-      const menu = group.querySelector('.jt-dropdown-menu');
-
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        toolbar.querySelectorAll('.jt-dropdown-menu').forEach(otherMenu => {
-          if (otherMenu !== menu) {
-            otherMenu.classList.remove('jt-dropdown-visible');
-          }
-        });
-
-        // Also close color dropdown when opening regular dropdowns
-        const colorDropdown = toolbar.querySelector('.jt-color-dropdown');
-        if (colorDropdown) {
-          colorDropdown.classList.remove('jt-color-dropdown-visible');
-        }
-
-        menu.classList.toggle('jt-dropdown-visible');
-      });
-    });
-  }
-
-  /**
-   * Setup color picker handlers
-   * @param {HTMLElement} toolbar
-   */
-  function setupColorPicker(toolbar) {
-    const colorBtn = toolbar.querySelector('[data-format="color-picker"]');
-    const colorDropdown = toolbar.querySelector('.jt-color-dropdown');
-
-    colorBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
-        menu.classList.remove('jt-dropdown-visible');
-      });
-
-      colorDropdown.classList.toggle('jt-color-dropdown-visible');
-    });
-
-    // Self-removing: this is a document-level listener but the toolbar it serves
-    // is per-field. Once the toolbar is detached (field/dialog removed by React),
-    // drop the listener instead of leaking one on `document` per toolbar created.
-    const onDocClick = (e) => {
-      if (!toolbar.isConnected) {
-        document.removeEventListener('click', onDocClick);
-        return;
-      }
-      if (!e.target.closest('.jt-formatter-toolbar')) {
-        toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
-          menu.classList.remove('jt-dropdown-visible');
-        });
-        colorDropdown.classList.remove('jt-color-dropdown-visible');
-      }
-    };
-    document.addEventListener('click', onDocClick);
-  }
-
-  /**
-   * Setup more dropdown handlers (for embedded toolbar - legacy)
-   * @param {HTMLElement} toolbar
-   */
-  function setupMoreDropdown(toolbar) {
-    const moreGroup = toolbar.querySelector('.jt-more-group');
-    if (!moreGroup) return;
-
-    const moreBtn = moreGroup.querySelector('.jt-more-btn');
-    const moreDropdown = moreGroup.querySelector('.jt-more-dropdown');
-
-    if (!moreBtn || !moreDropdown) return;
-
-    moreBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Close other dropdowns
-      toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
-        menu.classList.remove('jt-dropdown-visible');
-      });
-      const colorDropdown = toolbar.querySelector('.jt-color-dropdown');
-      if (colorDropdown) {
-        colorDropdown.classList.remove('jt-color-dropdown-visible');
-      }
-
-      moreDropdown.classList.toggle('jt-more-dropdown-visible');
-    });
-
-    // Close more dropdown when clicking outside (self-removing once the toolbar
-    // is detached, so we don't leak a document listener per toolbar created).
-    const onDocClick = (e) => {
-      if (!toolbar.isConnected) {
-        document.removeEventListener('click', onDocClick);
-        return;
-      }
-      if (!e.target.closest('.jt-more-group')) {
-        moreDropdown.classList.remove('jt-more-dropdown-visible');
-      }
-    };
-    document.addEventListener('click', onDocClick);
-
-    // Close more dropdown after clicking a button inside it
-    moreDropdown.querySelectorAll('button[data-format]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Small delay to allow the format to be applied first
-        setTimeout(() => {
-          moreDropdown.classList.remove('jt-more-dropdown-visible');
-        }, 50);
-      });
-    });
-  }
-
-  /**
    * Update toolbar overflow - move buttons that don't fit into the overflow menu
    * @param {HTMLElement} toolbar
    */
@@ -1261,7 +1026,6 @@ const FormatterToolbar = (() => {
 
     const overflowMenu = toolbar.querySelector('.jt-overflow-menu');
     const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
-    const overflowBtn = toolbar.querySelector('.jt-overflow-btn');
 
     if (!overflowMenu || !overflowDropdown) return;
 
@@ -1706,39 +1470,6 @@ const FormatterToolbar = (() => {
 
     document.body.appendChild(toolbar);
     return toolbar;
-  }
-
-  /**
-   * Check if a field is inside a modal that should NOT show the floating toolbar
-   * (because the floating toolbar would appear on top of the modal awkwardly)
-   * This does NOT prevent embedded toolbars - only the floating one
-   * @param {HTMLTextAreaElement} field
-   * @returns {boolean}
-   */
-  function isModalField(field) {
-    if (!field) return false;
-
-    // Check if field is inside our custom Alert modal
-    if (field.closest('.jt-alert-modal-overlay') !== null ||
-        field.closest('.jt-alert-modal') !== null ||
-        field.classList.contains('jt-alert-message')) {
-      return true;
-    }
-
-    // Check for JobTread native modals/popups - these are centered dialogs
-    // They use .m-auto.shadow-lg styling pattern for popup dialogs
-    // This includes both full-screen modals and nested popups (like NEW JOB MESSAGE)
-    const modalContainer = field.closest('.m-auto.shadow-lg');
-    if (modalContainer) {
-      // The .m-auto.shadow-lg pattern is sufficient to identify JobTread popups
-      // These popups can be either:
-      // 1. Full-screen modals with fixed backdrop (e.g., main dialogs)
-      // 2. Nested popups within sidebars (e.g., NEW JOB MESSAGE in task panel)
-      // Both should use embedded toolbar instead of floating
-      return true;
-    }
-
-    return false;
   }
 
   /**

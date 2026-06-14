@@ -391,17 +391,17 @@ const BudgetChangelogUI = (() => {
 
     if (typeof BudgetReportApp !== 'undefined' && BudgetReportApp.serializeData) {
       // Use extension page approach (bypasses CSP)
-      var data = BudgetReportApp.serializeData(diff, options);
+      const data = BudgetReportApp.serializeData(diff, options);
       chrome.storage.local.set({ _budgetReportData: data }, function() {
-        var reportUrl = chrome.runtime.getURL('report.html');
+        const reportUrl = chrome.runtime.getURL('report.html');
         window.open(reportUrl, '_blank');
       });
     } else {
       // Fallback to static HTML report
-      var htmlContent = generateFullReportHTML(diff, options);
-      var blob = new Blob([htmlContent], { type: 'text/html' });
-      var blobUrl = URL.createObjectURL(blob);
-      var newTab = window.open(blobUrl, '_blank');
+      const htmlContent = generateFullReportHTML(diff, options);
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      const newTab = window.open(blobUrl, '_blank');
       if (!newTab) {
         URL.revokeObjectURL(blobUrl);
         showDiffModalFallback(diff, options);
@@ -708,8 +708,8 @@ const BudgetChangelogUI = (() => {
         <h2>Added Items (${items.length})</h2>
       </div>
       ${buildHtmlList(items, item => {
-        const location = item.hierarchy.slice(0, -1).join(' > ') || 'Root Level';
-        return `
+    const location = item.hierarchy.slice(0, -1).join(' > ') || 'Root Level';
+    return `
         <div class="item">
           <div class="item-row">
             <div style="flex: 1;">
@@ -724,7 +724,7 @@ const BudgetChangelogUI = (() => {
             </div>
           </div>
         </div>`;
-      })}
+  })}
     </div>`;
   }
 
@@ -741,8 +741,8 @@ const BudgetChangelogUI = (() => {
         <h2>Removed Items (${items.length})</h2>
       </div>
       ${buildHtmlList(items, item => {
-        const location = item.hierarchy.slice(0, -1).join(' > ') || 'Root Level';
-        return `
+    const location = item.hierarchy.slice(0, -1).join(' > ') || 'Root Level';
+    return `
         <div class="item">
           <div class="item-row">
             <div style="flex: 1;">
@@ -757,7 +757,7 @@ const BudgetChangelogUI = (() => {
             </div>
           </div>
         </div>`;
-      })}
+  })}
     </div>`;
   }
 
@@ -774,40 +774,40 @@ const BudgetChangelogUI = (() => {
         <h2>Modified Items (${modifications.length})</h2>
       </div>
       ${buildHtmlList(modifications, mod => {
-        const { item, changes } = mod;
-        const location = item.hierarchy.slice(0, -1).join(' > ') || 'Root Level';
-        return `
+    const { item, changes } = mod;
+    const location = item.hierarchy.slice(0, -1).join(' > ') || 'Root Level';
+    return `
         <div class="item">
           <div class="item-name">${escapeHtml(item.name)}</div>
           <div class="item-location yellow">${escapeHtml(location)}</div>
           <div class="changes-box">
             ${buildHtmlList(changes, change => {
-              let oldDisplay = change.oldValue;
-              let newDisplay = change.newValue;
+    let oldDisplay = change.oldValue;
+    let newDisplay = change.newValue;
 
-              if (change.isCurrency) {
-                oldDisplay = BudgetDiffEngine.formatCurrency(change.oldValue);
-                newDisplay = BudgetDiffEngine.formatCurrency(change.newValue);
-              } else if (change.type === 'boolean') {
-                oldDisplay = change.oldValue ? 'Yes' : 'No';
-                newDisplay = change.newValue ? 'Yes' : 'No';
-              } else if (change.type === 'text' && change.field === 'description') {
-                return `<div class="change-row"><span class="change-label">${change.label}:</span> <span style="color: #ca8a04; font-style: italic;">Description was modified</span></div>`;
-              }
+    if (change.isCurrency) {
+      oldDisplay = BudgetDiffEngine.formatCurrency(change.oldValue);
+      newDisplay = BudgetDiffEngine.formatCurrency(change.newValue);
+    } else if (change.type === 'boolean') {
+      oldDisplay = change.oldValue ? 'Yes' : 'No';
+      newDisplay = change.newValue ? 'Yes' : 'No';
+    } else if (change.type === 'text' && change.field === 'description') {
+      return `<div class="change-row"><span class="change-label">${change.label}:</span> <span style="color: #ca8a04; font-style: italic;">Description was modified</span></div>`;
+    }
 
-              if (!oldDisplay && oldDisplay !== 0) oldDisplay = '(empty)';
+    if (!oldDisplay && oldDisplay !== 0) oldDisplay = '(empty)';
 
-              return `
+    return `
               <div class="change-row">
                 <span class="change-label">${change.label}:</span>
                 <span class="change-old">${escapeHtml(String(oldDisplay))}</span>
                 <span style="color: #9ca3af;">→</span>
                 <span class="change-new">${escapeHtml(String(newDisplay))}</span>
               </div>`;
-            })}
+  })}
           </div>
         </div>`;
-      })}
+  })}
     </div>`;
   }
 

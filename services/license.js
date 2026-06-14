@@ -41,6 +41,7 @@ const LicenseService = (() => {
     'contrastFix',      // Accessibility, instant value
     'characterCounter', // Simple utility
     'budgetHierarchy',  // Visual enhancement for budget tables
+    'compactBudgetRows', // Compact budget rows to one line + hover-expand
     'kanbanTypeFilter', // Simple - auto-hide empty Kanban columns
     'autoCollapseGroups', // Simple - collapse 100% complete groups
     'ganttLines',       // Simple visual enhancement for Gantt chart

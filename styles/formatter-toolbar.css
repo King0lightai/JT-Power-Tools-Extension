@@ -47,7 +47,7 @@
   min-width: 24px;
   height: 24px;
   font-size: 11px;
-  color: #475569;
+  color: #505050;
   box-shadow: none;
   transition: all 0.15s ease;
   display: inline-flex;
@@ -58,7 +58,7 @@
 .jt-formatter-toolbar.jt-toolbar-docked button:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #1e293b;
+  color: #2c2c2c;
 }
 
 .jt-formatter-toolbar.jt-toolbar-docked button.active {
@@ -145,7 +145,7 @@
   min-width: 28px;
   height: 28px;
   font-size: 12px;
-  color: #475569;
+  color: #505050;
   box-shadow: none;
   transition: all 0.15s ease;
   display: inline-flex;
@@ -156,7 +156,7 @@
 .jt-formatter-toolbar.jt-toolbar-header-docked button:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #1e293b;
+  color: #2c2c2c;
   box-shadow: none;
 }
 
@@ -250,7 +250,7 @@
 .jt-formatter-toolbar.jt-formatter-expanded button:hover {
   background: #f1f5f9;
   border-color: #e2e8f0;
-  color: #334155;
+  color: #404040;
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded button.active {
@@ -1133,7 +1133,7 @@
   border-radius: 0.375rem;
   cursor: pointer;
   font-size: 13px;
-  color: #475569;
+  color: #505050;
   transition: all 0.15s ease;
   box-shadow: none;
 }
@@ -1151,7 +1151,7 @@
 .jt-alert-format-btn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #1e293b;
+  color: #2c2c2c;
   box-shadow: none;
 }
 
@@ -1366,7 +1366,7 @@
 .jt-responsive-toolbar .jt-toolbar-item:hover {
   background: #f1f5f9;
   border-color: #e2e8f0;
-  color: #334155;
+  color: #404040;
 }
 
 .jt-responsive-toolbar .jt-toolbar-item:active {
@@ -1502,7 +1502,7 @@
 .jt-overflow-btn:hover {
   background: #f1f5f9;
   border-color: #e2e8f0;
-  color: #334155;
+  color: #404040;
 }
 
 .jt-overflow-btn svg {
@@ -1632,7 +1632,7 @@
 
 .jt-formatter-toolbar-embedded button:not(.jt-toolbar-item):not(.jt-overflow-btn):hover {
   background: #f1f5f9;
-  color: #334155;
+  color: #404040;
 }
 
 /* Alert button styling */
@@ -1659,7 +1659,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
   cursor: pointer;
-  color: #475569;
+  color: #505050;
   transition: all 0.15s ease;
   box-shadow: none;
 }
@@ -1667,7 +1667,7 @@
 .jt-more-btn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #1e293b;
+  color: #2c2c2c;
 }
 
 .jt-more-btn svg {
@@ -1733,7 +1733,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: #475569;
+  color: #505050;
   transition: all 0.15s ease;
   box-shadow: none;
 }
@@ -1741,7 +1741,7 @@
 .jt-more-row button:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #1e293b;
+  color: #2c2c2c;
   transform: translateY(-1px);
   box-shadow: none;
 }

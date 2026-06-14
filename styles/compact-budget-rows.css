@@ -1,0 +1,24 @@
+/* Compact Budget Rows — collapse budget rows to one line; hover a row to
+   expand it to full content height. Scoped under html.jt-compact-budget-rows
+   (toggled by the feature on /budget pages). Ported from the org tweak
+   "Compact budget + hover reveal". The \/ escapes the slash in JobTread's
+   Tailwind group name `group/row`. */
+
+html.jt-compact-budget-rows .group\/row .shrink-0 {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+html.jt-compact-budget-rows .group\/row .shrink-0 .overflow-hidden {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+html.jt-compact-budget-rows .bg-gray-100.font-bold .grow .inline-block {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+html.jt-compact-budget-rows .group\/row:hover .shrink-0 .overflow-hidden {
+  white-space: pre-wrap !important;
+  overflow: visible !important;
+}

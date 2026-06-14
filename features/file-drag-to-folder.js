@@ -17,7 +17,7 @@ const FileDragToFolderFeature = (() => {
   const enhancedFolders = new WeakSet();
 
   // State for current drag operation
-  let dragState = {
+  const dragState = {
     draggedFileElement: null,
     sourceView: null, // 'list' or 'grid'
     didDrag: false // Flag to suppress click after drag
@@ -25,15 +25,10 @@ const FileDragToFolderFeature = (() => {
 
   // Timing constants (ms)
   const DEBOUNCE_DELAY = 300;
-  const SIDEBAR_OPEN_DELAY = 600;
   const DROPDOWN_OPEN_DELAY = 400;
   const OPTION_SELECT_DELAY = 300;
   const SELECTION_MODE_DELAY = 300;
   const FAILSAFE_TIMEOUT = 8000;
-
-  // Folder SVG path data for reliable detection
-  // JobTread uses this path for the folder icon
-  const FOLDER_SVG_PATH = 'M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z';
 
   // ===== Lifecycle =====
 
@@ -101,19 +96,6 @@ const FileDragToFolderFeature = (() => {
   }
 
   // ===== Detection =====
-
-  /**
-   * Detect if we're on a files page by looking for folder buttons in the toolbar.
-   * Returns the toolbar container element or null.
-   */
-  function findFilesToolbar() {
-    // Look for folder buttons — they have a folder SVG icon
-    const folderButtons = findFolderButtons();
-    if (folderButtons.length > 0) {
-      return folderButtons[0].parentElement;
-    }
-    return null;
-  }
 
   /**
    * Detect view type: 'list' or 'grid'

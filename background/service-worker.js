@@ -15,23 +15,23 @@ try {
 const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefaultSettings)
   ? JTDefaults.getDefaultSettings()
   : {
-      // Inline fallback - should match defaults.js DEFAULT_SETTINGS
-      dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
-      darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
-      quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
-      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
-      pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
-      availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
-      taskTypeFilter: false,
-      jobAccessCollapse: false,
-      orgLogo: false,
-      // Forms always loads in the content script but self-gates on the
-      // server-side company toggle (Migration 029). Admins control the
-      // on/off decision in the JT Power Tools Portal, not here.
-      forms: true,
-      themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
-      savedThemes: [null, null, null]
-    };
+    // Inline fallback - should match defaults.js DEFAULT_SETTINGS
+    dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
+    quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
+    characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
+    pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
+    availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
+    taskTypeFilter: false,
+    jobAccessCollapse: false,
+    orgLogo: false,
+    // Forms always loads in the content script but self-gates on the
+    // server-side company toggle (Migration 029). Admins control the
+    // on/off decision in the JT Power Tools Portal, not here.
+    forms: true,
+    themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
+    savedThemes: [null, null, null]
+  };
 
 /**
  * Safe Chrome storage wrapper for service worker context
@@ -537,14 +537,14 @@ async function getSettings() {
 function getIconSets() {
   return {
     light: {
-      "16": chrome.runtime.getURL("icons/icon16-light.png"),
-      "48": chrome.runtime.getURL("icons/icon48-light.png"),
-      "128": chrome.runtime.getURL("icons/icon128-light.png")
+      '16': chrome.runtime.getURL('icons/icon16-light.png'),
+      '48': chrome.runtime.getURL('icons/icon48-light.png'),
+      '128': chrome.runtime.getURL('icons/icon128-light.png')
     },
     dark: {
-      "16": chrome.runtime.getURL("icons/icon16-dark.png"),
-      "48": chrome.runtime.getURL("icons/icon48-dark.png"),
-      "128": chrome.runtime.getURL("icons/icon128-dark.png")
+      '16': chrome.runtime.getURL('icons/icon16-dark.png'),
+      '48': chrome.runtime.getURL('icons/icon48-dark.png'),
+      '128': chrome.runtime.getURL('icons/icon128-dark.png')
     }
   };
 }

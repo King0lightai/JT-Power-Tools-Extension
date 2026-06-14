@@ -383,7 +383,7 @@ const InspectForAiFeature = (() => {
     if (!pickerActive) return;
     if (multiSession && multiSession.paused) return; // paused: let JT receive hover events normally
     // Find the real element under the cursor (excluding our own overlay nodes)
-    let el = document.elementFromPoint(e.clientX, e.clientY);
+    const el = document.elementFromPoint(e.clientX, e.clientY);
     if (!el) return;
     if (el === highlightEl || el === infoEl) return;
     // Don't highlight extension chrome (alert modals, editor pages, multi-pick chip, etc.)
@@ -615,8 +615,8 @@ const InspectForAiFeature = (() => {
         lines.push('**Sibling context:** parent has ' + cap.siblingContext.total + ' children, '
           + cap.siblingContext.sameSignature + ' match the target\'s tag+class signature.'
           + (cap.siblingContext.sameSignature > 1
-              ? ' (Look-alike siblings exist — selector must disambiguate.)'
-              : ''));
+            ? ' (Look-alike siblings exist — selector must disambiguate.)'
+            : ''));
         lines.push('');
       }
       if (cap.structuralBlock) {
@@ -711,8 +711,8 @@ const InspectForAiFeature = (() => {
       '**Sibling context:** target\'s parent has ' + siblingContext.total + ' children, '
         + siblingContext.sameSignature + ' of which match the target\'s tag+class signature. '
         + (siblingContext.sameSignature === 1
-            ? 'The target is unique within its parent — a class-only selector should be safe.'
-            : 'There are ' + siblingContext.sameSignature + ' look-alike siblings — your selector must use `:nth-child` or a unique data-attribute to disambiguate.'),
+          ? 'The target is unique within its parent — a class-only selector should be safe.'
+          : 'There are ' + siblingContext.sameSignature + ' look-alike siblings — your selector must use `:nth-child` or a unique data-attribute to disambiguate.'),
       '',
       structuralBlock
         ? '**Structural parent block** (the closest stable enclosing container — use this to verify your selector is unique within the visible structure. The target element is marked with `data-jt-target=""`. Tailwind atomic classes are stripped from non-target elements; long text is truncated for privacy):\n\n```html\n' + structuralBlock + '\n```\n'

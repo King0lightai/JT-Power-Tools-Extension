@@ -14,7 +14,7 @@ const FEATURE_TOGGLE_IDS = [
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
-  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme',
+  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'compactBudgetRows', 'darkMode', 'rgbTheme',
   'jobAccessCollapse', 'orgLogo'
 ];
 
@@ -194,7 +194,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   ? JTDefaults.getDefaultSettings()
   : {
     dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, compactBudgetRows: false,
     quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
     kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
     ganttLines: true, pdfMarkupTools: true, reverseThreadOrder: false,
@@ -651,6 +651,7 @@ async function loadSettings() {
     setCheckbox('contrastFix', settings.contrastFix);
     setCheckbox('characterCounter', settings.characterCounter !== undefined ? settings.characterCounter : false);
     setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
+    setCheckbox('compactBudgetRows', settings.compactBudgetRows !== undefined ? settings.compactBudgetRows : false);
     setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
     setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
     setCheckbox('documentSort', settings.documentSort !== undefined ? settings.documentSort : false);
@@ -796,7 +797,6 @@ async function saveSettings(settings) {
   try {
     // Use tier-based feature checking
     const tier = await LicenseService.getTier();
-    const hasLicense = tier !== null;
     const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
     const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
 
@@ -929,6 +929,7 @@ async function getCurrentSettings() {
     rgbTheme: getCheckboxValue('rgbTheme', defaultSettings.rgbTheme),
     smartJobSwitcher: getCheckboxValue('smartJobSwitcher', defaultSettings.smartJobSwitcher),
     budgetHierarchy: getCheckboxValue('budgetHierarchy', defaultSettings.budgetHierarchy),
+    compactBudgetRows: getCheckboxValue('compactBudgetRows', defaultSettings.compactBudgetRows),
     quickNotes: getCheckboxValue('quickNotes', defaultSettings.quickNotes),
     helpSidebarSupport: true, // Always enabled, not user-toggleable
     freezeHeader: getCheckboxValue('freezeHeader', defaultSettings.freezeHeader),
@@ -1110,42 +1111,6 @@ function openInSidebar(windowId) {
     console.error('Error opening side panel:', error);
     showStatus('Could not open side panel', 'error');
   }
-}
-
-// Convert hex to RGB for preview generation
-function hexToRgb(hex) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : { r: 59, g: 130, b: 246 };
-}
-
-// Convert RGB to HSL
-function rgbToHsl(r, g, b) {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
-
-  if (max === min) {
-    h = s = 0;
-  } else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-      case g: h = ((b - r) / d + 2) / 6; break;
-      case b: h = ((r - g) / d + 4) / 6; break;
-    }
-  }
-
-  return { h: h * 360, s: s * 100, l: l * 100 };
 }
 
 // Load theme colors into pickers
@@ -2138,13 +2103,13 @@ async function generateConfigJson(platform) {
   if (platform === 'other') {
     // Show both endpoints for "Other" clients
     return JSON.stringify({
-      "mcpServers": {
-        "jobtread": {
-          "comment": "Use HTTP for request/response, SSE for streaming",
-          "http_url": `${MCP_SERVER_URL}/message`,
-          "sse_url": `${MCP_SERVER_URL}/sse`,
-          "headers": {
-            "Authorization": `Bearer ${authToken}`
+      'mcpServers': {
+        'jobtread': {
+          'comment': 'Use HTTP for request/response, SSE for streaming',
+          'http_url': `${MCP_SERVER_URL}/message`,
+          'sse_url': `${MCP_SERVER_URL}/sse`,
+          'headers': {
+            'Authorization': `Bearer ${authToken}`
           }
         }
       }
@@ -2154,12 +2119,12 @@ async function generateConfigJson(platform) {
   if (platformConfig.configType === 'sse') {
     // SSE config for ChatGPT
     return JSON.stringify({
-      "mcpServers": {
-        "jobtread": {
-          "type": "sse",
-          "url": `${MCP_SERVER_URL}/sse`,
-          "headers": {
-            "Authorization": `Bearer ${authToken}`
+      'mcpServers': {
+        'jobtread': {
+          'type': 'sse',
+          'url': `${MCP_SERVER_URL}/sse`,
+          'headers': {
+            'Authorization': `Bearer ${authToken}`
           }
         }
       }
@@ -2170,11 +2135,11 @@ async function generateConfigJson(platform) {
   // Claude Desktop only supports local stdio servers, so we need mcp-remote as a bridge
   if (platform === 'claude') {
     const serverConfig = {
-      "command": "node",
-      "args": [
-        "YOUR_NPM_PATH/node_modules/mcp-remote/dist/proxy.js",
+      'command': 'node',
+      'args': [
+        'YOUR_NPM_PATH/node_modules/mcp-remote/dist/proxy.js',
         `${MCP_SERVER_URL}/sse`,
-        "--header",
+        '--header',
         `Authorization: Bearer ${authToken}`
       ]
     };
@@ -2191,10 +2156,10 @@ async function generateConfigJson(platform) {
   // Claude Code (CLI) - supports HTTP directly
   if (platform === 'claudeCode') {
     const serverConfig = {
-      "type": "http",
-      "url": `${MCP_SERVER_URL}/message`,
-      "headers": {
-        "Authorization": `Bearer ${authToken}`
+      'type': 'http',
+      'url': `${MCP_SERVER_URL}/message`,
+      'headers': {
+        'Authorization': `Bearer ${authToken}`
       }
     };
     return `"jobtread": ${JSON.stringify(serverConfig, null, 2)}`;
@@ -2202,12 +2167,12 @@ async function generateConfigJson(platform) {
 
   // HTTP config for Cursor, etc.
   return JSON.stringify({
-    "mcpServers": {
-      "jobtread": {
-        "type": "http",
-        "url": `${MCP_SERVER_URL}/message`,
-        "headers": {
-          "Authorization": `Bearer ${authToken}`
+    'mcpServers': {
+      'jobtread': {
+        'type': 'http',
+        'url': `${MCP_SERVER_URL}/message`,
+        'headers': {
+          'Authorization': `Bearer ${authToken}`
         }
       }
     }
@@ -2787,12 +2752,12 @@ function generateMcpConfig(platform) {
     case 'claude-code':
       // Claude Code: HTTP transport (official type per Anthropic docs)
       return JSON.stringify({
-        "mcpServers": {
-          "jobtread": {
-            "type": "http",
-            "url": `${serverUrl}/mcp`,
-            "headers": {
-              "Authorization": `Bearer ${placeholder}`
+        'mcpServers': {
+          'jobtread': {
+            'type': 'http',
+            'url': `${serverUrl}/mcp`,
+            'headers': {
+              'Authorization': `Bearer ${placeholder}`
             }
           }
         }
@@ -2801,14 +2766,14 @@ function generateMcpConfig(platform) {
     case 'claude-desktop':
       // Claude Desktop: Requires mcp-remote wrapper (stdio bridge to remote)
       return JSON.stringify({
-        "mcpServers": {
-          "jobtread": {
-            "command": "npx",
-            "args": [
-              "-y",
-              "mcp-remote",
+        'mcpServers': {
+          'jobtread': {
+            'command': 'npx',
+            'args': [
+              '-y',
+              'mcp-remote',
               `${serverUrl}/mcp`,
-              "--header",
+              '--header',
               `Authorization:Bearer ${placeholder}`
             ]
           }
@@ -2826,11 +2791,11 @@ function generateMcpConfig(platform) {
     case 'gemini':
       // Gemini CLI: Uses httpUrl key (per Google Gemini docs)
       return JSON.stringify({
-        "mcpServers": {
-          "jobtread": {
-            "httpUrl": `${serverUrl}/mcp`,
-            "headers": {
-              "Authorization": `Bearer ${placeholder}`
+        'mcpServers': {
+          'jobtread': {
+            'httpUrl': `${serverUrl}/mcp`,
+            'headers': {
+              'Authorization': `Bearer ${placeholder}`
             }
           }
         }
@@ -2839,11 +2804,11 @@ function generateMcpConfig(platform) {
     case 'grok':
       // Grok (xAI): Standard MCP config with url + headers
       return JSON.stringify({
-        "mcpServers": {
-          "jobtread": {
-            "url": `${serverUrl}/mcp`,
-            "headers": {
-              "Authorization": `Bearer ${placeholder}`
+        'mcpServers': {
+          'jobtread': {
+            'url': `${serverUrl}/mcp`,
+            'headers': {
+              'Authorization': `Bearer ${placeholder}`
             }
           }
         }
@@ -2951,10 +2916,6 @@ function setPrereqStatus(el, isDone) {
 async function initAccountUI() {
   // Get elements
   const accountSection = document.getElementById('accountSection');
-  const accountLoggedIn = document.getElementById('accountLoggedIn');
-  const accountLogin = document.getElementById('accountLogin');
-  const accountRegister = document.getElementById('accountRegister');
-  const accountSetupPrompt = document.getElementById('accountSetupPrompt');
 
   if (!accountSection) return;
 
@@ -4281,7 +4242,6 @@ async function initJobEmailCard(tier) {
   const valueEl = document.getElementById('jobEmailValue');
   const copyBtn = document.getElementById('jobEmailCopy');
   const metaEl = document.getElementById('jobEmailMeta');
-  const errorEl = document.getElementById('jobEmailError');
 
   copyBtn.addEventListener('click', async () => {
     const text = valueEl && valueEl.value;

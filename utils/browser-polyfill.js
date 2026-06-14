@@ -58,7 +58,7 @@
         const promise = browserArea.get(keys);
         if (typeof callback === 'function') {
           promise.then(function (result) { callback(result); })
-                 .catch(function () { callback({}); });
+            .catch(function () { callback({}); });
           return;
         }
         return promise;
@@ -68,7 +68,7 @@
         const promise = browserArea.set(data);
         if (typeof callback === 'function') {
           promise.then(function () { callback(); })
-                 .catch(function () { callback(); });
+            .catch(function () { callback(); });
           return;
         }
         return promise;
@@ -78,7 +78,7 @@
         const promise = browserArea.remove(keys);
         if (typeof callback === 'function') {
           promise.then(function () { callback(); })
-                 .catch(function () { callback(); });
+            .catch(function () { callback(); });
           return;
         }
         return promise;
@@ -88,7 +88,7 @@
         const promise = browserArea.clear();
         if (typeof callback === 'function') {
           promise.then(function () { callback(); })
-                 .catch(function () { callback(); });
+            .catch(function () { callback(); });
           return;
         }
         return promise;
@@ -97,10 +97,10 @@
       // getBytesInUse is not supported in Firefox — provide a safe no-op
       getBytesInUse: function (keys, callback) {
         if (typeof browserArea.getBytesInUse === 'function') {
-          var promise = browserArea.getBytesInUse(keys);
+          const promise = browserArea.getBytesInUse(keys);
           if (typeof callback === 'function') {
             promise.then(function (bytes) { callback(bytes); })
-                   .catch(function () { callback(0); });
+              .catch(function () { callback(0); });
             return;
           }
           return promise;
@@ -118,7 +118,7 @@
   // ─── Override chrome.storage ───────────────────────────────────────────
 
   if (typeof browser.storage !== 'undefined') {
-    var wrappedStorage = {
+    const wrappedStorage = {
       sync: wrapStorageArea(browser.storage.sync),
       local: wrapStorageArea(browser.storage.local),
       onChanged: browser.storage.onChanged
@@ -167,14 +167,14 @@
   // browser.tabs.* returns Promises. Wrap so chrome.tabs.* returns Promises too.
 
   if (typeof browser.tabs !== 'undefined') {
-    var wrappedTabs = {
+    const wrappedTabs = {
       _jt_polyfilled: true,
 
       query: function (queryInfo, callback) {
-        var promise = browser.tabs.query(queryInfo);
+        const promise = browser.tabs.query(queryInfo);
         if (typeof callback === 'function') {
           promise.then(function (tabs) { callback(tabs); })
-                 .catch(function () { callback([]); });
+            .catch(function () { callback([]); });
           return;
         }
         return promise;
@@ -186,22 +186,22 @@
           callback = reloadProperties;
           reloadProperties = undefined;
         }
-        var promise = reloadProperties
+        const promise = reloadProperties
           ? browser.tabs.reload(tabId, reloadProperties)
           : browser.tabs.reload(tabId);
         if (typeof callback === 'function') {
           promise.then(function () { callback(); })
-                 .catch(function () { callback(); });
+            .catch(function () { callback(); });
           return;
         }
         return promise;
       },
 
       create: function (createProperties, callback) {
-        var promise = browser.tabs.create(createProperties);
+        const promise = browser.tabs.create(createProperties);
         if (typeof callback === 'function') {
           promise.then(function (tab) { callback(tab); })
-                 .catch(function () { callback(null); });
+            .catch(function () { callback(null); });
           return;
         }
         return promise;
@@ -213,12 +213,12 @@
           callback = options;
           options = undefined;
         }
-        var promise = options
+        const promise = options
           ? browser.tabs.sendMessage(tabId, message, options)
           : browser.tabs.sendMessage(tabId, message);
         if (typeof callback === 'function') {
           promise.then(function (response) { callback(response); })
-                 .catch(function () { callback(undefined); });
+            .catch(function () { callback(undefined); });
           return;
         }
         return promise;
@@ -260,8 +260,6 @@
   // Codebase uses both patterns: fire-and-forget AND await.
 
   if (typeof browser.runtime !== 'undefined' && typeof browser.runtime.sendMessage === 'function') {
-    var originalSendMessage = chrome.runtime.sendMessage;
-
     // Guard against aliased runtimes: if browser.runtime.sendMessage and
     // chrome.runtime.sendMessage are the same function reference, assigning
     // chrome.runtime.sendMessage = wrappedSendMessage would also mutate
@@ -275,9 +273,9 @@
     // Capture the original browser promise-based sendMessage BEFORE any
     // assignment to chrome.runtime.sendMessage. Even if they're not aliased
     // now, defensive capture prevents future breakage.
-    var browserSendMessage = browser.runtime.sendMessage.bind(browser.runtime);
+    const browserSendMessage = browser.runtime.sendMessage.bind(browser.runtime);
 
-    var wrappedSendMessage = function (message, options, callback) {
+    const wrappedSendMessage = function (message, options, callback) {
       // Handle overloads:
       //   sendMessage(msg)
       //   sendMessage(msg, callback)
@@ -287,16 +285,16 @@
         options = undefined;
       }
 
-      var promise = options
+      const promise = options
         ? browserSendMessage(message, options)
         : browserSendMessage(message);
 
       if (typeof callback === 'function') {
         promise.then(function (response) { callback(response); })
-               .catch(function (err) {
-                 console.warn('Browser polyfill: runtime.sendMessage callback error:', err);
-                 callback(undefined);
-               });
+          .catch(function (err) {
+            console.warn('Browser polyfill: runtime.sendMessage callback error:', err);
+            callback(undefined);
+          });
         return; // No return value when using callbacks
       }
 

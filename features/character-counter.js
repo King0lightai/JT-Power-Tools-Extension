@@ -1372,23 +1372,6 @@ const CharacterCounterFeature = (() => {
   }
 
   /**
-   * Get the default template
-   * @returns {Object|null}
-   */
-  function getDefaultTemplate() {
-    if (!cachedTemplates.defaultTemplateId) return null;
-    return cachedTemplates.templates.find(t => t.id === cachedTemplates.defaultTemplateId) || null;
-  }
-
-  /**
-   * Escape HTML to prevent XSS
-   * @param {string} text - Text to escape
-   * @returns {string}
-   */
-  // Delegate to shared Sanitizer utility
-  const escapeHtml = (text) => Sanitizer.escapeHTML(text);
-
-  /**
    * Open the template edit/create modal
    * @param {Object|null} template - Existing template to edit, or null to create new
    * @returns {Promise<Object|null>} - { name, content, setAsDefault } or null if cancelled
@@ -1969,7 +1952,7 @@ const CharacterCounterFeature = (() => {
      * Populate the dropdown with templates
      */
     async function populate() {
-      const data = await loadTemplates();
+      await loadTemplates();
       dropdown.innerHTML = '';
 
       // If company tab is active, ensure team templates are loaded
@@ -2558,10 +2541,6 @@ const CharacterCounterFeature = (() => {
         // We want to insert the container next to the writing assistant buttons
         const dialog = field.closest('.shadow-lg, [role="dialog"], .modal, form');
         let toolbar = null;
-
-        // With the compact "T ▼" button, we can always use inline positioning
-        // No need for sidebar-specific row layout anymore
-        const isSidebar = false;
 
         if (dialog) {
           // FIRST: Check for document-sending modals (Send Estimate, Send Change Order, etc.)
