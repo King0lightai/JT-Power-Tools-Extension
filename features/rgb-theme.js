@@ -1102,6 +1102,26 @@ const CustomThemeFeature = (() => {
       .caret-black {
         caret-color: ${p.text.primary};
       }
+
+      /* === JobTread AI ("Jai") Help Assistant Launcher === */
+      /* Scoped via the unique purple sparkle badge (svg.fill-purple-500). The
+         resting icon already inherits ${'p.text.secondary'} from body.text-gray-600
+         (themed above) and the active button background is already mapped by the
+         .bg-gray-200 rule (-> background.emphasis), so only the active icon color
+         and the sparkle halo need theming here. JobTread marks the button active
+         (assistant panel open) with a bare \`bg-gray-200\`. */
+      [role="button"].bg-gray-200:has(> svg.fill-purple-500) {
+        color: ${p.primary.base} !important;
+      }
+
+      /* Sparkle outline (stroke) matches the backdrop it sits on so it does not
+         render a stray light ring on a themed header. */
+      [role="button"]:has(> svg.fill-purple-500) > svg.fill-purple-500 {
+        color: ${p.background.base} !important;
+      }
+      [role="button"].bg-gray-200:has(> svg.fill-purple-500) > svg.fill-purple-500 {
+        color: ${p.background.emphasis} !important;
+      }
     `;
 
     // v4.8 polish — only create the <style> element once. Subsequent calls

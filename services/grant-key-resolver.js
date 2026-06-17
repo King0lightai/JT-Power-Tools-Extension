@@ -99,7 +99,11 @@ const GrantKeyResolver = (() => {
         // NEVER fall back to legacy keys — that would return another org's key.
         if (!toastShownForOrgs.has(orgName)) {
           toastShownForOrgs.add(orgName);
-          showMissingKeyToast(orgName);
+          // Distinguish "not signed in" from "signed in but no key for this org"
+          // so the toast points the user to the right next step.
+          const needsSignIn = !!(response && response.error &&
+            /not authenticated|sign in/i.test(response.error));
+          showMissingKeyToast(orgName, needsSignIn ? 'signin' : 'no-key');
         }
         return null;
       } catch (err) {
@@ -146,10 +150,21 @@ const GrantKeyResolver = (() => {
     }
   }
 
-  function showMissingKeyToast(orgName) {
+  function showMissingKeyToast(orgName, reason = 'no-key') {
     if (document.getElementById('jt-missing-key-toast')) return;
 
     const escapedOrgName = safeEscapeHTML(orgName);
+
+    // Two distinct causes get two distinct messages:
+    //  - 'signin': no portal account token yet → the user must sign in to the extension
+    //  - 'no-key': signed in, but this org has no grant key configured yet
+    const isSignIn = reason === 'signin';
+    const title = isSignIn
+      ? 'Sign in to use API features'
+      : `No API key for "${escapedOrgName}"`;
+    const body = isSignIn
+      ? `Open the JT Power Tools extension and sign in to your account to enable API features for "${escapedOrgName}".`
+      : `Add one at <a href="https://app.jtpowertools.com/dashboard" target="_blank" style="color: #FF6B35; text-decoration: none;">app.jtpowertools.com</a>`;
 
     const toast = document.createElement('div');
     toast.id = 'jt-missing-key-toast';
@@ -166,8 +181,8 @@ const GrantKeyResolver = (() => {
       <div style="display: flex; align-items: flex-start; gap: 10px;">
         <span style="font-size: 16px; flex-shrink: 0;">&#9888;&#65039;</span>
         <div>
-          <div style="font-weight: 600; margin-bottom: 4px;">No API key for "${escapedOrgName}"</div>
-          <div style="color: #b0b0b0;">Add one at <a href="https://app.jtpowertools.com/dashboard" target="_blank" style="color: #FF6B35; text-decoration: none;">app.jtpowertools.com</a></div>
+          <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+          <div style="color: #b0b0b0;">${body}</div>
         </div>
         <button style="background: none; border: none; color: #707070; cursor: pointer; font-size: 16px; padding: 0; margin-left: 8px; flex-shrink: 0;" aria-label="Dismiss notification">&#10005;</button>
       </div>

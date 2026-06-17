@@ -845,3 +845,30 @@ div.border-l div.select-none.break-inside-avoid {
     color: #a78bfa !important;
     border-color: #a78bfa !important;
 }
+
+/* === JobTread AI ("Jai") Help Assistant Launcher === */
+/* Top-bar button holding the message-circle-question icon plus a purple sparkle
+   badge. The sparkle (svg.fill-purple-500) is unique on the page, so it scopes
+   these rules to this one button. JobTread marks the button "active" (assistant
+   panel open) with a bare `bg-gray-200`; inactive it is transparent (hover:/focus:
+   variants only). The resting icon already reads correctly via the
+   `.text-gray-600 { color: #e0e0e0 }` rule above (the icon inherits currentColor
+   from body.text-gray-600), so only the active state and the sparkle halo need
+   handling here. */
+
+/* Active: replace the glaring light-gray pill with a dark highlight and tint the
+   icon with the dark-mode accent. */
+[role="button"].bg-gray-200:has(> svg.fill-purple-500) {
+    background-color: #3a3a3a !important;
+    color: #818cf8 !important;
+}
+
+/* The sparkle's outline (stroke = text-gray-200) is meant to "cut out" of the
+   light pill. Re-point it to the dark backdrop it actually sits on so it does not
+   render a light ring. */
+[role="button"]:has(> svg.fill-purple-500) > svg.fill-purple-500 {
+    color: #2c2c2c !important; /* inactive: matches the dark header (bg-white -> #2c2c2c) */
+}
+[role="button"].bg-gray-200:has(> svg.fill-purple-500) > svg.fill-purple-500 {
+    color: #3a3a3a !important; /* active: matches the active highlight above */
+}

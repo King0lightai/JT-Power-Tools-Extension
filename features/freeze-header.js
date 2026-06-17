@@ -9,6 +9,7 @@ const FreezeHeaderFeature = (() => {
   let resizeHandler = null;
   let popupObserver = null;
   let jobContextObserver = null;
+  let jobContextInitTimer = null;
   let urlCheckInterval = null;
   let sidebarStyleObservers = [];
 
@@ -1724,8 +1725,12 @@ const FreezeHeaderFeature = (() => {
     findAndMarkGlobalSidebars();
     findAndMarkFullpageSidebars();
     findAndMarkEditItemsPanel();
-    // Small delay to ensure elements are rendered before measuring
-    setTimeout(() => {
+    // Small delay to ensure elements are rendered before measuring. Tracked so
+    // cleanup() can cancel it — otherwise it fires after teardown and rebuilds
+    // the job-context IntersectionObserver on a disabled feature.
+    if (jobContextInitTimer) clearTimeout(jobContextInitTimer);
+    jobContextInitTimer = setTimeout(() => {
+      jobContextInitTimer = null;
       updatePositions();
       adjustDragBoundarySidebars();
       setupJobContextObserver();
@@ -1988,6 +1993,13 @@ const FreezeHeaderFeature = (() => {
     if (debounceTimer) {
       clearTimeout(debounceTimer);
       debounceTimer = null;
+    }
+
+    // Clear the deferred position/observer setup timer so it can't fire after
+    // teardown and rebuild the job-context IntersectionObserver.
+    if (jobContextInitTimer) {
+      clearTimeout(jobContextInitTimer);
+      jobContextInitTimer = null;
     }
 
     // Clear URL check interval

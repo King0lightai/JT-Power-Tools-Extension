@@ -389,6 +389,19 @@ async function initializeAllFeatures() {
   if (featureModules.helpSidebarSupport) keysToInit.add('helpSidebarSupport');
   if (featureModules.keyboardShortcuts) keysToInit.add('keyboardShortcuts');
 
+  // Appearance modes are mutually exclusive. The popup enforces this on toggle,
+  // but stored settings (older versions, cross-device sync, manual edits) can
+  // still arrive with more than one enabled — and when they do, Custom Theme's
+  // palette fights Dark Mode and the page renders washed-out. Enforce a single
+  // winner here at the apply layer. Order = precedence (Dark Mode wins, since it
+  // was the survivor in the observed conflict).
+  const APPEARANCE_MODES = ['darkMode', 'rgbTheme', 'contrastFix'];
+  const enabledModes = APPEARANCE_MODES.filter(key => keysToInit.has(key));
+  if (enabledModes.length > 1) {
+    for (const mode of enabledModes.slice(1)) keysToInit.delete(mode);
+    console.log(`JT-Tools: Multiple appearance modes enabled (${enabledModes.join(', ')}); keeping ${enabledModes[0]} and skipping the rest — they are mutually exclusive.`);
+  }
+
   await Promise.allSettled([...keysToInit].map(key => initializeFeature(key)));
 
   console.log('JT-Tools: All enabled features initialized');
