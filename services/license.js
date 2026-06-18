@@ -55,6 +55,7 @@ const LicenseService = (() => {
     'smartJobSwitcher', // Keyboard navigation (J+S, Alt+J)
     'freezeHeader',     // Sticky headers for tables
     'pdfMarkupTools',   // PDF annotations
+    'budgetRowHighlight', // Emoji-driven row tinting in budgets
     'orgLogo'           // Admin-managed via portal; requires account (Essential+)
   ];
 

@@ -14,7 +14,7 @@ const FEATURE_TOGGLE_IDS = [
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
-  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme',
+  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
   'jobAccessCollapse', 'orgLogo'
 ];
 
@@ -194,7 +194,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   ? JTDefaults.getDefaultSettings()
   : {
     dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
     quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
     kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
     ganttLines: true, pdfMarkupTools: true, reverseThreadOrder: false,
@@ -651,6 +651,7 @@ async function loadSettings() {
     setCheckbox('contrastFix', settings.contrastFix);
     setCheckbox('characterCounter', settings.characterCounter !== undefined ? settings.characterCounter : false);
     setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
+    setCheckbox('budgetRowHighlight', settings.budgetRowHighlight !== undefined ? settings.budgetRowHighlight : false);
     setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
     setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
     setCheckbox('documentSort', settings.documentSort !== undefined ? settings.documentSort : false);
@@ -928,6 +929,7 @@ async function getCurrentSettings() {
     rgbTheme: getCheckboxValue('rgbTheme', defaultSettings.rgbTheme),
     smartJobSwitcher: getCheckboxValue('smartJobSwitcher', defaultSettings.smartJobSwitcher),
     budgetHierarchy: getCheckboxValue('budgetHierarchy', defaultSettings.budgetHierarchy),
+    budgetRowHighlight: getCheckboxValue('budgetRowHighlight', defaultSettings.budgetRowHighlight),
     quickNotes: getCheckboxValue('quickNotes', defaultSettings.quickNotes),
     helpSidebarSupport: true, // Always enabled, not user-toggleable
     freezeHeader: getCheckboxValue('freezeHeader', defaultSettings.freezeHeader),

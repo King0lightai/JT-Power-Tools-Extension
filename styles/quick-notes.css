@@ -1449,8 +1449,9 @@ body.jt-dark-mode .jt-table-menu-divider,
   border-color: transparent;
 }
 
-.jt-quick-notes-panel.custom-theme .jt-notes-tab:hover {
+.jt-quick-notes-panel.custom-theme .jt-notes-tab:hover:not(.active) {
   color: var(--jt-notes-text, #374151);
+  background: var(--jt-notes-hover-bg, #f9fafb);
 }
 
 .jt-quick-notes-panel.custom-theme .jt-notes-tab.active {
@@ -1461,11 +1462,24 @@ body.jt-dark-mode .jt-table-menu-divider,
 /* Custom theme - close button */
 .jt-quick-notes-panel.custom-theme .jt-notes-close-button {
   color: var(--jt-notes-text-secondary, #6b7280);
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
 }
 
 .jt-quick-notes-panel.custom-theme .jt-notes-close-button:hover {
   color: var(--jt-notes-text, #374151);
   background: var(--jt-notes-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+/* Custom theme - tab count badges */
+.jt-quick-notes-panel.custom-theme .jt-notes-tab-count {
+  background: var(--jt-notes-input-bg, #e5e7eb);
+  color: var(--jt-notes-text-secondary, #6b7280);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab.active .jt-notes-tab-count {
+  background: var(--jt-notes-primary, #06b6d4);
+  color: var(--jt-notes-bg, white);
 }
 
 /* Responsive adjustments */

@@ -82,6 +82,7 @@
         "features/rgb-theme.js",
         "features/job-switcher.js",
         "features/budget-hierarchy.js",
+        "features/budget-row-highlight.js",
         "features/quick-notes-modules/storage.js",
         "features/quick-notes-modules/markdown.js",
         "features/quick-notes-modules/editor.js",

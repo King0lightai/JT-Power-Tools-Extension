@@ -68,6 +68,11 @@ const featureModules = {
     feature: () => window.BudgetHierarchyFeature,
     instance: null
   },
+  budgetRowHighlight: {
+    name: 'Budget Row Highlight',
+    feature: () => window.BudgetRowHighlight,
+    instance: null
+  },
   quickNotes: {
     name: 'Quick Notes',
     feature: () => window.QuickNotesFeature,
@@ -191,7 +196,7 @@ let currentSettings = window.JTDefaults
   : {
     // Inline fallback if JTDefaults not loaded (should not happen)
     dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
