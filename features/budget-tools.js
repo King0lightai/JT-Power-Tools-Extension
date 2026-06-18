@@ -191,13 +191,39 @@ const BudgetTools = (() => {
   }
 
   /**
+   * Nesting depth of a row, from the indent spacers JobTread renders in the name
+   * cell (one ~16px empty spacer per level below the top: top-level = 0, its
+   * children = 1, etc.). Used to dedup selections so a selected group's
+   * already-rolled-up subtotal isn't double-counted by a separately-selected
+   * descendant. Computed only for selected rows (cheap) and stored in the map,
+   * so it stays correct after the row lazy-unloads.
+   */
+  function getRowIndentLevel(row) {
+    const nameCell = row.children[1];
+    if (!nameCell) return 0;
+    let level = 0;
+    for (const d of nameCell.querySelectorAll('div')) {
+      if (d.children.length === 0 && !d.textContent.trim()) {
+        const w = parseFloat(getComputedStyle(d).width);
+        if (w >= 8 && w <= 40) level++;
+      }
+    }
+    return level;
+  }
+
+  /**
    * Sync visible rows into selectionMap. Persistent map survives lazy scroll
-   * unloads. Groups are always excluded (their totals are sums of children).
+   * unloads. Both groups and line items are tracked when selected:
    *
-   * - Visible + selected item   → upsert with current values
-   * - Visible + deselected item → remove (user deselected)
-   * - Visible + group (any)     → remove if present (never count groups)
-   * - Not in DOM                → leave in map (lazy-unloaded, still selected)
+   * - Group rows are counted by their OWN displayed Extended Cost/Price, which
+   *   JobTread renders even when the group is collapsed and its children are
+   *   lazy-unloaded — the escape hatch from virtual scrolling. renderTotals()
+   *   dedups any separately-selected descendants so the rolled-up group subtotal
+   *   isn't double-counted.
+   *
+   * - Visible + selected (group or item) → upsert with current values
+   * - Visible + deselected               → remove (user deselected)
+   * - Not in DOM                         → leave in map (lazy-unloaded, still selected)
    */
   function syncSelectionMap(colIndices) {
     const numberCustomFields = detectNumberCustomFields(colIndices);
@@ -206,12 +232,6 @@ const BudgetTools = (() => {
     for (const row of allVisibleRows) {
       const key = getRowKey(row);
       if (!key) continue;
-
-      // Always remove groups from the map — they're aggregate rows
-      if (isGroupRow(row)) {
-        selectionMap.delete(key);
-        continue;
-      }
 
       // classList.contains is safe for both HTML and SVG elements; c.className
       // on an SVG element is a SVGAnimatedString (not a string), so
@@ -235,6 +255,8 @@ const BudgetTools = (() => {
           price: parseCurrency(priceRaw),
           isTbd: costRaw === 'TBD',
           custom,
+          isGroup: isGroupRow(row),
+          depth: getRowIndentLevel(row),
         });
       } else {
         // Visible but not selected — user deselected, not a lazy unload
@@ -339,7 +361,42 @@ const BudgetTools = (() => {
     return el;
   }
 
+  /**
+   * Reduce selected rows to the LEAF selections — those with no selected
+   * descendant. JobTread cascades selection BOTH ways: selecting a group selects
+   * all its descendants, and selecting a line item selects all its ancestor
+   * groups. Summing the leaves is therefore correct in every case and partitions
+   * the budget exactly once:
+   *   - group selected (collapsed) → no descendants loaded → it IS a leaf → its subtotal
+   *   - group selected (expanded)  → leaves are its sub-groups / items → group total
+   *   - item selected              → leaf is the item itself → item value
+   * In row-number order (= tree pre-order) a row's descendants immediately
+   * follow it at greater depth, so a row is a non-leaf ancestor iff the next
+   * selected row is deeper. Pure + side-effect-free for unit testing; uses only
+   * the passed (selected) rows, so it stays correct across lazy unloads.
+   *
+   * @param {Array<{num:number, depth:number, isGroup?:boolean}>} entries
+   * @returns {Array} the subset to count (deepest rows; ancestor rows dropped)
+   */
+  function computeLeafSelections(entries) {
+    const sorted = entries.slice().sort((a, b) => a.num - b.num);
+    const leaves = [];
+    for (let i = 0; i < sorted.length; i++) {
+      const next = sorted[i + 1];
+      if (next && next.depth > sorted[i].depth) continue; // ancestor — its subtree is selected below
+      leaves.push(sorted[i]);
+    }
+    return leaves;
+  }
+
   function renderTotals(el, colIndices) {
+    // Sum LEAF selections only (see computeLeafSelections for the rationale) —
+    // correct under JobTread's two-way selection cascade and immune to lazy
+    // unloads (uses only the persisted selected rows).
+    const counted = computeLeafSelections(
+      Array.from(selectionMap.entries()).map(([num, v]) => ({ num: parseInt(num, 10), ...v }))
+    );
+
     // Sum in integer cents to avoid floating-point drift across thousands of
     // rows — a budget totalling $1M+ summed from raw $0.10+$0.20 floats could
     // otherwise display cents that are off by a penny, and Profit / Margin
@@ -349,7 +406,7 @@ const BudgetTools = (() => {
     const hasCost = colIndices['Extended Cost'] !== undefined;
     const hasPrice = colIndices['Extended Price'] !== undefined;
 
-    for (const { cost, price, isTbd } of selectionMap.values()) {
+    for (const { cost, price, isTbd } of counted) {
       if (hasCost) {
         if (cost !== null) { totalCostCents += Math.round(cost * 100); countWithCost++; }
         else if (isTbd) tbdCount++;
@@ -359,7 +416,9 @@ const BudgetTools = (() => {
 
     const totalCost = totalCostCents / 100;
     const totalPrice = totalPriceCents / 100;
-    const count = selectionMap.size;
+    const count = counted.length;
+    const groupCount = counted.filter(e => e.isGroup).length;
+    const itemCount = count - groupCount;
     const profit = (totalPriceCents - totalCostCents) / 100;
     const margin = totalPriceCents > 0 ? ((totalPriceCents - totalCostCents) / totalPriceCents * 100) : 0;
     const t = getThemeColors();
@@ -376,11 +435,18 @@ const BudgetTools = (() => {
     header.textContent = 'Selection Totals';
     el.appendChild(header);
 
-    // Item count
+    // Selection summary. We sum LEAF selections (deepest selected rows): group
+    // leaves are exact subtotals (immune to collapse / lazy-load), while item
+    // leaves can have not-yet-loaded siblings.
     const countEl = document.createElement('div');
     countEl.style.cssText = `font-size:12px;color:${t.secondary};margin-bottom:8px;`;
-    const tbdNote = tbdCount > 0 ? ` (${tbdCount} TBD)` : '';
-    countEl.textContent = `${count} visible item${count !== 1 ? 's' : ''} counted${tbdNote} — scroll to count more`;
+    const bits = [];
+    if (groupCount > 0) bits.push(`${groupCount} group${groupCount !== 1 ? 's' : ''}`);
+    if (itemCount > 0) bits.push(`${itemCount} item${itemCount !== 1 ? 's' : ''}`);
+    let summary = `${bits.join(' + ') || '0 rows'} counted`;
+    if (tbdCount > 0) summary += ` (${tbdCount} TBD)`;
+    if (itemCount > 0) summary += ' — scroll to count more items';
+    countEl.textContent = summary;
     el.appendChild(countEl);
 
     // Money rows (Extended Cost, Extended Price, Profit)
@@ -404,7 +470,7 @@ const BudgetTools = (() => {
     // before the empty-state check so custom-field totals render even when
     // Cost/Price columns aren't visible (or all rows are TBD).
     const customSums = Object.create(null);
-    for (const entry of selectionMap.values()) {
+    for (const entry of counted) {
       if (!entry.custom) continue;
       for (const [name, val] of Object.entries(entry.custom)) {
         customSums[name] = (customSums[name] ?? 0) + val;
@@ -610,7 +676,9 @@ const BudgetTools = (() => {
   return {
     init,
     cleanup,
-    isActive: () => isActive
+    isActive: () => isActive,
+    // Exposed for unit tests (tests/features/budget-tools-dedup.test.js).
+    _computeLeafSelections: computeLeafSelections
   };
 })();
 

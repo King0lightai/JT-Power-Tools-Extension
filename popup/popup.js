@@ -14,7 +14,7 @@ const FEATURE_TOGGLE_IDS = [
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
-  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'compactBudgetRows', 'darkMode', 'rgbTheme',
+  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme',
   'jobAccessCollapse', 'orgLogo'
 ];
 
@@ -194,7 +194,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   ? JTDefaults.getDefaultSettings()
   : {
     dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, compactBudgetRows: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
     quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
     kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
     ganttLines: true, pdfMarkupTools: true, reverseThreadOrder: false,
@@ -651,7 +651,6 @@ async function loadSettings() {
     setCheckbox('contrastFix', settings.contrastFix);
     setCheckbox('characterCounter', settings.characterCounter !== undefined ? settings.characterCounter : false);
     setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
-    setCheckbox('compactBudgetRows', settings.compactBudgetRows !== undefined ? settings.compactBudgetRows : false);
     setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
     setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
     setCheckbox('documentSort', settings.documentSort !== undefined ? settings.documentSort : false);
@@ -929,7 +928,6 @@ async function getCurrentSettings() {
     rgbTheme: getCheckboxValue('rgbTheme', defaultSettings.rgbTheme),
     smartJobSwitcher: getCheckboxValue('smartJobSwitcher', defaultSettings.smartJobSwitcher),
     budgetHierarchy: getCheckboxValue('budgetHierarchy', defaultSettings.budgetHierarchy),
-    compactBudgetRows: getCheckboxValue('compactBudgetRows', defaultSettings.compactBudgetRows),
     quickNotes: getCheckboxValue('quickNotes', defaultSettings.quickNotes),
     helpSidebarSupport: true, // Always enabled, not user-toggleable
     freezeHeader: getCheckboxValue('freezeHeader', defaultSettings.freezeHeader),
@@ -4058,6 +4056,19 @@ function showAccountError(formType, message) {
       }
     }
 
+    // Side-panel only: focus stays in the side panel, so the page's crosshair
+    // picker and builder-panel Escape handlers never receive the keydown.
+    // Forward Escape to the JobTread tab so they can cancel. Harmless when
+    // nothing is active — the page-side handlers guard on their own state.
+    if (IS_IN_SIDE_PANEL) {
+      document.addEventListener('keydown', async (e) => {
+        if (e.key !== 'Escape') return;
+        const tab = await findJtTab();
+        if (!tab) return;
+        try { await chrome.tabs.sendMessage(tab.id, { type: 'JT_TWEAK_CANCEL' }); } catch (_) { /* no receiver */ }
+      });
+    }
+
     const $pickBtn = document.querySelector('[data-action="pick"]');
     if ($pickBtn) {
       $pickBtn.addEventListener('click', () => startPicker('INSPECT_START_PICKER', $pickBtn, 'Pick an element on JobTread'));
@@ -4082,6 +4093,11 @@ function showAccountError(formType, message) {
           setTimeout(() => { $pickMultiBtn.innerHTML = originalMultiHTML; }, 2200);
         }
       });
+    }
+
+    const $buildBtn = document.getElementById('tweakBuildBtn');
+    if ($buildBtn) {
+      $buildBtn.addEventListener('click', () => startPicker('INSPECT_PICK_FOR_BUILDER', $buildBtn, 'Build a tweak'));
     }
 
     function previewImport() {

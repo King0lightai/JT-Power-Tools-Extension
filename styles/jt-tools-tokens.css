@@ -1,0 +1,45 @@
+/* JT Power Tools — shared design tokens (popup + injected surfaces).
+   Values mirror the popup's dark theme (popup.css `body.dark-theme`) so the
+   injected tweak builder is visually identical to the popup — same brand
+   orange, warm dark surfaces/text, radii, and type. Namespaced under
+   .jt-tools-surface so JobTread's own styles can't bleed in. */
+.jt-tools-surface {
+  --jtt-bg: #2c2c2c;            /* popup --bg-surface */
+  --jtt-bg-2: #252525;          /* popup --bg */
+  --jtt-bg-elev: #333333;       /* popup --bg-raised */
+  --jtt-bg-hover: #3a3a3a;
+  --jtt-bg-sunken: #1f1f1f;     /* popup --bg-sunken (input fields) */
+  --jtt-border: #404040;        /* popup --rule */
+  --jtt-border-2: #505050;      /* popup --rule-strong */
+  --jtt-border-soft: #353535;   /* popup --rule-soft */
+  --jtt-text: #f2ede3;          /* popup --fg-strong (warm) */
+  --jtt-text-2: #e0d8c8;        /* popup --fg (warm) */
+  --jtt-text-muted: #b0b0b0;    /* popup --fg-muted */
+  --jtt-text-subtle: #909090;   /* popup --fg-subtle */
+  --jtt-primary: #fe4c0d;       /* popup --jt-orange / --accent (brand) */
+  --jtt-primary-hover: #d93d00; /* popup --jt-orange-deep */
+  --jtt-primary-fg: #ffffff;    /* white on orange — matches .jt-tweaks-action-primary */
+  --jtt-safe: #9fe1cb;
+  --jtt-warn: #fbbf24;          /* popup dark .tweak-status-chip.warn */
+  --jtt-danger: #f87171;        /* popup dark .tweak-status-chip.error */
+  --jtt-radius: 6px;            /* popup --r-md */
+  --jtt-radius-sm: 4px;         /* popup --r-sm */
+  color: var(--jtt-text);
+  font: 13px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.jt-tools-surface .jtt-btn {
+  background: var(--jtt-bg-elev); color: var(--jtt-text-2);
+  border: 1px solid var(--jtt-border-2); border-radius: var(--jtt-radius);
+  padding: 7px 12px; font: inherit; cursor: pointer;
+  transition: background 150ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.jt-tools-surface .jtt-btn:hover { background: var(--jtt-bg-hover); color: var(--jtt-text); }
+.jt-tools-surface .jtt-btn-primary { background: var(--jtt-primary); color: var(--jtt-primary-fg); border-color: var(--jtt-primary); }
+.jt-tools-surface .jtt-btn-primary:hover { background: var(--jtt-primary-hover); border-color: var(--jtt-primary-hover); color: var(--jtt-primary-fg); }
+.jt-tools-surface .jtt-input {
+  background: var(--jtt-bg-sunken); color: var(--jtt-text);
+  border: 1px solid var(--jtt-border-2); border-radius: var(--jtt-radius);
+  padding: 8px 10px; font: inherit; width: 100%; box-sizing: border-box;
+}
+.jt-tools-surface .jtt-input:focus { outline: none; border-color: var(--jtt-primary); }
+.jt-tools-surface .jtt-label { font-size: 11px; color: var(--jtt-text-muted); }

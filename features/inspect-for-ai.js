@@ -64,6 +64,22 @@ const InspectForAiFeature = (() => {
         sendResponse({ ok: true });
         return false;
       }
+      if (message && message.type === 'INSPECT_PICK_FOR_BUILDER') {
+        enterPickerMode({ multi: false, forBuilder: true });
+        sendResponse({ ok: true });
+        return false;
+      }
+      if (message && message.type === 'JT_TWEAK_CANCEL') {
+        // Sent by the popup when it's pinned as a side panel: keyboard focus
+        // stays in the side panel, so this page never sees the Escape keydown.
+        // Cancel the crosshair (if active) and tell the builder panel to close.
+        if (pickerActive) {
+          exitPickerMode();
+          showToast('Cancelled');
+        }
+        window.dispatchEvent(new CustomEvent('jt-tweak-build-cancel'));
+        return false;
+      }
       return false;
     };
     chrome.runtime.onMessage.addListener(msgHandler);
@@ -102,6 +118,7 @@ const InspectForAiFeature = (() => {
   // ============================================================
 
   let pickerActive = false;
+  let pickerForBuilder = false;
   let highlightEl = null;
   let infoEl = null;
   let lastHighlighted = null;
@@ -229,6 +246,7 @@ const InspectForAiFeature = (() => {
       return;
     }
     pickerActive = true;
+    pickerForBuilder = !!opts.forBuilder;
     injectPickerStyles();
 
     highlightEl = document.createElement('div');
@@ -358,6 +376,7 @@ const InspectForAiFeature = (() => {
   function exitPickerMode() {
     if (!pickerActive) return;
     pickerActive = false;
+    pickerForBuilder = false;
     document.removeEventListener('mousemove', onPickerMouseMove, true);
     document.removeEventListener('click', onPickerClick, true);
     document.removeEventListener('keydown', onPickerKeyDown, true);
@@ -487,8 +506,14 @@ const InspectForAiFeature = (() => {
       lastHighlighted = null;
       updateMultiChip();
     } else {
-      captureAndCopy(el);
-      exitPickerMode();
+      if (pickerForBuilder) {
+        const ctx = buildCaptureContext(el);
+        window.dispatchEvent(new CustomEvent('jt-tweak-build', { detail: ctx }));
+        exitPickerMode();
+      } else {
+        captureAndCopy(el);
+        exitPickerMode();
+      }
     }
   }
 

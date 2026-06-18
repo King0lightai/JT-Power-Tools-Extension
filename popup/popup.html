@@ -14,6 +14,7 @@
   <!-- Phosphor Icons -->
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="../styles/jt-tools-tokens.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -341,7 +342,7 @@
             <div class="category-header collapsed" data-category="appearance-features">
               <i class="ph ph-palette category-icon"></i>
               <span class="category-title">Appearance</span>
-              <span class="category-count">4</span>
+              <span class="category-count">3</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="appearance-features">
@@ -364,17 +365,6 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="feature-item">
-                <div class="feature-info">
-                  <h3>Auto Expand Budget Row <i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Collapses budget rows to one line; hover any row to auto-expand it to full height. Budget pages only.</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="compactBudgetRows" data-feature="compactBudgetRows">
                   <span class="slider"></span>
                 </label>
               </div>
@@ -670,8 +660,9 @@
               </label>
             </div>
             <div class="tweaks-pick-row" id="tweaksPickRow" hidden>
-              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="pick" title="Open JobTread, then click any element you want to change">Pick an element on JobTread</button>
-              <button class="jt-tweaks-action" data-action="pick-multi" title="Pick the same kind of element across multiple JobTread views (table, Gantt, month, etc.) — combines them into one AI prompt">Pick across views <span class="tweaks-pick-badge">multi</span></button>
+              <div class="tweaks-pick-label">Build with AI — copies a prompt to paste into your own AI chat; load the result with “Paste from AI” below.</div>
+              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="pick" title="Open JobTread, click an element, and copy an AI-ready prompt describing it to your clipboard">Copy element for AI</button>
+              <button class="jt-tweaks-action" data-action="pick-multi" title="Pick the same kind of element across multiple JobTread views (table, Gantt, month, etc.) — copies one combined AI prompt">Copy across views for AI <span class="tweaks-pick-badge">multi</span></button>
               <span class="tweaks-pick-hint">
                 Shortcuts on JobTread: <kbd>Alt</kbd>+click an element, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> for picker, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> for multi-view.
               </span>
@@ -681,8 +672,11 @@
           <section class="jt-tweaks-section" data-tweaks-section>
             <div class="jt-tweaks-header">
               <span class="jt-tweaks-org" data-tweaks-org>(no org)</span>
-              <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="import" title="Paste a tweak you got from an AI chat">Paste from AI</button>
-              <button class="jt-tweaks-action" data-action="new" title="For advanced users — write the JSON yourself">Blank</button>
+              <div class="jt-tweaks-actions">
+                <button class="jt-tweaks-action jt-tweaks-action-primary" id="tweakBuildBtn" data-action="build" title="Pick any element on JobTread and create a tweak by point-and-click — no JSON required">Build a tweak</button>
+                <button class="jt-tweaks-action jt-tweaks-action-primary" data-action="import" title="Paste a tweak you got from an AI chat">Paste from AI</button>
+                <button class="jt-tweaks-action" data-action="new" title="For advanced users — write the JSON yourself">Blank</button>
+              </div>
             </div>
             <!-- Tweaks status summary — visible at-a-glance for CS triage.
                  First triage question becomes "do you have any active

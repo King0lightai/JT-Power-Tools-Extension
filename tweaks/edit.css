@@ -1,20 +1,25 @@
-/* Tweak Editor — Dark mode neutral grey palette
-   (per project rules: NO blues for backgrounds/borders;
-   accent #3B82F6 is allowed for primary action only) */
+/* Tweak Editor — styled to match the JT Power Tools popup (dark theme).
+   Token values mirror popup.css `body.dark-theme`: brand orange accent,
+   warm dark surfaces/text, 6px radii, Inter type. */
 
 :root {
-  --bg-primary: #2c2c2c;
-  --bg-secondary: #252525;
-  --bg-elevated: #333333;
+  --bg-primary: #2c2c2c;       /* popup --bg-surface */
+  --bg-secondary: #252525;     /* popup --bg */
+  --bg-elevated: #333333;      /* popup --bg-raised */
   --bg-hover: #3a3a3a;
-  --border-primary: #404040;
-  --border-secondary: #505050;
-  --text-primary: #e0e0e0;
-  --text-secondary: #b0b0b0;
-  --text-muted: #a0a0a0;
-  --accent: #3B82F6;
-  --error: #ff6b6b;
-  --warn: #ffb84a;
+  --bg-sunken: #1f1f1f;        /* popup --bg-sunken (textarea) */
+  --border-primary: #404040;   /* popup --rule */
+  --border-secondary: #505050; /* popup --rule-strong */
+  --text-primary: #f2ede3;     /* popup --fg-strong (warm) */
+  --text-secondary: #e0d8c8;   /* popup --fg (warm) */
+  --text-muted: #b0b0b0;       /* popup --fg-muted */
+  --accent: #fe4c0d;           /* popup --jt-orange / --accent (brand) */
+  --accent-hover: #d93d00;     /* popup --jt-orange-deep */
+  --error: #f87171;            /* popup dark .tweak-status-chip.error */
+  --warn: #fbbf24;             /* popup dark .tweak-status-chip.warn */
+  --ok: #00c896;               /* popup --jt-green */
+  --radius: 6px;               /* popup --r-md */
+  --radius-sm: 4px;            /* popup --r-sm */
 }
 
 * { box-sizing: border-box; }
@@ -22,7 +27,7 @@ html, body { margin: 0; padding: 0; height: 100%; }
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font: 14px/1.4 system-ui, -apple-system, sans-serif;
+  font: 14px/1.4 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -45,17 +50,18 @@ body {
   border: 1px solid var(--border-secondary);
   color: var(--text-secondary);
   padding: 6px 14px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font: inherit;
   cursor: pointer;
+  transition: background 150ms cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.jt-tweak-edit-btn:hover { background: var(--bg-hover); }
+.jt-tweak-edit-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 .jt-tweak-edit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 .jt-tweak-edit-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.jt-tweak-edit-btn-primary:hover { background: #2563eb; }
+.jt-tweak-edit-btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
 .jt-tweak-edit-btn-secondary { color: var(--text-muted); }
 
 /* Layout */
@@ -80,12 +86,12 @@ body {
 }
 .jt-tweak-edit-editor textarea {
   flex: 1;
-  background: var(--bg-secondary);
+  background: var(--bg-sunken);
   border: 1px solid var(--border-primary);
   color: var(--text-primary);
   padding: 12px;
-  border-radius: 4px;
-  font: 13px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
+  border-radius: var(--radius);
+  font: 13px/1.5 'JetBrains Mono', ui-monospace, "Cascadia Code", Consolas, monospace;
   resize: none;
   outline: none;
 }
@@ -115,12 +121,12 @@ body {
 .jt-tweak-edit-status {
   padding: 8px 12px;
   background: var(--bg-elevated);
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: 13px;
 }
 .jt-tweak-edit-status[data-state="error"] { color: var(--error); }
 .jt-tweak-edit-status[data-state="warn"] { color: var(--warn); }
-.jt-tweak-edit-status[data-state="ok"] { color: #6dd; }
+.jt-tweak-edit-status[data-state="ok"] { color: var(--ok); }
 
 .jt-tweak-edit-list {
   list-style: none;
@@ -139,18 +145,15 @@ body {
 
 /* Scope toggle (admin/owner only) */
 .jt-tweak-edit-scope-row {
-  /* Layout */
   display: flex;
   flex-direction: column;
   gap: 8px;
-  /* Spacing */
   padding: 12px 14px;
   margin-bottom: 12px;
-  /* Colors */
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-left: 3px solid var(--accent);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 /* Critical: respect the [hidden] attribute. Without this, the .row's
    `display: flex` overrides the user-agent stylesheet's
@@ -179,7 +182,7 @@ body {
   padding: 8px 10px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-secondary);
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.12s;
 }
@@ -209,7 +212,7 @@ body {
   margin: 0;
   padding: 6px 10px;
   background: var(--bg-primary);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 11px;
   font-style: italic;

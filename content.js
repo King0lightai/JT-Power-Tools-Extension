@@ -68,11 +68,6 @@ const featureModules = {
     feature: () => window.BudgetHierarchyFeature,
     instance: null
   },
-  compactBudgetRows: {
-    name: 'Auto Expand Budget Row',
-    feature: () => window.CompactBudgetRowsFeature,
-    instance: null
-  },
   quickNotes: {
     name: 'Quick Notes',
     feature: () => window.QuickNotesFeature,
@@ -173,6 +168,11 @@ const featureModules = {
     feature: () => window.TweakEngineFeature,
     instance: null
   },
+  tweakBuilder: {
+    name: 'Tweak Builder',
+    feature: () => window.TweakBuilderFeature,
+    instance: null
+  },
   forms: {
     name: 'Forms',
     feature: () => window.FormsFeature,
@@ -191,7 +191,7 @@ let currentSettings = window.JTDefaults
   : {
     // Inline fallback if JTDefaults not loaded (should not happen)
     dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, compactBudgetRows: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
@@ -388,6 +388,8 @@ async function initializeAllFeatures() {
   }
   if (featureModules.helpSidebarSupport) keysToInit.add('helpSidebarSupport');
   if (featureModules.keyboardShortcuts) keysToInit.add('keyboardShortcuts');
+  // tweakBuilder is a companion to tweakEngine — init it whenever the engine is enabled.
+  if (featureModules.tweakBuilder && keysToInit.has('tweakEngine')) keysToInit.add('tweakBuilder');
 
   // Appearance modes are mutually exclusive. The popup enforces this on toggle,
   // but stored settings (older versions, cross-device sync, manual edits) can
@@ -440,10 +442,14 @@ async function handleSettingsChange(newSettings) {
         // Feature was enabled
         console.log(`JT-Tools: Enabling ${featureModules[key].name}`);
         await initializeFeature(key);
+        // tweakBuilder is a companion to tweakEngine — init/cleanup together.
+        if (key === 'tweakEngine' && featureModules.tweakBuilder) await initializeFeature('tweakBuilder');
       } else if (!enabled && wasEnabled) {
         // Feature was disabled
         console.log(`JT-Tools: Disabling ${featureModules[key].name}`);
         cleanupFeature(key);
+        // tweakBuilder is a companion to tweakEngine — init/cleanup together.
+        if (key === 'tweakEngine' && featureModules.tweakBuilder) cleanupFeature('tweakBuilder');
       }
     }
 

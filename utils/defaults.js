@@ -36,7 +36,6 @@ const JTDefaults = (() => {
     // Free Features - Appearance & Themes
     darkMode: false,
     budgetHierarchy: false,
-    compactBudgetRows: false,
 
     // Internal Features (not user-toggleable)
     helpSidebarSupport: true,
@@ -78,7 +77,7 @@ const JTDefaults = (() => {
   const FEATURE_CATEGORIES = {
     scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter', 'ganttLines'],
     productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder', 'inspectForAi', 'tweakEngine'],
-    appearanceThemes: ['contrastFix', 'budgetHierarchy', 'compactBudgetRows', 'darkMode', 'rgbTheme'],
+    appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],
     powerUser: ['budgetChangelog', 'taskTypeFilter']
   };

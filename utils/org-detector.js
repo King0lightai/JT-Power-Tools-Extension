@@ -16,6 +16,10 @@ const OrgDetector = (() => {
   let bodyObserver = null;
   let initialized = false;
   let lastDiagnostic = null; // exposed via getDiagnostic() for debugging
+  // Poll backstop for first-org acquisition — see startPolling().
+  let pollTimer = null;
+  const POLL_INTERVAL_MS = 400;
+  const POLL_MAX_MS = 20000;
 
   // Common search placeholders that are NOT the global org search.
   // If the remainder after "Search " matches one of these, skip the input.
@@ -29,7 +33,27 @@ const OrgDetector = (() => {
     initialized = true;
     detectOrg();
     setupObserver();
+    // The MutationObserver catches the search bar when JT swaps its placeholder
+    // via setAttribute, but it misses property-only updates and can lose the
+    // render race on first load. Poll as a backstop until the org is acquired —
+    // detectOrg() reads the live placeholder each tick regardless of how JT set
+    // it. Bounded so we don't poll forever on a page with no org search bar.
+    if (!activeOrgName) startPolling();
     console.log('OrgDetector: Initialized, activeOrg:', activeOrgName, '(strategy:', lastDiagnostic && lastDiagnostic.strategy, ')');
+  }
+
+  function startPolling() {
+    if (pollTimer || activeOrgName) return;
+    const startedAt = Date.now();
+    pollTimer = setInterval(() => {
+      if (activeOrgName) { stopPolling(); return; }
+      detectOrg();
+      if (Date.now() - startedAt > POLL_MAX_MS) stopPolling();
+    }, POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 
   /**
@@ -38,7 +62,7 @@ const OrgDetector = (() => {
    */
   function findOrgSearchInput() {
     // Strategy 1: legacy class match — .jt-top-header was a JT-specific class
-    let el = document.querySelector('.jt-top-header input[placeholder^="Search "]');
+    const el = document.querySelector('.jt-top-header input[placeholder^="Search "]');
     if (el && isOrgPlaceholder(el.getAttribute('placeholder'))) {
       lastDiagnostic = { strategy: 'jt-top-header', placeholder: el.getAttribute('placeholder') };
       return el;
@@ -91,12 +115,19 @@ const OrgDetector = (() => {
     if (orgName && orgName !== activeOrgName) {
       const previous = activeOrgName;
       activeOrgName = orgName;
-      if (previous !== null) {
-        console.log('OrgDetector: Org changed from', previous, 'to', orgName);
-        window.dispatchEvent(new CustomEvent('jt-org-changed', {
-          detail: { orgName, previousOrg: previous }
-        }));
-      }
+      stopPolling(); // acquired — stop the acquisition poll
+      // Dispatch on FIRST detection too (previous === null), not just on org
+      // switches. JT renders the search bar asynchronously, so the first
+      // successful detect usually lands AFTER dependent features (tweak engine,
+      // org logo, API context) have init'd and read a null org. They listen for
+      // this event to react once the org is known — suppressing it on first
+      // detect was why those only updated after a manual page refresh.
+      console.log('OrgDetector:', previous === null
+        ? 'detected org "' + orgName + '"'
+        : 'org changed from "' + previous + '" to "' + orgName + '"');
+      window.dispatchEvent(new CustomEvent('jt-org-changed', {
+        detail: { orgName, previousOrg: previous }
+      }));
     }
   }
 
@@ -163,6 +194,7 @@ const OrgDetector = (() => {
   }
 
   function cleanup() {
+    stopPolling();
     if (observer) { observer.disconnect(); observer = null; }
     if (bodyObserver) { bodyObserver.disconnect(); bodyObserver = null; }
     activeOrgName = null;

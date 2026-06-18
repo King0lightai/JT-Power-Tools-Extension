@@ -29,7 +29,7 @@ const TweakEngineFeature = (() => {
   // injectedStyles + observers + tweakEventListeners are populated by the
   // apply phase. Storing here so removeAllAppliedTweaks() owns disposal —
   // apply-phase code MUST write into these, not parallel containers.
-  let injectedStyles = new Map();   // tweakId -> <style> element
+  const injectedStyles = new Map();   // tweakId -> <style> element
   let observers = [];                // MutationObservers
   let eventListeners = [];           // {target, event, handler}
   let tweakEventListeners = [];      // [{ tweakId, target, event, handler, useCapture }]
@@ -78,6 +78,7 @@ const TweakEngineFeature = (() => {
     listenForOrgChanges();
     listenForUrlChanges();
     listenForDryRunRequests();
+    listenForBuilderPreview();
     console.log('TweakEngine: Initialized');
   }
 
@@ -132,6 +133,32 @@ const TweakEngineFeature = (() => {
     };
     chrome.runtime.onMessage.addListener(msgHandler);
     eventListeners.push({ target: chrome.runtime.onMessage, event: 'message', handler: msgHandler, isChromeListener: true });
+  }
+
+  /**
+   * Listens for preview events dispatched by builder.js on the shared window.
+   * Using window CustomEvents instead of chrome.runtime.sendMessage because
+   * content script → content script messaging on the same tab requires
+   * chrome.tabs.sendMessage (background relay) — chrome.runtime.sendMessage
+   * only reaches the background service worker, not sibling content scripts.
+   */
+  function listenForBuilderPreview() {
+    const applyHandler = (e) => {
+      try {
+        if (e.detail && e.detail.tweak) previewTweak(e.detail.tweak);
+      } catch (err) {
+        console.error('TweakEngine: error handling preview apply:', err && err.message);
+      }
+    };
+    const clearHandler = () => {
+      try { clearPreview(); } catch (err) {
+        console.error('TweakEngine: error handling preview clear:', err && err.message);
+      }
+    };
+    window.addEventListener('jt-tweak-preview-apply', applyHandler);
+    window.addEventListener('jt-tweak-preview-clear', clearHandler);
+    eventListeners.push({ target: window, event: 'jt-tweak-preview-apply', handler: applyHandler });
+    eventListeners.push({ target: window, event: 'jt-tweak-preview-clear', handler: clearHandler });
   }
 
   async function loadAndApply() {
@@ -940,11 +967,100 @@ const TweakEngineFeature = (() => {
     activeTweakIds.clear();
   }
 
+  // ─── Builder live preview (reversible, separate from the active set) ───
+  let previewStyleEl = null;
+  const previewTouched = []; // [{ el, prop, prev, text? }] for inline restore
+
+  function clearPreview() {
+    if (previewStyleEl && previewStyleEl.parentNode) previewStyleEl.parentNode.removeChild(previewStyleEl);
+    previewStyleEl = null;
+    document.documentElement.classList.remove('jt-tweak-preview-active');
+    document.documentElement.classList.remove('jt-tweak-preview');
+    for (const t of previewTouched.splice(0)) {
+      if (t.text !== undefined) {
+        // setText restore — prop is '' so we must not call style methods on it
+        t.el.textContent = t.text;
+      } else if (typeof t.prop === 'string' && t.prop.startsWith('__class:')) {
+        // addClass restore — remove the class we added
+        t.el.classList.remove(t.prop.slice(8));
+      } else if (typeof t.prop === 'string' && t.prop.startsWith('__restore-class:')) {
+        // removeClass restore — re-add the class we removed
+        t.el.classList.add(t.prop.slice(16));
+      } else {
+        // setStyle / hide restore — prop is a CSS property name
+        if (t.prev === null || t.prev === '') {
+          t.el.style.removeProperty(t.prop);
+        } else {
+          t.el.style.setProperty(t.prop, t.prev);
+        }
+      }
+    }
+  }
+
+  function previewTweak(tweak) {
+    clearPreview();
+    if (!tweak || typeof tweak !== 'object') return;
+    if (tweak.css && tweak.css.trim() && window.CssSanitizer) {
+      const r = window.CssSanitizer.sanitize(tweak.css, { tweakId: 'preview' });
+      if (r.ok) {
+        previewStyleEl = document.createElement('style');
+        previewStyleEl.id = 'jt-tweak-preview';
+        previewStyleEl.textContent = r.css;
+        document.head.appendChild(previewStyleEl);
+        document.documentElement.classList.add('jt-tweak-preview');
+      }
+    }
+    if (Array.isArray(tweak.actions)) {
+      for (const a of tweak.actions) {
+        if (a.type === 'onEvent' || a.type === 'confirmBeforeAction') continue; // not live-previewable
+        let els;
+        try { els = document.querySelectorAll(a.selector); } catch (e) { continue; }
+        for (const el of els) {
+          if (typeof a.match === 'string' && a.match && !(el.textContent || '').includes(a.match)) continue;
+          previewOne(a, el);
+        }
+      }
+    }
+  }
+
+  function previewOne(a, el) {
+    if (a.type === 'setText') {
+      previewTouched.push({ el, prop: '', prev: null, text: el.textContent });
+      el.textContent = a.text;
+    } else if (a.type === 'hide') {
+      const prev = el.style.getPropertyValue('display');
+      previewTouched.push({ el, prop: 'display', prev: prev || null });
+      el.style.setProperty('display', 'none', 'important');
+    } else if (a.type === 'show') {
+      const prev = el.style.getPropertyValue('display');
+      previewTouched.push({ el, prop: 'display', prev: prev || null });
+      el.style.removeProperty('display');
+    } else if (a.type === 'addClass') {
+      el.classList.add(a.class);
+      previewTouched.push({ el, prop: '__class:' + a.class, prev: null });
+    } else if (a.type === 'removeClass') {
+      const hadClass = el.classList.contains(a.class);
+      if (hadClass) {
+        el.classList.remove(a.class);
+        // Store as a special marker so clearPreview can re-add it
+        previewTouched.push({ el, prop: '__restore-class:' + a.class, prev: null });
+      }
+    } else if (a.type === 'setStyle') {
+      for (const [prop, val] of Object.entries(a.style || {})) {
+        const kebab = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+        const prev = el.style.getPropertyValue(kebab);
+        previewTouched.push({ el, prop: kebab, prev: prev || null });
+        el.style.setProperty(kebab, val);
+      }
+    }
+  }
+
   function cleanup() {
     if (!isActive) return;
     console.log('TweakEngine: Cleaning up...');
     if (diagnosticsFlushTimer) clearTimeout(diagnosticsFlushTimer);
     teardownUrlChangeListener();
+    clearPreview();
     removeAllAppliedTweaks();
     eventListeners.forEach(({ target, event, handler, isChromeListener }) => {
       if (isChromeListener) {
@@ -963,7 +1079,7 @@ const TweakEngineFeature = (() => {
     cleanup,
     isActive: () => isActive,
     // exposed for the editor's "Test on active tab" message handler + popup refresh button
-    _internals: { loadAndApply, removeAllAppliedTweaks, matchesContext, refreshFromServer }
+    _internals: { loadAndApply, removeAllAppliedTweaks, matchesContext, refreshFromServer, previewTweak, clearPreview }
   };
 })();
 

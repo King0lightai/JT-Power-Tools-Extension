@@ -41,7 +41,6 @@ const LicenseService = (() => {
     'contrastFix',      // Accessibility, instant value
     'characterCounter', // Simple utility
     'budgetHierarchy',  // Visual enhancement for budget tables
-    'compactBudgetRows', // Compact budget rows to one line + hover-expand
     'kanbanTypeFilter', // Simple - auto-hide empty Kanban columns
     'autoCollapseGroups', // Simple - collapse 100% complete groups
     'ganttLines',       // Simple visual enhancement for Gantt chart
@@ -69,6 +68,7 @@ const LicenseService = (() => {
     'reverseThreadOrder', // Reverse message thread order
     'availabilityFilter', // Team availability filtering
     'tweakEngine',      // User Tweaks engine (CSS + DOM verbs)
+    'tweakBuilder',     // Visual tweak builder panel (companion to tweakEngine)
     'inspectForAi'      // Alt-click DOM inspector for AI-authored tweaks
   ];
 
