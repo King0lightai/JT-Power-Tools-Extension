@@ -50,11 +50,103 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
-        <!-- Version 4.9.6 — confirmBeforeAction Tweak verb (warn-before-action on React) -->
+        <!-- Version 4.9.8 — Budget Row Highlight, visual tweak builder, Auto Sum groups, theme polish -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.8</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">June 19, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎨</span> Budget Row Highlight (New &mdash; Essential)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Drop a circle emoji in any budget field and the whole row lights up that color</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Type 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ or ⚪ into any cell on a budget &mdash; a custom field, the description, anywhere &mdash; and the entire row tints to match. A simple highlighter for budgets: flag selections, group your must-dos, or color-code trades at a glance. The wash is soft and readable, adapts to light, Dark, and Custom themes, and covers the frozen Name and number columns too. It steps aside for row selection, sits on top of Budget Hierarchy shading, and clears off the row you're editing so your cursor stays visible. Off by default &mdash; turn it on under Appearance.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🧰</span> Build Tweaks by Point-and-Click (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">A visual builder for Tweaks &mdash; no JSON required</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Click any element on JobTread and build a tweak &mdash; rename it, hide it, restyle it, warn before clicking, sort, or move it &mdash; right from a point-and-click panel with live preview. You can export and import your tweaks (personal info is stripped on the way out), and every tweak now shows a plain-English summary of what it does.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">➕</span> Auto Sum Now Adds Up Groups</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Select budget groups &mdash; not just line items &mdash; and Auto Sum totals them correctly</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Selecting a group used to show an empty total. Now Auto Sum counts whatever you select: a collapsed group totals by its shown subtotal (no expanding or scrolling, even with JobTread's lazy loading), an expanded group adds up its children, and a line item counts itself. Mixed and partial selections never double-count.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🌙</span> Theme Polish</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode and Custom Theme now style JobTread's new AI help button</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread's new top-bar AI assistant ("Jai") lit up as a glaring white chip on a themed header. Its active state now picks up your theme &mdash; the dark-mode accent in Dark Mode, your primary color in Custom Theme &mdash; and the sparkle badge no longer shows a stray light ring.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes tabs and close button follow your Custom theme</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The My / Team tabs, their hover state, and the close button were stuck white under a Custom (RGB) theme. They now match your palette.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode and Custom Theme can no longer fight each other</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">If both somehow ended up enabled &mdash; an older setting, a synced device, a manual edit &mdash; the page could render washed-out. Only one appearance mode applies now, so it always renders cleanly.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> Polish &amp; Under the Hood</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Clearer sign-in prompt for API features</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">When you're signed out, the prompt now tells you to sign in &mdash; instead of telling you to add an API key you couldn't reach yet.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Stability fixes for Quick Notes and Freeze Header</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Turning these features off now fully stops their background timers, so nothing lingers or re-appears after you've disabled them.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">More accurate, always-current JobTread AI integration</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The AI assistant's built-in help now reads JobTread's live help content directly instead of a periodic copy, and it can add tasks to your task templates &mdash; not just to jobs.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.9.7 — Custom logo fix, Document Sort on customer/vendor tabs, stay-signed-in -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.7</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">June 11, 2026</span>
             </div>
 
