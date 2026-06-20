@@ -33,6 +33,7 @@ const TweakEngineFeature = (() => {
   let observers = [];                // MutationObservers
   let eventListeners = [];           // {target, event, handler}
   let tweakEventListeners = [];      // [{ tweakId, target, event, handler, useCapture }]
+  let actionAppliers = [];           // [{ tweakId, run }] — re-runnable action passes
 
   // ─── Clickjacking guard for setText ──────────────────────────────
   // setText refuses to overwrite a button-like element whose CURRENT
@@ -79,6 +80,7 @@ const TweakEngineFeature = (() => {
     listenForUrlChanges();
     listenForDryRunRequests();
     listenForBuilderPreview();
+    listenForVisibility();
     console.log('TweakEngine: Initialized');
   }
 
@@ -159,6 +161,33 @@ const TweakEngineFeature = (() => {
     window.addEventListener('jt-tweak-preview-clear', clearHandler);
     eventListeners.push({ target: window, event: 'jt-tweak-preview-apply', handler: applyHandler });
     eventListeners.push({ target: window, event: 'jt-tweak-preview-clear', handler: clearHandler });
+  }
+
+  /**
+   * Re-apply on tab focus / bfcache restore. Browsers throttle (or coalesce)
+   * MutationObservers and timers in hidden tabs, so a tweak can fall behind
+   * while backgrounded; date tiers (matchDate) also go stale at midnight with
+   * no DOM mutation to trigger a re-run. When the tab becomes visible again we
+   * re-run every tweak's action applier — debounced, and with NO server
+   * round-trip (unlike loadAndApply) so it's cheap on every tab switch. CSS
+   * tweaks need nothing here; they re-match new elements automatically.
+   */
+  function listenForVisibility() {
+    const rerun = debounce(() => {
+      for (const a of actionAppliers) {
+        try {
+          a.run();
+        } catch (err) {
+          console.error('TweakEngine: visibility re-apply failed for', a.tweakId, err && err.message);
+        }
+      }
+    }, 100);
+    const visHandler = () => { if (document.visibilityState === 'visible') rerun(); };
+    const showHandler = (e) => { if (e && e.persisted) rerun(); };  // bfcache restore
+    document.addEventListener('visibilitychange', visHandler);
+    window.addEventListener('pageshow', showHandler);
+    eventListeners.push({ target: document, event: 'visibilitychange', handler: visHandler });
+    eventListeners.push({ target: window, event: 'pageshow', handler: showHandler });
   }
 
   async function loadAndApply() {
@@ -283,11 +312,28 @@ const TweakEngineFeature = (() => {
     if (Array.isArray(tweak.actions) && tweak.actions.length > 0) {
       const applyActions = makeActionApplier(tweak);
       applyActions();  // run once now
-      // Re-run on DOM changes — but only if the tweak's actions haven't been
-      // fully applied yet. JT is a SPA so new matching elements appear on
-      // navigation. We use a body-level observer with a debounce.
+      // Keep a handle so the applier can be re-run outside the observer — e.g.
+      // when the tab regains focus (see listenForVisibility), which catches
+      // changes missed while the tab was backgrounded and date tiers that went
+      // stale at midnight with no DOM mutation to trigger a re-run.
+      actionAppliers.push({ tweakId: tweak.id, run: applyActions });
+      // Re-run on DOM changes. JT is a SPA so new matching elements appear on
+      // navigation; a debounced body-level observer catches them. We watch
+      // childList+subtree AND the attributes that make a tweak visually drift:
+      // 'class' and 'style' (React patches these in place on existing nodes,
+      // with no childList change, when props update) plus any date attribute a
+      // matchDate action reads. Re-asserting on these keeps a tweak "stuck"
+      // even when JT rewrites a styled node without re-creating it. Safe from
+      // feedback loops because every verb is idempotent — it writes only when
+      // the value differs (see runAction) — so a converged element produces no
+      // further mutations.
       const obs = new MutationObserver(debounce(applyActions, 100));
-      obs.observe(document.body, { childList: true, subtree: true });
+      obs.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: observedAttrsForTweak(tweak),
+      });
       observers.push(obs);
     }
 
@@ -680,6 +726,86 @@ const TweakEngineFeature = (() => {
     };
   }
 
+  // ─── Date guard helpers (matchDate) ──────────────────────────────
+  // Lets an action gate on how many whole calendar days an element's date
+  // attribute (default "datetime", e.g. <time datetime="2026-06-17">) is
+  // from today. This is what a plain pasted CSS/attribute-prefix tweak
+  // CANNOT do: it can't tell "2 days out" apart from "3 days overdue"
+  // because it only string-matches the attribute. With matchDate an author
+  // writes one addClass per tier (overdue / today / tomorrow / 2+ days out)
+  // and gets the full color system. Composes with the `match` text guard.
+  /**
+   * Whole-day offset between a YYYY-MM-DD(…) date string and today.
+   * Both sides are normalized to UTC midnight from their calendar Y/M/D so
+   * the diff is a clean integer of calendar days, timezone-stable for
+   * date-only comparisons. Negative = past, 0 = today, positive = future.
+   * Returns null for a missing/unparseable value (caller fails closed).
+   */
+  function dayOffsetFromToday(value) {
+    if (typeof value !== 'string') return null;
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    const due = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.round((due - today) / 86400000);
+  }
+
+  /**
+   * True if `el` passes the action's optional `matchDate` guard (or if there
+   * is none). Reads `attr` (default "datetime") off `el`, or off a descendant
+   * matching `selector` when given, computes its day offset from today, and
+   * checks it against the inclusive [min, max] bounds (either bound optional).
+   * Missing attribute / unparseable date / missing descendant → false (the
+   * action is skipped) so a malformed row never gets mis-shaded.
+   */
+  function passesDateGuard(action, el) {
+    const md = action.matchDate;
+    if (!md || typeof md !== 'object') return true;
+    let source = el;
+    if (typeof md.selector === 'string' && md.selector) {
+      try {
+        source = el.querySelector(md.selector);
+      } catch {
+        return false;
+      }
+      if (!source) return false;
+    }
+    const attr = (typeof md.attr === 'string' && md.attr) ? md.attr : 'datetime';
+    const raw = source.getAttribute ? source.getAttribute(attr) : null;
+    const offset = dayOffsetFromToday(raw);
+    if (offset === null) return false;
+    if (typeof md.min === 'number' && offset < md.min) return false;
+    if (typeof md.max === 'number' && offset > md.max) return false;
+    return true;
+  }
+
+  /**
+   * The set of date attributes a tweak's actions read via matchDate (default
+   * "datetime"). Used to scope the MutationObserver's attributeFilter so an
+   * in-place date change re-triggers the action pass. Empty when no action
+   * uses matchDate — those tweaks keep a childList-only observer (no new cost).
+   */
+  function dateAttrsForTweak(tweak) {
+    const attrs = new Set();
+    for (const a of (tweak.actions || [])) {
+      if (a && a.matchDate) {
+        const attr = (typeof a.matchDate.attr === 'string' && a.matchDate.attr) ? a.matchDate.attr : 'datetime';
+        attrs.add(attr);
+      }
+    }
+    return [...attrs];
+  }
+
+  /**
+   * Attribute names a tweak's observer watches: 'class' and 'style' (React
+   * patches these in place on existing nodes, causing a tweak to drift) plus
+   * any date attribute read via matchDate. Deduped.
+   */
+  function observedAttrsForTweak(tweak) {
+    return [...new Set(['class', 'style', ...dateAttrsForTweak(tweak)])];
+  }
+
   function runAction(action, el, tweakId) {
     // Per-element match guard. Lets authors discriminate elements that
     // share a class signature with non-target elements (e.g. "Vendor"
@@ -692,6 +818,19 @@ const TweakEngineFeature = (() => {
       const text = el.textContent || '';
       if (!text.includes(action.match)) return;
     }
+    // Per-element date guard — gate on how far el's date attribute is from
+    // today. Like `match`, it filters which elements the action fires on
+    // (selector-level match counts stay unfiltered, by the same reasoning).
+    if (action.matchDate && !passesDateGuard(action, el)) {
+      // Date tiers must stay correct across transitions. When a date-gated
+      // addClass no longer matches (an item rolled from "due today" to
+      // "overdue" at midnight, or its date was edited), actively REMOVE the
+      // class instead of just skipping — otherwise a row accumulates two tier
+      // colors. classList.remove is a no-op when the class is absent, so this
+      // is safe to call on every pass. Other verbs simply skip on a miss.
+      if (action.type === 'addClass') el.classList.remove(action.class);
+      return;
+    }
     switch (action.type) {
       case 'addClass':
         el.classList.add(action.class);
@@ -703,12 +842,23 @@ const TweakEngineFeature = (() => {
         for (const [prop, val] of Object.entries(action.style || {})) {
           // setProperty handles both kebab and camel case; convert camel to kebab
           const kebab = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-          el.style.setProperty(kebab, val);
+          // Write only when the value actually differs. Re-asserting on every
+          // observer fire is how a tweak survives JT rewriting an element's
+          // inline style — but an unconditional write would mutate the style
+          // attribute and re-trigger the (style-watching) observer in a loop.
+          // Comparing first makes re-application a no-op once converged.
+          if (el.style.getPropertyValue(kebab) !== String(val)) {
+            el.style.setProperty(kebab, val);
+          }
         }
         break;
       case 'hide':
-        el.dataset.jtTweakHidden = tweakId;
-        el.style.setProperty('display', 'none', 'important');
+        if (el.dataset.jtTweakHidden !== tweakId) el.dataset.jtTweakHidden = tweakId;
+        // Idempotent for the same reason as setStyle — don't rewrite display
+        // (and re-fire the style-watching observer) when it's already hidden.
+        if (el.style.getPropertyValue('display') !== 'none') {
+          el.style.setProperty('display', 'none', 'important');
+        }
         break;
       case 'show':
         if (el.dataset.jtTweakHidden === tweakId) {
@@ -717,15 +867,21 @@ const TweakEngineFeature = (() => {
         }
         break;
       case 'setText':
-        // Clickjacking guard: refuse to overwrite a button-like element
-        // whose current text is a destructive/financial action word.
-        // See PROTECTED_ACTION_WORDS_RE. Throw is caught by the
-        // try/catch in applyActions and recorded in tweak_diagnostics.
-        if (isProtectedPrimaryAction(el)) {
-          throw new Error('setText refused: target is a primary-action button (text matches a protected pattern — likely clickjacking)');
+        // Idempotent: setting textContent replaces the element's children,
+        // which is itself a childList mutation — so an unconditional write on
+        // every observer fire would re-trigger the childList observer in a
+        // loop. Skip when the text already matches.
+        if (el.textContent !== action.text) {
+          // Clickjacking guard: refuse to overwrite a button-like element
+          // whose current text is a destructive/financial action word.
+          // See PROTECTED_ACTION_WORDS_RE. Throw is caught by the
+          // try/catch in applyActions and recorded in tweak_diagnostics.
+          if (isProtectedPrimaryAction(el)) {
+            throw new Error('setText refused: target is a primary-action button (text matches a protected pattern — likely clickjacking)');
+          }
+          // Use textContent to avoid HTML injection. Existing children are wiped.
+          el.textContent = action.text;
         }
-        // Use textContent to avoid HTML injection. Existing children are wiped.
-        el.textContent = action.text;
         break;
       case 'moveBefore':
       case 'moveAfter': {
@@ -957,6 +1113,7 @@ const TweakEngineFeature = (() => {
     injectedStyles.clear();
     observers.forEach(o => o.disconnect());
     observers = [];
+    actionAppliers = [];
     tweakEventListeners.forEach(({ target, event, handler, useCapture }) => {
       target.removeEventListener(event, handler, useCapture);
     });
@@ -1017,6 +1174,7 @@ const TweakEngineFeature = (() => {
         try { els = document.querySelectorAll(a.selector); } catch (e) { continue; }
         for (const el of els) {
           if (typeof a.match === 'string' && a.match && !(el.textContent || '').includes(a.match)) continue;
+          if (a.matchDate && !passesDateGuard(a, el)) continue;
           previewOne(a, el);
         }
       }
@@ -1079,7 +1237,7 @@ const TweakEngineFeature = (() => {
     cleanup,
     isActive: () => isActive,
     // exposed for the editor's "Test on active tab" message handler + popup refresh button
-    _internals: { loadAndApply, removeAllAppliedTweaks, matchesContext, refreshFromServer, previewTweak, clearPreview }
+    _internals: { loadAndApply, removeAllAppliedTweaks, matchesContext, refreshFromServer, previewTweak, clearPreview, dayOffsetFromToday, passesDateGuard, runAction, dateAttrsForTweak, observedAttrsForTweak }
   };
 })();
 

@@ -34,6 +34,14 @@
  * set, the engine only fires the action on elements whose textContent
  * contains the substring — a per-element guard for over-broad selectors.
  *
+ * Every action also accepts an optional date guard:
+ *   matchDate?: { min?: integer, max?: integer, attr?: string, selector?: string }
+ * It gates the action on how many whole calendar days the element's date
+ * attribute (default "datetime", optionally read from a descendant via
+ * `selector`) is from today — min/max are inclusive day offsets (0 = today,
+ * -1 = yesterday, 2 = in two days; at least one bound required). Pairs with
+ * addClass to shade rows by due date (overdue / today / tomorrow / 2+ out).
+ *
  * Refused: insertHTML, insertElement, removeElement, eval-style verbs.
  * onEvent requires at least one side effect (preventDefault, stopPropagation, alert, or then[]).
  * Nested onEvent is forbidden inside `then` — chains are pure DOM-mutation only.
@@ -125,6 +133,40 @@ const TweakValidator = (() => {
     }
   }
 
+  // Day-offset bounds for matchDate. ±100yrs is wide enough for any real
+  // due-date rule while keeping the value sane (an integer count of days
+  // from today, not a timestamp).
+  const MATCHDATE_BOUND = 36500;
+  // Attribute name an author may read the date from. Conservative HTML/XML
+  // attribute-name charset (lets through data-*, datetime, aria-*, etc.).
+  const ATTR_NAME_RE = /^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/;
+
+  function validateMatchDate(md, fieldPath, errors) {
+    if (!md || typeof md !== 'object' || Array.isArray(md)) {
+      errors.push({ field: fieldPath, reason: 'matchDate must be an object { min?, max?, attr?, selector? }' });
+      return;
+    }
+    if (md.attr !== undefined && (typeof md.attr !== 'string' || !ATTR_NAME_RE.test(md.attr))) {
+      errors.push({ field: `${fieldPath}.attr`, reason: 'attr must be a valid attribute name (defaults to "datetime")' });
+    }
+    if (md.selector !== undefined && !isSafeSelector(md.selector)) {
+      errors.push({ field: `${fieldPath}.selector`, reason: 'selector is invalid or targets extension UI' });
+    }
+    for (const key of ['min', 'max']) {
+      if (md[key] !== undefined &&
+          (typeof md[key] !== 'number' || !Number.isInteger(md[key]) ||
+           md[key] < -MATCHDATE_BOUND || md[key] > MATCHDATE_BOUND)) {
+        errors.push({ field: `${fieldPath}.${key}`, reason: `${key} must be an integer day offset from today between -${MATCHDATE_BOUND} and ${MATCHDATE_BOUND}` });
+      }
+    }
+    if (md.min === undefined && md.max === undefined) {
+      errors.push({ field: fieldPath, reason: 'matchDate needs at least one of min/max (day offset from today: 0=today, -1=yesterday, 2=in two days)' });
+    }
+    if (typeof md.min === 'number' && typeof md.max === 'number' && md.min > md.max) {
+      errors.push({ field: fieldPath, reason: 'matchDate.min must be ≤ matchDate.max' });
+    }
+  }
+
   function validateAction(action, fieldPath, errors, inThen) {
     if (!action || typeof action !== 'object') {
       errors.push({ field: fieldPath, reason: 'action must be an object' });
@@ -155,8 +197,15 @@ const TweakValidator = (() => {
     // surface small and avoid ReDoS.
     if (action.match !== undefined) {
       if (typeof action.match !== 'string' || action.match.length > MAX_MATCH_LEN) {
-        errors.push({ field: `actions[${i}].match`, reason: `match must be a string up to ${MAX_MATCH_LEN} chars` });
+        errors.push({ field: `${fieldPath}.match`, reason: `match must be a string up to ${MAX_MATCH_LEN} chars` });
       }
+    }
+    // Optional per-element date guard — gate the action on how many whole
+    // calendar days the element's date attribute is from today. Universal
+    // across verbs (like `match`). Lets a tweak shade by due date — the
+    // engine's passesDateGuard does the day math against `datetime`.
+    if (action.matchDate !== undefined) {
+      validateMatchDate(action.matchDate, `${fieldPath}.matchDate`, errors);
     }
     if (action.type === 'addClass' || action.type === 'removeClass') {
       if (typeof action.class !== 'string' || !/^[a-zA-Z_-][a-zA-Z0-9_-]*$/.test(action.class)) {

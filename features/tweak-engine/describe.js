@@ -6,6 +6,29 @@
 const TweakDescribe = (() => {
   const q = (s) => '"' + String(s) + '"';
 
+  // Plain-English label for a single day offset used by matchDate.
+  function dayLabel(n) {
+    if (n === 0) return 'today';
+    if (n === 1) return 'tomorrow';
+    if (n === -1) return 'yesterday';
+    if (n < 0) return Math.abs(n) + ' days overdue';
+    return 'in ' + n + ' days';
+  }
+
+  // Suffix describing a matchDate guard, e.g. "(only items due today)".
+  function dateGuardPhrase(md) {
+    if (!md || typeof md !== 'object') return '';
+    const { min, max } = md;
+    if (typeof min === 'number' && typeof max === 'number') {
+      return min === max
+        ? '(only items due ' + dayLabel(min) + ')'
+        : '(only items due ' + dayLabel(min) + ' through ' + dayLabel(max) + ')';
+    }
+    if (typeof max === 'number') return '(only items due ' + dayLabel(max) + ' or sooner)';
+    if (typeof min === 'number') return '(only items due ' + dayLabel(min) + ' or later)';
+    return '';
+  }
+
   function lineForAction(a) {
     switch (a && a.type) {
       case 'setText': return 'Renames text to ' + q(a.text);
@@ -40,6 +63,10 @@ const TweakDescribe = (() => {
         let line = lineForAction(a);
         if (a && typeof a.match === 'string' && a.match) {
           line += ' (only cells containing ' + q(a.match) + ')';
+        }
+        if (a && a.matchDate) {
+          const phrase = dateGuardPhrase(a.matchDate);
+          if (phrase) line += ' ' + phrase;
         }
         lines.push(line);
       }
