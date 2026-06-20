@@ -80,7 +80,8 @@ const LicenseService = (() => {
     'taskTypeFilter',    // Power-user schedule filtering
     'mcpAccess',         // AI integration
     'aiKnowledge',       // AI-powered assistance
-    'forms'              // Per-job Forms drawer (template-driven submissions)
+    'forms',             // Per-job Forms drawer (template-driven submissions)
+    'paveCapture'        // Record real Pave queries for the MCP (jt_captured_queries)
   ];
 
   // INTERNAL features - always enabled, not user-toggleable, bypass tier check

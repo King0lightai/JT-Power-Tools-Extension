@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
   <link rel="stylesheet" href="../styles/jt-tools-tokens.css">
   <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="pave-explorer.css">
 </head>
 <body>
   <div class="container">
@@ -52,6 +53,10 @@
         <button class="tab-item" data-tab="tweaks">
           <i class="ph ph-magic-wand tab-icon"></i>
           <span class="tab-label">Tweaks</span>
+        </button>
+        <button class="tab-item" data-tab="paveExplorer">
+          <i class="ph ph-network tab-icon"></i>
+          <span class="tab-label">Pave</span>
         </button>
         <button class="tab-item" data-tab="account">
           <i class="ph ph-user-circle tab-icon"></i>
@@ -678,6 +683,16 @@
                 Shortcuts on JobTread: <kbd>Alt</kbd>+click an element, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> for picker, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> for multi-view.
               </span>
             </div>
+            <div class="feature-item premium" id="paveCaptureFeature">
+              <div class="feature-info">
+                <h3>Pave Query Capture for AI <span class="badge power-user">Power User</span></h3>
+                <p>Records the real Pave API queries you run in JobTread (keys stripped) so your AI can read them back via the MCP and reuse working syntax. Shows a “Recording” pill while active.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="paveCapture" data-feature="paveCapture">
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
           <section class="jt-tweaks-section" data-tweaks-section>
@@ -711,6 +726,15 @@
           </section>
 
         </div>
+      </div>
+
+      <!-- ==================== PAVE EXPLORER TAB ==================== -->
+      <!-- Manual network-filter view of the Pave API calls you run in
+           JobTread — browse + copy the query (Request / Response / Shareable).
+           Best used as a side panel so you can interact with JobTread while
+           captures stream in. Built/gated by pave-explorer.js (Pro tier). -->
+      <div class="tab-content" id="tab-paveExplorer">
+        <div id="paveExplorerRoot"></div>
       </div>
 
       <!-- ==================== ACCOUNT TAB ==================== -->
@@ -986,5 +1010,6 @@
        (WCAG meter, OKLCH triplets, JT preview) can read window.ThemePalette -->
   <script src="../features/rgb-theme-modules/palette.js"></script>
   <script src="popup.js"></script>
+  <script src="pave-explorer.js"></script>
 </body>
 </html>

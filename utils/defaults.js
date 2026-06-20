@@ -31,6 +31,7 @@ const JTDefaults = (() => {
     budgetTools: false,
     documentSort: false,
     inspectForAi: false,    // off by default — most users won't author tweaks
+    paveCapture: false,     // off by default — opt-in recording of Pave queries for AI
     tweakEngine: true,      // on by default — installed tweaks should "just work"
 
     // Free Features - Appearance & Themes
@@ -77,7 +78,7 @@ const JTDefaults = (() => {
    */
   const FEATURE_CATEGORIES = {
     scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter', 'ganttLines'],
-    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder', 'inspectForAi', 'tweakEngine'],
+    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder', 'inspectForAi', 'paveCapture', 'tweakEngine'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],
     powerUser: ['budgetChangelog', 'taskTypeFilter']

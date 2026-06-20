@@ -189,6 +189,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         return true; // Keep channel open for async response
 
+      case 'PAVE_CAPTURE_UPLOAD':
+        // Ship key-stripped Pave queries to the Worker for the AI capture
+        // feature. Proxied through the SW (host_permissions → no CORS).
+        if (!isAllowedApiSender(sender)) {
+          console.warn('PaveCapture: rejected upload from untrusted sender');
+          sendResponse({ success: false, error: 'Untrusted sender' });
+          return false;
+        }
+        handlePaveCaptureUpload(message.grantKey, message.queries)
+          .then(result => sendResponse(result))
+          .catch(error => {
+            console.error('PaveCapture: upload failed:', error);
+            sendResponse({ success: false, error: error.message });
+          });
+        return true; // Keep channel open for async response
+
       case 'FETCH_EXTENSION_GRANT_KEY':
         // Fetch extension grant key from server for a specific org
         handleFetchExtensionGrantKey(message.orgName)
@@ -362,6 +378,45 @@ async function handleApiRequest(url, options) {
       error: error.message,
       isNetworkError: true
     };
+  }
+}
+
+/**
+ * Upload captured Pave queries to the Worker's /capture/queries endpoint.
+ *
+ * Auth is the grantKey embedded in the payload (the Worker resolves it to a
+ * user/org namespace), NOT a portal token — so this is intentionally simple.
+ * The endpoint is hard-coded (single allowed target) to keep the proxy from
+ * becoming a general-purpose outbound relay.
+ *
+ * @param {string} grantKey - JobTread grant key from the captured traffic
+ * @param {Array} queries - [{ query, operation, entity, type }]
+ * @returns {Promise<Object>} { success, stored } or { success: false, error }
+ */
+async function handlePaveCaptureUpload(grantKey, queries) {
+  if (!grantKey || typeof grantKey !== 'string') {
+    return { success: false, error: 'Missing grantKey' };
+  }
+  if (!Array.isArray(queries) || queries.length === 0) {
+    return { success: false, error: 'No queries to upload' };
+  }
+
+  const CAPTURE_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev/capture/queries';
+
+  try {
+    const response = await fetch(CAPTURE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'omit',
+      body: JSON.stringify({ grantKey, queries }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false, error: data.error || `HTTP ${response.status}` };
+    }
+    return { success: true, stored: data.stored || 0 };
+  } catch (error) {
+    return { success: false, error: error.message, isNetworkError: true };
   }
 }
 

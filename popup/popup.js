@@ -703,6 +703,7 @@ async function loadSettings() {
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
+    setCheckbox('paveCapture', settings.paveCapture !== undefined ? settings.paveCapture : false);
     // Forms toggle removed — see Migration 029. The on/off decision is
     // admin-managed in the portal; this popup never reads or writes
     // settings.forms anymore.
@@ -737,6 +738,9 @@ async function loadSettings() {
       if (settings.customFieldFilter) featuresToDisable.push('customFieldFilter');
       if (settings.budgetChangelog) featuresToDisable.push('budgetChangelog');
       if (settings.taskTypeFilter) featuresToDisable.push('taskTypeFilter');
+      // Capture only pays off with MCP access to read it back; both need a
+      // portal session, so disable recording when signed out.
+      if (settings.paveCapture) featuresToDisable.push('paveCapture');
     }
 
     if (featuresToDisable.length > 0) {
@@ -943,6 +947,7 @@ async function getCurrentSettings() {
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     taskTypeFilter: getCheckboxValue('taskTypeFilter', defaultSettings.taskTypeFilter),
+    paveCapture: getCheckboxValue('paveCapture', defaultSettings.paveCapture !== undefined ? defaultSettings.paveCapture : false),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
     reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),
     jobAccessCollapse: getCheckboxValue('jobAccessCollapse', defaultSettings.jobAccessCollapse),

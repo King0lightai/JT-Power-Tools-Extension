@@ -1,0 +1,167 @@
+/* Pave Explorer — scoped devtools-style network view (side panel) */
+/* Uses the repo's neutral-grey dark palette (NOT dark blues). */
+
+#paveExplorerRoot {
+  /* Layout — sizes to content; inner regions cap their own scroll height so
+     this works whether the popup is a small popup or a tall side panel. */
+  display: flex;
+  flex-direction: column;
+  /* Colors */
+  background: #2c2c2c;
+  color: #e0e0e0;
+  /* Typography */
+  font: 12px system-ui, -apple-system, sans-serif;
+}
+
+/* Toolbar */
+#paveExplorerRoot .pe-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: #252525;
+  border-bottom: 1px solid #404040;
+}
+#paveExplorerRoot .pe-filter,
+#paveExplorerRoot .pe-search {
+  background: #333333;
+  color: #e0e0e0;
+  border: 1px solid #505050;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font: inherit;
+}
+#paveExplorerRoot .pe-search { flex: 1; min-width: 0; }
+#paveExplorerRoot .pe-count {
+  color: #a0a0a0;
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  text-align: right;
+}
+#paveExplorerRoot .pe-btn {
+  background: #333333;
+  color: #b0b0b0;
+  border: 1px solid #505050;
+  border-radius: 4px;
+  padding: 5px 9px;
+  font: inherit;
+  cursor: pointer;
+}
+#paveExplorerRoot .pe-btn:hover { background: #3a3a3a; }
+
+#paveExplorerRoot .pe-status {
+  color: #b0b0b0;
+  padding: 0 8px;
+  font-size: 11px;
+}
+#paveExplorerRoot .pe-status:empty { display: none; }
+
+/* Call list */
+#paveExplorerRoot .pe-list { flex: 1; overflow-y: auto; min-height: 0; max-height: 60vh; }
+#paveExplorerRoot .pe-empty {
+  padding: 24px 16px;
+  color: #a0a0a0;
+  text-align: center;
+  line-height: 1.5;
+}
+#paveExplorerRoot .pe-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #333333;
+  cursor: pointer;
+}
+#paveExplorerRoot .pe-item:hover { background: #333333; }
+#paveExplorerRoot .pe-info { flex: 1; min-width: 0; }
+#paveExplorerRoot .pe-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#paveExplorerRoot .pe-meta {
+  color: #a0a0a0;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#paveExplorerRoot .pe-time { color: #707070; font-size: 10px; font-variant-numeric: tabular-nums; }
+
+/* Badges */
+#paveExplorerRoot .pe-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+#paveExplorerRoot .pe-mut { background: #4a2020; color: #ff9a9a; }
+#paveExplorerRoot .pe-qry { background: #21403a; color: #8fe0c7; }
+#paveExplorerRoot .pe-evt { background: #403a20; color: #e0d08f; }
+
+/* Detail view */
+#paveExplorerRoot .pe-detail { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+#paveExplorerRoot .pe-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #252525;
+  border-bottom: 1px solid #404040;
+}
+#paveExplorerRoot .pe-back { padding: 4px 8px; }
+#paveExplorerRoot .pe-detail-name { font-weight: 600; }
+#paveExplorerRoot .pe-detail-meta { color: #a0a0a0; font-size: 11px; padding: 6px 10px; }
+
+#paveExplorerRoot .pe-tabs { display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid #404040; }
+#paveExplorerRoot .pe-tab {
+  background: transparent;
+  color: #a0a0a0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 7px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+#paveExplorerRoot .pe-tab.active { color: #e0e0e0; border-bottom-color: #f08c00; }
+
+#paveExplorerRoot .pe-pane { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+#paveExplorerRoot .pe-codebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  color: #a0a0a0;
+  font-size: 11px;
+}
+#paveExplorerRoot .pe-copy {
+  background: #333333;
+  color: #b0b0b0;
+  border: 1px solid #505050;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font: inherit;
+  cursor: pointer;
+}
+#paveExplorerRoot .pe-copy:hover { background: #3a3a3a; }
+#paveExplorerRoot .pe-code {
+  flex: 1;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  max-height: 55vh;
+  background: #1e1e1e;
+  border-top: 1px solid #333333;
+  font: 11px ui-monospace, "Cascadia Code", Consolas, monospace;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* JSON syntax highlight */
+#paveExplorerRoot .jk { color: #9cdcfe; }
+#paveExplorerRoot .js { color: #ce9178; }
+#paveExplorerRoot .jn { color: #b5cea8; }
+#paveExplorerRoot .jb { color: #569cd6; }

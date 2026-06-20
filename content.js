@@ -168,6 +168,11 @@ const featureModules = {
     feature: () => window.InspectForAiFeature,
     instance: null
   },
+  paveCapture: {
+    name: 'Pave Query Capture for AI',
+    feature: () => window.PaveCaptureFeature,
+    instance: null
+  },
   tweakEngine: {
     name: 'User Tweaks',
     feature: () => window.TweakEngineFeature,
@@ -202,7 +207,7 @@ let currentSettings = window.JTDefaults
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
     budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
     jobAccessCollapse: false, orgLogo: false,
-    inspectForAi: false, tweakEngine: true, forms: true,
+    inspectForAi: false, paveCapture: false, tweakEngine: true, forms: true,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
     savedThemes: [null, null, null]
   };
