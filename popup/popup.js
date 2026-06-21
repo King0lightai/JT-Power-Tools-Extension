@@ -461,6 +461,9 @@ async function checkLicenseStatus() {
   const budgetChangelogCheckbox = document.getElementById('budgetChangelog');
   const taskTypeFilterFeature = document.getElementById('taskTypeFilterFeature');
   const taskTypeFilterCheckbox = document.getElementById('taskTypeFilter');
+  // Pave Query Capture ("Record for AI") — lives in the Pave Explorer tab now.
+  const paveCaptureFeature = document.getElementById('paveCaptureFeature');
+  const paveCaptureCheckbox = document.getElementById('paveCapture');
 
   if (licenseData && licenseData.valid && tier) {
     // Valid license - show tier name
@@ -509,6 +512,8 @@ async function checkLicenseStatus() {
       if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = false;
       taskTypeFilterFeature?.classList.remove('locked');
       if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = false;
+      paveCaptureFeature?.classList.remove('locked');
+      if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
@@ -519,6 +524,8 @@ async function checkLicenseStatus() {
       if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = true;
       taskTypeFilterFeature?.classList.add('locked');
       if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = true;
+      paveCaptureFeature?.classList.add('locked');
+      if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -570,6 +577,8 @@ async function checkLicenseStatus() {
     if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = true;
     taskTypeFilterFeature?.classList.add('locked');
     if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = true;
+    paveCaptureFeature?.classList.add('locked');
+    if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
     // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)
@@ -638,6 +647,7 @@ async function loadSettings() {
     const hasLicense = tier !== null;
     const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
     const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
+    const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
 
     // Helper to safely set checkbox value
     const setCheckbox = (id, value) => {
@@ -703,7 +713,7 @@ async function loadSettings() {
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
-    setCheckbox('paveCapture', settings.paveCapture !== undefined ? settings.paveCapture : false);
+    setCheckbox('paveCapture', hasPowerUser && (settings.paveCapture !== undefined ? settings.paveCapture : false));
     // Forms toggle removed — see Migration 029. The on/off decision is
     // admin-managed in the portal; this popup never reads or writes
     // settings.forms anymore.

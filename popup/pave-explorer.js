@@ -216,7 +216,11 @@
         : 'Listening… interact with JobTread and Pave calls will appear here.'}</div>`;
       return;
     }
-    els.list.innerHTML = items.map((call) => {
+    // Newest first — most recent Pave calls stay at the top so the user never
+    // scrolls to find the latest. getFiltered() preserves capture order
+    // (oldest→newest); reversing only the display keeps data-idx as the
+    // canonical state.calls index, so detail lookups are unaffected.
+    els.list.innerHTML = [...items].reverse().map((call) => {
       const idx = state.calls.indexOf(call);
       const a = call.analysis;
       const time = call.timestamp.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });

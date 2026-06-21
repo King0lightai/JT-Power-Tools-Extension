@@ -24,6 +24,7 @@ const PaveCaptureFeature = (() => {
   let messageHandler = null;
   let flushTimer = null;
   let indicatorEl = null;
+  let indicatorStyleEl = null;
 
   // Most recent grantKey seen in captured traffic — the upload credential.
   let lastGrantKey = null;
@@ -177,20 +178,95 @@ const PaveCaptureFeature = (() => {
 
   function showIndicator() {
     if (indicatorEl) return;
+
+    // Keyframes + hover states can't live in inline styles, so inject a small
+    // scoped <style>. Everything is namespaced under the pill's id.
+    indicatorStyleEl = document.createElement('style');
+    indicatorStyleEl.id = 'jt-pt-pave-capture-style';
+    indicatorStyleEl.textContent = `
+      #jt-pt-pave-capture-indicator {
+        position: fixed; bottom: 16px; left: 16px; z-index: 2147483646;
+        display: flex; align-items: center; gap: 9px;
+        background: #1f1f1f; color: #f0f0f0;
+        border: 1px solid #ff4d4d; border-left-width: 4px;
+        border-radius: 8px; padding: 8px 10px 8px 12px;
+        font: 600 12px/1 system-ui, -apple-system, sans-serif;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+      }
+      #jt-pt-pave-capture-indicator .jt-pt-rec-dot {
+        width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+        background: #ff4d4d;
+        animation: jt-pt-rec-pulse 1.4s ease-out infinite;
+      }
+      @keyframes jt-pt-rec-pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(255,77,77,0.7); }
+        70%  { box-shadow: 0 0 0 7px rgba(255,77,77,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,77,77,0); }
+      }
+      #jt-pt-pave-capture-indicator .jt-pt-rec-stop {
+        margin-left: 4px; background: #ff4d4d; color: #fff;
+        border: none; border-radius: 5px; padding: 4px 10px;
+        font: 700 11px system-ui, -apple-system, sans-serif; cursor: pointer;
+      }
+      #jt-pt-pave-capture-indicator .jt-pt-rec-stop:hover { background: #e23b3b; }
+      @media (prefers-reduced-motion: reduce) {
+        #jt-pt-pave-capture-indicator .jt-pt-rec-dot { animation: none; }
+      }
+    `;
+    (document.head || document.documentElement).appendChild(indicatorStyleEl);
+
     indicatorEl = document.createElement('div');
     indicatorEl.id = 'jt-pt-pave-capture-indicator';
-    indicatorEl.textContent = '● Recording Pave for AI';
-    indicatorEl.style.cssText =
-      'position:fixed;bottom:16px;left:16px;z-index:2147483646;' +
-      'background:#252525;color:#e0e0e0;border:1px solid #404040;border-radius:6px;' +
-      'padding:6px 10px;font:11px system-ui,-apple-system,sans-serif;' +
-      'box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:none;opacity:0.85;';
+
+    const dot = document.createElement('span');
+    dot.className = 'jt-pt-rec-dot';
+
+    const text = document.createElement('span');
+    text.className = 'jt-pt-rec-text';
+    text.textContent = 'Recording Pave for AI';
+
+    const stopBtn = document.createElement('button');
+    stopBtn.type = 'button';
+    stopBtn.className = 'jt-pt-rec-stop';
+    stopBtn.textContent = 'Stop';
+    stopBtn.title = 'Stop recording Pave queries';
+    stopBtn.addEventListener('click', stopRecording);
+
+    indicatorEl.appendChild(dot);
+    indicatorEl.appendChild(text);
+    indicatorEl.appendChild(stopBtn);
     (document.body || document.documentElement).appendChild(indicatorEl);
+  }
+
+  /**
+   * Stop recording from the on-page pill. Persists paveCapture=false (so it
+   * stays off and the popup toggle reflects it) and tears the feature down.
+   * Mirrors the popup's save path: GET_SETTINGS → flip → SETTINGS_UPDATED; the
+   * service worker persists it and relays SETTINGS_CHANGED, which also drives
+   * content.js to clean this feature up. cleanup() below is the instant local
+   * fallback (idempotent, so the relayed message is a harmless no-op).
+   */
+  function stopRecording() {
+    try {
+      chrome.runtime.sendMessage({ type: 'GET_SETTINGS' }, (res) => {
+        if (chrome.runtime.lastError) return;
+        const settings = (res && res.settings && typeof res.settings === 'object') ? res.settings : {};
+        settings.paveCapture = false;
+        chrome.runtime.sendMessage({ type: 'SETTINGS_UPDATED', settings }, () => {
+          void chrome.runtime.lastError; // ignore — local cleanup covers us
+        });
+      });
+    } catch (e) {
+      console.warn('PaveCapture: stop failed:', e.message);
+    }
+    cleanup();
   }
 
   function removeIndicator() {
     if (indicatorEl && indicatorEl.parentNode) indicatorEl.parentNode.removeChild(indicatorEl);
     indicatorEl = null;
+    if (indicatorStyleEl && indicatorStyleEl.parentNode) indicatorStyleEl.parentNode.removeChild(indicatorStyleEl);
+    indicatorStyleEl = null;
   }
 
   function cleanup() {

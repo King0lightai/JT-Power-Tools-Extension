@@ -55,7 +55,7 @@
           <span class="tab-label">Tweaks</span>
         </button>
         <button class="tab-item" data-tab="paveExplorer">
-          <i class="ph ph-network tab-icon"></i>
+          <i class="ph ph-share-network tab-icon"></i>
           <span class="tab-label">Pave</span>
         </button>
         <button class="tab-item" data-tab="account">
@@ -683,16 +683,6 @@
                 Shortcuts on JobTread: <kbd>Alt</kbd>+click an element, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> for picker, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> for multi-view.
               </span>
             </div>
-            <div class="feature-item premium" id="paveCaptureFeature">
-              <div class="feature-info">
-                <h3>Pave Query Capture for AI <span class="badge power-user">Power User</span></h3>
-                <p>Records the real Pave API queries you run in JobTread (keys stripped) so your AI can read them back via the MCP and reuse working syntax. Shows a “Recording” pill while active.</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="paveCapture" data-feature="paveCapture">
-                <span class="slider"></span>
-              </label>
-            </div>
           </div>
 
           <section class="jt-tweaks-section" data-tweaks-section>
@@ -734,6 +724,27 @@
            Best used as a side panel so you can interact with JobTread while
            captures stream in. Built/gated by pave-explorer.js (Pro tier). -->
       <div class="tab-content" id="tab-paveExplorer">
+        <div class="panel-header">
+          <div class="panel-icon"><i class="ph ph-share-network"></i></div>
+          <div class="panel-info">
+            <h2 class="panel-title">Pave Explorer</h2>
+            <p class="panel-desc">Browse &amp; copy the Pave API calls you run in JobTread</p>
+          </div>
+        </div>
+        <!-- Record for AI — relocated here from the Tweaks tab. Drives the same
+             paveCapture setting (Power User). popup.js binds + tier-locks it via
+             #paveCaptureFeature / #paveCapture, so the existing wiring is reused. -->
+        <div class="master-toggle-bar pe-record-bar" id="paveCaptureFeature" title="Record the real Pave queries you run in JobTread (keys stripped) so your AI can read them back via the MCP. Power User feature.">
+          <div class="master-toggle-info">
+            <i class="ph ph-broadcast category-icon"></i>
+            <span class="master-toggle-label">Record for AI</span>
+            <span class="badge power-user">Power User</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="paveCapture" data-feature="paveCapture">
+            <span class="slider"></span>
+          </label>
+        </div>
         <div id="paveExplorerRoot"></div>
       </div>
 

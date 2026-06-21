@@ -1,5 +1,15 @@
-/* Pave Explorer — scoped devtools-style network view (side panel) */
-/* Uses the repo's neutral-grey dark palette (NOT dark blues). */
+/* Pave Explorer — scoped devtools-style network view (side panel)
+   Skinned to the popup v5 design system: brand tokens, Inter / JetBrains Mono,
+   orange-flame accent, and light + dark support via body.dark-theme.
+   (Tokens are defined in popup.css :root / body.dark-theme.) */
+
+/* ── Panel header — matches the Theme / Tweaks / Account tabs ──────── */
+#tab-paveExplorer .panel-header {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--rule);
+}
 
 #paveExplorerRoot {
   /* Layout — sizes to content; inner regions cap their own scroll height so
@@ -7,10 +17,10 @@
   display: flex;
   flex-direction: column;
   /* Colors */
-  background: #2c2c2c;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--fg);
   /* Typography */
-  font: 12px system-ui, -apple-system, sans-serif;
+  font: 12px var(--ff-body);
 }
 
 /* Toolbar */
@@ -19,39 +29,49 @@
   align-items: center;
   gap: 6px;
   padding: 8px;
-  background: #252525;
-  border-bottom: 1px solid #404040;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--rule);
 }
 #paveExplorerRoot .pe-filter,
 #paveExplorerRoot .pe-search {
-  background: #333333;
-  color: #e0e0e0;
-  border: 1px solid #505050;
-  border-radius: 4px;
+  background: var(--bg-surface);
+  color: var(--fg-strong);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
   padding: 5px 8px;
   font: inherit;
+  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
 }
 #paveExplorerRoot .pe-search { flex: 1; min-width: 0; }
+#paveExplorerRoot .pe-filter:focus,
+#paveExplorerRoot .pe-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+#paveExplorerRoot .pe-search::placeholder { color: var(--fg-subtle); }
 #paveExplorerRoot .pe-count {
-  color: #a0a0a0;
+  color: var(--fg-muted);
   font-variant-numeric: tabular-nums;
   min-width: 28px;
   text-align: right;
 }
 #paveExplorerRoot .pe-btn {
-  background: #333333;
-  color: #b0b0b0;
-  border: 1px solid #505050;
-  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-strong);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
   padding: 5px 9px;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: all var(--duration) var(--ease);
 }
-#paveExplorerRoot .pe-btn:hover { background: #3a3a3a; }
+#paveExplorerRoot .pe-btn:hover { background: var(--bg-raised); border-color: var(--fg-strong); }
 
 #paveExplorerRoot .pe-status {
-  color: #b0b0b0;
-  padding: 0 8px;
+  color: var(--fg-muted);
+  padding: 6px 8px;
   font-size: 11px;
 }
 #paveExplorerRoot .pe-status:empty { display: none; }
@@ -60,7 +80,7 @@
 #paveExplorerRoot .pe-list { flex: 1; overflow-y: auto; min-height: 0; max-height: 60vh; }
 #paveExplorerRoot .pe-empty {
   padding: 24px 16px;
-  color: #a0a0a0;
+  color: var(--fg-muted);
   text-align: center;
   line-height: 1.5;
 }
@@ -69,38 +89,46 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid var(--rule-soft);
   cursor: pointer;
+  transition: background var(--duration) var(--ease);
 }
-#paveExplorerRoot .pe-item:hover { background: #333333; }
+#paveExplorerRoot .pe-item:hover { background: var(--bg-raised); }
 #paveExplorerRoot .pe-info { flex: 1; min-width: 0; }
 #paveExplorerRoot .pe-name {
   font-weight: 600;
+  color: var(--fg-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 #paveExplorerRoot .pe-meta {
-  color: #a0a0a0;
+  color: var(--fg-muted);
   font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-#paveExplorerRoot .pe-time { color: #707070; font-size: 10px; font-variant-numeric: tabular-nums; }
+#paveExplorerRoot .pe-time { color: var(--fg-subtle); font-size: 10px; font-variant-numeric: tabular-nums; }
 
-/* Badges */
+/* Badges — reuse the popup's theme-aware WCAG badge palette.
+   MUT = mutation (write, red), QRY = query (read, green), EVT = event (amber). */
 #paveExplorerRoot .pe-badge {
   flex-shrink: 0;
+  font-family: var(--ff-body);
   font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   padding: 2px 5px;
   border-radius: 3px;
+  text-transform: uppercase;
 }
-#paveExplorerRoot .pe-mut { background: #4a2020; color: #ff9a9a; }
-#paveExplorerRoot .pe-qry { background: #21403a; color: #8fe0c7; }
-#paveExplorerRoot .pe-evt { background: #403a20; color: #e0d08f; }
+#paveExplorerRoot .pe-mut { background: oklch(95% 0.07 25);  color: #b3261e; }
+#paveExplorerRoot .pe-qry { background: oklch(95% 0.06 145); color: #006b52; }
+#paveExplorerRoot .pe-evt { background: oklch(95% 0.08 80);  color: #8a5500; }
+body.dark-theme #paveExplorerRoot .pe-mut { background: oklch(32% 0.10 25 / 0.4);  color: #fca5a5; }
+body.dark-theme #paveExplorerRoot .pe-qry { background: oklch(32% 0.10 145 / 0.4); color: #4dd4a8; }
+body.dark-theme #paveExplorerRoot .pe-evt { background: oklch(32% 0.10 80 / 0.4);  color: #fbbf24; }
 
 /* Detail view */
 #paveExplorerRoot .pe-detail { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
@@ -109,59 +137,74 @@
   align-items: center;
   gap: 8px;
   padding: 8px;
-  background: #252525;
-  border-bottom: 1px solid #404040;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--rule);
 }
 #paveExplorerRoot .pe-back { padding: 4px 8px; }
-#paveExplorerRoot .pe-detail-name { font-weight: 600; }
-#paveExplorerRoot .pe-detail-meta { color: #a0a0a0; font-size: 11px; padding: 6px 10px; }
+#paveExplorerRoot .pe-detail-name { font-weight: 600; color: var(--fg-strong); }
+#paveExplorerRoot .pe-detail-meta { color: var(--fg-muted); font-size: 11px; padding: 6px 10px; }
 
-#paveExplorerRoot .pe-tabs { display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid #404040; }
+#paveExplorerRoot .pe-tabs { display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--rule); }
 #paveExplorerRoot .pe-tab {
   background: transparent;
-  color: #a0a0a0;
+  color: var(--fg-muted);
   border: none;
   border-bottom: 2px solid transparent;
   padding: 7px 10px;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: color var(--duration) var(--ease);
 }
-#paveExplorerRoot .pe-tab.active { color: #e0e0e0; border-bottom-color: #f08c00; }
+#paveExplorerRoot .pe-tab:hover { color: var(--fg-strong); }
+#paveExplorerRoot .pe-tab.active { color: var(--accent-ink); border-bottom-color: var(--accent); }
 
 #paveExplorerRoot .pe-pane { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+/* The detail container and the three panes are toggled via the [hidden]
+   attribute in JS. Our display:flex above outranks the UA [hidden]{display:none}
+   rule, so without this every pane shows at once and the Request/Response/
+   Shareable tabs appear to do nothing. Re-assert display:none when hidden. */
+#paveExplorerRoot .pe-detail[hidden],
+#paveExplorerRoot .pe-pane[hidden] { display: none; }
 #paveExplorerRoot .pe-codebar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 6px 10px;
-  color: #a0a0a0;
+  color: var(--fg-muted);
   font-size: 11px;
 }
 #paveExplorerRoot .pe-copy {
-  background: #333333;
-  color: #b0b0b0;
-  border: 1px solid #505050;
-  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-strong);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
   padding: 3px 8px;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: all var(--duration) var(--ease);
 }
-#paveExplorerRoot .pe-copy:hover { background: #3a3a3a; }
+#paveExplorerRoot .pe-copy:hover { background: var(--bg-raised); border-color: var(--fg-strong); }
 #paveExplorerRoot .pe-code {
   flex: 1;
   margin: 0;
   padding: 10px;
   overflow: auto;
   max-height: 55vh;
-  background: #1e1e1e;
-  border-top: 1px solid #333333;
-  font: 11px ui-monospace, "Cascadia Code", Consolas, monospace;
+  background: var(--bg-sunken);
+  border-top: 1px solid var(--rule-soft);
+  font: 11px var(--ff-mono);
   line-height: 1.5;
   white-space: pre;
 }
 
-/* JSON syntax highlight */
-#paveExplorerRoot .jk { color: #9cdcfe; }
-#paveExplorerRoot .js { color: #ce9178; }
-#paveExplorerRoot .jn { color: #b5cea8; }
-#paveExplorerRoot .jb { color: #569cd6; }
+/* JSON syntax highlight — light defaults (on paper), dark overrides (VS-code-ish) */
+#paveExplorerRoot .jk { color: #0b5cab; }  /* keys */
+#paveExplorerRoot .js { color: #a31515; }  /* strings */
+#paveExplorerRoot .jn { color: #098658; }  /* numbers */
+#paveExplorerRoot .jb { color: #1d4ed8; }  /* booleans / null */
+body.dark-theme #paveExplorerRoot .jk { color: #9cdcfe; }
+body.dark-theme #paveExplorerRoot .js { color: #ce9178; }
+body.dark-theme #paveExplorerRoot .jn { color: #b5cea8; }
+body.dark-theme #paveExplorerRoot .jb { color: #569cd6; }
