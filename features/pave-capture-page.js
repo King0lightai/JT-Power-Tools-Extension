@@ -1,17 +1,20 @@
 /**
  * Pave Capture — page-context sniffer (MAIN world, document_start)
  *
- * Patches window.fetch ONCE to observe JobTread's Pave API calls, mirroring
- * the proven PAVE Inspector interceptor. It is INERT by default: it only
- * emits a capture when the ISOLATED-world feature has told it to record
- * (via a window postMessage). When not recording it's a thin passthrough,
- * so leaving the script installed has negligible cost.
+ * Patches window.fetch AND XMLHttpRequest ONCE to observe JobTread's Pave API
+ * calls, mirroring the proven PAVE Inspector interceptor. JobTread uses BOTH
+ * transports for /pave — notably the budget grid saves through XHR — so a
+ * fetch-only sniffer would silently miss those (often the most useful
+ * mutations). It is INERT by default: it only emits a capture when the
+ * ISOLATED-world feature has told it to record (via a window postMessage).
+ * When not recording it's a thin passthrough, so leaving the script installed
+ * has negligible cost.
  *
- * It never blocks, modifies, or delays the app's requests — it clones the
- * request body, lets the real fetch run, and posts a copy to the content
- * script for sanitization + upload. Lives in MAIN world (not ISOLATED) so
- * it can see the page's own window.fetch and isn't subject to page CSP the
- * way an injected <script> tag would be.
+ * It never blocks, modifies, or delays the app's requests — it reads a copy of
+ * the request/response body, lets the real request run, and posts the copy to
+ * the content script for sanitization + upload. Lives in MAIN world (not
+ * ISOLATED) so it can see the page's own fetch/XHR and isn't subject to page
+ * CSP the way an injected <script> tag would be.
  *
  * Multiple independent consumers can ask it to emit — e.g. the "Record for
  * AI" uploader and the manual Pave Explorer side panel. It emits while ANY
@@ -95,4 +98,66 @@
 
     return response;
   };
+
+  // ── XMLHttpRequest path ──────────────────────────────────────
+  // JobTread fires many Pave calls (notably budget saves) through XHR, not
+  // fetch, so the fetch hook above misses them. Patch open()/send() with the
+  // SAME contract: inert unless a subscriber is recording, /pave only, never
+  // block or modify the request, and emit the identical payload shape on
+  // completion so both consumers (uploader, Pave Explorer) handle it uniformly.
+  const XHR = window.XMLHttpRequest;
+  if (XHR && XHR.prototype) {
+    const originalOpen = XHR.prototype.open;
+    const originalSend = XHR.prototype.send;
+
+    XHR.prototype.open = function (method, url, ...rest) {
+      // Stash request coordinates on the instance (cheap; no capture decision yet).
+      try {
+        this.__jtPtPave = { method, url: String(url) };
+      } catch (e) {
+        // Some hosts may freeze the instance — never break open().
+      }
+      return originalOpen.call(this, method, url, ...rest);
+    };
+
+    XHR.prototype.send = function (body) {
+      const meta = this.__jtPtPave;
+      // Fast path: not recording, or not a Pave call → plain native send.
+      if (subscribers.size === 0 || !meta || !meta.url.includes('/pave') || meta.url.includes('/healthz')) {
+        return originalSend.apply(this, arguments);
+      }
+
+      // Capture the request body (Pave bodies are JSON strings). Non-string
+      // bodies (Blob/FormData/etc.) are skipped, exactly like the fetch path
+      // skips emit when it can't read a body.
+      meta.requestBody = typeof body === 'string' ? body : null;
+
+      if (meta.requestBody) {
+        // addEventListener (not onload=) so we never clobber the app's handler.
+        this.addEventListener('load', function () {
+          let responseBody = null;
+          try {
+            responseBody = (this.responseType === '' || this.responseType === 'text')
+              ? this.responseText
+              : (this.response != null ? JSON.stringify(this.response) : null);
+          } catch (e) {
+            // Some responseTypes throw on responseText — emit without a body.
+          }
+          try {
+            window.postMessage({
+              source: 'jt-pt-capture',
+              payload: {
+                url: meta.url, status: this.status,
+                requestBody: meta.requestBody, responseBody, timestamp: Date.now(),
+              },
+            }, window.location.origin);
+          } catch (e) {
+            // Never break the app over a capture failure.
+          }
+        });
+      }
+
+      return originalSend.apply(this, arguments);
+    };
+  }
 })();
