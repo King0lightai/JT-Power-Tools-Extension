@@ -50,11 +50,133 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.10 — Schedule Expand/Collapse All, Pave Explorer, side-panel default, Tweaks date-shading, theme & popup polish -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.10</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">June 21, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📅</span> Expand / Collapse All Groups on the Schedule (New)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">One click to open or close every group on the Schedule</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A new button in the Schedule header expands or collapses all your groups at once &mdash; in both Gantt and List views, on the org-wide schedule and inside a job. It sits next to JobTread's own expand/collapse controls and flips between Expand All and Collapse All depending on the current state. Part of the Free Auto-Collapse Groups feature.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔎</span> Pave Explorer &amp; Record for AI (New &mdash; Pro / Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">A new Pave tab to see and copy the API calls behind your actions</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Open the new Pave tab (best as a side panel, so you can keep working in JobTread while it captures) to browse the live API calls your clicks trigger &mdash; filter, search, and copy any call's Request, Response, or a Shareable version with your keys and IDs stripped out. Handy for reports, integrations, or asking an AI for help.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Record working queries for your AI to reuse</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Power Users can turn on "Record for AI" to quietly collect the real, working queries from everyday JobTread use (keys removed, IDs anonymized). Your connected AI can then reuse that proven syntax instead of guessing &mdash; making AI-built reports and automations far more reliable.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🪄</span> Tweaks: Color-Code by Due Date</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Shade rows by how soon something is due</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Tweaks can now react to dates &mdash; overdue, due today, due tomorrow, or further out &mdash; so you can build a color-coded Action Items list that updates itself as the days roll over.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks apply more reliably and stop flickering</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Custom tweaks now re-assert instantly when JobTread re-renders and repaint when you switch back to the tab, so they stay put. And two browser tabs open on different orgs no longer cause a constant flicker on the budget or schedule.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎛️</span> Popup &amp; Side Panel</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">&ldquo;Always open in side panel&rdquo;</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A new remembered setting (Account &rarr; Preferences) makes the toolbar icon open Power Tools in Chrome's side panel instead of the popup &mdash; so it stays open beside JobTread while you work. Flip it back anytime.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Features list reorganized into clearer categories</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Features tab is now grouped by where you use each tool &mdash; Schedule, Budget, Documents &amp; Text, Appearance, and General &mdash; so things are easier to find, and the category counts always stay correct.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎨</span> Theme Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme: the job financial summary stays readable</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Under a Custom theme, the labels on a job's financial summary (Approved Price, Collected, Remaining Balance, &hellip;) were washing out against the colored panel. They're now re-lit to read clearly next to the dollar amounts.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode &amp; Custom Theme: Plans measurement buttons no longer flash white</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Hiding a measurement on a job's Plans tab made the show/hide buttons appear as glaring light blocks. They now pick up a proper themed highlight.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> AI Server (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Smarter, faster JobTread AI connector</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Catalog and budget imports now run in far fewer steps, the AI can attach files to comments and send org-wide direct messages, and it can tap the working queries you've recorded (above) to build accurate reports and automations.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> Polish &amp; Under the Hood</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter no longer leaves stray toolbars on the Budget</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Returning to the Budget from another tab could spray a formatting toolbar onto every visible description row and block clicks until you scrolled. Fixed &mdash; the toolbar only appears on the field you're editing.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Pave Explorer reconnects after a page refresh</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Refreshing JobTread while the Pave panel was open used to leave it stuck until you closed and reopened it. It now reconnects on its own.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.8 — Budget Row Highlight, visual tweak builder, Auto Sum groups, theme polish -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.8</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">June 19, 2026</span>
             </div>
 

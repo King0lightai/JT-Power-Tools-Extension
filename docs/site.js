@@ -1,5 +1,53 @@
-// site.js — reveal on scroll, scroll-spy active nav, mobile nav sheet
+// site.js — reveal on scroll, scroll-spy active nav, mobile nav sheet,
+// Just Shipped announcement tabs
 (function() {
+  function initShipTabs() {
+    const tablist = document.querySelector('[data-ship-tabs]');
+    if (!tablist) return;
+    const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+    const panels = tabs.map(t => document.getElementById(t.getAttribute('aria-controls')));
+
+    function activate(tab, focus) {
+      tabs.forEach((t, i) => {
+        const active = t === tab;
+        t.classList.toggle('is-active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.tabIndex = active ? 0 : -1;
+        if (panels[i]) panels[i].hidden = !active;
+      });
+      if (focus) tab.focus();
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => activate(tab));
+      tab.addEventListener('keydown', (e) => {
+        const i = tabs.indexOf(tab);
+        let next = null;
+        if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+        else if (e.key === 'Home') next = tabs[0];
+        else if (e.key === 'End') next = tabs[tabs.length - 1];
+        if (next) {
+          e.preventDefault();
+          activate(next, true);
+        }
+      });
+    });
+
+    // Deep links: #email-to-job / #tweaks open their tab and scroll to the rail
+    function openFromHash() {
+      const id = location.hash.replace('#', '');
+      if (!id) return;
+      const idx = panels.findIndex(p => p && p.id === id);
+      if (idx === -1) return;
+      activate(tabs[idx]);
+      const section = document.getElementById('shipped');
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.addEventListener('hashchange', openFromHash);
+    openFromHash();
+  }
+
   function initReveal() {
     if (!('IntersectionObserver' in window)) return;
     const els = document.querySelectorAll('.reveal');
@@ -67,6 +115,7 @@
   }
 
   function init() {
+    initShipTabs();
     initReveal();
     initSpy();
     initMobileNav();

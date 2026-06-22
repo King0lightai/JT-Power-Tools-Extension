@@ -2262,6 +2262,128 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   .s-emailtojob-comment-title { font-size: 13px; }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Just Shipped — tabbed announcement rail (.s-ship)
+   ═══════════════════════════════════════════════════════════
+   Collapses the stacked flagship announcements into one section.
+   The rail lists each release as a tab (version · name · tier);
+   only the active panel renders, so adding future drops doesn't
+   stretch the page. Markup contract: .s-ship-tab[aria-controls]
+   ↔ .s-ship-panel[id], wired up by initShipTabs() in site.js. */
+.s-ship { padding: 0 0 110px; scroll-margin-top: 72px; }
+
+.s-ship-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 22px 0;
+  margin-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.s-ship-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--orange);
+  white-space: nowrap;
+}
+.s-ship-bar-label i { font-size: 13px; }
+
+.s-ship-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+.s-ship-tabs::-webkit-scrollbar { display: none; }
+
+.s-ship-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 18px 11px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  text-align: left;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.s-ship-tab:hover {
+  border-color: var(--ink-subtle);
+  transform: translateY(-1px);
+}
+.s-ship-tab-ver {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+.s-ship-tab-name {
+  font-family: var(--font-sub);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.s-ship-tab-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-subtle);
+}
+.s-ship-tab-tier::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 25%, transparent);
+}
+.s-ship-tab.is-active {
+  background: var(--surface);
+  border-color: var(--orange);
+  box-shadow: inset 0 0 0 1px var(--orange), 0 6px 18px color-mix(in srgb, var(--orange) 14%, transparent);
+}
+.s-ship-tab.is-active .s-ship-tab-ver { color: var(--orange); }
+
+/* Panels — only the active one renders; switching re-runs the entrance */
+.s-ship-panel[hidden] { display: none; }
+.s-ship-panel { animation: s-ship-panel-in 0.45s var(--ease) both; }
+@keyframes s-ship-panel-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .s-ship-panel { animation: none; }
+}
+
+/* Tablet */
+@media (max-width: 960px) {
+  .s-ship { padding: 0 0 84px; }
+  .s-ship-bar { margin-bottom: 40px; }
+}
+
+/* Phone — label on its own row, tabs scroll horizontally */
+@media (max-width: 560px) {
+  .s-ship-bar { gap: 12px; padding: 16px 0; }
+  .s-ship-bar-label { width: 100%; }
+  .s-ship-tab-name { font-size: 14px; }
+}
+
 /* Pro card — orange border + "New in v4.7.0" pill badge + highlighted
    Tweaks bullet. Mirrors the Power User featured-badge anatomy so the
    two cards have parallel visual treatment, just in brand orange. */

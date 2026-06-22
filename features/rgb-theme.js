@@ -704,6 +704,20 @@ const CustomThemeFeature = (() => {
         color: ${p.text.disabled};
       }
 
+      /* Muted labels on the SECONDARY surface (bg-gray-700 -> secondary.base,
+         which is repainted dark and hosts white text by design). JT uses
+         text-gray-300/400/500 for labels there — e.g. the Job Financial Summary
+         widget's row labels (Approved Price, Collected, …) — but the rules above
+         theme those dark (text.disabled/muted, tuned for the LIGHT main
+         background), so they go low-contrast on the dark secondary. Re-light
+         them so labels read like the white values beside them, kept slightly
+         dimmer to preserve the label/value hierarchy. */
+      .bg-gray-700 .text-gray-300,
+      .bg-gray-700 .text-gray-400,
+      .bg-gray-700 .text-gray-500 {
+        color: rgba(255, 255, 255, 0.72) !important;
+      }
+
       /* Keep .text-white as white - used on intentionally dark UI elements */
       /* .text-white is NOT themed */
 

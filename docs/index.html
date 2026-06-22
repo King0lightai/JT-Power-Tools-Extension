@@ -115,23 +115,39 @@
       </div>
     </section>
 
-    <!-- ══ Email-to-Job announcement (v4.9.3 flagship feature) ══ -->
-    <section id="email-to-job" class="s-tweaks" aria-labelledby="email-headline">
+    <!-- ══ Just Shipped — tabbed feature announcements ══
+         Each release is a tab in the rail + a matching panel below. Only the
+         active panel renders, so new drops don't stretch the page.
+         To add one: copy a .s-ship-tab button and a .s-ship-panel, wire the
+         ids (tab-<slug> ↔ <slug>), and place the newest tab first with
+         is-active / aria-selected="true" (move `hidden` to the old panel). -->
+    <section id="shipped" class="s-tweaks s-ship" aria-label="Latest feature announcements">
       <div class="s-tweaks-tape" aria-hidden="true"></div>
 
-      <div class="container s-tweaks-inner">
-        <!-- Top metadata strip -->
-        <div class="s-tweaks-meta">
-          <span class="s-tweaks-shipped">
+      <div class="container">
+        <div class="s-ship-bar">
+          <span class="s-ship-bar-label">
             <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
-            Just shipped · v4.9.3
+            Just Shipped
           </span>
-          <span class="s-tweaks-meta-label">Email to Job</span>
-          <span class="s-tweaks-live">
-            <span class="s-tweaks-dot" aria-hidden="true"></span>
-            Live in Power User
-          </span>
+          <div class="s-ship-tabs" role="tablist" aria-label="Feature announcements" data-ship-tabs>
+            <button class="s-ship-tab is-active" id="tab-email-to-job" role="tab" aria-selected="true" aria-controls="email-to-job" type="button">
+              <span class="s-ship-tab-ver">v4.9.3</span>
+              <span class="s-ship-tab-name">Email to Job</span>
+              <span class="s-ship-tab-tier">Live in Power User</span>
+            </button>
+            <button class="s-ship-tab" id="tab-tweaks" role="tab" aria-selected="false" aria-controls="tweaks" tabindex="-1" type="button">
+              <span class="s-ship-tab-ver">v4.7.0</span>
+              <span class="s-ship-tab-name">The Tweaks Engine</span>
+              <span class="s-ship-tab-tier">Live in Pro</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div class="container s-tweaks-inner">
+        <!-- ── Panel: Email to Job (v4.9.3) ── -->
+        <div class="s-ship-panel" id="email-to-job" role="tabpanel" aria-labelledby="tab-email-to-job">
 
         <!-- Headline + demo grid -->
         <div class="s-tweaks-grid">
@@ -242,26 +258,10 @@
             without anyone copy-pasting threads at the end of the day.
           </p>
         </div>
-      </div>
-    </section>
+        </div><!-- /panel: email-to-job -->
 
-    <!-- ══ Tweaks Engine announcement (v4.7.0 flagship feature) ══ -->
-    <section id="tweaks" class="s-tweaks" aria-labelledby="tweaks-headline">
-      <div class="s-tweaks-tape" aria-hidden="true"></div>
-
-      <div class="container s-tweaks-inner">
-        <!-- Top metadata strip -->
-        <div class="s-tweaks-meta">
-          <span class="s-tweaks-shipped">
-            <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
-            Just shipped · v4.7.0
-          </span>
-          <span class="s-tweaks-meta-label">The Tweaks Engine</span>
-          <span class="s-tweaks-live">
-            <span class="s-tweaks-dot" aria-hidden="true"></span>
-            Live in Pro
-          </span>
-        </div>
+        <!-- ── Panel: The Tweaks Engine (v4.7.0) ── -->
+        <div class="s-ship-panel" id="tweaks" role="tabpanel" aria-labelledby="tab-tweaks" hidden>
 
         <!-- Headline + demo grid -->
         <div class="s-tweaks-grid">
@@ -430,6 +430,7 @@
             bends to match &mdash; without waiting for the next release.
           </p>
         </div>
+        </div><!-- /panel: tweaks -->
       </div>
     </section>
 
@@ -657,17 +658,11 @@
           <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--ink" target="_blank" rel="noopener">
             <img src="chrome-color-svgrepo-com.svg" alt="" width="18" height="18"> Chrome
           </a>
-          <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" class="btn btn--ink" target="_blank" rel="noopener">
-            <img src="microsoft-edge-logo_svgstack_com_28201770610048.svg" alt="" width="18" height="18"> Edge
-          </a>
           <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" class="btn btn--ink" target="_blank" rel="noopener">
             <img src="Firefox_logo,_2017.png" alt="" width="18" height="18"> Firefox
           </a>
-          <span class="btn btn--disabled" aria-disabled="true">
-            <img src="safari.png" alt="" width="18" height="18"> Safari — Soon
-          </span>
         </div>
-        <p class="s-install-note">Use <strong>Brave, Arc, or Opera</strong>? Choose Chrome — same store. · Safari supports extensions on iPhone &amp; iPad.</p>
+        <p class="s-install-note">Use <strong>Edge, Brave, Arc, or Opera</strong>? Choose Chrome — same store.</p>
       </div>
     </section>
 
@@ -977,7 +972,6 @@
         <p class="s-cta-lede reveal">Install in under 30 seconds. Keep everything free forever, or unlock the pros when you need them.</p>
         <div class="s-cta-buttons reveal">
           <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--ink-inverted" target="_blank"><img src="chrome-color-svgrepo-com.svg" alt="" width="18" height="18"> Chrome</a>
-          <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" class="btn btn--ink-inverted" target="_blank"><img src="microsoft-edge-logo_svgstack_com_28201770610048.svg" alt="" width="18" height="18"> Edge</a>
           <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" class="btn btn--ink-inverted" target="_blank"><img src="Firefox_logo,_2017.png" alt="" width="18" height="18"> Firefox</a>
         </div>
         <p class="s-cta-note reveal">No account needed · Works on app.jobtread.com · Starts earning time back immediately</p>
