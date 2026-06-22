@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tweaks — JT Power Tools</title>
+  <meta name="description" content="Make your own changes to JobTread — rename labels, hide clutter, restyle, reorder, warn before risky clicks — by point-and-click, with AI, or by hand. Pro.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/tweaks.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/tweaks.html">
+  <meta property="og:title" content="Tweaks — JT Power Tools">
+  <meta property="og:description" content="Customize JobTread yourself — point-and-click, with AI, or by hand. Scoped to your org, synced to your team.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
+
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-magic-wand"></i></span>
+          <span class="tier pro">Pro</span>
+        </div>
+        <h1 class="g-title"><span>Tweaks.</span></h1>
+        <p class="g-lede">Make JobTread work the way your team works — rename labels, hide clutter, restyle, reorder, or warn before a risky click. No code required.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>Tweaks are small, personal changes you make to JobTread itself. Rename a confusing label, hide a button you never use, recolor a section, reorder a list, or pop a confirmation before someone clicks something risky. Each tweak is scoped to your org and the page you built it on, stored on our server, and synced — so what you build shows up for your team on the pages it belongs to.</p>
+          <p>The <strong>User Tweaks Engine</strong> is the on/off switch that applies your installed tweaks. There are three ways to author them, from zero-code to fully hands-on.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Click the JT Power Tools icon and open the <strong>Tweaks</strong> tab.</li>
+            <li>Turn on the <strong>User Tweaks Engine</strong> (Pro). This applies your installed tweaks on this device.</li>
+            <li>Your current org shows at the top of the tab — tweaks you build are saved to that org.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Three ways to build a tweak</h2>
+          <ol class="g-steps">
+            <li><strong>Point-and-click — “Build a tweak.”</strong> Click the button, pick any element on a JobTread page, then choose what to do: rename text, hide it, restyle it, warn before click, sort a list, or move it. You get a live preview before you save. No JSON, no guessing.</li>
+            <li><strong>With AI — “Copy element for AI.”</strong> Pick an element and it copies a ready-to-paste prompt describing it. Paste that into your own AI chat, get a tweak back, then hit <strong>“Paste from AI”</strong> to install it. <em>“Copy across views for AI”</em> grabs the same kind of element across several views (table, Gantt, month) into one combined prompt.</li>
+            <li><strong>By hand — “Blank.”</strong> For advanced users who want to write the tweak JSON themselves.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>Tweaks are scoped to one org <em>and</em> the page you made them on — they won't leak onto unrelated screens.</li>
+            <li>They're cached on your device too, so they keep applying even offline or before you've signed in.</li>
+            <li>Safety guard: a tweak can't relabel a destructive or financial button — Approve, Delete, Pay, Send, Sign, and the like — into something misleading.</li>
+            <li>The engine toggle is per-device. Flip it off to instantly suspend every tweak on this machine without deleting anything.</li>
+            <li><strong>Power User tier</strong> adds MCP-powered authoring — your AI can write and edit tweaks on the fly through the JobTread connection.</li>
+            <li>Need help from support? <em>“Copy for support”</em> drops a diagnostic summary on your clipboard.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/custom-theme.html">Custom Theme</a> — recolor the whole app, not just one element</li>
+            <li><a href="/guides/pave-explorer.html">Pave Explorer</a> — see the API calls behind a page</li>
+            <li><a href="/mcp/other.html">MCP Setup</a> — connect your AI to JobTread</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
+</body>
+</html>
