@@ -510,6 +510,22 @@ div.border-l div.select-none.break-inside-avoid {
     }
 }
 
+/* === Plans tab — measurement visibility (eye) toggles === */
+/* When a measurement is hidden, JT flags the visibility controls with bare gray
+   utilities: `bg-gray-400` on the header "hide all" eye button and `bg-gray-200`
+   on the per-row eye cell. Neither bare utility is remapped globally (see the
+   AI-launcher note below for why a blanket `bg-gray-200` override is avoided), so
+   in dark mode the "hidden" indicator renders as a glaring light-grey block.
+   Scope the fix to these 30px eye controls and swap in dark "active" highlights,
+   keeping the header a notch stronger than the row (mirroring gray-400 > gray-200). */
+[role="button"].bg-gray-400.w-\[30px\] {
+    background-color: #505050 !important;
+}
+
+.bg-gray-200.shrink-0[style*="width: 30px"] {
+    background-color: #404040 !important;
+}
+
 /* === Group Hover Styles === */
 .group-hover\/row\:bg-gray-50 {
     background-color: #353535; /* Tailwind Zinc-900 */

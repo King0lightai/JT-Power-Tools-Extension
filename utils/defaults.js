@@ -76,13 +76,45 @@ const JTDefaults = (() => {
   /**
    * Feature categories for UI organization
    */
-  const FEATURE_CATEGORIES = {
-    scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter', 'ganttLines'],
-    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder', 'inspectForAi', 'paveCapture', 'tweakEngine'],
-    appearanceThemes: ['contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme'],
-    apiExperimental: ['customFieldFilter'],
-    powerUser: ['budgetChangelog', 'taskTypeFilter']
-  };
+  // Single source of truth for the Features tab. An ORDERED list of categories,
+  // each with an ORDERED list of feature ids. popup.js renders the category
+  // sections, their counts, and the within-category order straight from this —
+  // so nothing drifts and a new feature just slots into the right list. Order
+  // within each list is Free → Essential → Pro → Power User, then alphabetical.
+  // (Tweaks/AI features — tweakEngine, inspectForAi, paveCapture — live in their
+  // own tabs and are intentionally NOT listed here.)
+  const FEATURE_CATEGORIES = [
+    {
+      id: 'schedule',
+      title: 'Schedule & Calendar',
+      icon: 'ph-calendar-blank',
+      features: ['autoCollapseGroups', 'ganttLines', 'kanbanTypeFilter', 'availabilityFilter', 'dragDrop', 'taskTypeFilter']
+    },
+    {
+      id: 'budget',
+      title: 'Budget',
+      icon: 'ph-calculator',
+      features: ['budgetHierarchy', 'budgetTools', 'budgetRowHighlight', 'budgetChangelog']
+    },
+    {
+      id: 'documents',
+      title: 'Documents & Text',
+      icon: 'ph-file-text',
+      features: ['characterCounter', 'documentSort', 'formatter', 'pdfMarkupTools', 'reverseThreadOrder', 'fileDragToFolder', 'previewMode']
+    },
+    {
+      id: 'appearance',
+      title: 'Appearance',
+      icon: 'ph-palette',
+      features: ['contrastFix', 'darkMode', 'rgbTheme']
+    },
+    {
+      id: 'general',
+      title: 'General',
+      icon: 'ph-wrench',
+      features: ['jobAccessCollapse', 'freezeHeader', 'quickNotes', 'smartJobSwitcher', 'customFieldFilter']
+    }
+  ];
 
   /**
    * Timing constants (in milliseconds)

@@ -25,7 +25,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>POWER TOOLS</h1>
-        <span class="version">v4.9.8</span>
+        <span class="version">v4.9.10</span>
         <button class="header-action-btn" id="refreshBtn" title="Refresh current tab">
           <i class="ph ph-arrows-clockwise"></i>
         </button>
@@ -108,7 +108,7 @@
               <div class="feature-item">
                 <div class="feature-info">
                   <h3>Auto Collapse Completed Groups <i class="ph ph-question feature-help" data-guide="auto-collapse" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Collapse 100% complete groups on page load</p>
+                  <p>Collapse 100% complete groups on page load, and add an Expand/Collapse All Groups button to the Schedule</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
@@ -907,6 +907,21 @@
             </div>
           </div>
 
+          <!-- App Preferences (always visible; independent of sign-in state) -->
+          <div class="preferences-section" id="preferencesSection">
+            <h3 class="preferences-title">Preferences</h3>
+            <div class="feature-item" id="sidePanelPrefItem">
+              <div class="feature-info">
+                <h3>Always open in side panel</h3>
+                <p>Open Power Tools in Chrome's side panel when you click the toolbar icon, instead of the popup. You can switch back here anytime.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="alwaysOpenInSidePanel">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
           <!-- Portal Links -->
           <div class="portal-links" id="portalLinks" style="display: none;">
             <div class="portal-links-header">
@@ -1020,6 +1035,9 @@
   <!-- v4.8: OKLCH palette engine — must load before popup.js so the Theme tab
        (WCAG meter, OKLCH triplets, JT preview) can read window.ThemePalette -->
   <script src="../features/rgb-theme-modules/palette.js"></script>
+  <!-- Per-org tweak cache keyspace — must load before popup.js so the Tweaks
+       tab can read/migrate the jtTweaks:<org> buckets. -->
+  <script src="../features/tweak-engine/storage.js"></script>
   <script src="popup.js"></script>
   <script src="pave-explorer.js"></script>
 </body>

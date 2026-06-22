@@ -1609,6 +1609,84 @@ async function loadThemeFromSlot(slotIndex) {
   }
 }
 
+/**
+ * Render the Features-tab categories from the single source of truth
+ * (JTDefaults.FEATURE_CATEGORIES). Reparents the existing static .feature-item
+ * nodes into category sections in the defined order and sets each count
+ * dynamically — so categories, order, and counts all derive from one
+ * definition and never drift (kills the hardcoded-count bug). Any feature row
+ * not listed in a category is kept (appended to a "More" section) so nothing is
+ * ever hidden. Moving the existing nodes (not regenerating them) preserves each
+ * toggle's id and all the load/save wiring that references it by id.
+ */
+function renderFeatureCategories() {
+  const section = document.querySelector('#tab-features .features-section');
+  const cats = window.JTDefaults && window.JTDefaults.FEATURE_CATEGORIES;
+  if (!section || !Array.isArray(cats)) return; // defensive: fall back to static HTML
+
+  // Index every feature toggle row by its feature id, wherever it lives now.
+  const itemsById = {};
+  section.querySelectorAll('.feature-item').forEach(item => {
+    const input = item.querySelector('input[data-feature]');
+    if (input) itemsById[input.dataset.feature] = item;
+  });
+
+  const buildSection = (id, title, iconClass, ids) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'feature-category';
+
+    const header = document.createElement('div');
+    header.className = 'category-header collapsed';
+    header.dataset.category = id;
+    const icon = document.createElement('i');
+    icon.className = `ph ${iconClass} category-icon`;
+    const titleEl = document.createElement('span');
+    titleEl.className = 'category-title';
+    titleEl.textContent = title;
+    const countEl = document.createElement('span');
+    countEl.className = 'category-count';
+    const toggle = document.createElement('span');
+    toggle.className = 'category-toggle';
+    toggle.textContent = '▼';
+    header.append(icon, titleEl, countEl, toggle);
+
+    const body = document.createElement('div');
+    body.className = 'category-features collapsed';
+    body.dataset.categoryContent = id;
+
+    let count = 0;
+    ids.forEach(fid => {
+      const item = itemsById[fid];
+      if (item) { body.appendChild(item); delete itemsById[fid]; count++; }
+    });
+    countEl.textContent = String(count);
+
+    wrap.append(header, body);
+    return wrap;
+  };
+
+  const frag = document.createDocumentFragment();
+  cats.forEach(cat => {
+    if (cat && cat.id && Array.isArray(cat.features)) {
+      frag.appendChild(buildSection(cat.id, cat.title || cat.id, cat.icon || 'ph-squares-four', cat.features));
+    }
+  });
+
+  // Safety net: any toggle not assigned to a category still gets shown.
+  const orphanIds = Object.keys(itemsById);
+  if (orphanIds.length) {
+    console.warn('renderFeatureCategories: uncategorized feature toggles:', orphanIds);
+    frag.appendChild(buildSection('more', 'More', 'ph-dots-three', orphanIds));
+  }
+
+  // Replace the old static category sections with the rebuilt ones, mounted
+  // right after the master-toggle bar.
+  section.querySelectorAll('.feature-category').forEach(el => el.remove());
+  const masterBar = section.querySelector('.master-toggle-bar');
+  if (masterBar) masterBar.after(frag);
+  else section.appendChild(frag);
+}
+
 // Initialize popup
 // Initialize collapsible category functionality
 function initializeCategories() {
@@ -1697,6 +1775,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Check API status
   await checkApiStatus();
+
+  // Reorganize the Features tab into categories from the single source of
+  // truth BEFORE loading settings / wiring categories (it reparents existing
+  // toggle rows, so ids — and their load/save wiring — are preserved).
+  renderFeatureCategories();
 
   // Load current settings and update UI
   await loadSettings();
@@ -1911,6 +1994,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       }).catch(err => {
         console.error('Could not resolve current window for sidebar button:', err);
         openInSidebarBtn.style.display = 'none';
+      });
+    }
+  }
+
+  // "Always open in side panel" preference. Device-local; the service worker
+  // reads it and flips the toolbar-icon behavior (popup vs side panel). Hidden
+  // when the browser has no side-panel API. Rendered in both the popup and the
+  // side panel, so the user can always toggle it back off.
+  const sidePanelPref = document.getElementById('alwaysOpenInSidePanel');
+  const sidePanelPrefItem = document.getElementById('sidePanelPrefItem');
+  if (sidePanelPref) {
+    if (!chrome.sidePanel || typeof chrome.sidePanel.open !== 'function') {
+      if (sidePanelPrefItem) sidePanelPrefItem.style.display = 'none';
+    } else {
+      chrome.storage.local.get('openInSidePanel').then(({ openInSidePanel }) => {
+        sidePanelPref.checked = !!openInSidePanel;
+      });
+      sidePanelPref.addEventListener('change', () => {
+        const enabled = sidePanelPref.checked;
+        chrome.storage.local.set({ openInSidePanel: enabled });
+        showStatus(
+          enabled
+            ? 'Side panel set as default — click the toolbar icon to open it'
+            : 'Toolbar icon will open the popup',
+          'success'
+        );
       });
     }
   }
@@ -3563,6 +3672,9 @@ function showAccountError(formType, message) {
 
     let activeOrg = null;
     let isJtTab = false;
+    // Id of the JT tab this popup/panel is tracking — set by detectJtTab() and
+    // used to scope JT_ORG_CHANGED broadcasts to the tab we're showing.
+    let trackedTabId = null;
     // Cache of the caller's account info (role) used for Phase 2 UI gating
     // — admin/owner sees Edit/Delete on org_required tweaks; members don't.
     let callerAccount = null;
@@ -3572,6 +3684,29 @@ function showAccountError(formType, message) {
     // via the tweak-engine message handler. No `scripting` permission needed.
     detectJtTab();
     loadCallerAccount();
+
+    // Re-render the Tweaks list when the org is switched in the JT tab.
+    // OrgDetector (content script) broadcasts JT_ORG_CHANGED with the new org
+    // name; the `jt-org-changed` window event it also fires never leaves the
+    // page, so without this the list stays on the previous org while a
+    // persistent side panel is open across the switch (a transient popup closes
+    // on the click that switches orgs, so this only bit the side panel).
+    //
+    // Set activeOrg DIRECTLY from the broadcast (authoritative) rather than
+    // re-running detectJtTab — re-querying raced the SPA's org swap and could
+    // resolve null, which made render() fall back to readAll() and show every
+    // org's tweaks at once. Scope to the tab we're tracking so a change in a
+    // different JT tab doesn't hijack the panel; adopt a tab if we had none.
+    chrome.runtime.onMessage.addListener((message, sender) => {
+      if (!message || message.type !== 'JT_ORG_CHANGED') return;
+      const senderTabId = sender && sender.tab && sender.tab.id;
+      if (senderTabId == null) return;
+      if (trackedTabId != null && senderTabId !== trackedTabId) return;
+      trackedTabId = senderTabId;
+      activeOrg = message.orgName || null;
+      $orgLabel.textContent = activeOrg ? '(' + activeOrg + ')' : '(JT tab — org not detected)';
+      render();
+    });
 
     /**
      * Read the caller's role from AccountService. Called once on start
@@ -3615,12 +3750,9 @@ function showAccountError(formType, message) {
       if (!activeOrg) return;
       try {
         const { tweaks, diagnostics } = await window.TweaksApi.list(activeOrg);
-        // Same merge strategy as the engine: keep cache for OTHER orgs,
-        // overwrite for the org we just fetched.
-        const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics']);
-        const existing = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
-        const otherOrgs = existing.filter(t => t && t.scope && t.scope.jtOrg && t.scope.jtOrg !== activeOrg);
-        const merged = otherOrgs.concat(tweaks);
+        // Per-org keys: replace only this org's bucket — no cross-org merge.
+        await window.TweakStorage.writeOrg(activeOrg, tweaks);
+        const stored = await chrome.storage.local.get(['jtTweakDiagnostics']);
         const mergedDiag = { ...(stored.jtTweakDiagnostics || {}) };
         for (const [id, d] of Object.entries(diagnostics || {})) {
           mergedDiag[id] = {
@@ -3630,7 +3762,7 @@ function showAccountError(formType, message) {
             lastError: d.lastErrorMessage
           };
         }
-        await chrome.storage.local.set({ jtTweaks: merged, jtTweakDiagnostics: mergedDiag });
+        await chrome.storage.local.set({ jtTweakDiagnostics: mergedDiag });
       } catch (_err) {
         // Server offline / not logged in — silent fallback, render() uses cache.
       }
@@ -3651,6 +3783,9 @@ function showAccountError(formType, message) {
         }));
       }
       isJtTab = !!(tab && isJobTreadUrl(tab.url));
+      // Remember which tab we're showing so JT_ORG_CHANGED broadcasts from a
+      // different JT tab don't hijack the list.
+      trackedTabId = isJtTab ? tab.id : null;
       if (isJtTab) {
         // Try up to 3 times with a small delay — content script may still be
         // initializing on a freshly-loaded page, or OrgDetector may not have
@@ -3753,10 +3888,11 @@ function showAccountError(formType, message) {
 
     if ($summaryCopy) {
       $summaryCopy.addEventListener('click', async () => {
-        const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics']);
-        const all = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+        const stored = await chrome.storage.local.get(['jtTweakDiagnostics']);
         const diag = stored.jtTweakDiagnostics || {};
-        const visible = activeOrg ? all.filter(t => t && t.scope && t.scope.jtOrg === activeOrg) : all;
+        const visible = activeOrg
+          ? await window.TweakStorage.readOrg(activeOrg)
+          : await window.TweakStorage.readAll();
         const text = buildSupportDiagnostic(visible, diag);
         try {
           await navigator.clipboard.writeText(text);
@@ -3770,17 +3906,20 @@ function showAccountError(formType, message) {
     }
 
     async function render() {
+      // Split any legacy single-array cache into per-org keys before reading.
+      await window.TweakStorage.migrateLegacyIfNeeded();
       // Pull fresh data from the server before rendering (best-effort).
       // Cache keeps render() fast on repeat opens; this just keeps it
       // accurate when the user has authored on another device.
       await refreshFromServerSilent();
-      const stored = await chrome.storage.local.get(['jtTweaks', 'jtTweakDiagnostics', 'jtTweakAutoDisabled']);
-      const all = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+      const stored = await chrome.storage.local.get(['jtTweakDiagnostics', 'jtTweakAutoDisabled']);
       const diag = stored.jtTweakDiagnostics || {};
       const autoDisabledMap = stored.jtTweakAutoDisabled || {};
+      // With an active org, show just that org's bucket; otherwise show every
+      // org's tweaks (same visibility as before, now sourced per-org).
       const visible = activeOrg
-        ? all.filter(t => t && t.scope && t.scope.jtOrg === activeOrg)
-        : all;
+        ? await window.TweakStorage.readOrg(activeOrg)
+        : await window.TweakStorage.readAll();
 
       $list.innerHTML = '';
       renderSummary(visible, diag);
@@ -3993,13 +4132,7 @@ function showAccountError(formType, message) {
           console.warn('TweaksApi.setState failed, falling back to cache only:', err.message);
         }
       }
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
-      const idx = list.findIndex(t => t.id === id);
-      if (idx >= 0) {
-        list[idx].enabled = enabled;
-        await chrome.storage.local.set({ jtTweaks: list });
-      }
+      await window.TweakStorage.updateById(id, (t) => { t.enabled = enabled; });
     }
 
     async function deleteTweak(id, name) {
@@ -4015,9 +4148,7 @@ function showAccountError(formType, message) {
           return;
         }
       }
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const list = (stored.jtTweaks || []).filter(t => t.id !== id);
-      await chrome.storage.local.set({ jtTweaks: list });
+      await window.TweakStorage.removeById(id);
       render();
     }
 
@@ -4181,10 +4312,9 @@ function showAccountError(formType, message) {
 
       // Decide whether this is a fresh create or an update of an existing
       // tweak — the editor / popup share the same import flow for both.
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
-      const existingIdx = list.findIndex(t => t.id === parsed.id);
-      const isUpdate = existingIdx >= 0;
+      await window.TweakStorage.migrateLegacyIfNeeded();
+      const existingAll = await window.TweakStorage.readAll();
+      const isUpdate = existingAll.some(t => t && t.id === parsed.id);
 
       // Server-first. If we're online + logged in, send to the server
       // and use the canonical (sanitized) shape it returns. The server
@@ -4207,8 +4337,8 @@ function showAccountError(formType, message) {
         }
       }
 
-      if (existingIdx >= 0) list[existingIdx] = canonical; else list.push(canonical);
-      await chrome.storage.local.set({ jtTweaks: list });
+      // Lands in canonical.scope.jtOrg's bucket; upsert replaces by id on update.
+      await window.TweakStorage.upsert(canonical);
       $dialog.close();
       render();
     }

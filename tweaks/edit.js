@@ -70,8 +70,10 @@
       $json.value = JSON.stringify(blank, null, 2);
       originalSnapshot = $json.value;
     } else if (tweakId) {
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+      // Tweaks are cached under per-org keys (jtTweaks:<orgName>); migrate any
+      // legacy single-array cache first, then search across all buckets by id.
+      await window.TweakStorage.migrateLegacyIfNeeded();
+      const list = await window.TweakStorage.readAll();
       const tweak = list.find(t => t.id === tweakId);
       if (!tweak) {
         setStatus('Tweak not found', 'error');
@@ -301,16 +303,9 @@
       }
 
       // Always also write through the local cache so the engine's
-      // storage-change listener fires and re-applies on the JT tab.
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
-      const idx = list.findIndex(t => t.id === canonical.id);
-      if (idx >= 0) {
-        list[idx] = canonical;
-      } else {
-        list.push(canonical);
-      }
-      await chrome.storage.local.set({ jtTweaks: list });
+      // storage-change listener fires and re-applies on the JT tab. Lands in
+      // canonical.scope.jtOrg's per-org bucket; upsert replaces by id on update.
+      await window.TweakStorage.upsert(canonical);
 
       // Reflect the server's canonical shape back into the textarea so
       // the user sees the sanitized CSS and any normalized fields.

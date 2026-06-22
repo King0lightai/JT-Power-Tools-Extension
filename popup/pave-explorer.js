@@ -362,12 +362,16 @@
       if (msg && msg.payload) onCapture(msg.payload);
     });
     port.onDisconnect.addListener(() => {
-      // Content script not present (tab never loaded the extension) or tab closed.
-      if (chrome.runtime.lastError && els.status) {
-        els.status.textContent = 'Reload your JobTread tab once, then reopen this panel.';
-      }
+      void chrome.runtime.lastError; // tab reloaded/closed — expected, consume it
       state.active = false;
       state.port = null;
+      // The JobTread tab reloaded or closed. While the panel stays open we now
+      // auto-reconnect when a JobTread tab finishes loading (tabs.onUpdated in
+      // initGate), so reassure rather than telling the user to reopen the panel.
+      const panelEl = document.getElementById('tab-paveExplorer');
+      if (els.status && panelEl && panelEl.classList.contains('active')) {
+        els.status.textContent = 'Reconnecting…';
+      }
     });
   }
 
@@ -410,6 +414,22 @@
         else if (!isActive && state.active) stop();
       });
       obs.observe(panel, { attributes: true, attributeFilter: ['class'] });
+
+      // Reconnect after a JobTread page reload/navigation. The port to the
+      // content-script bridge dies when the tab reloads, and nothing else
+      // re-runs start() while the panel stays open (the MutationObserver only
+      // fires on tab switches) — so the panel used to stay stuck on "reload and
+      // reopen" until the user closed and reopened it. When the active JobTread
+      // tab finishes loading and we're not connected, reconnect. The bridge runs
+      // at document_end, so its onConnect listener is ready before 'complete'.
+      // start() re-queries the active JobTread tab, so a loose trigger is fine.
+      chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+        if (changeInfo.status !== 'complete') return;
+        if (!tab || !tab.url || !tab.url.startsWith('https://app.jobtread.com/')) return;
+        if (!panel.classList.contains('active') || state.active) return;
+        start();
+      });
+
       if (panel.classList.contains('active')) start();
     }
   }

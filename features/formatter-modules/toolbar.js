@@ -278,10 +278,21 @@ const FormatterToolbar = (() => {
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
    */
-  function embedToolbarForField(field) {
+  function embedToolbarForField(field, { fromFocus = false } = {}) {
     // Budget table fields that are NOT Description get no toolbar
     // Description fields now use the embedded compact toolbar (adaptive)
     if (isAnyBudgetTableField(field) && !isBudgetDescriptionField(field)) {
+      return null;
+    }
+
+    // Budget Description fields get a body-appended, position:fixed adaptive
+    // toolbar that is only positioned and deduped on the focus path
+    // (showToolbar -> positionBudgetFixedToolbar / hideAllEmbeddedToolbars).
+    // Building one OUTSIDE that path — e.g. initializeFields' "pre-create for
+    // every visible field" loop — spawns a visible, unpositioned, click-capturing
+    // toolbar on every visible budget row, and nothing removes them. So only
+    // build the budget toolbar when the field is actually focused.
+    if (!fromFocus && isBudgetDescriptionField(field)) {
       return null;
     }
 
@@ -1539,8 +1550,10 @@ const FormatterToolbar = (() => {
       activeToolbar = null;
     }
 
-    // Use embedded toolbar for all fields (embedToolbarForField handles exclusions)
-    const embeddedToolbar = embedToolbarForField(field);
+    // Use embedded toolbar for all fields (embedToolbarForField handles exclusions).
+    // fromFocus:true authorizes building the budget Description adaptive toolbar —
+    // this is the only path that positions and dedups it.
+    const embeddedToolbar = embedToolbarForField(field, { fromFocus: true });
     if (embeddedToolbar) {
       // Close overflow dropdowns on other embedded toolbars
       hideAllEmbeddedToolbars(embeddedToolbar);

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "4.10.0",
+  "version": "4.9.10",
   "description": "Supercharge JobTread with 20+ productivity features for contractors.",
   "icons": {
     "16": "icons/icon16-light.png",
@@ -118,6 +118,7 @@
         "features/inspect-for-ai.js",
         "features/pave-capture.js",
         "features/pave-explorer-bridge.js",
+        "features/tweak-engine/storage.js",
         "features/tweak-engine/alert-modal.js",
         "features/tweak-engine/system-banner.js",
         "features/tweak-engine/describe.js",

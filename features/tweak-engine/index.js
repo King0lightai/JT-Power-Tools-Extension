@@ -5,15 +5,18 @@
  * Storage model (Phase 2):
  *   - Server is source of truth: TweaksApi.list(jtOrg) returns the
  *     authoritative tweak set + per-account diagnostics.
- *   - chrome.storage.local['jtTweaks'] is an offline cache (write-through
- *     after every successful server fetch).
+ *   - chrome.storage.local['jtTweaks:<orgName>'] is a per-org offline cache
+ *     (write-through after every successful server fetch). Keyed per org so
+ *     tabs on different orgs never contend on one key — see storage.js
+ *     (window.TweakStorage), which also migrates the legacy single 'jtTweaks'
+ *     array into per-org keys on first run.
  *   - chrome.storage.local['jtTweakDiagnostics'] mirrors per-tweak
  *     diagnostics; the engine still buffers locally and flushes to the
  *     server on a debounce (best-effort).
  *
  * Init flow:
- *   1. Read cached jtTweaks → apply matching tweaks immediately (instant
- *      render even if the network is slow or the user isn't logged in).
+ *   1. Read the active org's cached bucket → apply matching tweaks immediately
+ *      (instant render even if the network is slow or the user isn't logged in).
  *   2. Fire a background TweaksApi.list(activeOrg) refresh. On success,
  *      write the response into chrome.storage.local — the existing
  *      storage-change listener triggers a re-apply automatically.
@@ -68,6 +71,20 @@ const TweakEngineFeature = (() => {
     // wraps a whole card with accidental "delete" inside the body copy.
     if (!text || text.length > 60) return false;
     return PROTECTED_ACTION_WORDS_RE.test(text);
+  }
+
+  // After the extension is reloaded/updated (or a Web Store auto-update),
+  // content scripts from the previous version keep running on already-open
+  // tabs but lose their connection — any chrome.* call then throws
+  // "Extension context invalidated". Guard the hot paths that fire on timers
+  // and observers so an orphaned script fails silent until the tab refreshes,
+  // instead of spamming uncaught errors.
+  function isContextValid() {
+    try {
+      return !!(chrome.runtime && chrome.runtime.id);
+    } catch {
+      return false;
+    }
   }
 
   function init() {
@@ -174,6 +191,9 @@ const TweakEngineFeature = (() => {
    */
   function listenForVisibility() {
     const rerun = debounce(() => {
+      // Orphaned content script after a reload/update — its chrome.* calls
+      // inside a.run() would throw "Extension context invalidated". Bail.
+      if (!isContextValid()) return;
       for (const a of actionAppliers) {
         try {
           a.run();
@@ -195,11 +215,19 @@ const TweakEngineFeature = (() => {
     // auto-disabled in a previous session stays disabled until the user
     // explicitly clicks Re-enable in the popup.
     await hydrateAutoDisabled();
+    // One-time split of the legacy single-array cache into per-org keys.
+    // Idempotent and cheap after the first run (no legacy key → early return).
+    await window.TweakStorage.migrateLegacyIfNeeded();
     try {
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const tweaks = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
+      // Read only the ACTIVE org's bucket — a tab never touches another org's
+      // key. matchesContext still applies the enabled / auto-disabled / urlMatch
+      // filters; the per-org key already guarantees scope.jtOrg === activeOrg.
+      // With no active org yet we apply nothing — jt-org-changed re-runs this
+      // once OrgDetector resolves the org.
+      const activeOrg = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
+      const tweaks = activeOrg ? await window.TweakStorage.readOrg(activeOrg) : [];
       const matching = tweaks.filter(matchesContext);
-      console.log(`TweakEngine: Loaded ${tweaks.length} total, ${matching.length} match current context`);
+      console.log(`TweakEngine: Loaded ${tweaks.length} for org "${activeOrg}", ${matching.length} match current context`);
       activeTweakIds = new Set();
       for (const tweak of matching) {
         applyTweak(tweak);
@@ -227,6 +255,28 @@ const TweakEngineFeature = (() => {
   }
 
   /**
+   * Order-insensitive equality of two tweak arrays. The multi-tab flicker loop
+   * comes from writing the SAME set in a different array ORDER on every refresh
+   * (each tab orders `merged` by its own active org), so chrome.storage's
+   * onChanged fires in the other tab forever. Comparing as a sorted set lets the
+   * steady state compare equal, so both tabs stop writing and the loop ends.
+   * Full content per tweak (not just id/version/enabled) so a real edit still
+   * propagates even if a version field isn't bumped; tweaks are stored exactly
+   * as the server returns them (no per-fetch fields), so this converges rather
+   * than looping.
+   */
+  function tweakSetsEqual(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+    const norm = (arr) => arr.map((t) => JSON.stringify(t)).sort();
+    const sa = norm(a);
+    const sb = norm(b);
+    for (let i = 0; i < sa.length; i++) {
+      if (sa[i] !== sb[i]) return false;
+    }
+    return true;
+  }
+
+  /**
    * Pull authoritative tweak set from the server for the current active
    * org and replace the cache. Best-effort: returns silently if there's
    * no active org, no API, or the user isn't logged in.
@@ -244,15 +294,17 @@ const TweakEngineFeature = (() => {
     try {
       const { tweaks, diagnostics } = await window.TweaksApi.list(activeOrg);
       console.log(`TweakEngine: Server returned ${tweaks.length} tweaks for org "${activeOrg}"`);
-      // Merge server set with any cached tweaks for OTHER orgs (so we
-      // don't lose offline data for an org the user isn't currently
-      // viewing). The cache is keyed only by tweak content, not by
-      // org-of-fetch, so we use scope.jtOrg as the join key.
-      const stored = await chrome.storage.local.get(['jtTweaks']);
-      const existing = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
-      const otherOrgs = existing.filter(t => t && t.scope && t.scope.jtOrg && t.scope.jtOrg !== activeOrg);
-      const merged = otherOrgs.concat(tweaks);
-      await chrome.storage.local.set({ jtTweaks: merged });
+      // Replace only THIS org's bucket. Per-org keys mean there's no cross-org
+      // merge to do — other orgs' caches live under their own keys and are never
+      // touched here. Still skip the write when the set is unchanged
+      // (order-insensitive): a cheap belt-and-suspenders guard against a needless
+      // re-apply if the server returns the same set in a different order. See
+      // tweakSetsEqual above; per-org keys are what actually kills the old
+      // cross-org ping-pong flicker.
+      const existing = await window.TweakStorage.readOrg(activeOrg);
+      if (!tweakSetsEqual(existing, tweaks)) {
+        await window.TweakStorage.writeOrg(activeOrg, tweaks);
+      }
       // Also overwrite diagnostics for the tweaks we have fresh data on.
       // Don't blow away diagnostics for tweaks not in the response.
       const diagStored = await chrome.storage.local.get(['jtTweakDiagnostics']);
@@ -703,23 +755,28 @@ const TweakEngineFeature = (() => {
         }
         streak.count++;
         const streakAge = now - streak.since;
-        if (streak.count >= ZERO_MATCH_THRESHOLD && streakAge >= ZERO_STREAK_MIN_DURATION_MS) {
+        if (streak.count >= ZERO_MATCH_THRESHOLD && streakAge >= ZERO_STREAK_MIN_DURATION_MS && isContextValid()) {
           // Pull last-success info from the persisted diagnostic
           // (in-memory buffer might not have the historical timestamp
-          // if it was flushed already).
-          chrome.storage.local.get(['jtTweakDiagnostics']).then((stored) => {
-            // Re-check inside the async callback: a successful match between
-            // the trip and now would have called consecutiveZeroMatches.delete.
-            // Without this, we'd auto-disable a tweak that just started
-            // working again — exactly the false-positive we're guarding against.
-            if (!consecutiveZeroMatches.has(tweak.id)) return;
-            const d = (stored.jtTweakDiagnostics || {})[tweak.id] || {};
-            const lastSuccessAt = d.lastSuccessfulMatchAt;
-            const lastSuccessCount = d.lastSuccessfulMatchCount || 0;
-            if (lastSuccessAt && (Date.now() - lastSuccessAt) >= MIN_SUCCESS_AGE_MS) {
-              autoDisableTweak(tweak.id, 'dom_changed', lastSuccessCount);
-            }
-          }).catch(() => {});
+          // if it was flushed already). Wrap in try/catch: on an orphaned
+          // post-reload script, chrome.storage.local.get throws SYNCHRONOUSLY
+          // ("Extension context invalidated") before returning a promise, so
+          // the .catch() below can't see it — fail silent instead.
+          try {
+            chrome.storage.local.get(['jtTweakDiagnostics']).then((stored) => {
+              // Re-check inside the async callback: a successful match between
+              // the trip and now would have called consecutiveZeroMatches.delete.
+              // Without this, we'd auto-disable a tweak that just started
+              // working again — exactly the false-positive we're guarding against.
+              if (!consecutiveZeroMatches.has(tweak.id)) return;
+              const d = (stored.jtTweakDiagnostics || {})[tweak.id] || {};
+              const lastSuccessAt = d.lastSuccessfulMatchAt;
+              const lastSuccessCount = d.lastSuccessfulMatchCount || 0;
+              if (lastSuccessAt && (Date.now() - lastSuccessAt) >= MIN_SUCCESS_AGE_MS) {
+                autoDisableTweak(tweak.id, 'dom_changed', lastSuccessCount);
+              }
+            }).catch(() => {});
+          } catch (_e) { /* extension context invalidated mid-pass — ignore */ }
         }
       }
       recordDiagnostic(tweak.id, partial);
@@ -1019,12 +1076,18 @@ const TweakEngineFeature = (() => {
   function listenForStorageChanges() {
     const handler = (changes, areaName) => {
       if (areaName !== 'local') return;
-      // Re-apply on either tweak-set changes OR auto-disable map changes
-      // (popup writes to jtTweakAutoDisabled when the user clicks
-      // Re-enable, and we want the engine to retry that tweak).
-      if (!changes.jtTweaks && !changes.jtTweakAutoDisabled) return;
+      // React ONLY to OUR active org's per-org key — a tab on org A ignores
+      // writes to jtTweaks:<orgB>, which is what removes the cross-org flicker
+      // loop at the source. Also react to auto-disable map changes (the popup
+      // writes jtTweakAutoDisabled when the user clicks Re-enable, and we want
+      // the engine to retry that tweak). The legacy jtTweaks key is deliberately
+      // NOT watched: migration removes it, and we don't want to react to that.
+      const activeOrg = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
+      const orgKey = activeOrg ? window.TweakStorage.keyForOrg(activeOrg) : null;
+      const tweaksChanged = !!(orgKey && changes[orgKey]);
+      if (!tweaksChanged && !changes.jtTweakAutoDisabled) return;
       console.log('TweakEngine: storage changed, re-applying',
-        changes.jtTweaks ? '(tweaks)' : '(auto-disable map)');
+        tweaksChanged ? '(tweaks)' : '(auto-disable map)');
       removeAllAppliedTweaks();
       loadAndApply();
     };

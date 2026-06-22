@@ -20,9 +20,10 @@
  *   - any authenticated member can write own state (incl. local-disable
  *     of org_required tweaks)
  *
- * The extension keeps chrome.storage.local['jtTweaks'] as an offline
- * cache. The engine reads from cache on init, then refreshes from the
- * server in the background.
+ * The extension keeps per-org offline caches in
+ * chrome.storage.local['jtTweaks:<orgName>'] (see storage.js /
+ * window.TweakStorage). The engine reads its active org's cache on init,
+ * then refreshes from the server in the background.
  */
 const TweaksApi = (() => {
   const DEBUG = false;

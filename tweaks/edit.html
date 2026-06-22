@@ -67,6 +67,9 @@
 <script src="../utils/tweak-validator.js"></script>
 <script src="../services/account-service.js"></script>
 <script src="../services/tweaks-api.js"></script>
+<!-- Per-org tweak cache keyspace — must load before edit.js so it can
+     read/migrate the jtTweaks:<org> buckets when editing an existing tweak. -->
+<script src="../features/tweak-engine/storage.js"></script>
 <script src="edit.js"></script>
 </body>
 </html>

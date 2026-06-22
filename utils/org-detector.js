@@ -128,6 +128,30 @@ const OrgDetector = (() => {
       window.dispatchEvent(new CustomEvent('jt-org-changed', {
         detail: { orgName, previousOrg: previous }
       }));
+      // The window event above only reaches content scripts in THIS frame.
+      // Also broadcast to extension pages (popup / side panel) so they can
+      // react to an org switch — the popup's Tweaks list reads the active org
+      // once on open and otherwise goes stale while a persistent side panel
+      // stays open across the switch.
+      broadcastOrgChange(orgName, previous);
+    }
+  }
+
+  /**
+   * Notify extension pages (popup / side panel) of an org change via
+   * chrome.runtime.sendMessage. Fire-and-forget: reads lastError in the
+   * callback to swallow the "no receiving end" noise when no page is open,
+   * and bails if the extension context was invalidated (reload/update).
+   */
+  function broadcastOrgChange(orgName, previousOrg) {
+    try {
+      if (!chrome || !chrome.runtime || !chrome.runtime.id) return;
+      chrome.runtime.sendMessage(
+        { type: 'JT_ORG_CHANGED', orgName, previousOrg },
+        () => { void chrome.runtime.lastError; }
+      );
+    } catch (_e) {
+      // Extension context invalidated — nothing to notify.
     }
   }
 

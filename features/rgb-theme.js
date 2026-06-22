@@ -468,6 +468,15 @@ const CustomThemeFeature = (() => {
         background-color: ${p.background.emphasis} !important;
       }
 
+      /* Plans tab — when a measurement is hidden, JT flags the header "hide all"
+         eye button with a bare \`bg-gray-400\` (the per-row eye cell uses
+         bg-gray-200, themed just above). bg-gray-400 isn't remapped globally, so
+         scope it to this 30px eye button and give it the strong background tier —
+         a notch above the row's emphasis, mirroring JT's gray-400 > gray-200. */
+      [role="button"].bg-gray-400.w-\\[30px\\] {
+        background-color: ${p.background.strong} !important;
+      }
+
       /* v4.8.3 — secondary action buttons (Item / Group / chip-style buttons in JT).
          The :not([style*="background-image"]) exclusion guarantees profile-icon
          elements (which use inline background-image: url(...) but no .bg-gray-* class today)

@@ -116,8 +116,53 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         console.error('Error during extension update process:', updateError);
       }
     }
+
+    // Apply the remembered "open in side panel vs popup" action behavior.
+    await initSidePanelPreference();
   } catch (error) {
     console.error('JT Power Tools: Unhandled error in onInstalled listener:', error);
+  }
+});
+
+/**
+ * Side-panel-as-default behavior.
+ *
+ * The toolbar icon opens EITHER the popup or the side panel, never both — Chrome
+ * shows the popup whenever action.default_popup is set. To honor a remembered
+ * "Always open in side panel" preference we clear the popup and turn on
+ * openPanelOnActionClick; to revert we restore the manifest popup and turn it
+ * off. The preference is device-local (chrome.storage.local, like the grant key)
+ * under `openInSidePanel`. Programmatic action/panel settings reset to manifest
+ * defaults on install/update/reload and browser restart, so we re-apply on
+ * onInstalled + onStartup, plus live on storage change.
+ */
+async function applySidePanelPreference(enabled) {
+  try {
+    await chrome.action.setPopup({ popup: enabled ? '' : 'popup/popup.html' });
+    if (chrome.sidePanel && typeof chrome.sidePanel.setPanelBehavior === 'function') {
+      await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: !!enabled });
+    }
+  } catch (error) {
+    console.error('JT Power Tools: Failed to apply side panel preference:', error);
+  }
+}
+
+async function initSidePanelPreference() {
+  try {
+    const { openInSidePanel } = await chrome.storage.local.get('openInSidePanel');
+    await applySidePanelPreference(!!openInSidePanel);
+  } catch (error) {
+    console.error('JT Power Tools: Failed to read side panel preference:', error);
+  }
+}
+
+chrome.runtime.onStartup.addListener(() => {
+  initSidePanelPreference();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes.openInSidePanel) {
+    applySidePanelPreference(!!changes.openInSidePanel.newValue);
   }
 });
 

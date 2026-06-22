@@ -515,12 +515,10 @@ const TweakBuilderFeature = (() => {
   }
 
   // Write-through to the local cache so the engine's storage-change listener
-  // applies the real (non-preview) tweak.
+  // applies the real (non-preview) tweak. Lands in the tweak's own per-org
+  // bucket (scope.jtOrg); upsert dedupes by id so a re-save can't duplicate.
   async function saveToLocal(tweak) {
-    const stored = await chrome.storage.local.get(['jtTweaks']);
-    const list = Array.isArray(stored.jtTweaks) ? stored.jtTweaks : [];
-    list.push(tweak);
-    await chrome.storage.local.set({ jtTweaks: list });
+    await window.TweakStorage.upsert(tweak);
   }
 
   async function save() {
