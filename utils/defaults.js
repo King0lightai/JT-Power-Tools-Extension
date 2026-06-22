@@ -100,7 +100,7 @@ const JTDefaults = (() => {
       id: 'documents',
       title: 'Documents & Text',
       icon: 'ph-file-text',
-      features: ['characterCounter', 'documentSort', 'formatter', 'pdfMarkupTools', 'reverseThreadOrder', 'fileDragToFolder', 'previewMode']
+      features: ['characterCounter', 'documentSort', 'formatter', 'pdfMarkupTools', 'reverseThreadOrder', 'previewMode']
     },
     {
       id: 'appearance',
