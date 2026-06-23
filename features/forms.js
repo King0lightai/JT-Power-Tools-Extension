@@ -168,7 +168,16 @@ const FormsFeature = (() => {
         schema: t.schema || null,
         instance: null,
       }));
-    return [...filled, ...empty];
+    // Honor the admin-defined display order (sort_order, set in the portal).
+    // The server returns filled instances and available templates as two
+    // separate arrays, so concatenating them loses cross-array order — sort
+    // the merged list by template.sortOrder to restore the #1/#2/#3 sequence.
+    // Fall back to 0 for any record missing the field (older server response).
+    const orderOf = (entry) => {
+      const v = entry && entry.template ? entry.template.sortOrder : undefined;
+      return typeof v === 'number' ? v : 0;
+    };
+    return [...filled, ...empty].sort((a, b) => orderOf(a) - orderOf(b));
   }
 
   async function handleOpenForCurrentJob() {
