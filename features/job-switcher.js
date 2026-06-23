@@ -1,4 +1,4 @@
-// JobTread Smart Job Switcher Feature
+// JobTread Smart Resize Feature
 // Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
 // Features: Quick job search, keyboard navigation, resizable sidebars with per-sidebar width memory
 

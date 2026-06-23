@@ -22,6 +22,11 @@
             font-weight: 600;
             color: var(--light);
         }
+        /* Long inline tokens (URLs, paths) must wrap, not force horizontal
+           scroll on narrow screens. */
+        .changelog-container code {
+            overflow-wrap: anywhere;
+        }
     </style>
 </head>
 <body>

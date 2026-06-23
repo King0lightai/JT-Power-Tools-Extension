@@ -865,9 +865,9 @@ async function saveSettings(settings) {
       return;
     }
 
-    // Check if user is trying to enable Smart Job Switcher without license
+    // Check if user is trying to enable Smart Resize without license
     if (settings.smartJobSwitcher && !hasEssentialFeatures) {
-      showStatus('Smart Job Switcher requires a license (Essential tier or higher)', 'error');
+      showStatus('Smart Resize requires a license (Essential tier or higher)', 'error');
       document.getElementById('smartJobSwitcher').checked = false;
       settings.smartJobSwitcher = false;
       return;

@@ -32,7 +32,7 @@ A Chrome & Firefox extension that supercharges [JobTread](https://www.jobtread.c
 
 | Feature | Description |
 |---------|-------------|
-| **Smart Job Switcher** | Keyboard-driven job search (J+S or Alt+J) with real-time filtering |
+| **Smart Resize** | Drag-resize any JobTread sidebar with per-sidebar width memory, plus quick job search (J+S or Alt+J) |
 | **Quick Notes** | Persistent notepad with markdown, WYSIWYG editor, and cross-device sync |
 | **Freeze Header** | Sticky column/row headers during table scrolling |
 | **PDF Markup Tools** | Stamp selector and eraser for PDF annotations |

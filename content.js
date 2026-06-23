@@ -59,7 +59,7 @@ const featureModules = {
     instance: null
   },
   smartJobSwitcher: {
-    name: 'Smart Job Switcher',
+    name: 'Smart Resize',
     feature: () => window.SmartJobSwitcherFeature,
     instance: null
   },
