@@ -169,28 +169,42 @@
 
     const bg = {
       base: background,
-      subtle:    shiftL(background, shallower * 1),
-      muted:     shiftL(background, deeper * 1),
+      // Light themes: subtle/muted sit slightly DARKER than the page and stay
+      // monotonic (subtle < muted) so fills/zebra read; "elevated" floats toward
+      // white (+0.05) so popups/dropdowns/modals actually lift off the page —
+      // the old +0.015 left them indistinguishable from the page. Dark themes
+      // are unchanged (already well-separated).
+      subtle:    shiftL(background, bgIsDark ? shallower : -0.018),
+      muted:     shiftL(background, bgIsDark ? deeper : -0.040),
       emphasis:  shiftL(background, deeper * 2),
       strong:    shiftL(background, deeper * 5),
-      elevated:  bgIsDark
-                   ? shiftL(background, +0.06)
-                   : shiftL(background, +0.015),
+      elevated:  shiftL(background, bgIsDark ? +0.06 : +0.05),
     };
 
     const tx = {
       primary:   text,
-      secondary: mix(text, background, 0.25),
-      muted:     mix(text, background, 0.45),
-      disabled:  mix(text, background, 0.6),
+      // Light themes pull the ramp back (less background mixed in) so secondary/
+      // muted labels stay legible instead of hazing toward the paper — JobTread
+      // uses muted text for a lot of real body copy. Dark unchanged.
+      secondary: mix(text, background, bgIsDark ? 0.25 : 0.18),
+      muted:     mix(text, background, bgIsDark ? 0.45 : 0.34),
+      disabled:  mix(text, background, bgIsDark ? 0.60 : 0.50),
     };
 
+    // Light-theme borders were mixed ~85% toward the background — a hairline so
+    // faint that cards/inputs/cells lost their edges and the UI read as blurry.
+    // Pull more text into the light tiers so edges are visible. Dark unchanged.
     const border = {
-      subtle:  mix(text, background, bgIsDark ? 0.82 : 0.88),
-      default: mix(text, background, bgIsDark ? 0.72 : 0.78),
-      strong:  mix(text, background, bgIsDark ? 0.55 : 0.62),
+      subtle:  mix(text, background, bgIsDark ? 0.82 : 0.80),
+      default: mix(text, background, bgIsDark ? 0.72 : 0.68),
+      strong:  mix(text, background, bgIsDark ? 0.55 : 0.55),
     };
 
+    // Selection blend with chroma rescue on light themes (see note below).
+    const sel = (t) => {
+      const blended = mix(primary, background, t);
+      return bgIsDark ? blended : scaleC(blended, 1.4);
+    };
     const pri = {
       base:   primary,
       hover:  shiftL(primary, bgIsDark ? +0.05 : -0.04),
@@ -201,9 +215,14 @@
          selection vanished into the surrounding bg on dense tables (cost
          items list, line-item editor). Current ratios let 35% / 45% / 58%
          primary through respectively. */
-      selection:       mix(primary, background, 0.65),
-      selectionHover:  mix(primary, background, 0.55),
-      selectionStrong: mix(primary, background, 0.42),
+      /* On light themes, blending the primary toward a near-white bg in Oklab
+         strips chroma, leaving a greyed-tan wash that vanishes on dense tables.
+         Re-boost chroma (×1.4) so the selection keeps the brand hue and reads as
+         "selected". Dark themes blend toward a dark bg without the same chroma
+         loss, so they're left as the plain mix. */
+      selection:       sel(0.65),
+      selectionHover:  sel(0.55),
+      selectionStrong: sel(0.42),
     };
 
     // v4.8.3 — secondary auto-derived from primary in OKLCH space.
@@ -256,13 +275,21 @@
       const C = bgIsDark ? 0.13 : 0.14;
       return oklchToHex({ L, C, h: hue });
     }
+    // One step off `tint()` for active-row hover (e.g. bg-green-200 over -100).
+    // rgb-theme.js referenced `alerts.<hue>.bgHover` but it was never defined,
+    // so hovered active rows didn't change — this supplies the step.
+    function tintHover(hue) {
+      const L = bgIsDark ? 0.35 : 0.91;
+      const C = bgIsDark ? 0.12 : 0.08;
+      return oklchToHex({ L, C, h: hue });
+    }
     const alerts = {
       bodyText: tx.primary,
-      green:  { bg: tint(155), text: tintText(155), border: tintBorder(155) },
-      yellow: { bg: tint(85),  text: tintText(85),  border: tintBorder(85) },
-      red:    { bg: tint(25),  text: tintText(25),  border: tintBorder(25) },
-      orange: { bg: tint(50),  text: tintText(50),  border: tintBorder(50) },
-      purple: { bg: tint(310), text: tintText(310), border: tintBorder(310) },
+      green:  { bg: tint(155), bgHover: tintHover(155), text: tintText(155), border: tintBorder(155) },
+      yellow: { bg: tint(85),  bgHover: tintHover(85),  text: tintText(85),  border: tintBorder(85) },
+      red:    { bg: tint(25),  bgHover: tintHover(25),  text: tintText(25),  border: tintBorder(25) },
+      orange: { bg: tint(50),  bgHover: tintHover(50),  text: tintText(50),  border: tintBorder(50) },
+      purple: { bg: tint(310), bgHover: tintHover(310), text: tintText(310), border: tintBorder(310) },
     };
 
     const shadows = bgIsDark

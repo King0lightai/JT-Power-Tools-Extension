@@ -685,7 +685,10 @@ body.dark-theme .badge.new {
   left: 3px;
   bottom: 3px;
   background: #fff;
-  transition: all var(--duration) var(--ease);
+  /* Knob slides with a back-out spring (slight overshoot) for a tactile snap;
+     color/other props keep the standard ease. The 3px track clearance absorbs
+     the overshoot so the knob never clips. */
+  transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1), background var(--duration) var(--ease);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0,0,0,.2);
 }

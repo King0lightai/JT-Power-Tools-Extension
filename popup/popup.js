@@ -1349,7 +1349,14 @@ async function applyTheme() {
 }
 
 // Preloaded theme presets — v4.8 lineup
+// Brand themes (Light / Dark / Jurassic Tarantula) lead the lineup — seed
+// triples taken from the JT Power Tools Design System (warm paper, warm coal,
+// and the fossil-amber/tar Jurassic theme). The OKLCH engine derives the full
+// palette from these three seeds.
 const PRESET_THEMES = {
+  'light':      { primary: '#FE4C0D', background: '#F5F1EA', text: '#1A1A1A', label: 'Light',      meta: 'Brand · warm paper' },
+  'dark':       { primary: '#FE4C0D', background: '#1C1A16', text: '#F4EFE6', label: 'Dark',       meta: 'Brand · warm coal' },
+  'jurassic':   { primary: '#E0531F', background: '#16110A', text: '#F6E9C9', label: 'Jurassic Tarantula', meta: 'Fossil amber · tar black' },
   'field-day':  { primary: '#FE4C0D', background: '#FFFBF4', text: '#1A1410', label: 'Field Day',  meta: 'High-vis · auto-applied' },
   'blueprint':  { primary: '#0EA5E9', background: '#F4F8FC', text: '#0C2230', label: 'Blueprint',  meta: 'Brand · auto-applied' },
   'carbon':     { primary: '#FFB000', background: '#1A1916', text: '#ECECEC', label: 'Carbon',     meta: 'Dark · auto-applied' },

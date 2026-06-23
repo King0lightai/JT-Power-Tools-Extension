@@ -219,49 +219,29 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Custom Scrollbar Styling === */
-      /* Only style scrollbars on scrollable containers, not all elements */
-      html::-webkit-scrollbar,
-      body::-webkit-scrollbar,
-      [class*="overflow-auto"]::-webkit-scrollbar,
-      [class*="overflow-y-auto"]::-webkit-scrollbar,
-      [class*="overflow-x-auto"]::-webkit-scrollbar,
-      [class*="overflow-scroll"]::-webkit-scrollbar {
+      /* Themed globally (matches Dark Mode's coverage) so inner scroll regions
+         that don't carry an overflow-* class don't keep default light scrollbars. */
+      ::-webkit-scrollbar {
         width: 10px;
         height: 10px;
       }
 
-      html::-webkit-scrollbar-track,
-      body::-webkit-scrollbar-track,
-      [class*="overflow-auto"]::-webkit-scrollbar-track,
-      [class*="overflow-y-auto"]::-webkit-scrollbar-track,
-      [class*="overflow-x-auto"]::-webkit-scrollbar-track,
-      [class*="overflow-scroll"]::-webkit-scrollbar-track {
+      ::-webkit-scrollbar-track {
         background: ${p.scrollbar.track};
         border-radius: 5px;
       }
 
-      html::-webkit-scrollbar-thumb,
-      body::-webkit-scrollbar-thumb,
-      [class*="overflow-auto"]::-webkit-scrollbar-thumb,
-      [class*="overflow-y-auto"]::-webkit-scrollbar-thumb,
-      [class*="overflow-x-auto"]::-webkit-scrollbar-thumb,
-      [class*="overflow-scroll"]::-webkit-scrollbar-thumb {
+      ::-webkit-scrollbar-thumb {
         background: ${p.scrollbar.thumb};
         border-radius: 5px;
         border: 2px solid ${p.background.base};
       }
 
-      html::-webkit-scrollbar-thumb:hover,
-      body::-webkit-scrollbar-thumb:hover,
-      [class*="overflow-auto"]::-webkit-scrollbar-thumb:hover,
-      [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover,
-      [class*="overflow-x-auto"]::-webkit-scrollbar-thumb:hover,
-      [class*="overflow-scroll"]::-webkit-scrollbar-thumb:hover {
+      ::-webkit-scrollbar-thumb:hover {
         background: ${p.scrollbar.thumbHover};
       }
 
-      html::-webkit-scrollbar-corner,
-      body::-webkit-scrollbar-corner {
+      ::-webkit-scrollbar-corner {
         background: ${p.background.base};
       }
 
@@ -646,6 +626,7 @@ const CustomThemeFeature = (() => {
       div[data-popper-placement] {
         background-color: ${p.background.elevated} !important;
         color: ${p.text.primary} !important;
+        border: 1px solid ${p.border.default} !important;
         box-shadow: 0 8px 24px ${p.shadows.colorStrong} !important;
       }
 
@@ -795,7 +776,9 @@ const CustomThemeFeature = (() => {
       button[class*="bg-blue"] {
         background-color: ${p.primary.base} !important;
         color: ${primaryText} !important;
-        box-shadow: 0 2px 4px ${p.shadows.color};
+        /* Brand signature: chunky press-shadow (deep-orange underline) instead of
+           a generic soft drop — the tactile "physical button" feel from the DS. */
+        box-shadow: 0 2px 0 ${p.primary.active};
       }
 
       button.hover\\:bg-blue-600:hover,
