@@ -23,6 +23,7 @@
   const $btnSave = document.getElementById('btn-save');
   const $btnTest = document.getElementById('btn-test');
   const $btnRevert = document.getElementById('btn-revert');
+  const $btnShare = document.getElementById('btn-share');
   const $scopeRow = document.getElementById('scope-toggle-row');
   const $scopeLockedNote = document.getElementById('scope-locked-note');
 
@@ -92,6 +93,7 @@
     $btnSave.addEventListener('click', save);
     $btnTest.addEventListener('click', testOnActiveTab);
     $btnRevert.addEventListener('click', revert);
+    $btnShare.addEventListener('click', shareTweak);
 
     validateAndRender();
   }
@@ -366,6 +368,31 @@
       $json.value = originalSnapshot;
       validateAndRender();
       setStatus('Reverted to last save.', 'ok');
+    }
+  }
+
+  /**
+   * Strip the current tweak to a shareable envelope and create a short
+   * link via the server. Copies the link to the clipboard and shows it in
+   * the status line. Requires login (server enforces the active-license gate).
+   */
+  async function shareTweak() {
+    const tweak = validateAndRender();
+    if (!tweak) { setStatus('Fix validation errors before sharing.', 'error'); return; }
+    if (!window.TweakPort) { setStatus('Share unavailable (TweakPort not loaded).', 'error'); return; }
+    if (!window.TweaksApi || !window.TweaksApi.isAvailable()) {
+      setStatus('Log in to JT Power Tools to share a tweak.', 'error');
+      return;
+    }
+    setStatus('Creating share link…', '');
+    try {
+      const envelope = window.TweakPort.exportTweak(tweak);
+      const result = await window.TweaksApi.share(envelope);
+      if (!result || !result.url) throw new Error('No URL returned');
+      try { await navigator.clipboard.writeText(result.url); } catch (_e) { /* clipboard may be blocked */ }
+      setStatus('Share link copied: ' + result.url, 'ok');
+    } catch (err) {
+      setStatus('Share failed: ' + (err && err.message ? err.message : String(err)), 'error');
     }
   }
 

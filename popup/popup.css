@@ -2147,6 +2147,22 @@ body.dark-theme .tweak-card-actions .icon-btn.danger:hover {
   border-color: var(--brand-orange);
   box-shadow: 0 0 0 3px var(--brand-orange-glow);
 }
+.jt-tweaks-share-url {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: 8px;
+  font: 13px ui-monospace, "Cascadia Code", Consolas, monospace;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--duration) var(--ease);
+}
+.jt-tweaks-share-url:focus {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px var(--brand-orange-glow);
+}
 .jt-tweaks-import-preview {
   margin-top: 10px;
   font-size: 12px;

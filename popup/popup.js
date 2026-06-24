@@ -4068,6 +4068,16 @@ function showAccountError(formType, message) {
           actions.appendChild(reBtn);
         }
 
+        // Share is available to anyone who can see the tweak — export strips
+        // all org/person data, so even a member viewing an org_required tweak
+        // can share a portable copy.
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'icon-btn';
+        shareBtn.textContent = 'Share';
+        shareBtn.title = 'Create a shareable link for this tweak';
+        shareBtn.addEventListener('click', () => shareTweak(tweak));
+        actions.appendChild(shareBtn);
+
         // Edit + Delete are gated on role for org_required tweaks. A
         // member can't mutate them — only locally disable via the
         // toggle. Admin/owner sees the buttons either way.
@@ -4164,6 +4174,30 @@ function showAccountError(formType, message) {
       chrome.tabs.create({ url });
     }
 
+    async function shareTweak(tweak) {
+      if (!window.TweakPort) { showStatus('Share unavailable on this page', 'error'); return; }
+      if (!window.TweaksApi || !window.TweaksApi.isAvailable()) {
+        showStatus('Log in to share a tweak', 'error');
+        return;
+      }
+      try {
+        const envelope = window.TweakPort.exportTweak(tweak);
+        const result = await window.TweaksApi.share(envelope);
+        if (!result || !result.url) throw new Error('No URL returned');
+        const $shareDialog = document.querySelector('[data-share-dialog]');
+        const $shareUrl = $shareDialog ? $shareDialog.querySelector('[data-share-url]') : null;
+        if ($shareUrl) $shareUrl.value = result.url;
+        try { await navigator.clipboard.writeText(result.url); } catch (_e) { /* ignore */ }
+        if ($shareDialog && $shareDialog.showModal) {
+          $shareDialog.showModal();
+        } else {
+          showStatus('Share link copied', 'success');
+        }
+      } catch (err) {
+        showStatus('Share failed: ' + (err && err.message ? err.message : 'error'), 'error');
+      }
+    }
+
     $importBtn.addEventListener('click', () => {
       $importJson.value = '';
       $importPreview.textContent = '';
@@ -4174,6 +4208,22 @@ function showAccountError(formType, message) {
     $cancelBtn.addEventListener('click', () => $dialog.close());
     $importJson.addEventListener('input', previewImport);
     $installBtn.addEventListener('click', doInstall);
+
+    const $shareDialog = document.querySelector('[data-share-dialog]');
+    if ($shareDialog) {
+      const $shareClose = $shareDialog.querySelector('[data-action="share-close"]');
+      const $shareCopy = $shareDialog.querySelector('[data-action="share-copy"]');
+      const $shareUrl = $shareDialog.querySelector('[data-share-url]');
+      if ($shareClose) $shareClose.addEventListener('click', () => $shareDialog.close());
+      if ($shareCopy) $shareCopy.addEventListener('click', async () => {
+        if ($shareUrl) {
+          $shareUrl.select();
+          try { await navigator.clipboard.writeText($shareUrl.value); } catch (_e) { /* ignore */ }
+        }
+        $shareCopy.textContent = 'Copied!';
+        setTimeout(() => { $shareCopy.textContent = 'Copy link'; }, 1500);
+      });
+    }
 
     // "Pick an element on JobTread" buttons — single + multi-view variants.
     // Both send a message to the JT tab to start picker mode. The multi

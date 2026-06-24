@@ -1036,6 +1036,16 @@
     </div>
   </dialog>
 
+  <dialog class="jt-tweaks-import-dialog" data-share-dialog>
+    <h3>Share this tweak</h3>
+    <p>Anyone with this link can import a copy into their own JobTread org. Org-specific data is stripped.</p>
+    <input type="text" data-share-url readonly class="jt-tweaks-share-url">
+    <div class="jt-tweaks-import-actions">
+      <button data-action="share-close">Close</button>
+      <button data-action="share-copy" class="jt-tweaks-action-primary">Copy link</button>
+    </div>
+  </dialog>
+
   <script src="../utils/browser-polyfill.js"></script>
   <script src="../utils/defaults.js"></script>
   <script src="../utils/sanitizer.js"></script>
@@ -1053,6 +1063,7 @@
   <!-- Per-org tweak cache keyspace — must load before popup.js so the Tweaks
        tab can read/migrate the jtTweaks:<org> buckets. -->
   <script src="../features/tweak-engine/storage.js"></script>
+  <script src="../features/tweak-engine/port.js"></script>
   <script src="popup.js"></script>
   <script src="pave-explorer.js"></script>
 </body>

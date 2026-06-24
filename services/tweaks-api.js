@@ -177,6 +177,20 @@ const TweaksApi = (() => {
   }
 
   /**
+   * Share a stripped tweak envelope (the output of TweakPort.exportTweak).
+   * Server stores it under a short code. Returns { ok, code, url }.
+   * Same auth as create — the active-license requirement is the "licensed
+   * tweak user" gate.
+   */
+  async function share(envelope) {
+    if (!envelope || typeof envelope !== 'object') {
+      throw new Error('share envelope object is required');
+    }
+    log('share', { name: envelope.name });
+    return postJson('/admin/tweaks/share', { envelope });
+  }
+
+  /**
    * Convenience predicate: is the API reachable for this caller? Used by
    * the engine to decide whether to attempt a server fetch on init.
    * Returns true when AccountService reports a logged-in user.
@@ -192,6 +206,7 @@ const TweaksApi = (() => {
     remove,
     setState,
     reportDiagnostics,
+    share,
     isAvailable
   };
 })();

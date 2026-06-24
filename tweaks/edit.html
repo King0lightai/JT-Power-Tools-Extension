@@ -9,6 +9,7 @@
 <header class="jt-tweak-edit-header">
   <h1 id="title">Edit Tweak</h1>
   <div class="jt-tweak-edit-actions">
+    <button id="btn-share" class="jt-tweak-edit-btn jt-tweak-edit-btn-secondary" title="Create a shareable link for this tweak">Share</button>
     <button id="btn-test" class="jt-tweak-edit-btn">Test on active JT tab</button>
     <button id="btn-revert" class="jt-tweak-edit-btn jt-tweak-edit-btn-secondary">Revert</button>
     <button id="btn-save" class="jt-tweak-edit-btn jt-tweak-edit-btn-primary">Save</button>
@@ -70,6 +71,7 @@
 <!-- Per-org tweak cache keyspace — must load before edit.js so it can
      read/migrate the jtTweaks:<org> buckets when editing an existing tweak. -->
 <script src="../features/tweak-engine/storage.js"></script>
+<script src="../features/tweak-engine/port.js"></script>
 <script src="edit.js"></script>
 </body>
 </html>

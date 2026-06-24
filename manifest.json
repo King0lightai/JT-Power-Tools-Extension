@@ -126,6 +126,7 @@
         "features/tweak-engine/builder-emit.js",
         "features/tweak-engine/builder.js",
         "features/tweak-engine/index.js",
+        "features/tweak-engine/share-loader.js",
         "content.js"
       ],
       "run_at": "document_end"
