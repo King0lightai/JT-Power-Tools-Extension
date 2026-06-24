@@ -225,18 +225,27 @@
       selectionStrong: sel(0.42),
     };
 
-    // v4.8.3 — secondary auto-derived from primary in OKLCH space.
-    // Complementary hue (+180°) at 85% chroma + same lightness:
-    //   - Same L → secondary buttons sit at the same visual weight as primary buttons.
-    //   - 85% C → doesn't compete with primary for attention.
-    //   - +180° h → maximum perceptual contrast.
-    //   - For low-chroma primaries (Slate / Charcoal), C * 0.85 stays low,
-    //     so secondary stays gracefully neutral instead of injecting jarring color.
+    // v4.8.4 — secondary derived from primary in OKLCH space.
+    //
+    // These map to JobTread's .bg-gray-700/800 surfaces — the financial summary
+    // bar, Item/Group buttons, and chips. In stock JobTread they're DARK NEUTRALS,
+    // not a second accent hue. v4.8.3 derived them as the +180° complement at the
+    // primary's own lightness, which (a) clashed hard with the theme (a blue
+    // primary produced an amber bar) and (b) only gave ~3.6:1 contrast under the
+    // forced white text on these surfaces.
+    //
+    // Derive instead as a DARK, LOW-CHROMA tone in the PRIMARY's hue:
+    //   - h = primary.h → always harmonizes; the surface reads as "the theme's
+    //     dark neutral" (blue theme → navy, red → brick, green → forest).
+    //   - C capped low → a gentle theme tint, never a competing saturated accent;
+    //     low-chroma primaries (Slate / Charcoal) stay gracefully near-neutral.
+    //   - Fixed dark L → matches stock gray-700's weight and keeps white text
+    //     legible (~7-9:1). Slightly lighter on dark themes so it lifts off the page.
     const primaryOklch = hexToOklch(primary);
     const secondaryBase = oklchToHex({
-      L: primaryOklch.L,
-      C: primaryOklch.C * 0.85,
-      h: (primaryOklch.h + 180) % 360,
+      L: bgIsDark ? 0.46 : 0.42,
+      C: Math.min(primaryOklch.C, 0.07),
+      h: primaryOklch.h,
     });
     const secondary = {
       base:   secondaryBase,
