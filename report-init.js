@@ -5,7 +5,7 @@
   'use strict';
 
   chrome.storage.local.get('_budgetReportData', function(result) {
-    var payload = result._budgetReportData;
+    const payload = result._budgetReportData;
     if (!payload) {
       document.getElementById('app').innerHTML =
         '<h2 style="color:#ef4444;">No report data found</h2>' +
@@ -17,11 +17,11 @@
     chrome.storage.local.remove('_budgetReportData');
 
     try {
-      var data = payload;
+      const data = payload;
       document.title = 'Budget Changelog - ' + (data.options.jobName || 'Budget');
 
       // Inject styles
-      var style = document.createElement('style');
+      const style = document.createElement('style');
       style.textContent = BudgetReportApp.getReportStyles();
       document.head.appendChild(style);
 

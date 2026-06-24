@@ -236,81 +236,8 @@ const TaskCompletion = (() => {
     // Click the header button to open sidebar (not the whole card, just the button)
     headerButton.click();
 
-    // Wait for sidebar to open
-    setTimeout(() => {
-      const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
-
-      if (sidebar) {
-        // Find the Progress section
-        const progressCheckbox = findProgressCheckbox(sidebar);
-
-        if (progressCheckbox) {
-          // Click the checkbox to toggle completion
-          progressCheckbox.click();
-
-          // Wait a bit for the change to register
-          setTimeout(() => {
-            // Close the sidebar
-            if (window.SidebarManager) {
-              window.SidebarManager.closeSidebar(failsafeTimeout, () => {
-                // Update checkbox visual state (toggle from previous state)
-                const newCompletionState = !wasComplete;
-                updateCheckboxState(checkbox, newCompletionState);
-
-                // Restore checkbox
-                checkbox.style.opacity = '';
-                checkbox.style.pointerEvents = '';
-
-                // Show notification
-                if (window.UIUtils) {
-                  const statusText = newCompletionState ? 'completed' : 'marked incomplete';
-                  window.UIUtils.showNotification(`Task ${statusText}`);
-                }
-              });
-            } else {
-              // Manual close if SidebarManager not available
-              clearTimeout(failsafeTimeout);
-              if (hideStyle) hideStyle.remove();
-
-              // Update checkbox visual state
-              const newCompletionState = !wasComplete;
-              updateCheckboxState(checkbox, newCompletionState);
-
-              checkbox.style.opacity = '';
-              checkbox.style.pointerEvents = '';
-            }
-          }, 300);
-        } else {
-          console.error('TaskCompletion: Could not find progress checkbox in sidebar');
-          // Close sidebar and restore
-          if (window.SidebarManager) {
-            window.SidebarManager.closeSidebar(failsafeTimeout, () => {
-              checkbox.style.opacity = '';
-              checkbox.style.pointerEvents = '';
-            });
-          } else {
-            clearTimeout(failsafeTimeout);
-            if (hideStyle) hideStyle.remove();
-            checkbox.style.opacity = '';
-            checkbox.style.pointerEvents = '';
-          }
-
-          if (window.UIUtils) {
-            window.UIUtils.showNotification('Could not find progress checkbox');
-          }
-        }
-      } else {
-        console.error('TaskCompletion: Sidebar did not open');
-        clearTimeout(failsafeTimeout);
-        if (hideStyle) hideStyle.remove();
-        checkbox.style.opacity = '';
-        checkbox.style.pointerEvents = '';
-
-        if (window.UIUtils) {
-          window.UIUtils.showNotification('Sidebar did not open');
-        }
-      }
-    }, 500);
+    // Wait for sidebar to open, then toggle the Progress checkbox
+    waitForSidebarAndToggleProgress(checkbox, hideStyle, wasComplete, failsafeTimeout);
   }
 
   /**
@@ -471,7 +398,20 @@ const TaskCompletion = (() => {
       taskCard.click();
     }
 
-    // Wait for sidebar to open
+    // Wait for sidebar to open, then toggle the Progress checkbox
+    waitForSidebarAndToggleProgress(checkbox, hideStyle, wasComplete, failsafeTimeout);
+  }
+
+  /**
+   * Wait for the task sidebar to open, then toggle its Progress checkbox and
+   * restore the originating checkbox's visual state. Shared by the Kanban and
+   * list-view completion toggles.
+   * @param {HTMLElement} checkbox - The checkbox button that was clicked
+   * @param {HTMLElement|null} hideStyle - Injected sidebar-hiding style element
+   * @param {boolean} wasComplete - Whether the task was complete before clicking
+   * @param {number} failsafeTimeout - Failsafe timeout id to clear on sidebar close
+   */
+  function waitForSidebarAndToggleProgress(checkbox, hideStyle, wasComplete, failsafeTimeout) {
     setTimeout(() => {
       const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 

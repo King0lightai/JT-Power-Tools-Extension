@@ -277,8 +277,8 @@ const CssSanitizer = (() => {
     return errors.length === 0
       ? { ok: true, css }
       : (css.trim().length === 0
-          ? { ok: false, errors }
-          : { ok: true, css, warnings: errors });
+        ? { ok: false, errors }
+        : { ok: true, css, warnings: errors });
   }
 
   return { sanitize };

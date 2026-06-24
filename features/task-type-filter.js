@@ -62,15 +62,6 @@ const TaskTypeFilterFeature = (() => {
   }
 
   /**
-   * Check if we're on a job-level schedule (e.g. /jobs/{id}/schedule)
-   * vs. the global org schedule (/schedule).
-   * On job-level, task cards from other jobs can't be opened in the sidebar.
-   */
-  function isJobLevelSchedule() {
-    return /\/jobs\/[^/]+\/schedule/.test(window.location.pathname);
-  }
-
-  /**
    * A "navigation key" for the current URL with the transient `taskId` param
    * removed. Opening/closing a task sidebar only toggles ?taskId=, which is
    * NOT a real navigation — using this key for change-detection keeps the
@@ -509,16 +500,6 @@ const TaskTypeFilterFeature = (() => {
   }
 
   /**
-   * Find the first row in tbody — we insert our rows BEFORE it
-   * (above all assignee rows like INTERNAL, Warren, etc.)
-   */
-  function getFirstBodyRow() {
-    const info = getTableInfo();
-    if (!info) return null;
-    return info.tbody.querySelector('tr');
-  }
-
-  /**
    * Build and render the filter bar (above the table) and TASKS row (inside tbody)
    */
   function renderInjectedRows() {
@@ -640,7 +621,7 @@ const TaskTypeFilterFeature = (() => {
     // approach we tried either failed to open the sidebar or forced a full
     // page reload. Until JT supports it, the card is a passive, informative
     // chip: it shows the unassigned task + job on hover but does nothing on
-    // click. (openTaskSidebar is retained below for when we revisit this.)
+    // click.
     const card = document.createElement('div');
     card.className = 'jt-ttf-task-card jt-ttf-readonly';
     card.style.backgroundColor = bgColor;
@@ -653,67 +634,6 @@ const TaskTypeFilterFeature = (() => {
     `;
 
     return card;
-  }
-
-  /**
-   * Show a brief toast message telling the user to use the global schedule
-   */
-  let _toastTimeout = null;
-  function showJobLevelMessage() {
-    // Remove existing toast if any
-    const existing = document.getElementById('jt-ttf-toast');
-    if (existing) existing.remove();
-    if (_toastTimeout) clearTimeout(_toastTimeout);
-
-    const toast = document.createElement('div');
-    toast.id = 'jt-ttf-toast';
-    toast.className = 'jt-ttf-toast';
-    toast.textContent = 'Go to the global Schedule → Availability to interact with unassigned tasks';
-    document.body.appendChild(toast);
-
-    // Fade in
-    requestAnimationFrame(() => toast.classList.add('visible'));
-
-    // Auto-dismiss after 3 seconds
-    _toastTimeout = setTimeout(() => {
-      toast.classList.remove('visible');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  /**
-   * Open the task sidebar by adding ?taskId=<id> to the current URL. JT's SPA
-   * router picks up the taskId param and opens the sidebar.
-   *
-   * CRITICAL: preserve the OTHER query params — notably ?view=<savedViewId>.
-   * The availability saved-view URL looks like
-   *   /schedule?view=22PGZ2Aw3fAH&taskId=22PYYaA6UvM3
-   * The old code rebuilt the URL as `${path}?taskId=${id}`, which wiped the
-   * `view` param. JT then navigated away from the saved view (the flicker) and
-   * the sidebar never opened. We now mutate only the taskId param via
-   * URLSearchParams so the view (and anything else) survives.
-   *
-   * Staying on the same path means the schedule grid never unmounts — no flash.
-   * If a sidebar is already open for a different task, we clear taskId first
-   * (keeping other params) so React detects the change.
-   */
-  function openTaskSidebar(taskId) {
-    if (!taskId) return;
-
-    // Build the target URL preserving existing params (notably ?view=).
-    const params = new URLSearchParams(window.location.search);
-    params.set('taskId', taskId);
-    const targetUrl = `${window.location.pathname}?${params.toString()}`;
-
-    // Mirror the Job Switcher's instant client-side navigation EXACTLY — it
-    // updates the page with no refresh by doing a synchronous pushState with
-    // an empty-object state, then dispatching a popstate that also carries
-    // `{ state: {} }`. (Earlier attempts here used requestAnimationFrame + a
-    // null state + a clear-first step, or a synthetic anchor click — none of
-    // which JT's router picked up, so the sidebar only opened on refresh / the
-    // anchor triggered a full reload.)
-    window.history.pushState({}, '', targetUrl);
-    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
   }
 
   /**

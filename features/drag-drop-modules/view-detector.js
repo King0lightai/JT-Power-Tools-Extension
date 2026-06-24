@@ -161,7 +161,7 @@ const ViewDetector = (() => {
           // Check for common modal/dialog class patterns
           const className = element.className || '';
           if (typeof className === 'string' && (
-              className.includes('modal') ||
+            className.includes('modal') ||
               className.includes('dialog') ||
               className.includes('popup') ||
               className.includes('overlay')

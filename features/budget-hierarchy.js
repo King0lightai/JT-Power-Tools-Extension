@@ -405,6 +405,20 @@ const BudgetHierarchyFeature = (() => {
     return false;
   }
 
+  // Shade groups only. Items keep their default background so groups stay
+  // visually distinct — otherwise every row under a group looks identical to
+  // the group itself, collapsing the hierarchy into a single flat block.
+  function applyGroupLevelClasses(rowInfo) {
+    rowInfo.forEach(info => {
+      for (let i = 1; i <= 5; i++) {
+        info.row.classList.remove(`jt-group-level-${i}`, `jt-item-under-level-${i}`);
+      }
+      if (info.isGroup) {
+        info.row.classList.add(`jt-group-level-${info.level}`);
+      }
+    });
+  }
+
   // Apply shading to document display budget tables (PDA/HIA/Change Order PDFs)
   // Structure differs from the budget page: rows are `div.flex.min-w-max` inside
   // `div.border-b`, main cell is 175px wide, groups are marked by `bg-gray-100`
@@ -439,14 +453,7 @@ const BudgetHierarchyFeature = (() => {
     // Shade groups only. Items keep their default background so groups stay
     // visually distinct — otherwise every row under a group looks identical to
     // the group itself, collapsing the hierarchy into a single flat block.
-    rowInfo.forEach(info => {
-      for (let i = 1; i <= 5; i++) {
-        info.row.classList.remove(`jt-group-level-${i}`, `jt-item-under-level-${i}`);
-      }
-      if (info.isGroup) {
-        info.row.classList.add(`jt-group-level-${info.level}`);
-      }
-    });
+    applyGroupLevelClasses(rowInfo);
   }
 
   // Apply shading to the Add/Edit Items sidebar on document pages.
@@ -472,14 +479,7 @@ const BudgetHierarchyFeature = (() => {
 
     // Shade groups only; items keep their default bg-white so the hierarchy
     // is visible. See applyDocumentDisplayShading for rationale.
-    rowInfo.forEach(info => {
-      for (let i = 1; i <= 5; i++) {
-        info.row.classList.remove(`jt-group-level-${i}`, `jt-item-under-level-${i}`);
-      }
-      if (info.isGroup) {
-        info.row.classList.add(`jt-group-level-${info.level}`);
-      }
-    });
+    applyGroupLevelClasses(rowInfo);
   }
 
   // Apply shading to all groups

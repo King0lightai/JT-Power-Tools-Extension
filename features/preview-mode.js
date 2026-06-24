@@ -8,8 +8,7 @@ const PreviewModeFeature = (() => {
   let activePreview = null;
   let activeButton = null;
 
-  // Store button and preview references for each textarea
-  const buttonMap = new WeakMap();
+  // Store preview references for each textarea
   const previewMap = new WeakMap();
 
   // Pinned mode state
@@ -208,125 +207,8 @@ const PreviewModeFeature = (() => {
       if (!field.dataset.previewModeReady && document.body.contains(field)) {
         field.dataset.previewModeReady = 'true';
         // Standalone preview button removed - preview is now only accessible via formatter toolbar
-        // addPreviewButton(field);
       }
     });
-  }
-
-  // Add preview button next to textarea
-  function addPreviewButton(textarea) {
-    // Find the container that holds the textarea
-    const container = textarea.closest('div');
-    if (!container) return;
-
-    // Create preview button
-    const button = document.createElement('button');
-    button.className = 'jt-preview-btn';
-    button.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 3C4.5 3 1.73 5.61 1 9c.73 3.39 3.5 6 7 6s6.27-2.61 7-6c-.73-3.39-3.5-6-7-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6.5c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z" fill="currentColor"/>
-      </svg>
-    `;
-    button.title = 'Preview formatting';
-    button.type = 'button';
-
-    // Position button absolutely relative to container
-    button.style.position = 'absolute';
-    button.style.top = '4px';
-    button.style.right = '4px';
-    button.style.zIndex = '100';
-    button.style.opacity = '0';
-    button.style.pointerEvents = 'none';
-    button.style.transition = 'opacity 0.15s ease';
-
-    // Apply theme to button
-    detectAndApplyTheme(button);
-
-    // Track hide timeout for this specific button
-    let hideTimeout = null;
-
-    // Show button helper
-    const showButton = () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-      button.style.opacity = '1';
-      button.style.pointerEvents = 'auto';
-    };
-
-    // Hide button helper
-    const hideButton = () => {
-      // Don't hide if preview is open
-      const preview = previewMap.get(textarea);
-      if (preview && document.body.contains(preview)) {
-        return;
-      }
-      button.style.opacity = '0';
-      button.style.pointerEvents = 'none';
-    };
-
-    // Click handler for button
-    button.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      togglePreview(textarea, button);
-    });
-
-    // Focus event - show button (matches formatter pattern)
-    textarea.addEventListener('focus', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-      showButton();
-    });
-
-    // Mousedown event - show button (matches formatter pattern)
-    textarea.addEventListener('mousedown', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-      // Small delay to ensure it appears smoothly
-      setTimeout(() => {
-        if (document.body.contains(textarea)) {
-          showButton();
-        }
-      }, 10);
-    });
-
-    // Blur event - hide button with delay (matches formatter pattern)
-    textarea.addEventListener('blur', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-      }
-
-      hideTimeout = setTimeout(() => {
-        const newFocus = document.activeElement;
-        const preview = previewMap.get(textarea);
-
-        // Don't hide if focus went to the button or preview is open
-        if (!newFocus?.closest('.jt-preview-btn') &&
-            (!preview || !document.body.contains(preview))) {
-          hideButton();
-        }
-        hideTimeout = null;
-      }, 200);
-    });
-
-    // Store reference
-    buttonMap.set(textarea, button);
-    button._textarea = textarea; // Store textarea reference on button for closePreview
-
-    // Insert button into the container
-    container.style.position = 'relative';
-    container.appendChild(button);
-
-    // If textarea is already focused, show button immediately
-    if (document.activeElement === textarea) {
-      showButton();
-    }
   }
 
   // Toggle preview panel
@@ -890,7 +772,7 @@ const PreviewModeFeature = (() => {
         };
 
         const cursor = direction === 'right' ? 'ew-resize' :
-                       direction === 'bottom' ? 'ns-resize' : 'nwse-resize';
+          direction === 'bottom' ? 'ns-resize' : 'nwse-resize';
         document.body.style.cursor = cursor;
         document.body.style.userSelect = 'none';
         preview.classList.add('jt-preview-resizing');

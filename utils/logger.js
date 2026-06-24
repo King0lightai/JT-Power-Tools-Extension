@@ -27,11 +27,6 @@ const JTLogger = (() => {
   const PREFIX = 'JT-Tools';
 
   /**
-   * Feature-specific prefixes for easier filtering
-   */
-  const featurePrefixes = new Map();
-
-  /**
    * Set the current log level
    * @param {string|number} level - Log level name or number
    */

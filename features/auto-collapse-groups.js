@@ -413,24 +413,18 @@ const AutoCollapseGroupsFeature = (() => {
       return;
     }
 
-    let collapsedCount = 0;
-
     if (viewType === 'gantt') {
       const groups = getGanttGroupRows();
       groups.forEach(row => {
         if (isGanttGroupComplete(row) && isGanttGroupExpanded(row)) {
-          if (collapseGanttGroup(row)) {
-            collapsedCount++;
-          }
+          collapseGanttGroup(row);
         }
       });
     } else if (viewType === 'list') {
       const groups = getListGroupRows();
       groups.forEach(row => {
         if (isListGroupComplete(row) && isGroupExpanded(row)) {
-          if (collapseGroup(row)) {
-            collapsedCount++;
-          }
+          collapseGroup(row);
         }
       });
     }

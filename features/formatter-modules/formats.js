@@ -465,7 +465,7 @@ const FormatterFormats = (() => {
         const numRows = parseInt(rows);
 
         // Create table
-        let table = [];
+        const table = [];
 
         // Header row
         const headers = Array(numCols).fill('Header').map((h, i) => i === 0 ? h : h + (i + 1));
@@ -536,7 +536,6 @@ const FormatterFormats = (() => {
 
         if (existingColorMatch) {
           // Found existing color formatting on this line
-          const existingColor = existingColorMatch[1];
           const colorTagEnd = cLineStart + existingColorMatch[0].length;
 
           // Extract the text after the color tag (excluding the tag itself)

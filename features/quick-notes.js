@@ -55,7 +55,7 @@ const QuickNotesFeature = (() => {
   let isSidebarCollapsed = false;
 
   // Store resize event handlers for cleanup
-  let resizeHandlers = {
+  const resizeHandlers = {
     mouseMove: null,
     mouseUp: null
   };
@@ -2041,52 +2041,6 @@ const QuickNotesFeature = (() => {
 
     // Insert BEFORE the Time Clock button (to the left of it)
     container.insertBefore(notesButton, beforeElement);
-  }
-
-  // Create Quick Notes button that integrates with Jobtread action buttons
-  function createQuickNotesButton(container) {
-    // Remove existing button if present
-    if (notesButton && notesButton.parentNode) {
-      notesButton.remove();
-    }
-
-    notesButton = document.createElement('div');
-    // Match the exact classes from JobTread's action buttons
-    notesButton.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0 jt-quick-notes-btn';
-    notesButton.setAttribute('role', 'button');
-    notesButton.setAttribute('tabindex', '0');
-    notesButton.setAttribute('index', '99'); // High index to ensure it's treated as an action button
-    notesButton.setAttribute('title', 'Quick Notes (Alt+N)');
-
-    notesButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-      </svg> Quick Notes
-    `;
-
-    // Add click handler
-    notesButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      togglePanel();
-    });
-
-    // Add keyboard handler for accessibility
-    notesButton.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        e.stopPropagation();
-        togglePanel();
-      }
-    });
-
-    // Insert at the beginning of the container (leftmost position in action bar)
-    if (container.firstChild) {
-      container.insertBefore(notesButton, container.firstChild);
-    } else {
-      container.appendChild(notesButton);
-    }
   }
 
   // Check if current page should have the quick notes button

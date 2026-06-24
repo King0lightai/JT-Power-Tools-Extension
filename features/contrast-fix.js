@@ -142,7 +142,7 @@ const ContrastFixFeature = (() => {
     const currentDateDivs = document.querySelectorAll('div.bg-blue-500.text-white');
 
     currentDateDivs.forEach(dateDiv => {
-      let tdCell = dateDiv.closest('td');
+      const tdCell = dateDiv.closest('td');
 
       if (tdCell && !tdCell.classList.contains('jt-current-date-enhanced')) {
         tdCell.classList.add('jt-current-date-enhanced');

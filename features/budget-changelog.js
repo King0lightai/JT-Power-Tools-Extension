@@ -6,7 +6,6 @@ const BudgetChangelogFeature = (() => {
   const DEBUG = false; // Set to true for development debugging only — NEVER ship as true
   let isActive = false;
   let sidebarObserver = null;
-  let currentJobId = null;
 
   // Selectors for Budget Backups sidebar
   // Note: JobTread sidebars have z-30, absolute positioning, and right-0
@@ -108,9 +107,6 @@ const BudgetChangelogFeature = (() => {
     // Remove any injected UI
     BudgetChangelogUI.cleanup();
 
-    // Reset state
-    currentJobId = null;
-
     if (DEBUG) console.log('BudgetChangelog: Deactivated');
   }
 
@@ -202,8 +198,6 @@ const BudgetChangelogFeature = (() => {
       if (DEBUG) console.log('BudgetChangelog: Not on a job page, skipping');
       return;
     }
-
-    currentJobId = jobId;
 
     // Fetch backup list
     try {

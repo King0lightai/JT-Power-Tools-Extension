@@ -324,8 +324,10 @@ const TweakValidator = (() => {
       errors.push({ field: 'name', reason: `name must be a 1..${MAX_NAME_LEN} char string` });
     }
 
-    // description (optional)
-    if (tweak.description !== undefined && (typeof tweak.description !== 'string' || tweak.description.length > MAX_DESC_LEN)) {
+    // description (optional). `!= null` accepts both undefined (freshly built,
+    // in-memory) and null (JSON round-trip from the server, which stores
+    // `description || null`) as "no description".
+    if (tweak.description != null && (typeof tweak.description !== 'string' || tweak.description.length > MAX_DESC_LEN)) {
       errors.push({ field: 'description', reason: `description must be a string up to ${MAX_DESC_LEN} chars` });
     }
 

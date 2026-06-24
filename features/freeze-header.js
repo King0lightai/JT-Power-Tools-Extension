@@ -1877,7 +1877,7 @@ const FreezeHeaderFeature = (() => {
         // exclusions are in place before the browser applies broad positioning rules.
         // This prevents the flash where global sidebars get pushed down by freeze header CSS.
         findAndMarkGlobalSidebars();
-    findAndMarkFullpageSidebars();
+        findAndMarkFullpageSidebars();
 
         // Debounce the rest of the updates (heavier operations)
         if (debounceTimer) clearTimeout(debounceTimer);
@@ -1892,7 +1892,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkFilesListHeader();
           findAndMarkFilesSidebar();
           findAndMarkGlobalSidebars();
-    findAndMarkFullpageSidebars();
+          findAndMarkFullpageSidebars();
           findAndMarkEditItemsPanel();
           updatePositions();
           adjustDragBoundarySidebars();
@@ -1943,7 +1943,7 @@ const FreezeHeaderFeature = (() => {
             findAndMarkFilesListHeader();
             findAndMarkFilesSidebar();
             findAndMarkGlobalSidebars();
-    findAndMarkFullpageSidebars();
+            findAndMarkFullpageSidebars();
             findAndMarkEditItemsPanel();
             updatePositions();
             adjustDragBoundarySidebars();

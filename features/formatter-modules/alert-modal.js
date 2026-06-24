@@ -152,7 +152,6 @@ const AlertModal = (() => {
       `;
 
       // Get references to elements
-      const modal = overlay.querySelector('.jt-alert-modal');
       const closeBtn = overlay.querySelector('.jt-alert-modal-close');
       const cancelBtn = overlay.querySelector('.jt-alert-btn-cancel');
       const addBtn = overlay.querySelector('.jt-alert-btn-add');

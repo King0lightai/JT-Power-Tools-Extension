@@ -28,7 +28,6 @@
 const TweaksApi = (() => {
   const DEBUG = false;
   function log(...args) { if (DEBUG) console.log('TweaksApi:', ...args); }
-  function logError(...args) { if (DEBUG) console.error('TweaksApi:', ...args); }
 
   /**
    * Resolve AccountService and verify the user is logged in. Returns the

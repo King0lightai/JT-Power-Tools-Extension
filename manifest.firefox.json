@@ -104,6 +104,7 @@
         "features/help-sidebar-support.js",
         "features/keyboard-shortcuts.js",
         "features/freeze-header.js",
+        "features/character-counter-modules/styles.js",
         "features/character-counter.js",
         "features/kanban-type-filter.js",
         "features/auto-collapse-groups.js",

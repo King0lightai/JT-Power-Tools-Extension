@@ -7,8 +7,8 @@
 const GrantKeyResolver = (() => {
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   let cache = {}; // { orgName: { grantKey, orgId, expiresAt } }
-  let inFlight = {}; // { orgName: Promise<grantKey|null> } — dedup concurrent fetches
-  let toastShownForOrgs = new Set();
+  const inFlight = {}; // { orgName: Promise<grantKey|null> } — dedup concurrent fetches
+  const toastShownForOrgs = new Set();
 
   /**
    * Check if the extension context is still valid.

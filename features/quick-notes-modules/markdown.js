@@ -233,7 +233,7 @@ const QuickNotesMarkdown = (() => {
     let text = '';
     const children = element.childNodes;
 
-    for (let node of children) {
+    for (const node of children) {
       if (node.nodeType === Node.TEXT_NODE) {
         text += node.textContent;
       } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -310,7 +310,7 @@ const QuickNotesMarkdown = (() => {
     let markdown = '';
     const children = element.childNodes;
 
-    for (let node of children) {
+    for (const node of children) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const tag = node.tagName.toLowerCase();
 
@@ -321,7 +321,6 @@ const QuickNotesMarkdown = (() => {
           const text = span ? extractInlineMarkdown(span) : '';
           markdown += `- [${checked ? 'x' : ' '}] ${text}\n`;
         } else if (node.classList.contains('jt-note-bullet')) {
-          const text = node.textContent.replace(/^•\s*/, '');
           const indent = parseInt(node.getAttribute('data-indent') || '0');
           const indentSpaces = '  '.repeat(indent); // 2 spaces per indent level
           markdown += `${indentSpaces}- ${extractInlineMarkdown(node)}\n`;

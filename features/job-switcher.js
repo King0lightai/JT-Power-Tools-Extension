@@ -8,7 +8,7 @@ const SmartJobSwitcherFeature = (() => {
   let jKeyPressed = false;
   let sidebarObserver = null;
   let migrationDone = false;
-  let resizeState = {
+  const resizeState = {
     isResizing: false,
     startX: 0,
     startWidth: 0,
@@ -27,7 +27,6 @@ const SmartJobSwitcherFeature = (() => {
   const STORAGE_PREFIX = 'jt-sidebar-';
   const MIN_WIDTH = 280;
   const MAX_WIDTH_FLOOR = 800;
-  const DEFAULT_WIDTH = 400;
   const SIDEBAR_SELECTOR = 'div.z-30.absolute.top-0.bottom-0.right-0';
 
   /**

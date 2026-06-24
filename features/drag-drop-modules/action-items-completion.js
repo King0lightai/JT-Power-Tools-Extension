@@ -246,33 +246,6 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Update checkbox visual state
-   * @param {HTMLElement} checkbox - The checkbox button element
-   * @param {boolean} isComplete - Whether the task is now complete
-   */
-  function updateCheckboxState(checkbox, isComplete) {
-    const svg = checkbox.querySelector('svg');
-    if (!svg) return;
-
-    // Remove existing checkmark if present
-    const existingCheckmark = svg.querySelector('.jt-checkmark');
-    if (existingCheckmark) {
-      existingCheckmark.remove();
-    }
-
-    // Add checkmark if task is complete
-    if (isComplete) {
-      const checkmark = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      checkmark.setAttribute('d', 'M20 6 9 17l-5-5');
-      checkmark.setAttribute('class', 'jt-checkmark');
-      svg.appendChild(checkmark);
-    }
-
-    // Update tooltip
-    checkbox.setAttribute('title', isComplete ? 'Task marked complete' : 'Mark task complete');
-  }
-
-  /**
    * Handle checkbox click
    * @param {Event} e - The click event
    * @param {HTMLElement} item - The action item link element

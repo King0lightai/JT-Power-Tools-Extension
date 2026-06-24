@@ -14,7 +14,6 @@ const CustomFieldFilterFeature = (() => {
   let savedFilters = [];
   let activeSavedFilterId = null;
   let dropdownOpen = false;
-  let availableValues = [];
   let activeSortOrder = 'recent';    // 'recent', 'az', 'za'
   let currentPage = 0;
   let isLoadingMore = false;
@@ -129,7 +128,6 @@ const CustomFieldFilterFeature = (() => {
     savedFilters = [];
     activeSavedFilterId = null;
     dropdownOpen = false;
-    availableValues = [];
     activeSortOrder = 'recent';
     if (scrollObserver) {
       scrollObserver.disconnect();
@@ -436,7 +434,6 @@ const CustomFieldFilterFeature = (() => {
    * Populate the checkbox dropdown with values
    */
   function populateValueCheckboxes(values) {
-    availableValues = values;
     const list = document.getElementById('jt-cf-value-list');
     if (!list) return;
 

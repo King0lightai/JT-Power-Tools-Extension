@@ -40,28 +40,6 @@ const KanbanTypeFilterFeature = (() => {
   }
 
   /**
-   * Check if we're on a schedule page (where Kanban view exists)
-   */
-  function isSchedulePage() {
-    return window.location.pathname.match(/\/schedule/);
-  }
-
-  /**
-   * Check if we're on a tasks/to-dos page (where Kanban view exists)
-   */
-  function isTasksPage() {
-    return window.location.pathname.match(/\/to-dos/) ||
-           window.location.pathname.match(/\/tasks/);
-  }
-
-  /**
-   * Check if we're on a page that could have Kanban view
-   */
-  function isKanbanCapablePage() {
-    return isSchedulePage() || isTasksPage();
-  }
-
-  /**
    * Find all Kanban column containers
    * Kanban columns are identified by their structure:
    * - Collapsed (empty): div.shrink-0.flex.px-1 > div with vertical text (writing-mode: vertical-rl)
@@ -186,20 +164,15 @@ const KanbanTypeFilterFeature = (() => {
       return;
     }
 
-    let hiddenCount = 0;
-    let shownCount = 0;
-
     for (const column of columns) {
       const count = getColumnCount(column);
 
       if (count === 0) {
         // Mark column as empty to be hidden
         column.classList.add('jt-kanban-column-empty');
-        hiddenCount++;
       } else {
         // Ensure column is visible
         column.classList.remove('jt-kanban-column-empty');
-        shownCount++;
       }
     }
   }

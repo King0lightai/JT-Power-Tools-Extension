@@ -597,7 +597,6 @@ const AccountService = (() => {
       // 1. Tree fetch (this triggers the server-side legacy importer on
       //    the very first call after upgrade).
       const tree = await fetchNotebookTree('personal');
-      const sectionNameById = new Map(tree.defaultSections.map(s => [s.id, s.name]));
       const serverPageMetaById = new Map(tree.defaultPages.map(p => [p.id, p]));
 
       let uploaded = 0;
@@ -855,26 +854,13 @@ const AccountService = (() => {
       id: page.id,
       title: page.title,
       // `content` only travels in the per-page response from /pages/get;
-      // tree responses omit it for payload size. Caller stitches in
-      // content via fetchPageContent when needed.
+      // tree responses omit it for payload size.
       content: page.content ?? '',
       folder: sectionName || 'General',
       isPinned: !!page.isPinned,
       createdAt: page.createdAt || page.created_at || null,
       updatedAt: page.updatedAt || page.updated_at || null,
     };
-  }
-
-  async function fetchPageContent(scope, pageId) {
-    const response = await authenticatedFetch('/sync/pages/get', {
-      method: 'POST',
-      body: JSON.stringify({ scope, id: pageId }),
-    });
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch page');
-    }
-    return result.data;
   }
 
   // Materialize a section for `folderName` in `scope`. Returns the

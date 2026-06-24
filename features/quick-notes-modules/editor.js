@@ -190,20 +190,6 @@ const QuickNotesEditor = (() => {
   }
 
   /**
-   * Insert a zero-width space to help with cursor positioning when toggling formats
-   * @param {Range} range - Current selection range
-   * @returns {Text} The inserted text node
-   */
-  function insertCursorHelper(range) {
-    // Insert a regular space instead of zero-width space to avoid wall issues
-    const spaceNode = document.createTextNode(' ');
-    range.insertNode(spaceNode);
-    range.setStartAfter(spaceNode);
-    range.setEndAfter(spaceNode);
-    return spaceNode;
-  }
-
-  /**
    * Apply formatting to contenteditable (WYSIWYG)
    *
    * @param {HTMLElement} element - The contenteditable element
@@ -255,7 +241,6 @@ const QuickNotesEditor = (() => {
 
     // Check if this is an inline formatting command with no selection (collapsed cursor)
     const isInlineFormat = ['bold', 'italic', 'underline', 'strikethrough'].includes(formatType);
-    const hasNoSelection = selection.rangeCount > 0 && selection.getRangeAt(0).collapsed;
 
     // NOTE: execCommand is deprecated but still widely supported for contenteditable.
     switch (formatType) {

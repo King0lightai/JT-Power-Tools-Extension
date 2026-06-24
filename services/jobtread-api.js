@@ -91,8 +91,7 @@ const JobTreadAPI = (() => {
     JOBS_TIMESTAMP: 'jtToolsJobsTimestamp'
   };
 
-  // Cache duration (5 minutes for jobs, 1 hour for custom field definitions)
-  const JOBS_CACHE_DURATION = 5 * 60 * 1000;
+  // Cache duration (1 hour for custom field definitions)
   const CUSTOM_FIELDS_CACHE_DURATION = 60 * 60 * 1000;
 
   /**
@@ -609,7 +608,7 @@ const JobTreadAPI = (() => {
   async function fetchJobs(options = {}) {
     const { limit = 100, offset = 0, status = null, sortBy = null } = options;
 
-    let orgId = await getOrgId();
+    const orgId = await getOrgId();
     if (!orgId) {
       throw new Error('Organization ID not configured');
     }
@@ -697,7 +696,7 @@ const JobTreadAPI = (() => {
   async function fetchJobsWithFilters(filters = [], options = {}) {
     const { status = null, sortBy = null, limit = 100, offset = 0 } = options;
 
-    let orgId = await getOrgId();
+    const orgId = await getOrgId();
     if (!orgId) {
       throw new Error('Organization ID not configured');
     }
