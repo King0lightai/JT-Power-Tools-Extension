@@ -486,6 +486,8 @@ async function checkLicenseStatus() {
       if (previewModeCheckbox) previewModeCheckbox.disabled = false;
       availabilityFilterFeature?.classList.remove('locked');
       if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = false;
+      reverseThreadOrderFeature?.classList.remove('locked');
+      if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = false;
     } else {
       // Essential tier - lock PRO features
       dragDropFeature?.classList.add('locked');
@@ -496,6 +498,8 @@ async function checkLicenseStatus() {
       if (previewModeCheckbox) previewModeCheckbox.disabled = true;
       availabilityFilterFeature?.classList.add('locked');
       if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = true;
+      reverseThreadOrderFeature?.classList.add('locked');
+      if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = true;
 
       // Add upgrade hint for Essential users
       if (statusText) statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for more features`;
@@ -537,8 +541,6 @@ async function checkLicenseStatus() {
     if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = false;
     pdfMarkupToolsFeature?.classList.remove('locked');
     if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = false;
-    reverseThreadOrderFeature?.classList.remove('locked');
-    if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = false;
 
     return { hasLicense: true, tier: tier };
   } else {
@@ -555,6 +557,8 @@ async function checkLicenseStatus() {
     if (previewModeCheckbox) previewModeCheckbox.disabled = true;
     availabilityFilterFeature?.classList.add('locked');
     if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = true;
+    reverseThreadOrderFeature?.classList.add('locked');
+    if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = true;
 
     // Lock ESSENTIAL features (require license)
     quickNotesFeature?.classList.add('locked');
@@ -565,8 +569,6 @@ async function checkLicenseStatus() {
     if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = true;
     pdfMarkupToolsFeature?.classList.add('locked');
     if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = true;
-    reverseThreadOrderFeature?.classList.add('locked');
-    if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = true;
 
     // Hide API category and grant key for free users
     apiCategory?.classList.add('hidden');
@@ -674,13 +676,13 @@ async function loadSettings() {
     setCheckbox('smartJobSwitcher', hasEssentialFeatures && (settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true));
     setCheckbox('freezeHeader', hasEssentialFeatures && (settings.freezeHeader !== undefined ? settings.freezeHeader : false));
     setCheckbox('pdfMarkupTools', hasEssentialFeatures && (settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true));
-    setCheckbox('reverseThreadOrder', hasEssentialFeatures && (settings.reverseThreadOrder !== undefined ? settings.reverseThreadOrder : false));
 
     // PRO features - require Pro or Power User tier
     setCheckbox('dragDrop', hasProFeatures && settings.dragDrop);
     setCheckbox('previewMode', hasProFeatures && settings.previewMode);
     setCheckbox('rgbTheme', hasProFeatures && settings.rgbTheme);
     setCheckbox('availabilityFilter', hasProFeatures && (settings.availabilityFilter !== undefined ? settings.availabilityFilter : false));
+    setCheckbox('reverseThreadOrder', hasProFeatures && (settings.reverseThreadOrder !== undefined ? settings.reverseThreadOrder : false));
     setCheckbox('tweakEngine', hasProFeatures && (settings.tweakEngine !== undefined ? settings.tweakEngine : true));
     setCheckbox('inspectForAi', hasProFeatures && (settings.inspectForAi !== undefined ? settings.inspectForAi : false));
 
@@ -731,13 +733,13 @@ async function loadSettings() {
       if (settings.availabilityFilter) featuresToDisable.push('availabilityFilter');
       if (settings.tweakEngine) featuresToDisable.push('tweakEngine');
       if (settings.inspectForAi) featuresToDisable.push('inspectForAi');
+      if (settings.reverseThreadOrder) featuresToDisable.push('reverseThreadOrder');
     }
     if (!hasEssentialFeatures) {
       if (settings.quickNotes) featuresToDisable.push('quickNotes');
       if (settings.smartJobSwitcher) featuresToDisable.push('smartJobSwitcher');
       if (settings.freezeHeader) featuresToDisable.push('freezeHeader');
       if (settings.pdfMarkupTools) featuresToDisable.push('pdfMarkupTools');
-      if (settings.reverseThreadOrder) featuresToDisable.push('reverseThreadOrder');
     }
 
     // API-dependent features need a portal session (JWT) to fetch data from
@@ -3493,12 +3495,12 @@ async function handleLogout() {
     updated.previewMode = false;
     updated.rgbTheme = false;
     updated.availabilityFilter = false;
+    updated.reverseThreadOrder = false;
     // ESSENTIAL features
     updated.quickNotes = false;
     updated.smartJobSwitcher = false;
     updated.freezeHeader = false;
     updated.pdfMarkupTools = false;
-    updated.reverseThreadOrder = false;
     await chrome.storage.sync.set({ jtToolsSettings: updated });
 
     // Notify content script to deactivate features

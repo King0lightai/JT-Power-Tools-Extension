@@ -199,7 +199,7 @@ curl -X POST "https://mcp.jobtread-tools.pro/message" \
   -d '{
     "method": "tools/call",
     "params": {
-      "name": "search_jobs",
+      "name": "jt_search",
       "arguments": {
         "query": "kitchen remodel"
       }
@@ -207,52 +207,78 @@ curl -X POST "https://mcp.jobtread-tools.pro/message" \
   }'</div>
 
             <h2>Available Tools</h2>
-            <p>The MCP server provides these read-only tools:</p>
+            <p>The MCP server provides tools for reading, writing, and deleting your JobTread data &mdash; what a connection can do is set by its permission tier (Read, Write, or Delete). A few common ones:</p>
             <table>
                 <thead>
                     <tr>
                         <th>Tool Name</th>
                         <th>Description</th>
-                        <th>Parameters</th>
+                        <th>Access</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><code>search_jobs</code></td>
-                        <td>Search and list JobTread jobs</td>
-                        <td><code>query</code> (optional), <code>status</code> (optional)</td>
+                        <td><code>jt_job_context</code></td>
+                        <td>Full job snapshot: budget, schedule, documents, comments, and daily logs in one call</td>
+                        <td>Read</td>
                     </tr>
                     <tr>
-                        <td><code>list_customers</code></td>
-                        <td>Get customer information</td>
-                        <td><code>limit</code> (optional)</td>
+                        <td><code>jt_schedule_context</code></td>
+                        <td>Schedule items, tasks, time entries, and overdue/upcoming work</td>
+                        <td>Read</td>
                     </tr>
                     <tr>
-                        <td><code>list_vendors</code></td>
-                        <td>Get vendor information</td>
-                        <td><code>limit</code> (optional)</td>
+                        <td><code>jt_crm_context</code></td>
+                        <td>Customers, vendors, subcontractors, contacts, and locations</td>
+                        <td>Read</td>
                     </tr>
                     <tr>
-                        <td><code>list_tasks</code></td>
-                        <td>Get tasks and to-dos</td>
-                        <td><code>job_id</code> (optional), <code>status</code> (optional)</td>
+                        <td><code>jt_search</code></td>
+                        <td>Search across jobs, contacts, documents, and other records</td>
+                        <td>Read</td>
                     </tr>
                     <tr>
-                        <td><code>get_budgets</code></td>
-                        <td>Get budget details for jobs</td>
-                        <td><code>job_id</code> (required)</td>
+                        <td><code>jt_budget_compare</code></td>
+                        <td>Compare two budget backups and report what changed</td>
+                        <td>Read</td>
                     </tr>
                     <tr>
-                        <td><code>knowledge_lookup</code></td>
-                        <td>Search knowledge base</td>
-                        <td><code>query</code> (required)</td>
+                        <td><code>jt_job_write</code></td>
+                        <td>Create, update, or delete jobs and job areas</td>
+                        <td>Write / Delete</td>
+                    </tr>
+                    <tr>
+                        <td><code>jt_task_write</code></td>
+                        <td>Create, update, complete, or delete schedule tasks</td>
+                        <td>Write / Delete</td>
+                    </tr>
+                    <tr>
+                        <td><code>jt_budget_write</code></td>
+                        <td>Add, edit, or remove budget line items and cost groups</td>
+                        <td>Write / Delete</td>
+                    </tr>
+                    <tr>
+                        <td><code>jt_document_write</code></td>
+                        <td>Full lifecycle for invoices, bills, POs, change orders, and payments</td>
+                        <td>Write / Delete</td>
+                    </tr>
+                    <tr>
+                        <td><code>jt_daily_log_write</code></td>
+                        <td>Post and edit daily logs</td>
+                        <td>Write</td>
+                    </tr>
+                    <tr>
+                        <td><code>jt_comment_write</code></td>
+                        <td>Add comments to jobs and documents</td>
+                        <td>Write</td>
                     </tr>
                 </tbody>
             </table>
+            <p>Plus tools for contacts, time entries, dashboards, data views, workflows, webhooks, catalog items, bills, files, forms, notes, and email &mdash; 30+ in total. The complete, current list (with which tools your tier can use) is in the JT Power Tools extension &rarr; MCP tab.</p>
 
             <div class="info-box tip">
-                <strong>Read-Only Access</strong>
-                <p>For security, the MCP server currently provides read-only access to your data. To make changes, use the JobTread web interface.</p>
+                <strong>Permission Tiers</strong>
+                <p>Access is controlled by a three-tier permission model set per grant key: <strong>Read</strong> (view only), <strong>Write</strong> (create and update), and <strong>Delete</strong> (full read, write, and delete). An admin sets the tier in the JT Power Tools extension &rarr; MCP tab.</p>
             </div>
 
             <h2>Testing the Connection</h2>
