@@ -689,9 +689,11 @@ const InspectForAiFeature = (() => {
     lines.push('  ]');
     lines.push('}');
     lines.push('');
-    lines.push('Allowed action verbs: addClass, removeClass, setStyle, hide, show, setText, onEvent, moveBefore, moveAfter, sortChildren.');
+    lines.push('Allowed action verbs: addClass, removeClass, setStyle, hide, show, setText, onEvent, confirmBeforeAction, moveBefore, moveAfter, sortChildren.');
+    lines.push('confirmBeforeAction { type: "confirmBeforeAction", selector, event: "click|dblclick|submit", confirm: "Are you sure?" } gates a destructive click/submit — it shows a confirm() BEFORE the app\'s handler runs (Cancel blocks, OK proceeds untouched). It is the only verb that can conditionally let the original action through; prefer it over onEvent for "warn before X".');
     lines.push('onEvent supports an optional `then: [ <Action>, ... ]` array (V1.7) — chained DOM-mutation actions that run after preventDefault/alert. Use this for "click triggers state change" patterns (sortable headers, toggleable rows). Nested onEvent inside then[] is forbidden. Max 20 then-steps.');
     lines.push('Every action also accepts an optional `match: "<substring>"` (≤200 chars) — a per-element guard. The engine fires the action only on elements whose textContent contains that substring. Use it when a selector is broader than you want (e.g. setText "Vendor" → "Trade Partner" only on cells whose current text contains "Vendor").');
+    lines.push('Every action also accepts an optional `matchDate: { min?, max?, attr?, selector? }` — a per-element date guard (inclusive day offsets from today: 0 = today, -1 = yesterday, 2 = in two days; attr defaults to "datetime"). Pair with addClass + a css rule to shade rows by due date.');
     lines.push('Do NOT use innerHTML, insertHTML, insertElement, or any verb not in that list.');
     lines.push('Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.');
     lines.push('setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.');
@@ -778,6 +780,8 @@ const InspectForAiFeature = (() => {
       '                           "alert": { "title": "...", "body": "...", "confirmLabel": "OK" },',
       '                           "then": [ <Action>, <Action>, ... ]   // V1.7: chained DOM-mutation actions run after preventDefault/alert',
       '                         }',
+      '  { "type": "confirmBeforeAction", "selector": "...", "event": "click|dblclick|submit",',
+      '                           "confirm": "Are you sure?" }   // gate a destructive click/submit — shows a confirm() in the capture phase BEFORE the app\'s React handler runs; Cancel blocks it, OK lets the original action proceed untouched',
       '  { "type": "moveBefore",  "selector": "...", "referenceSelector": "..." }   // move target to be the previous sibling of reference',
       '  { "type": "moveAfter",   "selector": "...", "referenceSelector": "..." }   // move target to be the next sibling of reference',
       '  { "type": "sortChildren", "selector": "<parent>", "childSelector": "<row>",',
@@ -789,11 +793,22 @@ const InspectForAiFeature = (() => {
       'For "click triggers state change" patterns (e.g. clickable headers that mutate cells, sortable columns) use onEvent + then[]: the then array runs DOM-mutation actions (addClass, removeClass, setStyle, setText, hide, show, moveBefore, moveAfter, sortChildren) after the click pre-effects fire. Each then-step has its OWN selector and runs against all matches. Nested onEvent inside then[] is forbidden (validator rejects). Max 20 then-steps per onEvent.',
       'For "JT table has no sort" use sortChildren on the tbody — keySelector picks the column to sort by. To make headers clickable: combine onEvent + then[sortChildren] so each click toggles the sort.',
       'Every action also accepts optional `"match": "<substring>"` (≤200 chars) — a per-element guard. The engine fires the action only on elements whose textContent contains that substring. Use it when a selector is broader than you want (e.g. setText "Vendor" → "Trade Partner" only on cells whose current text contains "Vendor").',
+      'Every action also accepts optional `"matchDate": { "min": <int>, "max": <int>, "attr": "datetime", "selector": "<descendant>" }` — a per-element DATE guard. It fires the action only when the element\'s date attribute is within an inclusive range of whole days from today (0 = today, -1 = yesterday, 2 = in two days; at least one of min/max is required; attr defaults to "datetime", and selector optionally reads the date from a descendant). Pair it with addClass + a css rule to shade rows by due date.',
+      'For "warn before a destructive click" prefer confirmBeforeAction over onEvent: it is the ONLY verb that can conditionally let the original click/submit proceed (onEvent side effects are unconditional — they can block but never proceed-after-confirm). Use onEvent + alert only for a notice that does not need to let the action through.',
       'setText cannot relabel primary-action buttons (Approve / Delete / Pay / Submit / Send / Sign / etc.) — engine refuses as anti-clickjacking guard.',
       'Do NOT use innerHTML, insertHTML, insertElement, or any verb not on the list above.',
       'Selectors must NOT contain .jt-tools-, .jt-popup-, or .jt-tweak-edit- prefixes.',
       'CSS values via setStyle must be simple (alphanumeric + space + - % .). For complex',
       'values like rgb(), calc(), or shorthand, put them in the css field instead.',
+      '',
+      'Selector robustness (JobTread is a React SPA): prefer the Structural parent block above, semantic structure, data-* attributes, :has(), and :nth-child(). Treat atomic Tailwind classes (p-2, flex, text-sm, gap-1) as UNSTABLE — they change between builds and across views. The css field is auto-scoped to this tweak, so style freely there.',
+      '',
+      'Common recipes:',
+      '  • Warn before a destructive click → confirmBeforeAction { event: "click", confirm: "..." } on the button.',
+      '  • Rename a label everywhere → setText with a match guard (e.g. "Vendor" → "Trade Partner").',
+      '  • Shade overdue rows → addClass { matchDate: { max: -1 } } + a css rule for that class (today: { min: 0, max: 0 }; next 7 days: { min: 0, max: 7 }).',
+      '  • Make a column header sortable → onEvent { event: "click", then: [ { type: "sortChildren", ... } ] } on the header.',
+      '  • Reorder elements → moveBefore / moveAfter against a referenceSelector.',
       '```',
       '',
       '_Copied by JT Power Tools — Inspect for AI_'
