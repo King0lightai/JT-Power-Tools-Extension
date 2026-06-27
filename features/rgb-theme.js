@@ -543,6 +543,14 @@ const CustomThemeFeature = (() => {
       .border-l-4.bg-yellow-50.border-yellow-500 { border-color: #eab308 !important; }
       .border-l-4.bg-red-50.border-red-500 { border-color: #ef4444 !important; }
       .border-l-4.bg-orange-50.border-orange-500 { border-color: #f97316 !important; }
+      /* JobTread renders the "orange" alert with its brand class .border-jtOrange
+         (not .border-orange-500), so the "Selected State" rule further down
+         (.border-jtOrange -> primary) was repainting the orange alert's accent
+         stripe to the theme's primary color while the .text-jtOrange header
+         stayed orange. Pin it back to JT's orange (#ff5600, same value Dark Mode
+         uses) so the accent matches the header. Specificity (0,3,0)+!important
+         beats the (0,1,0)+!important selection rule regardless of source order. */
+      .border-l-4.bg-orange-50.border-jtOrange { border-color: #ff5600 !important; }
       .border-l-4.bg-purple-50.border-purple-500 { border-color: #a855f7 !important; }
 
       /* === Focus States (Real Colors, Not Filters!) === */
@@ -731,11 +739,34 @@ const CustomThemeFeature = (() => {
       }
       /* Signature canvas + other non-alert bg-orange-50 surfaces — pale
          Tailwind #fff7ed reads as a bright white panel on dark themes.
-         :not(.border-l-4) keeps the orange text-alert containers at
-         their native pale bg. */
+         :not(.border-l-4) scopes this to non-alert surfaces; the orange
+         text-alert containers are darkened to their semantic tint below. */
       .bg-orange-50:not(.border-l-4) {
         background-color: ${p.background.elevated} !important;
-      }` : ''}
+      }
+
+      /* Text-alert containers (.border-l-4 + .bg-{color}-50) on DARK themes.
+         Their pale Tailwind pastel bg glares as a bright white box on a dark
+         page, so darken each to its semantic dark tint (palette.alerts.<hue>.bg
+         — orange stays orange, green stays green, …) and pin body text to the
+         themed light text, mirroring Dark Mode. The left border and the colored
+         header keep their vivid colors (border pinned in the Alerts block above;
+         headers via JT's .text-{color}-500 / .text-jtOrange, untouched — so the
+         orange alert's #ff5600 header matches Dark Mode exactly). */
+      .border-l-4.bg-blue-50,
+      .border-l-4.bg-green-50,
+      .border-l-4.bg-yellow-50,
+      .border-l-4.bg-red-50,
+      .border-l-4.bg-orange-50,
+      .border-l-4.bg-purple-50 {
+        color: ${p.text.primary} !important;
+      }
+      .border-l-4.bg-blue-50   { background-color: ${p.alerts.blue.bg} !important; }
+      .border-l-4.bg-green-50  { background-color: ${p.alerts.green.bg} !important; }
+      .border-l-4.bg-yellow-50 { background-color: ${p.alerts.yellow.bg} !important; }
+      .border-l-4.bg-red-50    { background-color: ${p.alerts.red.bg} !important; }
+      .border-l-4.bg-orange-50 { background-color: ${p.alerts.orange.bg} !important; }
+      .border-l-4.bg-purple-50 { background-color: ${p.alerts.purple.bg} !important; }` : ''}
 
       .hover\\:text-gray-800:hover,
       .hover\\:text-gray-900:hover {

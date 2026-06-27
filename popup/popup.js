@@ -1,12 +1,20 @@
-// True when this popup.html instance is loaded inside Chrome's side panel
-// rather than the toolbar popup. The side-panel default_path includes
-// `?context=sidepanel` (see manifest.json side_panel.default_path), and the
-// Open-in-Sidebar button preserves that param. Side-panel mode behaves
-// like a persistent panel — closing it requires the user, so calls that
-// would auto-close the popup (e.g. `window.close()` after refreshing the
-// JobTread tab) must no-op here, otherwise the user's pinned sidebar
-// disappears every time they touch the refresh icon.
+// True when this popup.html instance is loaded inside the side panel (Chrome)
+// or sidebar (Firefox) rather than the toolbar popup. Both the Chrome
+// side_panel.default_path and the Firefox sidebar_action.default_panel include
+// `?context=sidepanel`, and the Open-in-Sidebar button preserves that param.
+// Side-panel mode behaves like a persistent panel — closing it requires the
+// user, so calls that would auto-close the popup (e.g. `window.close()` after
+// refreshing the JobTread tab) must no-op here, otherwise the user's pinned
+// sidebar disappears every time they touch the refresh icon.
 const IS_IN_SIDE_PANEL = new URLSearchParams(window.location.search).get('context') === 'sidepanel';
+
+// Sidebar capability detection. Chrome exposes chrome.sidePanel; Firefox has no
+// chrome.sidePanel and instead exposes browser.sidebarAction. The Open-in-Sidebar
+// header button uses whichever exists; the rest of side-panel mode is identical.
+const FIREFOX_SIDEBAR_API =
+  (typeof browser !== 'undefined' && browser.sidebarAction) ? browser.sidebarAction : null;
+const HAS_CHROME_SIDEPANEL = !!(chrome.sidePanel && typeof chrome.sidePanel.open === 'function');
+const HAS_FIREFOX_SIDEBAR = !!(FIREFOX_SIDEBAR_API && typeof FIREFOX_SIDEBAR_API.open === 'function');
 
 // All feature toggle IDs (used by master toggle)
 const FEATURE_TOGGLE_IDS = [
@@ -1130,6 +1138,19 @@ function openInSidebar(windowId) {
   }
 }
 
+// Firefox equivalent of openInSidebar(). browser.sidebarAction.open() takes no
+// windowId and must be called synchronously inside the user gesture, so there's
+// no windowId pre-fetch like the Chrome path.
+function openInSidebarFirefox() {
+  try {
+    FIREFOX_SIDEBAR_API.open();
+    window.close();
+  } catch (error) {
+    console.error('Error opening sidebar:', error);
+    showStatus('Could not open sidebar', 'error');
+  }
+}
+
 // Load theme colors into pickers
 function loadThemeColors(colors) {
   const primaryPicker = document.getElementById('primaryColorPicker');
@@ -1990,20 +2011,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshBtn.addEventListener('click', refreshCurrentTab);
   }
 
-  // Open-in-sidebar button: only shown in popup context, only if browser supports sidePanel.
-  // Pre-fetch windowId so the click handler can call sidePanel.open() synchronously and
-  // preserve the user-gesture activation required by chrome.sidePanel.open().
+  // Open-in-sidebar button: only shown in popup context, only if the browser has a
+  // side-panel/sidebar API. Chrome uses chrome.sidePanel.open({windowId}) — we pre-fetch
+  // windowId so the click handler stays synchronous and preserves the user-gesture
+  // activation. Firefox uses browser.sidebarAction.open() (no windowId, must be called
+  // synchronously in the gesture), wired directly without the pre-fetch.
   const openInSidebarBtn = document.getElementById('openInSidebarBtn');
   if (openInSidebarBtn) {
-    if (IS_IN_SIDE_PANEL || !chrome.sidePanel || typeof chrome.sidePanel.open !== 'function') {
+    if (IS_IN_SIDE_PANEL || (!HAS_CHROME_SIDEPANEL && !HAS_FIREFOX_SIDEBAR)) {
       openInSidebarBtn.style.display = 'none';
-    } else {
+    } else if (HAS_CHROME_SIDEPANEL) {
       chrome.windows.getCurrent().then(win => {
         openInSidebarBtn.addEventListener('click', () => openInSidebar(win.id));
       }).catch(err => {
         console.error('Could not resolve current window for sidebar button:', err);
         openInSidebarBtn.style.display = 'none';
       });
+    } else {
+      openInSidebarBtn.addEventListener('click', () => openInSidebarFirefox());
     }
   }
 

@@ -294,6 +294,7 @@
     }
     const alerts = {
       bodyText: tx.primary,
+      blue:   { bg: tint(260), bgHover: tintHover(260), text: tintText(260), border: tintBorder(260) },
       green:  { bg: tint(155), bgHover: tintHover(155), text: tintText(155), border: tintBorder(155) },
       yellow: { bg: tint(85),  bgHover: tintHover(85),  text: tintText(85),  border: tintBorder(85) },
       red:    { bg: tint(25),  bgHover: tintHover(25),  text: tintText(25),  border: tintBorder(25) },
