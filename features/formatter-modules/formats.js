@@ -607,6 +607,28 @@ const FormatterFormats = (() => {
   }
 
   /**
+   * Commit a list-continuation edit via React's native value setter, then move
+   * the caret and fire a single input event.
+   *
+   * The native setter is used ONLY (never assign field.value first): assigning
+   * field.value runs React's instance-level setter and updates its
+   * _valueTracker, after which the dispatched 'input' event looks unchanged and
+   * React silently drops the edit (list continuation lost on save). Only the
+   * input event is dispatched (not change) to avoid breaking React state.
+   * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {string} newValue - The full new field value
+   * @param {number} newCursorPos - Caret position after the edit
+   */
+  function commitListContinuation(field, newValue, newCursorPos) {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeInputValueSetter.call(field, newValue);
+    field.setSelectionRange(newCursorPos, newCursorPos);
+
+    const inputEvent = new Event('input', { bubbles: true });
+    field.dispatchEvent(inputEvent);
+  }
+
+  /**
    * Handle Enter key for smart auto-numbering
    * @param {HTMLTextAreaElement} field - The textarea field
    * @param {KeyboardEvent} e - The keyboard event
@@ -650,17 +672,7 @@ const FormatterFormats = (() => {
         newCursorPos = start + newText.length;
       }
 
-      // Set the new value via the native setter ONLY. Do NOT assign field.value
-      // first — that runs React's instance-level setter and updates its
-      // _valueTracker, after which the dispatched 'input' event looks unchanged
-      // and React silently drops the edit (list continuation lost on save).
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-      nativeInputValueSetter.call(field, newValue);
-      field.setSelectionRange(newCursorPos, newCursorPos);
-
-      // Dispatch only input event (not change to avoid breaking React state)
-      const inputEvent = new Event('input', { bubbles: true });
-      field.dispatchEvent(inputEvent);
+      commitListContinuation(field, newValue, newCursorPos);
 
       return true; // Handled
     }
@@ -692,15 +704,7 @@ const FormatterFormats = (() => {
         newCursorPos = start + newText.length;
       }
 
-      // Set the new value via the native setter ONLY (see numbered-list note above):
-      // assigning field.value first updates React's _valueTracker and the edit is dropped.
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-      nativeInputValueSetter.call(field, newValue);
-      field.setSelectionRange(newCursorPos, newCursorPos);
-
-      // Dispatch only input event (not change to avoid breaking React state)
-      const inputEvent = new Event('input', { bubbles: true });
-      field.dispatchEvent(inputEvent);
+      commitListContinuation(field, newValue, newCursorPos);
 
       return true; // Handled
     }

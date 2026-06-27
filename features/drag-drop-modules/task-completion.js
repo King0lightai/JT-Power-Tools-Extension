@@ -286,32 +286,9 @@ const TaskCompletion = (() => {
     button.style.cssText = 'flex-shrink: 0; margin-right: 4px;';
 
     // Create SVG checkbox icon
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    svg.setAttribute('stroke-width', '2');
-    svg.setAttribute('class', 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]');
-    svg.setAttribute('viewBox', '0 0 24 24');
-
-    // Checkbox rect
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('width', '18');
-    rect.setAttribute('height', '18');
-    rect.setAttribute('x', '3');
-    rect.setAttribute('y', '3');
-    rect.setAttribute('rx', '2');
-    svg.appendChild(rect);
-
-    // Add checkmark if task is complete
-    if (isComplete) {
-      const checkmark = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      checkmark.setAttribute('d', 'M20 6 9 17l-5-5');
-      checkmark.setAttribute('class', 'jt-checkmark');
-      svg.appendChild(checkmark);
-    }
+    const svg = window.UIUtils.createCheckboxSvg(isComplete, {
+      className: 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]'
+    });
 
     button.appendChild(svg);
 

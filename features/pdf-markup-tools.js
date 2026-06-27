@@ -487,6 +487,14 @@ const PDFMarkupToolsFeature = (() => {
 
     btn.appendChild(icon);
 
+    return finalizeToolButton(btn, onClick);
+  }
+
+  /**
+   * Wire click + keyboard (Enter/Space) activation onto a tool button and
+   * return it. Shared by the vertical and horizontal button builders.
+   */
+  function finalizeToolButton(btn, onClick) {
     // Add click handler
     btn.addEventListener('click', onClick);
 
@@ -1144,18 +1152,7 @@ const PDFMarkupToolsFeature = (() => {
 
     btn.appendChild(inner);
 
-    // Add click handler
-    btn.addEventListener('click', onClick);
-
-    // Add keyboard support
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onClick(e);
-      }
-    });
-
-    return btn;
+    return finalizeToolButton(btn, onClick);
   }
 
   /**

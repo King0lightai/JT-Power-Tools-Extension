@@ -1551,7 +1551,7 @@
 .jt-overflow-dropdown .jt-toolbar-item:hover {
   background: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
-  color: #334155 !important;
+  color: #333333 !important;
 }
 
 .jt-overflow-dropdown .jt-toolbar-item.active {

@@ -61,22 +61,6 @@ const TaskTypeFilterFeature = (() => {
     return false;
   }
 
-  /**
-   * A "navigation key" for the current URL with the transient `taskId` param
-   * removed. Opening/closing a task sidebar only toggles ?taskId=, which is
-   * NOT a real navigation — using this key for change-detection keeps the
-   * feature from reloading every time a task sidebar opens.
-   */
-  function navKeyIgnoringTask(href) {
-    try {
-      const u = new URL(href);
-      u.searchParams.delete('taskId');
-      return `${u.pathname}?${u.searchParams.toString()}`;
-    } catch (e) {
-      return href;
-    }
-  }
-
   // ─── TABLE DETECTION ─────────────────────────────────────
 
   /**
@@ -216,6 +200,29 @@ const TaskTypeFilterFeature = (() => {
 
   // ─── API CALLS (Pro Worker with direct Pave fallback) ───────
 
+  /**
+   * Discover the organization ID from the configured grant key.
+   * Uses currentGrant → user → memberships → organization.
+   * @returns {Promise<string>} the resolved organization ID
+   * @throws {Error} if the organization cannot be determined
+   */
+  async function discoverOrgId() {
+    const orgResult = await JobTreadAPI.paveQuery({
+      currentGrant: {
+        user: {
+          memberships: {
+            nodes: {
+              organization: { id: {} }
+            }
+          }
+        }
+      }
+    });
+    const orgId = orgResult?.currentGrant?.user?.memberships?.nodes?.[0]?.organization?.id;
+    if (!orgId) throw new Error('Could not determine organization from grant key');
+    return orgId;
+  }
+
   async function fetchTaskTypes() {
     // Try Pro Worker first (single-org / legacy)
     if (typeof JobTreadProService !== 'undefined') {
@@ -226,23 +233,9 @@ const TaskTypeFilterFeature = (() => {
     }
 
     // Fallback: direct Pave query via JobTreadAPI (multi-org aware)
-    // Uses currentGrant → user → memberships → organization to find org,
     // then queries organization.taskTypes
     if (typeof JobTreadAPI !== 'undefined' && await JobTreadAPI.isConfigured()) {
-      // First discover the org ID from the grant key
-      const orgResult = await JobTreadAPI.paveQuery({
-        currentGrant: {
-          user: {
-            memberships: {
-              nodes: {
-                organization: { id: {} }
-              }
-            }
-          }
-        }
-      });
-      const orgId = orgResult?.currentGrant?.user?.memberships?.nodes?.[0]?.organization?.id;
-      if (!orgId) throw new Error('Could not determine organization from grant key');
+      const orgId = await discoverOrgId();
 
       // Now query task types via the organization
       let allTaskTypes = [];
@@ -286,20 +279,7 @@ const TaskTypeFilterFeature = (() => {
 
     // Fallback: direct Pave query via JobTreadAPI (multi-org aware)
     if (typeof JobTreadAPI !== 'undefined' && await JobTreadAPI.isConfigured()) {
-      // Discover org ID from grant key
-      const orgResult = await JobTreadAPI.paveQuery({
-        currentGrant: {
-          user: {
-            memberships: {
-              nodes: {
-                organization: { id: {} }
-              }
-            }
-          }
-        }
-      });
-      const orgId = orgResult?.currentGrant?.user?.memberships?.nodes?.[0]?.organization?.id;
-      if (!orgId) throw new Error('Could not determine organization from grant key');
+      const orgId = await discoverOrgId();
 
       // Fetch tasks via organization (paginated, size 50 to avoid 413)
       let allTasks = [];
@@ -880,9 +860,9 @@ const TaskTypeFilterFeature = (() => {
     // adds/removes ?taskId=, and we must NOT treat that as a navigation
     // (otherwise opening any task wipes our state and re-fetches, which the
     // user sees as a jarring reload). Path / ?view= / date changes still count.
-    let lastNavKey = navKeyIgnoringTask(window.location.href);
+    let lastNavKey = UrlUtils.navKeyIgnoringTask(window.location.href);
     urlCheckInterval = setInterval(() => {
-      const key = navKeyIgnoringTask(window.location.href);
+      const key = UrlUtils.navKeyIgnoringTask(window.location.href);
       if (key !== lastNavKey) {
         lastNavKey = key;
         removeInjectedRows();

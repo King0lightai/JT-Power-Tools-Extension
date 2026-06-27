@@ -1738,6 +1738,29 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Run the full marker + reposition sequence. Shared by the MutationObserver
+   * debounce and the SPA URL-change handler, which previously inlined identical
+   * copies of this list.
+   */
+  function runAllMarkers() {
+    findAndMarkTopHeader();
+    findAndMarkTabs();
+    findAndMarkActionToolbar();
+    findAndMarkBudgetTableHeader();
+    findAndMarkScheduleHeader();
+    findAndMarkListHeader();
+    findAndMarkFilesFolderBar();
+    findAndMarkFilesListHeader();
+    findAndMarkFilesSidebar();
+    findAndMarkGlobalSidebars();
+    findAndMarkFullpageSidebars();
+    findAndMarkEditItemsPanel();
+    updatePositions();
+    adjustDragBoundarySidebars();
+    setupJobContextObserver();
+  }
+
+  /**
    * Remove sticky behavior
    */
   function removeFreezeHeader() {
@@ -1881,23 +1904,7 @@ const FreezeHeaderFeature = (() => {
 
         // Debounce the rest of the updates (heavier operations)
         if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          findAndMarkTopHeader();
-          findAndMarkTabs();
-          findAndMarkActionToolbar();
-          findAndMarkBudgetTableHeader();
-          findAndMarkScheduleHeader();
-          findAndMarkListHeader();
-          findAndMarkFilesFolderBar();
-          findAndMarkFilesListHeader();
-          findAndMarkFilesSidebar();
-          findAndMarkGlobalSidebars();
-          findAndMarkFullpageSidebars();
-          findAndMarkEditItemsPanel();
-          updatePositions();
-          adjustDragBoundarySidebars();
-          setupJobContextObserver();
-        }, 200);
+        debounceTimer = setTimeout(runAllMarkers, 200);
       }
     });
 
@@ -1932,23 +1939,7 @@ const FreezeHeaderFeature = (() => {
           if (!wasOnJobPage) {
             applyFreezeHeader();
           }
-          setTimeout(() => {
-            findAndMarkTopHeader();
-            findAndMarkTabs();
-            findAndMarkActionToolbar();
-            findAndMarkBudgetTableHeader();
-            findAndMarkScheduleHeader();
-            findAndMarkListHeader();
-            findAndMarkFilesFolderBar();
-            findAndMarkFilesListHeader();
-            findAndMarkFilesSidebar();
-            findAndMarkGlobalSidebars();
-            findAndMarkFullpageSidebars();
-            findAndMarkEditItemsPanel();
-            updatePositions();
-            adjustDragBoundarySidebars();
-            setupJobContextObserver();
-          }, 300);
+          setTimeout(runAllMarkers, 300);
         } else if (wasOnJobPage) {
           // Navigated away from job page - remove freeze header
           removeFreezeHeader();

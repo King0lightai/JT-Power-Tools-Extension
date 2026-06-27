@@ -70,37 +70,11 @@ const SmartJobSwitcherFeature = (() => {
   }
 
   /**
-   * Check if a sidebar element is specifically the Job Switcher
-   * Used only for keyboard shortcut features (Enter to select, Escape to close)
-   */
-  function isJobSwitcherSidebar(sidebar) {
-    if (!sidebar) return false;
-
-    const headerText = sidebar.textContent || '';
-    if (headerText.includes('JOB SWITCHER') || headerText.includes('Job Switcher')) {
-      return true;
-    }
-
-    const searchInput = sidebar.querySelector('input[placeholder*="Search Jobs"]') ||
-                       sidebar.querySelector('input[placeholder*="Search jobs"]');
-    if (searchInput) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Find the Job Switcher sidebar specifically (for keyboard shortcuts)
+   * Find the Job Switcher sidebar specifically (for keyboard shortcuts).
+   * Delegates to the shared SidebarDetector util.
    */
   function findJobSwitcherSidebar() {
-    const sidebars = document.querySelectorAll(SIDEBAR_SELECTOR);
-    for (const sidebar of sidebars) {
-      if (isJobSwitcherSidebar(sidebar)) {
-        return sidebar;
-      }
-    }
-    return null;
+    return window.SidebarDetector.findJobSwitcherSidebar(SIDEBAR_SELECTOR);
   }
 
   /**

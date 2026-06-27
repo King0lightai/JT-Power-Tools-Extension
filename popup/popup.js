@@ -225,17 +225,8 @@ async function checkApiStatus() {
   const taskTypeFilterToggle = document.getElementById('taskTypeFilter');
   const taskTypeFilterFeature = document.getElementById('taskTypeFilterFeature');
 
-  // Check if Pro Service is configured (uses Worker)
-  const isProConfigured = await JobTreadProService.isConfigured();
-
-  if (isProConfigured) {
-    const orgInfo = await JobTreadProService.getOrgInfo();
-    apiStatus.className = 'api-status active';
-    statusText.textContent = `API configured (${orgInfo.orgName || 'Connected'})`;
-    apiKeyInput.placeholder = '••••••••••••';
-    orgIdInput.placeholder = orgInfo.orgId || 'Org ID';
-    orgIdInput.value = '';
-
+  // Enable the API-dependent feature toggles (shared by the Pro and Direct config branches)
+  function enableApiDependentToggles() {
     // Enable Custom Field Filter toggle
     customFieldFilterToggle.disabled = false;
     if (customFieldFilterFeature) {
@@ -254,6 +245,20 @@ async function checkApiStatus() {
       taskTypeFilterFeature.classList.remove('disabled');
       taskTypeFilterFeature.title = '';
     }
+  }
+
+  // Check if Pro Service is configured (uses Worker)
+  const isProConfigured = await JobTreadProService.isConfigured();
+
+  if (isProConfigured) {
+    const orgInfo = await JobTreadProService.getOrgInfo();
+    apiStatus.className = 'api-status active';
+    statusText.textContent = `API configured (${orgInfo.orgName || 'Connected'})`;
+    apiKeyInput.placeholder = '••••••••••••';
+    orgIdInput.placeholder = orgInfo.orgId || 'Org ID';
+    orgIdInput.value = '';
+
+    enableApiDependentToggles();
   } else {
     // Fall back to check old direct API configuration
     const isDirectConfigured = await JobTreadAPI.isFullyConfigured();
@@ -265,24 +270,7 @@ async function checkApiStatus() {
       apiKeyInput.placeholder = '••••••••••••';
       orgIdInput.placeholder = storedOrgId || 'Org ID';
 
-      // Enable Custom Field Filter toggle
-      customFieldFilterToggle.disabled = false;
-      if (customFieldFilterFeature) {
-        customFieldFilterFeature.classList.remove('disabled');
-        customFieldFilterFeature.title = '';
-      }
-      // Enable Budget Changelog toggle
-      if (budgetChangelogToggle) budgetChangelogToggle.disabled = false;
-      if (budgetChangelogFeature) {
-        budgetChangelogFeature.classList.remove('disabled');
-        budgetChangelogFeature.title = '';
-      }
-      // Enable Task Type Filter toggle
-      if (taskTypeFilterToggle) taskTypeFilterToggle.disabled = false;
-      if (taskTypeFilterFeature) {
-        taskTypeFilterFeature.classList.remove('disabled');
-        taskTypeFilterFeature.title = '';
-      }
+      enableApiDependentToggles();
     } else {
       apiStatus.className = 'api-status inactive';
 

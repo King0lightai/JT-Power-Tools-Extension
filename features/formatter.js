@@ -637,53 +637,53 @@ const FormatterFeature = (() => {
     }
   }
 
-  function handleScroll() {
+  // Resolve the currently active toolbar/field pair for repositioning.
+  // Hides the toolbar (and returns null) if either element has been removed
+  // from the DOM, and returns null unless both are present.
+  function getActivePositioningPair() {
     const activeToolbar = Toolbar().getActiveToolbar();
     const activeField = Toolbar().getActiveField();
 
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       Toolbar().hideToolbar();
-      return;
+      return null;
     }
     if (activeField && !document.body.contains(activeField)) {
       Toolbar().hideToolbar();
-      return;
+      return null;
     }
 
     if (activeToolbar && activeField) {
-      Toolbar().positionToolbar(activeToolbar, activeField);
-
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
-      }
-      scrollTimeout = setTimeout(() => {
-        const toolbar = Toolbar().getActiveToolbar();
-        const field = Toolbar().getActiveField();
-        if (toolbar && field &&
-            document.body.contains(toolbar) &&
-            document.body.contains(field)) {
-          Toolbar().positionToolbar(toolbar, field);
-        }
-      }, 100);
+      return { toolbar: activeToolbar, field: activeField };
     }
+    return null;
+  }
+
+  function handleScroll() {
+    const pair = getActivePositioningPair();
+    if (!pair) return;
+
+    Toolbar().positionToolbar(pair.toolbar, pair.field);
+
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout);
+    }
+    scrollTimeout = setTimeout(() => {
+      const toolbar = Toolbar().getActiveToolbar();
+      const field = Toolbar().getActiveField();
+      if (toolbar && field &&
+          document.body.contains(toolbar) &&
+          document.body.contains(field)) {
+        Toolbar().positionToolbar(toolbar, field);
+      }
+    }, 100);
   }
 
   function handleResize() {
-    const activeToolbar = Toolbar().getActiveToolbar();
-    const activeField = Toolbar().getActiveField();
+    const pair = getActivePositioningPair();
+    if (!pair) return;
 
-    if (activeToolbar && !document.body.contains(activeToolbar)) {
-      Toolbar().hideToolbar();
-      return;
-    }
-    if (activeField && !document.body.contains(activeField)) {
-      Toolbar().hideToolbar();
-      return;
-    }
-
-    if (activeToolbar && activeField) {
-      Toolbar().positionToolbar(activeToolbar, activeField);
-    }
+    Toolbar().positionToolbar(pair.toolbar, pair.field);
   }
 
   function handleGlobalClick(e) {

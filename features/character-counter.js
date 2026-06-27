@@ -28,6 +28,35 @@ const CharacterCounterFeature = (() => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   }
 
+  /**
+   * Wire standard signature-modal dismissal: click on the backdrop closes the
+   * modal, and Escape closes it only when this overlay is the topmost one (so a
+   * nested modal doesn't close every open modal at once). Both listeners are
+   * bound to the provided AbortSignal for cleanup.
+   * @param {HTMLElement} overlay
+   * @param {Function} closeModal
+   * @param {AbortSignal} signal
+   */
+  function wireOverlayDismiss(overlay, closeModal, signal) {
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeModal();
+      }
+    }, { signal });
+
+    // Close on Escape — only if THIS overlay is the topmost one. Without
+    // this check, Escape pressed while the edit modal sits on top of the
+    // manager modal closes BOTH (each document-scoped handler fires).
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const allOverlays = document.querySelectorAll('.jt-signature-modal-overlay');
+      if (allOverlays[allOverlays.length - 1] === overlay) {
+        closeModal();
+      }
+    }, { signal });
+  }
+
   async function checkEssentialTier() {
     try {
       if (window.LicenseService) {
@@ -489,23 +518,8 @@ const CharacterCounterFeature = (() => {
       cancelBtn.addEventListener('click', () => closeModal(), { signal });
       saveBtn.addEventListener('click', saveTemplate, { signal });
 
-      // Close on overlay click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          closeModal();
-        }
-      }, { signal });
-
-      // Close on Escape — only if THIS overlay is the topmost one. Without
-      // this check, Escape pressed while the edit modal sits on top of the
-      // manager modal closes BOTH (each document-scoped handler fires).
-      document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        const allOverlays = document.querySelectorAll('.jt-signature-modal-overlay');
-        if (allOverlays[allOverlays.length - 1] === overlay) {
-          closeModal();
-        }
-      }, { signal });
+      // Close on overlay click + Escape (topmost only)
+      wireOverlayDismiss(overlay, closeModal, signal);
 
       // Submit on Ctrl+Enter in textarea
       textarea.addEventListener('keydown', (e) => {
@@ -781,23 +795,8 @@ const CharacterCounterFeature = (() => {
       // Event listeners
       closeBtn.addEventListener('click', closeModal, { signal });
 
-      // Close on overlay click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          closeModal();
-        }
-      }, { signal });
-
-      // Close on Escape — only if THIS overlay is the topmost one. Without
-      // this check, Escape pressed while the edit modal sits on top of the
-      // manager modal closes BOTH (each document-scoped handler fires).
-      document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        const allOverlays = document.querySelectorAll('.jt-signature-modal-overlay');
-        if (allOverlays[allOverlays.length - 1] === overlay) {
-          closeModal();
-        }
-      }, { signal });
+      // Close on overlay click + Escape (topmost only)
+      wireOverlayDismiss(overlay, closeModal, signal);
 
       // Add new template button
       addBtn.addEventListener('click', async () => {

@@ -39,38 +39,19 @@ const CustomFieldFilterFeature = (() => {
   }
 
   /**
-   * Check if a sidebar element is specifically the Job Switcher
+   * Check if a sidebar element is specifically the Job Switcher.
+   * Delegates to the shared SidebarDetector util.
    */
   function isJobSwitcherSidebar(sidebar) {
-    if (!sidebar) return false;
-
-    // Check for "JOB SWITCHER" text in the header
-    const headerText = sidebar.textContent || '';
-    if (headerText.includes('JOB SWITCHER') || headerText.includes('Job Switcher')) {
-      return true;
-    }
-
-    // Check for job search input placeholder
-    const searchInput = sidebar.querySelector('input[placeholder*="Search Jobs"]') ||
-                       sidebar.querySelector('input[placeholder*="Search jobs"]');
-    if (searchInput) {
-      return true;
-    }
-
-    return false;
+    return window.SidebarDetector.isJobSwitcherSidebar(sidebar);
   }
 
   /**
-   * Find the Job Switcher sidebar specifically
+   * Find the Job Switcher sidebar specifically.
+   * Delegates to the shared SidebarDetector util.
    */
   function findJobSwitcherSidebar() {
-    const sidebars = document.querySelectorAll(SIDEBAR_SELECTOR);
-    for (const sidebar of sidebars) {
-      if (isJobSwitcherSidebar(sidebar)) {
-        return sidebar;
-      }
-    }
-    return null;
+    return window.SidebarDetector.findJobSwitcherSidebar(SIDEBAR_SELECTOR);
   }
 
   /**

@@ -104,22 +104,6 @@ const AvailabilityFilterFeature = (() => {
   }
 
   /**
-   * A "navigation key" for the current URL with the transient `taskId` param
-   * removed. Opening/closing a task sidebar only toggles ?taskId=, which is
-   * NOT a real navigation — using this key for URL-change detection keeps the
-   * filter bar from tearing down and rebuilding every time a task opens.
-   */
-  function navKeyIgnoringTask(href) {
-    try {
-      const u = new URL(href);
-      u.searchParams.delete('taskId');
-      return `${u.pathname}?${u.searchParams.toString()}`;
-    } catch (e) {
-      return href;
-    }
-  }
-
-  /**
    * Scan the page for categories and their assignees
    *
    * Structure:
@@ -1494,14 +1478,14 @@ const AvailabilityFilterFeature = (() => {
     // `taskId` param stripped — opening/closing a task sidebar toggles
     // ?taskId= and must NOT be treated as navigation, or the whole filter bar
     // tears down and rebuilds every time a task opens (visually jarring).
-    let lastNavKey = navKeyIgnoringTask(location.href);
+    let lastNavKey = UrlUtils.navKeyIgnoringTask(location.href);
     urlCheckInterval = setInterval(() => {
       if (!isActiveState) {
         clearInterval(urlCheckInterval);
         return;
       }
 
-      const navKey = navKeyIgnoringTask(location.href);
+      const navKey = UrlUtils.navKeyIgnoringTask(location.href);
       if (navKey !== lastNavKey) {
         lastNavKey = navKey;
         console.log('AvailabilityFilter: URL changed, rescanning...');

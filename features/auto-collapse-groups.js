@@ -517,7 +517,7 @@ const AutoCollapseGroupsFeature = (() => {
     // This prevents re-collapse when clicking on tasks (which adds task ID to URL)
     let lastPathname = window.location.pathname;
 
-    const checkUrl = () => {
+    const onPathnameChange = () => {
       const currentPathname = window.location.pathname;
       if (currentPathname !== lastPathname) {
         lastPathname = currentPathname;
@@ -534,22 +534,10 @@ const AutoCollapseGroupsFeature = (() => {
     };
 
     // Check periodically for URL changes (handles pushState)
-    urlCheckInterval = setInterval(checkUrl, 500);
+    urlCheckInterval = setInterval(onPathnameChange, 500);
 
     // Also listen for popstate (browser back/forward)
-    popstateHandler = () => {
-      const currentPathname = window.location.pathname;
-      if (currentPathname !== lastPathname) {
-        lastPathname = currentPathname;
-        initialCollapseApplied = false;
-        if (isOnSchedulePage()) {
-          applyInitialCollapse();
-          injectScheduleExpandButton();
-        } else {
-          removeScheduleExpandButton();
-        }
-      }
-    };
+    popstateHandler = onPathnameChange;
     window.addEventListener('popstate', popstateHandler);
   }
 

@@ -22,51 +22,12 @@ const FormsApi = (() => {
   const DEBUG = false;
   function log(...args) { if (DEBUG) console.log('FormsApi:', ...args); }
 
-  /**
-   * Resolve AccountService and verify the user is logged in. Returns the
-   * service or throws a stable error message that callers can render.
-   */
-  function requireAccountService() {
-    const svc = window.AccountService;
-    if (!svc) throw new Error('AccountService not loaded');
-    if (!svc.isLoggedIn || !svc.isLoggedIn()) {
-      throw new Error('Not logged in');
-    }
-    return svc;
-  }
-
-  /**
-   * Wrap fetch + JSON parse + error normalization. The server returns
-   * { error: '...' } on 4xx/5xx; we surface that as a thrown Error so
-   * callers can distinguish ok-with-result from server errors via try/catch.
-   * Status + parsed payload are attached to the Error so 409 callers can
-   * read currentData / currentVersion for field-level merge.
-   */
-  async function postJson(endpoint, body) {
-    const svc = requireAccountService();
-    const response = await svc.authenticatedFetch(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(body || {})
-    });
-
-    let payload = null;
-    try {
-      payload = await response.json();
-    } catch (_err) {
-      // Non-JSON response — surface the status text
-    }
-
-    if (!response.ok) {
-      const msg = (payload && (payload.error || payload.message)) ||
-                  ('HTTP ' + response.status + ' ' + response.statusText);
-      const err = new Error(msg);
-      err.status = response.status;
-      err.payload = payload;
-      throw err;
-    }
-
-    return payload;
-  }
+  // Auth + POST-JSON plumbing shared with CustomThemeApi / TweaksApi.
+  // postJson attaches status + parsed payload to thrown Errors so 409
+  // callers can read currentData / currentVersion for field-level merge.
+  // See services/admin-api-base.js.
+  const requireAccountService = window.AdminApiBase.requireAccountService;
+  const postJson = window.AdminApiBase.createPostJson(false);
 
   // ─── Public API ─────────────────────────────────────────────────────
 

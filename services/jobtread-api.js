@@ -407,6 +407,28 @@ const JobTreadAPI = (() => {
   }
 
   /**
+   * Build the customFields sub-query for a given targetType.
+   * Shared by the job and location custom-field fetchers.
+   * @param {string} targetType - Pave targetType filter (e.g. 'job', 'location')
+   * @returns {Object} Pave customFields sub-query object
+   */
+  function buildCustomFieldsSubQuery(targetType) {
+    return {
+      $: {
+        where: ['targetType', '=', targetType],
+        sortBy: [{ field: 'position' }]
+      },
+      nodes: {
+        id: {},
+        name: {},
+        type: {},
+        targetType: {},
+        options: {}
+      }
+    };
+  }
+
+  /**
    * Fetch custom field definitions for jobs
    * @param {string} orgId - Organization ID (optional, will use stored if not provided)
    * @returns {Promise<Array>} List of custom field definitions
@@ -443,21 +465,7 @@ const JobTreadAPI = (() => {
       organization: {
         $: { id: orgId },
         id: {},
-        customFields: {
-          $: {
-            where: ['targetType', '=', 'job'],
-            sortBy: [
-              { field: 'position' }
-            ]
-          },
-          nodes: {
-            id: {},
-            name: {},
-            type: {},
-            targetType: {},
-            options: {}
-          }
-        }
+        customFields: buildCustomFieldsSubQuery('job')
       }
     };
 
@@ -509,19 +517,7 @@ const JobTreadAPI = (() => {
     const query = {
       organization: {
         $: { id: orgId },
-        customFields: {
-          $: {
-            where: ['targetType', '=', 'location'],
-            sortBy: [{ field: 'position' }]
-          },
-          nodes: {
-            id: {},
-            name: {},
-            type: {},
-            targetType: {},
-            options: {}
-          }
-        }
+        customFields: buildCustomFieldsSubQuery('location')
       }
     };
 

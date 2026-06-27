@@ -87,9 +87,57 @@ const UIUtils = (() => {
     }, 3000);
   }
 
+  /**
+   * Build the SVG checkbox icon shared by the task and action-item completion
+   * checkboxes (an outlined rounded rect, plus a checkmark path when complete).
+   * @param {boolean} isComplete - Whether to render the checkmark
+   * @param {Object} [options] - Per-caller SVG variations
+   * @param {string} [options.className] - SVG class attribute
+   * @param {string} [options.width] - SVG width attribute (omitted if falsy)
+   * @param {string} [options.height] - SVG height attribute (omitted if falsy)
+   * @returns {SVGElement} The constructed SVG element
+   */
+  function createCheckboxSvg(isComplete = false, options = {}) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('class', options.className || 'inline-block overflow-visible');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    if (options.width) {
+      svg.setAttribute('width', options.width);
+    }
+    if (options.height) {
+      svg.setAttribute('height', options.height);
+    }
+
+    // Checkbox rect
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('width', '18');
+    rect.setAttribute('height', '18');
+    rect.setAttribute('x', '3');
+    rect.setAttribute('y', '3');
+    rect.setAttribute('rx', '2');
+    svg.appendChild(rect);
+
+    // Add checkmark if task is complete
+    if (isComplete) {
+      const checkmark = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      checkmark.setAttribute('d', 'M20 6 9 17l-5-5');
+      checkmark.setAttribute('class', 'jt-checkmark');
+      svg.appendChild(checkmark);
+    }
+
+    return svg;
+  }
+
   // Public API
   return {
-    showNotification
+    showNotification,
+    createCheckboxSvg
   };
 })();
 

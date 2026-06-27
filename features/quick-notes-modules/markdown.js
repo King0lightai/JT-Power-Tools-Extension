@@ -172,37 +172,8 @@ const QuickNotesMarkdown = (() => {
   function parseMarkdown(text) {
     if (!text) return '';
 
-    // Escape HTML first
-    let html = escapeHtml(text);
-
-    // Parse links [text](url) - sanitize URL and attr-escape before href interpolation
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, (match, linkText, url) => {
-      const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
-        ? Sanitizer.sanitizeURL(url, '#')
-        : '#';
-      const hrefAttr = (typeof Sanitizer !== 'undefined' && Sanitizer.escapeAttr)
-        ? Sanitizer.escapeAttr(safeUrl)
-        : safeUrl;
-      return `<a href="${hrefAttr}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
-    });
-
-    // Parse inline code `code`
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-
-    // Parse strikethrough ~~text~~ (must be before underline)
-    html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
-
-    // Parse underline __text__ (must be before bold)
-    html = html.replace(/__(.+?)__/g, '<u>$1</u>');
-
-    // Parse bold **text**
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-    // Parse bold *text* (single asterisks)
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
-
-    // Parse italic _text_ (single underscores)
-    html = html.replace(/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/g, '<em>$1</em>');
+    // Apply inline formatting (links, code, bold, italic, etc.) — shared with the editor parser
+    const html = processInlineFormatting(text);
 
     // Parse line by line for lists and checkboxes
     const lines = html.split('\n');

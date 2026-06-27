@@ -260,8 +260,14 @@ const FormsFieldRenderers = (() => {
     return row;
   }
 
-  function renderCheckboxes(field, value, onChange) {
-    const card = makeCard('jt-forms-field-checkboxes');
+  /**
+   * Shared option-list renderer for checkbox + radio fields. The two differ
+   * only in the card class, input type, and the value-mutation applied on
+   * select — everything else (option rows, fill-in wiring, closure value
+   * tracking) is identical, so it lives here once.
+   */
+  function renderOptionList(field, value, onChange, { cardClass, inputType, selectOption }) {
+    const card = makeCard(cardClass);
     appendLabel(card, field);
     const options = Array.isArray(field.options) ? field.options : [];
     options.forEach((option, idx) => {
@@ -270,11 +276,11 @@ const FormsFieldRenderers = (() => {
         field,
         option,
         optionIndex: idx,
-        inputType: 'checkbox',
+        inputType,
         isSelected: isOptionSelected(value, option.value),
         fillInText: getOptionFillIn(value, option.value),
         onInputChange: () => {
-          const next = toggleOption(value, option.value, optionHasFillIn);
+          const next = selectOption(value, option.value, optionHasFillIn);
           value = next; // local closure update so subsequent edits see latest
           onChange(field.id, next);
         },
@@ -289,33 +295,20 @@ const FormsFieldRenderers = (() => {
     return card;
   }
 
-  function renderRadio(field, value, onChange) {
-    const card = makeCard('jt-forms-field-radio');
-    appendLabel(card, field);
-    const options = Array.isArray(field.options) ? field.options : [];
-    options.forEach((option, idx) => {
-      const optionHasFillIn = !!option.fillIn;
-      const row = buildOptionRow({
-        field,
-        option,
-        optionIndex: idx,
-        inputType: 'radio',
-        isSelected: isOptionSelected(value, option.value),
-        fillInText: getOptionFillIn(value, option.value),
-        onInputChange: () => {
-          const next = selectRadio(value, option.value, optionHasFillIn);
-          value = next;
-          onChange(field.id, next);
-        },
-        onFillInChange: (event) => {
-          const next = setFillInForOption(value, option.value, event.target.value);
-          value = next;
-          onChange(field.id, next);
-        },
-      });
-      card.appendChild(row);
+  function renderCheckboxes(field, value, onChange) {
+    return renderOptionList(field, value, onChange, {
+      cardClass: 'jt-forms-field-checkboxes',
+      inputType: 'checkbox',
+      selectOption: toggleOption,
     });
-    return card;
+  }
+
+  function renderRadio(field, value, onChange) {
+    return renderOptionList(field, value, onChange, {
+      cardClass: 'jt-forms-field-radio',
+      inputType: 'radio',
+      selectOption: selectRadio,
+    });
   }
 
   // ─── Date field ───

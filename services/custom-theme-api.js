@@ -23,50 +23,10 @@ const CustomThemeApi = (() => {
   const DEBUG = false;
   function log(...args) { if (DEBUG) console.log('CustomThemeApi:', ...args); }
 
-  /**
-   * Resolve AccountService and verify the user is logged in. Returns
-   * the service or throws a stable error message that callers can render.
-   */
-  function requireAccountService() {
-    const svc = window.AccountService;
-    if (!svc) throw new Error('AccountService not loaded');
-    if (!svc.isLoggedIn || !svc.isLoggedIn()) {
-      throw new Error('Not logged in');
-    }
-    return svc;
-  }
-
-  /**
-   * Wrap fetch + JSON parse + error normalization. The server returns
-   * { success: false, error: '...' } on 4xx/5xx; we surface that as a
-   * thrown Error so callers can distinguish ok-with-result from server
-   * errors via try/catch.
-   */
-  async function postJson(endpoint, body) {
-    const svc = requireAccountService();
-    const response = await svc.authenticatedFetch(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(body || {})
-    });
-
-    let payload = null;
-    try {
-      payload = await response.json();
-    } catch (_err) {
-      // Non-JSON response — surface the status text
-    }
-
-    if (!response.ok || (payload && payload.success === false)) {
-      const msg = (payload && (payload.error || payload.message)) ||
-                  ('HTTP ' + response.status + ' ' + response.statusText);
-      const err = new Error(msg);
-      err.status = response.status;
-      err.payload = payload;
-      throw err;
-    }
-
-    return payload;
-  }
+  // Auth + POST-JSON plumbing shared with TweaksApi / FormsApi. The server
+  // returns { success: false, error: '...' } on failure, so this service
+  // opts into treating a 200 { success:false } body as an error too.
+  const postJson = window.AdminApiBase.createPostJson(true);
 
   // ─── Public API ─────────────────────────────────────────────────────
 

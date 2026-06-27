@@ -408,28 +408,49 @@ const TweakEngineFeature = (() => {
     recordDiagnostic(tweak.id, { lastApplyAt: Date.now(), lastError: null });
   }
 
+  // ─── Shared helpers for capture-phase action listeners ──────────────
+  // onEvent and confirmBeforeAction both register a document-level capture
+  // listener that gates on a selector match, optionally stops propagation,
+  // and is tracked in tweakEventListeners for teardown. These three helpers
+  // hold that shared shape so the two registrars stay in lockstep.
+
+  function matchesActionSelector(e, selector) {
+    // closest() catches events bubbled from a child of a matching element.
+    try {
+      return !!(e.target && e.target.closest && e.target.closest(selector));
+    } catch {
+      return false;
+    }
+  }
+
+  function stopEventPropagation(e) {
+    e.stopPropagation();
+    // Also stop other capturing/bubbling listeners on the same target.
+    if (typeof e.stopImmediatePropagation === 'function') {
+      e.stopImmediatePropagation();
+    }
+  }
+
+  function registerCaptureListener(action, tweak, handler) {
+    document.addEventListener(action.event, handler, { capture: true });
+    tweakEventListeners.push({
+      tweakId: tweak.id,
+      target: document,
+      event: action.event,
+      handler,
+      useCapture: true
+    });
+  }
+
   function registerOnEventAction(action, actionIndex, tweak) {
     const handler = (e) => {
-      // Validate the target matches our selector. Use closest() so we catch
-      // events that bubbled from a child of a matching element.
-      let matched;
-      try {
-        matched = e.target && e.target.closest && e.target.closest(action.selector);
-      } catch {
-        return;
-      }
-      if (!matched) return;
+      // Validate the target matches our selector before doing anything.
+      if (!matchesActionSelector(e, action.selector)) return;
 
       // Apply side effects in the correct order:
       // preventDefault must run BEFORE we yield to async (the alert).
       if (action.preventDefault) e.preventDefault();
-      if (action.stopPropagation) {
-        e.stopPropagation();
-        // Also stop other capturing/bubbling listeners on the same target
-        if (typeof e.stopImmediatePropagation === 'function') {
-          e.stopImmediatePropagation();
-        }
-      }
+      if (action.stopPropagation) stopEventPropagation(e);
       if (action.alert && window.JTTweakAlert) {
         try {
           window.JTTweakAlert.show(action.alert);
@@ -476,14 +497,7 @@ const TweakEngineFeature = (() => {
     // Capture phase so we fire BEFORE JT's own React-attached handlers,
     // which is required for preventDefault to actually block JT's
     // mousedown→drag handoff.
-    document.addEventListener(action.event, handler, { capture: true });
-    tweakEventListeners.push({
-      tweakId: tweak.id,
-      target: document,
-      event: action.event,
-      handler,
-      useCapture: true
-    });
+    registerCaptureListener(action, tweak, handler);
   }
 
   /**
@@ -506,13 +520,7 @@ const TweakEngineFeature = (() => {
    */
   function registerConfirmBeforeAction(action, actionIndex, tweak) {
     const handler = (e) => {
-      let matched;
-      try {
-        matched = e.target && e.target.closest && e.target.closest(action.selector);
-      } catch {
-        return;
-      }
-      if (!matched) return;
+      if (!matchesActionSelector(e, action.selector)) return;
 
       let proceed;
       try {
@@ -531,10 +539,7 @@ const TweakEngineFeature = (() => {
         // Cancelled — block the event so React's delegated handler and the
         // browser's default both stay dormant.
         e.preventDefault();
-        e.stopPropagation();
-        if (typeof e.stopImmediatePropagation === 'function') {
-          e.stopImmediatePropagation();
-        }
+        stopEventPropagation(e);
       }
       // Confirmed → return without stopping; the event continues to React and
       // the original action proceeds.
@@ -543,14 +548,7 @@ const TweakEngineFeature = (() => {
     // Capture phase at document so we run BEFORE React's root-delegated
     // handler. Tracked in tweakEventListeners so teardown removes it (same
     // lifecycle as onEvent).
-    document.addEventListener(action.event, handler, { capture: true });
-    tweakEventListeners.push({
-      tweakId: tweak.id,
-      target: document,
-      event: action.event,
-      handler,
-      useCapture: true
-    });
+    registerCaptureListener(action, tweak, handler);
   }
 
   function injectStyle(tweakId, css) {

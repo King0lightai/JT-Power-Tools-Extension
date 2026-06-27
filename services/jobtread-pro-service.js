@@ -37,13 +37,7 @@ const JobTreadProService = (() => {
    */
   function obfuscateValue(text) {
     try {
-      const textBytes = new TextEncoder().encode(text);
-      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
-      const obfuscated = new Uint8Array(textBytes.length);
-      for (let i = 0; i < textBytes.length; i++) {
-        obfuscated[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
-      }
-      return btoa(String.fromCharCode(...obfuscated));
+      return window.Obfuscation.obfuscate(text, OBFUSCATION_KEY);
     } catch (error) {
       logError('Obfuscation error:', error);
       return text;
@@ -55,13 +49,7 @@ const JobTreadProService = (() => {
    */
   function deobfuscateValue(obfuscatedText) {
     try {
-      const obfuscated = Uint8Array.from(atob(obfuscatedText), c => c.charCodeAt(0));
-      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
-      const original = new Uint8Array(obfuscated.length);
-      for (let i = 0; i < obfuscated.length; i++) {
-        original[i] = obfuscated[i] ^ keyBytes[i % keyBytes.length];
-      }
-      return new TextDecoder().decode(original);
+      return window.Obfuscation.deobfuscate(obfuscatedText, OBFUSCATION_KEY);
     } catch (error) {
       logError('Deobfuscation error:', error);
       return null;

@@ -144,20 +144,27 @@ const FormsActionBarInjector = (() => {
    * @param {Function} onClick - click + keyboard activation handler
    * @returns {HTMLElement}
    */
-  function buildButton(onClick) {
+  // Clipboard-with-lines stroke icon (matches JT's stroke-icon style) plus
+  // the "Forms" label — shared verbatim by the inline and menu buttons.
+  const FORMS_ICON_HTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg> Forms';
+
+  /**
+   * Build the shared Forms trigger element: a role="button" div carrying the
+   * Forms icon/label and click + keyboard activation. The caller supplies the
+   * Tailwind class string so the inline and menu variants can style
+   * themselves while sharing identical behavior.
+   *
+   * @param {string} className - Tailwind class string for the variant
+   * @param {Function} onClick - click + keyboard activation handler
+   * @returns {HTMLElement}
+   */
+  function buildTriggerEl(className, onClick) {
     const btn = document.createElement('div');
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '0');
     btn.setAttribute('data-jt-forms-trigger', 'true');
-    btn.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0';
-    // Mount hidden, then reveal on the next stable frame (see revealButton).
-    // visibility:hidden — NOT display:none — so the button still reserves its
-    // flex slot: siblings settle around it while hidden and the reveal causes
-    // no layout shift. This kills the load-time flash where the button popped
-    // in mid-hydration as JT re-rendered the action bar.
-    btn.style.visibility = 'hidden';
-    // Icon — clipboard-with-lines, matching JT's stroke-icon style
-    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg> Forms';
+    btn.className = className;
+    btn.innerHTML = FORMS_ICON_HTML;
     btn.addEventListener('click', (e) => {
       if (typeof onClick === 'function') onClick(e);
     });
@@ -171,6 +178,17 @@ const FormsActionBarInjector = (() => {
     return btn;
   }
 
+  function buildButton(onClick) {
+    const btn = buildTriggerEl('inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0', onClick);
+    // Mount hidden, then reveal on the next stable frame (see revealButton).
+    // visibility:hidden — NOT display:none — so the button still reserves its
+    // flex slot: siblings settle around it while hidden and the reveal causes
+    // no layout shift. This kills the load-time flash where the button popped
+    // in mid-hydration as JT re-rendered the action bar.
+    btn.style.visibility = 'hidden';
+    return btn;
+  }
+
   /**
    * Build a Forms entry styled to match a JT overflow-menu item. Uses
    * the same Tailwind class string as the surrounding entries
@@ -181,22 +199,7 @@ const FormsActionBarInjector = (() => {
    * @returns {HTMLElement}
    */
   function buildMenuButton(onClick) {
-    const btn = document.createElement('div');
-    btn.setAttribute('role', 'button');
-    btn.setAttribute('tabindex', '0');
-    btn.setAttribute('data-jt-forms-trigger', 'true');
-    btn.className = 'block w-full relative cursor-pointer px-4 py-2 hover:bg-blue-500 hover:text-white';
-    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg> Forms';
-    btn.addEventListener('click', (e) => {
-      if (typeof onClick === 'function') onClick(e);
-    });
-    btn.addEventListener('keydown', (e) => {
-      if ((e.key === 'Enter' || e.key === ' ') && typeof onClick === 'function') {
-        e.preventDefault();
-        onClick(e);
-      }
-    });
-    return btn;
+    return buildTriggerEl('block w-full relative cursor-pointer px-4 py-2 hover:bg-blue-500 hover:text-white', onClick);
   }
 
   /**

@@ -238,16 +238,7 @@ const LicenseService = (() => {
    */
   function obfuscate(text) {
     try {
-      const textBytes = new TextEncoder().encode(text);
-      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
-      const obfuscated = new Uint8Array(textBytes.length);
-
-      for (let i = 0; i < textBytes.length; i++) {
-        obfuscated[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
-      }
-
-      // Convert to base64
-      return btoa(String.fromCharCode(...obfuscated));
+      return window.Obfuscation.obfuscate(text, OBFUSCATION_KEY);
     } catch (error) {
       logError('Obfuscation error:', error);
       return text; // Fallback to plaintext if obfuscation fails
@@ -262,16 +253,7 @@ const LicenseService = (() => {
    */
   function deobfuscate(obfuscatedText) {
     try {
-      // Decode from base64
-      const obfuscated = Uint8Array.from(atob(obfuscatedText), c => c.charCodeAt(0));
-      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
-      const original = new Uint8Array(obfuscated.length);
-
-      for (let i = 0; i < obfuscated.length; i++) {
-        original[i] = obfuscated[i] ^ keyBytes[i % keyBytes.length];
-      }
-
-      return new TextDecoder().decode(original);
+      return window.Obfuscation.deobfuscate(obfuscatedText, OBFUSCATION_KEY);
     } catch (error) {
       logError('Deobfuscation error:', error);
       return null;
@@ -373,6 +355,27 @@ const LicenseService = (() => {
   }
 
   // Check if user has valid premium license (with re-validation)
+  // Evaluate a re-validation result for hasValidLicense.
+  // Returns false to deny access, true to grant temporary (offline) access,
+  // or null when the result is successful and the caller should continue.
+  function evaluateRevalidationResult(result, timeSinceRevalidation) {
+    if (result.success) {
+      return null;
+    }
+    // If re-validation failed due to network, allow temporary access
+    // ONLY if we're still within the offline grace period.
+    if (result.silent) {
+      if (timeSinceRevalidation > OFFLINE_GRACE_PERIOD) {
+        logWarn('Re-validation failed (network) and offline grace period exceeded — denying access');
+        return false;
+      }
+      logWarn('Re-validation failed (network), allowing temporary access');
+      return true;
+    }
+    // If license was actually revoked, deny access
+    return false;
+  }
+
   async function hasValidLicense() {
     try {
       const licenseData = await getLicenseData();
@@ -392,21 +395,8 @@ const LicenseService = (() => {
         if (revalidationInProgress && revalidationPromise) {
           log('Revalidation already in progress, waiting...');
           const result = await revalidationPromise;
-
-          if (!result.success) {
-            // If re-validation failed due to network, allow temporary access
-            // ONLY if we're still within the offline grace period.
-            if (result.silent) {
-              if (timeSinceRevalidation > OFFLINE_GRACE_PERIOD) {
-                logWarn('Re-validation failed (network) and offline grace period exceeded — denying access');
-                return false;
-              }
-              logWarn('Re-validation failed (network), allowing temporary access');
-              return true;
-            }
-            // If license was actually revoked, deny access
-            return false;
-          }
+          const decision = evaluateRevalidationResult(result, timeSinceRevalidation);
+          if (decision !== null) return decision;
         } else {
           // Start new revalidation with lock
           revalidationInProgress = true;
@@ -414,21 +404,8 @@ const LicenseService = (() => {
 
           try {
             const result = await revalidationPromise;
-
-            if (!result.success) {
-              // If re-validation failed due to network, allow temporary access
-              // ONLY if we're still within the offline grace period.
-              if (result.silent) {
-                if (timeSinceRevalidation > OFFLINE_GRACE_PERIOD) {
-                  logWarn('Re-validation failed (network) and offline grace period exceeded — denying access');
-                  return false;
-                }
-                logWarn('Re-validation failed (network), allowing temporary access');
-                return true;
-              }
-              // If license was actually revoked, deny access
-              return false;
-            }
+            const decision = evaluateRevalidationResult(result, timeSinceRevalidation);
+            if (decision !== null) return decision;
           } finally {
             // Release lock
             revalidationInProgress = false;
