@@ -33,6 +33,19 @@
   // Active capture subscribers (e.g. 'upload', 'browse'). Emit while non-empty.
   const subscribers = new Set();
 
+  // Redact the grantKey before the capture crosses the page-observable
+  // window.postMessage bus. This MAIN-world script shares its window with the
+  // page, so anything broadcast here is readable by any script on the page
+  // (e.g. a JobTread XSS or a hostile co-installed MAIN-world extension). The
+  // grantKey is the JobTread credential; neither consumer needs it on the bus
+  // anymore — the "Record for AI" uploader authenticates with the extension
+  // grant key it fetches privately via the service worker, and the Pave
+  // Explorer never needed the live key. Strip it at the source.
+  const GRANT_KEY_RE = /("grantKey"\s*:\s*")[^"]*(")/g;
+  function redactGrantKey(body) {
+    return typeof body === 'string' ? body.replace(GRANT_KEY_RE, '$1<REDACTED>$2') : body;
+  }
+
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     const d = event.data;
@@ -83,7 +96,7 @@
         try {
           window.postMessage({
             source: 'jt-pt-capture',
-            payload: { url, status: response.status, requestBody, responseBody, timestamp: Date.now() },
+            payload: { url, status: response.status, requestBody: redactGrantKey(requestBody), responseBody, timestamp: Date.now() },
           }, window.location.origin);
         } catch (e) {
           // Never break the app over a capture failure.
@@ -148,7 +161,7 @@
               source: 'jt-pt-capture',
               payload: {
                 url: meta.url, status: this.status,
-                requestBody: meta.requestBody, responseBody, timestamp: Date.now(),
+                requestBody: redactGrantKey(meta.requestBody), responseBody, timestamp: Date.now(),
               },
             }, window.location.origin);
           } catch (e) {

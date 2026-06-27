@@ -8,13 +8,18 @@
  *
  * Pipeline:
  *   1. A MAIN-world sniffer (pave-capture-page.js) observes window.fetch and
- *      posts each Pave request body to this ISOLATED module.
- *   2. Here we extract the grantKey (the upload credential + the source of
- *      the per-user namespace), then sanitize the query: grantKey removed,
- *      JobTread IDs (22-prefixed) replaced with <ID_n> placeholders — the
- *      same "shareable Pave" scheme as the inspector.
+ *      posts each Pave request body to this ISOLATED module — with the
+ *      grantKey already redacted, so the live credential never rides the
+ *      page-observable postMessage bus.
+ *   2. Here we sanitize the query: any residual grantKey blanked, JobTread
+ *      IDs (22-prefixed) replaced with <ID_n> placeholders — the same
+ *      "shareable Pave" scheme as the inspector.
  *   3. Sanitized queries are buffered and batch-uploaded through the
  *      background service worker (which has host_permissions, so no CORS).
+ *      The upload credential is the extension grant key for the active org,
+ *      fetched privately via the service worker (FETCH_EXTENSION_GRANT_KEY) —
+ *      not scraped from page traffic. The capture endpoint resolves it to the
+ *      same org namespace (reads are org-scoped), so results are unchanged.
  *
  * The grantKey never leaves the upload payload — it's stripped from anything
  * stored. Recording is visible to the user via a small on-screen pill.
@@ -26,8 +31,12 @@ const PaveCaptureFeature = (() => {
   let indicatorEl = null;
   let indicatorStyleEl = null;
 
-  // Most recent grantKey seen in captured traffic — the upload credential.
-  let lastGrantKey = null;
+  // Upload credential: the extension grant key for the active org, fetched
+  // privately via the service worker (portal-authed) — NOT scraped from page
+  // traffic, so the live JobTread grantKey never has to ride the page-
+  // observable postMessage bus. Cached per org; refetched on org change.
+  let grantKey = null;
+  let grantKeyOrg = null;
   // Pending sanitized queries awaiting upload.
   let buffer = [];
 
@@ -61,6 +70,9 @@ const PaveCaptureFeature = (() => {
     // Tell the page-context sniffer to start emitting.
     setRecording(true);
 
+    // Warm the upload credential for the active org so the first flush ships.
+    ensureGrantKey();
+
     flushTimer = setInterval(flush, FLUSH_INTERVAL_MS);
     showIndicator();
     console.log('PaveCapture: Recording for AI');
@@ -90,10 +102,6 @@ const PaveCaptureFeature = (() => {
 
     const queryObj = parsed && parsed.query ? parsed.query : parsed;
     if (!queryObj || typeof queryObj !== 'object') return;
-
-    // Pull the grantKey for the upload credential before we strip it.
-    const gk = queryObj.$ && typeof queryObj.$.grantKey === 'string' ? queryObj.$.grantKey : null;
-    if (gk) lastGrantKey = gk;
 
     const sanitized = sanitizeQuery(queryObj);
     if (!sanitized) return;
@@ -154,14 +162,49 @@ const PaveCaptureFeature = (() => {
     return { operation: null, type: 'other', entity: null };
   }
 
-  function flush() {
-    if (!buffer.length || !lastGrantKey) return;
+  /**
+   * Resolve (and cache) the extension grant key for the active org. Fetched
+   * via the service worker, which holds the portal access token — the key
+   * never passes through page-world script. Returns null if the org isn't
+   * known yet or the user isn't signed into the portal; the upload is skipped
+   * and the buffer is retried on the next flush.
+   */
+  function ensureGrantKey() {
+    const org = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
+    if (!org) return Promise.resolve(null);
+    if (grantKey && grantKeyOrg === org) return Promise.resolve(grantKey);
+    grantKey = null;
+    grantKeyOrg = org;
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'FETCH_EXTENSION_GRANT_KEY', orgName: org }, (res) => {
+          if (chrome.runtime.lastError || !res || !res.success || !res.grantKey) {
+            const why = (chrome.runtime.lastError && chrome.runtime.lastError.message)
+              || (res && res.error) || 'unknown';
+            console.warn('PaveCapture: no upload credential yet:', why);
+            resolve(null);
+            return;
+          }
+          // Guard against an org switch during the round-trip.
+          if (grantKeyOrg === org) grantKey = res.grantKey;
+          resolve(res.grantKey);
+        });
+      } catch (e) {
+        console.warn('PaveCapture: grant key fetch failed:', e.message);
+        resolve(null);
+      }
+    });
+  }
+
+  async function flush() {
+    if (!buffer.length) return;
+    const key = await ensureGrantKey();
+    if (!key) return; // keep the buffer; retry once a credential is available
     const queries = buffer;
     buffer = [];
-    const grantKey = lastGrantKey;
     try {
       chrome.runtime.sendMessage(
-        { type: 'PAVE_CAPTURE_UPLOAD', grantKey, queries },
+        { type: 'PAVE_CAPTURE_UPLOAD', grantKey: key, queries },
         (res) => {
           // Surface (but never throw) chrome.runtime errors.
           if (chrome.runtime.lastError) {
@@ -278,7 +321,8 @@ const PaveCaptureFeature = (() => {
     if (messageHandler) { window.removeEventListener('message', messageHandler); messageHandler = null; }
     removeIndicator();
     buffer = [];
-    lastGrantKey = null;
+    grantKey = null;
+    grantKeyOrg = null;
     isActive = false;
     console.log('PaveCapture: Cleaned up');
   }
