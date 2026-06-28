@@ -169,6 +169,7 @@
   background: var(--if-surface);
 }
 .jt-if-tile-v { font-size: 21px; font-weight: 600; }
+.jt-if-tile-v.paid { color: #16a34a; }
 .jt-if-tile-v.commit { color: #0d9488; }
 .jt-if-tile-v.proj { color: #b45309; }
 .jt-if-tile-k { margin-top: 2px; font-size: 11.5px; color: var(--if-text-muted); }
@@ -216,7 +217,8 @@
 }
 .jt-if-seg { width: 100%; transition: filter 0.12s; }
 .jt-if-bar:hover .jt-if-seg { filter: brightness(1.08); }
-.jt-if-seg.commit { background: #0d9488; border-radius: 0 0 3px 3px; }
+.jt-if-seg.paid { background: #16a34a; }
+.jt-if-seg.commit { background: #0d9488; }
 .jt-if-seg.proj {
   background-color: #fdf0d6;
   background-image: repeating-linear-gradient(45deg, #f59e0b 0, #f59e0b 2px, transparent 2px, transparent 6px);
@@ -231,6 +233,7 @@
 .jt-if-li { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--if-text); }
 .jt-if-li.muted { color: var(--if-text-muted); }
 .jt-if-dot { width: 13px; height: 13px; border-radius: 3px; }
+.jt-if-dot.paid { background: #16a34a; }
 .jt-if-dot.commit { background: #0d9488; }
 .jt-if-dot.proj {
   background-color: #fdf0d6;
@@ -287,6 +290,7 @@
 .jt-if-status.s-unknown { background: #f1f5f9; color: #64748b; }
 
 .jt-if-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.jt-if-tag.paid { background: #dcfce7; color: #166534; }
 .jt-if-tag.commit { background: #ccfbf1; color: #115e59; }
 .jt-if-tag.proj { background: #fef3c7; color: #92400e; }
 

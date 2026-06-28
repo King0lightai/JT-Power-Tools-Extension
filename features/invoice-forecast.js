@@ -440,12 +440,20 @@ const InvoiceForecastFeature = (() => {
 
     // Active-org-aware direct path (per-org forecasts)
     const orgId = await resolveActiveOrgId();
-    const invoices = await fetchInvoicesDirect(orgId, config.taskTypeIds, from, to, config.includeClosed);
+    const [scheduled, paid] = await Promise.all([
+      fetchInvoicesDirect(orgId, config.taskTypeIds, from, to, config.includeClosed),
+      fetchPaidInvoicesDirect(orgId, from, to, config.includeClosed)
+    ]);
     let soldJobIds = null;
     if (config.soldContractNames.length) {
       soldJobIds = await fetchSoldJobIdsDirect(orgId, config.soldContractNames, config.includeClosed);
     }
-    return invoices.map(inv => normalize(inv, soldJobIds)).filter(r => r.expectedMonth);
+    // Scheduled set drops paid invoices — they come from the paid query, dated by
+    // issueDate. Keeps the two disjoint (no double-count).
+    return [
+      ...scheduled.filter(inv => !((inv.amountPaid || 0) > 0)).map(inv => normalize(inv, soldJobIds, false)),
+      ...paid.map(inv => normalize(inv, soldJobIds, true))
+    ].filter(r => r.expectedMonth);
   }
 
   async function fetchInvoicesDirect(orgId, taskTypeIds, from, to, includeClosed) {
@@ -462,7 +470,36 @@ const InvoiceForecastFeature = (() => {
       if (page) params.page = page;
       const r = await JobTreadAPI.paveQuery({
         organization: { $: { id: orgId }, documents: { $: params, nextPage: {}, nodes: {
-          id: {}, number: {}, status: {}, priceWithTax: {},
+          id: {}, number: {}, status: {}, priceWithTax: {}, amountPaid: {},
+          job: { id: {}, name: {}, number: {} },
+          task: { id: {}, name: {}, startDate: {}, completed: {} }
+        } } }
+      });
+      const docs = r?.organization?.documents;
+      all = all.concat(docs?.nodes || []);
+      page = docs?.nextPage || null;
+      pages++;
+    } while (page && pages < 50);
+    return all;
+  }
+
+  // Paid invoices on open jobs, ANY task type, dated by issueDate. Catches
+  // deposits billed on doc approval that aren't linked to an invoice task.
+  async function fetchPaidInvoicesDirect(orgId, from, to, includeClosed) {
+    let all = [], page, pages = 0;
+    const and = [
+      ['type', '=', 'customerInvoice'],
+      ['amountPaid', '>', 0]
+    ];
+    if (!includeClosed) and.push([['job', 'closedOn'], '=', null]);
+    if (from) and.push(['issueDate', '>=', from]);
+    if (to) and.push(['issueDate', '<=', to]);
+    do {
+      const params = { size: 100, where: { and } };
+      if (page) params.page = page;
+      const r = await JobTreadAPI.paveQuery({
+        organization: { $: { id: orgId }, documents: { $: params, nextPage: {}, nodes: {
+          id: {}, number: {}, status: {}, priceWithTax: {}, amountPaid: {}, issueDate: {},
           job: { id: {}, name: {}, number: {} },
           task: { id: {}, name: {}, startDate: {}, completed: {} }
         } } }
@@ -498,9 +535,14 @@ const InvoiceForecastFeature = (() => {
     return ids;
   }
 
-  function normalize(inv, soldJobIds) {
-    const expectedDate = inv.task?.startDate || null;
+  function normalize(inv, soldJobIds, isPaid) {
+    // Paid = collected, dated by when billed (issueDate). Scheduled = forward,
+    // dated by its linked task. Deposits are paid + untasked → issueDate only.
+    const expectedDate = isPaid ? (inv.issueDate || null) : (inv.task?.startDate || null);
     const jobId = inv.job?.id || null;
+    const jobSold = soldJobIds ? (jobId ? soldJobIds.has(jobId) : false) : true;
+    // Paid is its own category (not split by sold — collected cash is collected).
+    const category = isPaid ? 'paid' : (jobSold ? 'committed' : 'projected');
     return {
       id: inv.id,
       number: inv.number,
@@ -508,7 +550,9 @@ const InvoiceForecastFeature = (() => {
       amount: inv.priceWithTax || 0,
       expectedDate,
       expectedMonth: expectedDate ? expectedDate.slice(0, 7) : null,
-      jobSold: soldJobIds ? (jobId ? soldJobIds.has(jobId) : false) : true,
+      paid: !!isPaid,
+      category,
+      jobSold,
       job: inv.job ? { id: inv.job.id, name: inv.job.name } : null,
       task: inv.task ? { name: inv.task.name } : null
     };
@@ -526,24 +570,27 @@ const InvoiceForecastFeature = (() => {
   // Single client-side aggregator (used for both pro-service + direct paths)
   function aggregate(records) {
     const byMonth = {};
-    let grandTotal = 0, committedTotal = 0, projectedTotal = 0;
+    let grandTotal = 0, paidTotal = 0, committedTotal = 0, projectedTotal = 0;
 
     for (const r of records) {
       grandTotal += r.amount;
-      if (r.jobSold) committedTotal += r.amount; else projectedTotal += r.amount;
+      if (r.category === 'paid') paidTotal += r.amount;
+      else if (r.category === 'projected') projectedTotal += r.amount;
+      else committedTotal += r.amount;
       const k = r.expectedMonth || 'unscheduled';
-      const m = byMonth[k] || (byMonth[k] = { total: 0, committed: 0, projected: 0, jobs: {} });
+      const m = byMonth[k] || (byMonth[k] = { total: 0, paid: 0, committed: 0, projected: 0, jobs: {} });
       m.total += r.amount;
-      if (r.jobSold) m.committed += r.amount; else m.projected += r.amount;
+      m[r.category] += r.amount;
       if (r.job) {
-        const j = m.jobs[r.job.id] || (m.jobs[r.job.id] = { name: r.job.name, total: 0, sold: r.jobSold });
+        const j = m.jobs[r.job.id] || (m.jobs[r.job.id] = { name: r.job.name, total: 0, sold: r.jobSold, paid: 0 });
         j.total += r.amount;
+        if (r.category === 'paid') j.paid += r.amount;
       }
     }
     return {
       count: records.length,
       soldConfigured: config.soldContractNames.length > 0,
-      grandTotal, committedTotal, projectedTotal, byMonth
+      grandTotal, paidTotal, committedTotal, projectedTotal, byMonth
     };
   }
 
@@ -556,7 +603,7 @@ const InvoiceForecastFeature = (() => {
       <div class="jt-if-header">
         <div>
           <h2 class="jt-if-title">Invoice forecast</h2>
-          <div class="jt-if-sub">Projected invoice releases, dated by linked task · open jobs only</div>
+          <div class="jt-if-sub">Collected + scheduled invoices · paid dated by issue date, scheduled by task · open jobs only</div>
         </div>
         <div class="jt-if-controls" id="jt-if-controls"></div>
       </div>
@@ -628,19 +675,18 @@ const InvoiceForecastFeature = (() => {
     if (!recs.length) return;
 
     const showSplit = snapshot && snapshot.soldConfigured;
-    const header = ['Month', 'Date', 'Job', 'Invoice #', 'Amount', 'Status'].concat(showSplit ? ['Type'] : []);
+    const header = ['Month', 'Date', 'Job', 'Invoice #', 'Amount', 'Status', 'Type'];
     const lines = [header];
     for (const r of recs) {
-      const row = [
+      lines.push([
         r.expectedMonth,
         r.expectedDate || '',
         r.job ? (r.job.name || '') : '',
         r.number != null ? r.number : '',
         r.amount,
-        r.status || ''
-      ];
-      if (showSplit) row.push(r.jobSold ? 'Committed' : 'Projected');
-      lines.push(row);
+        r.status || '',
+        typeLabel(r, showSplit)
+      ]);
     }
     const csv = lines.map(row => row.map(csvCell).join(',')).join('\r\n');
 
@@ -711,6 +757,13 @@ const InvoiceForecastFeature = (() => {
   function fmtFull(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
   function fmtM(n) { return n >= 1e6 ? '$' + (n / 1e6).toFixed(2) + 'M' : fmtK(n); }
 
+  // Per-job tooltip suffix: paid-in-full reads as collected; unsold scheduled as projected.
+  function jobTipSuffix(j, showSplit) {
+    if (j.paid && j.paid >= j.total - 0.5) return ' (paid)';
+    if (showSplit && !j.sold) return ' (projected)';
+    return '';
+  }
+
   function monthLabel(key) {
     if (key === 'unscheduled') return 'No date';
     const [y, m] = key.split('-');
@@ -724,7 +777,7 @@ const InvoiceForecastFeature = (() => {
 
     const months = Object.keys(snapshot.byMonth).filter(k => k !== 'unscheduled').sort();
     if (!months.length) {
-      body.innerHTML = '<div class="jt-if-empty"><h3>No upcoming invoices</h3><p>No invoices on open jobs are linked to the selected task type(s).</p></div>';
+      body.innerHTML = '<div class="jt-if-empty"><h3>No invoices in this window</h3><p>No invoices on open jobs match the selected task type(s) or were paid in this period.</p></div>';
       return;
     }
 
@@ -732,41 +785,57 @@ const InvoiceForecastFeature = (() => {
     const showSplit = snapshot.soldConfigured;
 
     const tiles = [
-      ['', fmtM(snapshot.grandTotal), 'Total forecast'],
-      showSplit ? ['commit', fmtM(snapshot.committedTotal), 'Committed (sold)'] : null,
+      ['', fmtM(snapshot.grandTotal), 'Total (in window)'],
+      ['paid', fmtM(snapshot.paidTotal), 'Collected'],
+      ['commit', fmtM(snapshot.committedTotal), showSplit ? 'Committed (sold)' : 'Scheduled'],
       showSplit ? ['proj', fmtM(snapshot.projectedTotal), 'Projected (not sold)'] : null,
       ['', String(snapshot.count), 'Invoices']
     ].filter(Boolean);
 
     const tilesHtml = tiles.map(t => `<div class="jt-if-tile"><div class="jt-if-tile-v ${t[0]}">${t[1]}</div><div class="jt-if-tile-k">${t[2]}</div></div>`).join('');
 
+    const pct = (v) => (v / maxTotal) * 100;
     const colsHtml = months.map(k => {
       const m = snapshot.byMonth[k];
-      const commitH = (m.committed / maxTotal) * 100;
-      const projH = (m.projected / maxTotal) * 100;
+      // Stack bottom→top: paid, committed, projected. Flex column ends at the
+      // bottom, so DOM order top→bottom is projected → committed → paid.
+      const segs = [];
+      if (m.projected > 0) segs.push(['proj', m.projected]);
+      if (m.committed > 0) segs.push(['commit', m.committed]);
+      if (m.paid > 0) segs.push(['paid', m.paid]);
+      const segHtml = segs.map(([cls, v], i) => {
+        const top = i === 0, bottom = i === segs.length - 1;
+        const radius = top && bottom ? '3px' : top ? '3px 3px 0 0' : bottom ? '0 0 3px 3px' : '0';
+        return `<div class="jt-if-seg ${cls}" style="height:${pct(v)}%;border-radius:${radius}"></div>`;
+      }).join('');
       const jobsTip = Object.values(m.jobs).sort((a, b) => b.total - a.total)
-        .map(j => `${Sanitizer.escapeHTML(j.name || '')}: ${fmtFull(j.total)}${showSplit ? (j.sold ? '' : ' (projected)') : ''}`).join('\n');
+        .map(j => `${Sanitizer.escapeHTML(j.name || '')}: ${fmtFull(j.total)}${jobTipSuffix(j, showSplit)}`).join('\n');
       return `
         <div class="jt-if-col">
           <div class="jt-if-col-total">${m.total > 0 ? fmtK(m.total) : ''}</div>
           <div class="jt-if-bar" title="${Sanitizer.escapeHTML(monthLabel(k))}\n${Sanitizer.escapeHTML(jobsTip)}">
-            ${showSplit && projH > 0 ? `<div class="jt-if-seg proj" style="height:${projH}%"></div>` : ''}
-            <div class="jt-if-seg commit" style="height:${(showSplit ? commitH : (m.total / maxTotal) * 100)}%"></div>
+            ${segHtml}
           </div>
           <div class="jt-if-col-label">${monthLabel(k)}</div>
         </div>`;
     }).join('');
 
+    const paidLi = `<span class="jt-if-li"><span class="jt-if-dot paid"></span>Paid (collected)</span>`;
     const legendHtml = showSplit ? `
       <div class="jt-if-legend">
+        ${paidLi}
         <span class="jt-if-li"><span class="jt-if-dot commit"></span>Committed (sold)</span>
         <span class="jt-if-li"><span class="jt-if-dot proj"></span>Projected (not yet sold)</span>
         <span class="jt-if-li muted">hover a bar for the per-job breakdown</span>
       </div>` : `
-      <div class="jt-if-legend"><span class="jt-if-li muted">Set a sold-contract type above to split committed vs. projected · hover a bar for jobs</span></div>`;
+      <div class="jt-if-legend">
+        ${paidLi}
+        <span class="jt-if-li"><span class="jt-if-dot commit"></span>Scheduled</span>
+        <span class="jt-if-li muted">set a sold-contract type above to split committed vs. projected · hover for jobs</span>
+      </div>`;
 
     body.innerHTML = `
-      <div class="jt-if-tiles">${tilesHtml}</div>
+      <div class="jt-if-tiles" style="grid-template-columns:repeat(${tiles.length},1fr)">${tilesHtml}</div>
       <div class="jt-if-chart">
         <div class="jt-if-yaxis">
           <span>${fmtK(maxTotal)}</span><span>${fmtK(maxTotal / 2)}</span><span>$0</span>
@@ -792,6 +861,19 @@ const InvoiceForecastFeature = (() => {
     return `<span class="jt-if-status s-${Sanitizer.escapeHTML(s || 'unknown')}">${Sanitizer.escapeHTML(label)}</span>`;
   }
 
+  // Category label for the detail table / CSV. When sold isn't configured the
+  // scheduled bucket is just "Scheduled" (no committed/projected split).
+  function typeLabel(r, showSplit) {
+    if (r.category === 'paid') return 'Paid';
+    if (r.category === 'projected') return 'Projected';
+    return showSplit ? 'Committed' : 'Scheduled';
+  }
+
+  function typeTag(r, showSplit) {
+    const cls = r.category === 'paid' ? 'paid' : r.category === 'projected' ? 'proj' : 'commit';
+    return `<span class="jt-if-tag ${cls}">${typeLabel(r, showSplit)}</span>`;
+  }
+
   // Detail breakdown: every upcoming invoice grouped by month, sorted by day,
   // showing day / job / amount / status (+ committed vs projected when split on).
   function buildTableHtml() {
@@ -802,7 +884,7 @@ const InvoiceForecastFeature = (() => {
     if (!recs.length) return '';
 
     const showSplit = snapshot.soldConfigured;
-    const cols = showSplit ? 5 : 4;
+    const cols = 5;
     let rows = '';
     let curMonth = null;
     for (const r of recs) {
@@ -811,18 +893,15 @@ const InvoiceForecastFeature = (() => {
         const m = snapshot.byMonth[curMonth];
         rows += `<tr class="jt-if-trow-month"><td colspan="${cols}">${monthLabel(curMonth)} · ${fmtFull(m.total)}</td></tr>`;
       }
-      const typeTag = showSplit
-        ? `<td>${r.jobSold ? '<span class="jt-if-tag commit">Committed</span>' : '<span class="jt-if-tag proj">Projected</span>'}</td>`
-        : '';
       rows += `<tr>
         <td class="jt-if-td-date">${dayLabel(r.expectedDate)}</td>
         <td>${Sanitizer.escapeHTML(r.job ? (r.job.name || '—') : '—')}</td>
         <td class="jt-if-td-amt">${fmtFull(r.amount)}</td>
         <td>${statusBadge(r.status)}</td>
-        ${typeTag}
+        <td>${typeTag(r, showSplit)}</td>
       </tr>`;
     }
-    const head = `<tr><th>Date</th><th>Job</th><th class="jt-if-td-amt">Amount</th><th>Status</th>${showSplit ? '<th>Type</th>' : ''}</tr>`;
+    const head = `<tr><th>Date</th><th>Job</th><th class="jt-if-td-amt">Amount</th><th>Status</th><th>Type</th></tr>`;
     return `
       <h3 class="jt-if-table-title">Detail by month</h3>
       <div class="jt-if-table-wrap">
