@@ -785,6 +785,34 @@ const JobTreadProService = (() => {
     }
   }
 
+  /**
+   * Get distinct customerOrder document names for the sold-contract picker (via Pro Worker)
+   * @returns {Promise<Array<{name:string,count:number}>>}
+   */
+  async function getContractDocNames() {
+    try {
+      const result = await workerRequest('getContractDocNames');
+      return result.names || [];
+    } catch (error) {
+      logError('getContractDocNames failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build the invoice forecast (via Pro Worker)
+   * @param {Object} options - { taskTypeIds: string[], soldContractNames?: string[] }
+   * @returns {Promise<Object>} snapshot { unconfigured? , generatedAt, count, soldConfigured, records, aggregates }
+   */
+  async function getInvoiceForecast(options = {}) {
+    try {
+      return await workerRequest('getInvoiceForecast', { options });
+    } catch (error) {
+      logError('getInvoiceForecast failed:', error);
+      throw error;
+    }
+  }
+
   // Public API
   return {
     // Configuration
@@ -813,6 +841,10 @@ const JobTreadProService = (() => {
     getLocationCustomFieldValues,
     getTaskTypes,
     getUnassignedTasks,
+
+    // Invoice Forecast
+    getContractDocNames,
+    getInvoiceForecast,
 
     // Cache management
     clearCache,

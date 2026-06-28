@@ -49,6 +49,7 @@ const JTDefaults = (() => {
     // Power User Features (require API connection)
     budgetChangelog: false,
     taskTypeFilter: false,
+    invoiceForecast: false,
     jobAccessCollapse: false,
     orgLogo: false,
     // Forms toggle moved from popup to portal (Migration 029). Default
@@ -94,7 +95,7 @@ const JTDefaults = (() => {
       id: 'budget',
       title: 'Budget',
       icon: 'ph-calculator',
-      features: ['budgetHierarchy', 'budgetTools', 'budgetRowHighlight', 'budgetChangelog']
+      features: ['budgetHierarchy', 'budgetTools', 'budgetRowHighlight', 'budgetChangelog', 'invoiceForecast']
     },
     {
       id: 'documents',

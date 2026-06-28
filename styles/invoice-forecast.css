@@ -1,0 +1,320 @@
+/* JT Power Tools - Invoice Forecast
+ *
+ * Theming model: the panel maps the Custom Theme tokens (--jt-theme-*, published
+ * by the RGB/Custom Theme feature on :root) into local --if-* vars with light
+ * fallbacks, and every chrome rule reads the local vars. Dark Mode overrides the
+ * local vars in one place. So all three states work from a single source:
+ *   • no theme        → light fallbacks
+ *   • Custom Theme on → inherits the user's palette
+ *   • Dark Mode on    → neutral-grey overrides (NOT blue-greys)
+ * Committed/projected/status are DATA colors — intentionally fixed, never themed.
+ */
+
+/* ── Panel + local theme vars ──────────────────────────── */
+.jt-if-panel {
+  /* Theme tokens → local vars (fallbacks = the original light palette) */
+  --if-bg: var(--jt-theme-background, #ffffff);
+  --if-surface: var(--jt-theme-background-elevated, #f9fafb);
+  --if-hover: var(--jt-theme-background-subtle, #f3f4f6);
+  --if-emphasis: var(--jt-theme-background-emphasis, #eef2ff);
+  --if-text: var(--jt-theme-text, #1f2937);
+  --if-text-muted: var(--jt-theme-text-muted, #6b7280);
+  --if-border: var(--jt-theme-border, #e5e7eb);
+  --if-border-strong: var(--jt-theme-border-strong, #d1d5db);
+  --if-accent: var(--jt-theme-primary, #4f46e5);
+
+  padding: 20px 24px;
+  background: var(--if-bg);
+  color: var(--if-text);
+  font-size: 14px;
+}
+
+.jt-if-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.jt-if-title { margin: 0; font-size: 18px; font-weight: 600; }
+.jt-if-sub { margin-top: 3px; font-size: 12.5px; color: var(--if-text-muted); }
+
+/* ── Controls (pickers, period, toggle) ────────────────── */
+.jt-if-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.jt-if-picker { position: relative; }
+
+.jt-if-picker-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--if-border-strong);
+  border-radius: 6px;
+  background: var(--if-bg);
+  color: var(--if-text);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.jt-if-picker-btn:hover { background: var(--if-hover); }
+
+.jt-if-count {
+  display: inline-block;
+  min-width: 16px;
+  padding: 0 5px;
+  margin: 0 2px;
+  border-radius: 999px;
+  background: var(--if-emphasis);
+  color: var(--if-accent);
+  font-size: 11px;
+}
+
+.jt-if-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--if-border);
+  border-radius: 8px;
+  background: var(--if-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.jt-if-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--if-text);
+}
+.jt-if-opt:hover { background: var(--if-hover); }
+.jt-if-opt input { cursor: pointer; }
+.jt-if-opt-empty { padding: 8px; font-size: 12.5px; color: var(--if-text-muted); }
+
+.jt-if-period {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.jt-if-period label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--if-text-muted);
+}
+.jt-if-month {
+  padding: 5px 8px;
+  border: 1px solid var(--if-border-strong);
+  border-radius: 6px;
+  background: var(--if-bg);
+  color: var(--if-text);
+  font-size: 12.5px;
+  font-family: inherit;
+}
+
+.jt-if-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--if-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.jt-if-check input { cursor: pointer; }
+
+.jt-if-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--if-border-strong);
+  border-radius: 6px;
+  background: var(--if-surface);
+  color: var(--if-text);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.jt-if-export:hover { background: var(--if-hover); }
+
+/* ── Summary tiles ─────────────────────────────────────── */
+.jt-if-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.jt-if-tile {
+  padding: 12px 14px;
+  border: 1px solid var(--if-border);
+  border-radius: 10px;
+  background: var(--if-surface);
+}
+.jt-if-tile-v { font-size: 21px; font-weight: 600; }
+.jt-if-tile-v.commit { color: #0d9488; }
+.jt-if-tile-v.proj { color: #b45309; }
+.jt-if-tile-k { margin-top: 2px; font-size: 11.5px; color: var(--if-text-muted); }
+
+/* ── Chart ─────────────────────────────────────────────── */
+.jt-if-chart { display: flex; gap: 8px; height: 300px; }
+.jt-if-yaxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 48px;
+  flex: 0 0 48px;
+  padding-bottom: 22px;
+  font-size: 10.5px;
+  color: var(--if-text-muted);
+  text-align: right;
+}
+.jt-if-plot {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  border-left: 1px solid var(--if-border);
+  border-bottom: 1px solid var(--if-border);
+  padding: 0 6px;
+  overflow-x: auto;
+}
+.jt-if-col {
+  flex: 1;
+  min-width: 32px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+.jt-if-col-total { font-size: 10px; color: var(--if-text-muted); margin-bottom: 3px; white-space: nowrap; }
+.jt-if-bar {
+  width: 62%;
+  max-width: 46px;
+  height: calc(100% - 36px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.jt-if-seg { width: 100%; transition: filter 0.12s; }
+.jt-if-bar:hover .jt-if-seg { filter: brightness(1.08); }
+.jt-if-seg.commit { background: #0d9488; border-radius: 0 0 3px 3px; }
+.jt-if-seg.proj {
+  background-color: #fdf0d6;
+  background-image: repeating-linear-gradient(45deg, #f59e0b 0, #f59e0b 2px, transparent 2px, transparent 6px);
+  border: 1px dashed #f59e0b;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+}
+.jt-if-col-label { margin-top: 7px; font-size: 11px; color: var(--if-text-muted); white-space: nowrap; }
+
+/* ── Legend ────────────────────────────────────────────── */
+.jt-if-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; align-items: center; }
+.jt-if-li { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--if-text); }
+.jt-if-li.muted { color: var(--if-text-muted); }
+.jt-if-dot { width: 13px; height: 13px; border-radius: 3px; }
+.jt-if-dot.commit { background: #0d9488; }
+.jt-if-dot.proj {
+  background-color: #fdf0d6;
+  background-image: repeating-linear-gradient(45deg, #f59e0b 0, #f59e0b 2px, transparent 2px, transparent 5px);
+  border: 1px dashed #f59e0b;
+}
+
+/* ── Detail table ──────────────────────────────────────── */
+.jt-if-table-title { margin: 22px 0 8px; font-size: 14px; font-weight: 600; }
+.jt-if-table-wrap {
+  max-height: 440px;
+  overflow-y: auto;
+  border: 1px solid var(--if-border);
+  border-radius: 8px;
+}
+.jt-if-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.jt-if-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  font-weight: 500;
+  color: var(--if-text-muted);
+  background: var(--if-surface);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--if-border);
+}
+.jt-if-table td { padding: 7px 12px; border-bottom: 1px solid var(--if-border); color: var(--if-text); }
+.jt-if-td-date { white-space: nowrap; color: var(--if-text); }
+.jt-if-td-amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.jt-if-trow-month td {
+  background: var(--if-hover);
+  font-weight: 500;
+  color: var(--if-text);
+  position: sticky;
+  top: 33px;
+}
+
+/* Status badge — fixed semantic colors */
+.jt-if-status {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.jt-if-status.s-draft { background: #f1f5f9; color: #4b5563; }
+.jt-if-status.s-pending { background: #fef3c7; color: #92400e; }
+.jt-if-status.s-approved { background: #dcfce7; color: #166534; }
+.jt-if-status.s-sent { background: #ede9fe; color: #5b21b6; }
+.jt-if-status.s-paid { background: #ccfbf1; color: #115e59; }
+.jt-if-status.s-denied { background: #fee2e2; color: #991b1b; }
+.jt-if-status.s-unknown { background: #f1f5f9; color: #64748b; }
+
+.jt-if-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.jt-if-tag.commit { background: #ccfbf1; color: #115e59; }
+.jt-if-tag.proj { background: #fef3c7; color: #92400e; }
+
+/* ── States ────────────────────────────────────────────── */
+.jt-if-empty, .jt-if-loading, .jt-if-error {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--if-text-muted);
+}
+.jt-if-empty h3 { margin: 0 0 6px; font-size: 16px; color: var(--if-text); }
+.jt-if-empty p { margin: 0 auto; max-width: 460px; font-size: 13px; line-height: 1.6; }
+.jt-if-empty-icon { font-size: 28px; margin-bottom: 8px; }
+.jt-if-error { color: #b91c1c; }
+
+/* ── Dark Mode — override the local vars in one place (neutral greys) ── */
+body.jt-dark-mode .jt-if-panel,
+.dark .jt-if-panel {
+  --if-bg: #2c2c2c;
+  --if-surface: #333333;
+  --if-hover: #3a3a3a;
+  --if-emphasis: #3a3a3a;
+  --if-text: #e0e0e0;
+  --if-text-muted: #b0b0b0;
+  --if-border: #404040;
+  --if-border-strong: #505050;
+  --if-accent: #c7d2fe;
+}
+/* Neutral status badges need a darker fill in dark mode; colored ones read fine. */
+body.jt-dark-mode .jt-if-status.s-draft, .dark .jt-if-status.s-draft,
+body.jt-dark-mode .jt-if-status.s-unknown, .dark .jt-if-status.s-unknown { background: #3a3a3a; color: #c0c0c0; }
+body.jt-dark-mode .jt-if-error, .dark .jt-if-error { color: #f87171; }

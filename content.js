@@ -153,6 +153,11 @@ const featureModules = {
     feature: () => window.TaskTypeFilterFeature,
     instance: null
   },
+  invoiceForecast: {
+    name: 'Invoice Forecast',
+    feature: () => window.InvoiceForecastFeature,
+    instance: null
+  },
   jobAccessCollapse: {
     name: 'Job Access Collapse',
     feature: () => window.JobAccessCollapseFeature,
@@ -205,7 +210,7 @@ let currentSettings = window.JTDefaults
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
-    budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
+    budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false, invoiceForecast: false,
     jobAccessCollapse: false, orgLogo: false,
     inspectForAi: false, paveCapture: false, tweakEngine: true, forms: true,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },

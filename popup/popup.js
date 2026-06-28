@@ -22,7 +22,7 @@ const FEATURE_TOGGLE_IDS = [
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
-  'budgetChangelog', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
+  'budgetChangelog', 'invoiceForecast', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
   'jobAccessCollapse', 'orgLogo'
 ];
 
@@ -34,6 +34,7 @@ const GRANT_KEY_REQUIRED_FEATURES = new Set([
   'budgetChangelog',
   'taskTypeFilter',
   'availabilityFilter',
+  'invoiceForecast',
 ]);
 
 const REGISTER_NUDGE_DISMISSED_KEY = 'jtRegisterNudgeDismissed';
@@ -315,7 +316,7 @@ async function checkApiStatus() {
       // Persist disabled state so features actually turn off on the JobTread page.
       // Without this, storage keeps saying the features are enabled even though
       // the UI shows them as off, leaving the features "stuck active".
-      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter']);
+      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast']);
     }
   }
 }
@@ -711,6 +712,7 @@ async function loadSettings() {
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
+    setCheckbox('invoiceForecast', settings.invoiceForecast !== undefined ? settings.invoiceForecast : false);
     setCheckbox('paveCapture', hasPowerUser && (settings.paveCapture !== undefined ? settings.paveCapture : false));
     // Forms toggle removed — see Migration 029. The on/off decision is
     // admin-managed in the portal; this popup never reads or writes
@@ -746,6 +748,7 @@ async function loadSettings() {
       if (settings.customFieldFilter) featuresToDisable.push('customFieldFilter');
       if (settings.budgetChangelog) featuresToDisable.push('budgetChangelog');
       if (settings.taskTypeFilter) featuresToDisable.push('taskTypeFilter');
+      if (settings.invoiceForecast) featuresToDisable.push('invoiceForecast');
       // Capture only pays off with MCP access to read it back; both need a
       // portal session, so disable recording when signed out.
       if (settings.paveCapture) featuresToDisable.push('paveCapture');
@@ -955,6 +958,7 @@ async function getCurrentSettings() {
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     taskTypeFilter: getCheckboxValue('taskTypeFilter', defaultSettings.taskTypeFilter),
+    invoiceForecast: getCheckboxValue('invoiceForecast', defaultSettings.invoiceForecast),
     paveCapture: getCheckboxValue('paveCapture', defaultSettings.paveCapture !== undefined ? defaultSettings.paveCapture : false),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
     reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),

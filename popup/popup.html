@@ -192,7 +192,7 @@
             <div class="category-header collapsed" data-category="productivity">
               <i class="ph ph-lightning category-icon"></i>
               <span class="category-title">Productivity Tools</span>
-              <span class="category-count">12</span>
+              <span class="category-count">13</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="productivity">
@@ -316,6 +316,17 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="invoiceForecastFeature">
+                <div class="feature-info">
+                  <h3>Invoice Forecast <i class="ph ph-question feature-help" data-guide="invoice-forecast" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>A Reports tab charting upcoming invoices by month, split by sold vs. projected jobs</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="invoiceForecast" data-feature="invoiceForecast">
                   <span class="slider"></span>
                 </label>
               </div>
@@ -1051,10 +1062,12 @@
   <script src="../utils/sanitizer.js"></script>
   <script src="../utils/tweak-validator.js"></script>
   <script src="../config/worker-config.js"></script>
+  <script src="../services/obfuscation.js"></script>
   <script src="../services/license.js"></script>
   <script src="../services/account-service.js"></script>
   <script src="../services/jobtread-pro-service.js"></script>
   <script src="../services/jobtread-api.js"></script>
+  <script src="../services/admin-api-base.js"></script>
   <script src="../services/tweaks-api.js"></script>
   <script src="../services/custom-theme-api.js"></script>
   <!-- v4.8: OKLCH palette engine — must load before popup.js so the Theme tab
