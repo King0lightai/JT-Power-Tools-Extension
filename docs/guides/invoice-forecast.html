@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Forecast — JT Power Tools</title>
+  <meta name="description" content="A month-by-month cash-flow forecast inside JobTread's Reports. See upcoming invoices stacked as paid, committed, and projected across every active job — set it up per company and export to CSV. Power User.">
+  <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <link rel="canonical" href="https://jtpowertools.com/guides/invoice-forecast.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jtpowertools.com/guides/invoice-forecast.html">
+  <meta property="og:title" content="Invoice Forecast — JT Power Tools">
+  <meta property="og:description" content="Turn JobTread's invoice schedule into a month-by-month cash-flow forecast — paid, committed, and projected across every active job.">
+  <meta property="og:image" content="https://jtpowertools.com/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/guides/guide.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="/">
+          <span class="nav-brand-mark">
+            <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+            <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+          </span>
+          <span>Power Tools</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#install">Install</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#mcp">AI</a>
+          <a href="/documentation/">Docs</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/support/">Support</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-theme" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          <i class="ph ph-moon" data-theme-icon aria-hidden="true"></i>
+          <span data-theme-label>Dark</span>
+        </button>
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--primary" target="_blank" rel="noopener">
+          <i class="ph ph-download-simple" aria-hidden="true"></i>
+          Install Free
+        </a>
+        <button class="nav-burger" data-nav-toggle aria-label="Open menu" aria-expanded="false">
+          <i class="ph ph-list" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+    <nav class="nav-sheet" data-nav-sheet aria-label="Mobile menu">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#mcp">AI</a>
+      <a href="/documentation/">Docs</a>
+      <a href="/roadmap/">Roadmap</a>
+      <a href="/support/">Support</a>
+    </nav>
+  </header>
+
+  <main class="guide">
+    <section class="g-hero">
+      <div class="container">
+        <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
+        <div class="g-hero-row">
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-chart-line-up"></i></span>
+          <span class="tier power">Power User</span>
+        </div>
+        <h1 class="g-title"><span>Invoice</span> <span class="serif">Forecast.</span></h1>
+        <p class="g-lede">Turn JobTread's invoice schedule into a month-by-month cash-flow picture — paid, committed, and projected across every active job, right inside Reports.</p>
+      </div>
+    </section>
+
+    <section class="g-video">
+      <div class="container">
+        <div class="g-video-frame">
+          <div class="g-video-placeholder">
+            <i class="ph-fill ph-play-circle"></i>
+            <span>Video walkthrough coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="g-body">
+      <div class="container">
+        <div class="g-section">
+          <h2>What it does</h2>
+          <p>JobTread links invoices to schedule tasks, but it never charts them — the only way to see when money is set to come in is to open each task and spot a dollar amount. Invoice Forecast adds an <strong>Invoice Forecast</strong> tab to JobTread's Reports that does it for you: a month-by-month bar chart of upcoming invoices across every active job, dated by each invoice's scheduled task.</p>
+          <p>Each month's bar stacks three layers, so it's a forecast and a schedule at once:</p>
+          <ul class="g-tips">
+            <li><strong>Paid</strong> — invoices you've already collected on, including deposits you bill on approval that have no scheduled task. Dated by their issue date.</li>
+            <li><strong>Committed</strong> — unpaid invoices on jobs that are sold (an approved contract).</li>
+            <li><strong>Projected</strong> — unpaid invoices on jobs you haven't closed yet.</li>
+          </ul>
+          <p>Hover any bar for the per-job breakdown, and read every invoice — its day, job, amount, document status, and type — in the detail table below the chart.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>Turn it on</h2>
+          <ol class="g-steps">
+            <li>Invoice Forecast is a <strong>Power User</strong> feature — make sure your company is on that tier and you're signed in.</li>
+            <li>In JobTread, open <strong>Reports</strong>. You'll see a new <strong>Invoice Forecast</strong> tab alongside the built-in reports.</li>
+            <li>The first time you open it, a short setup step asks you to tell it how your company bills (below).</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Set it up for your company</h2>
+          <p>Power Tools serves every company, so nothing is hardcoded. Two quick choices — remembered per company — teach the forecast how you work:</p>
+          <ol class="g-steps">
+            <li><strong>Which task type(s) mark an invoice.</strong> Pick the schedule task type(s) you use to represent an invoice release (for example, an "Invoice" or "Draw" task type). The chart dates each invoice by that task's start date.</li>
+            <li><strong>Which contract means a job is "sold."</strong> Pick the approved contract document name(s) that signal a sold job (for example, "Home Improvement Agreement"). Jobs with that approved document count as <em>committed</em>; everything else is <em>projected</em>.</li>
+          </ol>
+          <p>If you run more than one company through Power Tools, each gets its own setup and its own forecast — switching orgs in JobTread reloads the view for that company.</p>
+        </div>
+
+        <div class="g-section">
+          <h2>How to read it</h2>
+          <ol class="g-steps">
+            <li>Scan the bars to see which months are heavy and which are light. Solid green is money already collected, solid teal is committed, hatched amber is projected.</li>
+            <li>Check the <strong>Collected</strong> tile for what's actually landed, and use the detail table to drill into any single month — every invoice with its day, job, amount, and status.</li>
+            <li>Use the <strong>From / To</strong> period filter to frame a quarter or a fiscal year. It defaults to the current month onward; clear it to see everything, including earlier deposits.</li>
+            <li>Flip <strong>Include closed jobs</strong> on when jobs that closed earlier in the year still carry invoices you want in the totals.</li>
+            <li>Hit <strong>Export CSV</strong> to pull the current view — month, date, job, invoice number, amount, status, and type — into a spreadsheet.</li>
+          </ol>
+        </div>
+
+        <div class="g-section">
+          <h2>Good to know</h2>
+          <ul class="g-tips">
+            <li>The forecast reflects <em>when cash is scheduled to land</em>, not document approval state — so a drafted-but-scheduled invoice still appears. The Type and status columns let you tell them apart.</li>
+            <li>Paid invoices are counted regardless of task type — even a deposit with no scheduled task — and they're never double-counted against the scheduled layers.</li>
+            <li>It runs on open jobs by default. Turn on Include closed jobs only when you need closed-job invoices in a period total.</li>
+            <li>Empty chart? You probably haven't picked a task type yet — open the setup and choose which task type marks an invoice.</li>
+            <li>The whole panel follows your appearance — it themes through Custom Theme and has a neutral-grey Dark Mode; the paid / committed / projected colors stay fixed so the data reads consistently.</li>
+          </ul>
+        </div>
+
+        <div class="g-section g-related">
+          <h2>Related guides</h2>
+          <ul>
+            <li><a href="/guides/custom-field-filter.html">Job Switcher Filter</a> — filter jobs by your custom fields</li>
+            <li><a href="/guides/budget-changelog.html">Budget Changelog</a> — see what changed between two budgets</li>
+            <li><a href="/guides/premium.html">Tiers &amp; Pricing</a> — what's included at Power User</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="nav-brand" href="/">
+            <span class="nav-brand-mark">
+              <img class="nav-brand-mark--light" src="/jt-symbol-black.png" alt="" aria-hidden="true">
+              <img class="nav-brand-mark--dark" src="/jt-symbol-white.png" alt="" aria-hidden="true">
+            </span>
+            <span>Power Tools</span>
+          </a>
+          <p style="margin: 16px 0 20px; max-width: 32ch;">JobTread, supercharged.</p>
+          <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#install">Install</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+            <li><a href="/#mcp">AI Toolkit</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/documentation/">Documentation</a></li>
+            <li><a href="/#mcp">MCP Setup</a></li>
+            <li><a href="https://blog.jtpowertools.com/">Blog</a></li>
+            <li><a href="/support/">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/security/">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 JT Power Tools. All rights reserved.</span>
+        <span class="footer-partner"><i class="ph ph-check" aria-hidden="true"></i>Official JobTread Partner</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script src="/site.js"></script>
+</body>
+</html>

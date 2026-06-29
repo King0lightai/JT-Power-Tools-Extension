@@ -131,7 +131,12 @@
             Just Shipped
           </span>
           <div class="s-ship-tabs" role="tablist" aria-label="Feature announcements" data-ship-tabs>
-            <button class="s-ship-tab is-active" id="tab-pave-explorer" role="tab" aria-selected="true" aria-controls="pave-explorer" type="button">
+            <button class="s-ship-tab is-active" id="tab-invoice-forecast" role="tab" aria-selected="true" aria-controls="invoice-forecast" type="button">
+              <span class="s-ship-tab-ver">v4.9.12</span>
+              <span class="s-ship-tab-name">Invoice Forecast</span>
+              <span class="s-ship-tab-tier">Live in Power User</span>
+            </button>
+            <button class="s-ship-tab" id="tab-pave-explorer" role="tab" aria-selected="false" aria-controls="pave-explorer" tabindex="-1" type="button">
               <span class="s-ship-tab-ver">v4.9.10</span>
               <span class="s-ship-tab-name">Pave Explorer</span>
               <span class="s-ship-tab-tier">Live in Pro</span>
@@ -152,7 +157,7 @@
 
       <div class="container s-tweaks-inner">
         <!-- ── Panel: Pave Explorer (v4.9.10) ── -->
-        <div class="s-ship-panel" id="pave-explorer" role="tabpanel" aria-labelledby="tab-pave-explorer">
+        <div class="s-ship-panel" id="pave-explorer" role="tabpanel" aria-labelledby="tab-pave-explorer" hidden>
 
         <!-- Headline + demo grid -->
         <div class="s-tweaks-grid">
@@ -300,6 +305,146 @@
           </p>
         </div>
         </div><!-- /panel: pave-explorer -->
+
+        <!-- ── Panel: Invoice Forecast (v4.9.12) ── -->
+        <div class="s-ship-panel" id="invoice-forecast" role="tabpanel" aria-labelledby="tab-invoice-forecast">
+
+        <!-- Headline + demo grid -->
+        <div class="s-tweaks-grid">
+          <div>
+            <h2 id="forecast-headline" class="s-tweaks-headline">
+              SEE THE CASH<br>
+              <span class="accent">BEFORE IT LANDS.</span>
+            </h2>
+            <p class="s-tweaks-lede">
+              JobTread ties invoices to schedule tasks but never charts them.
+              Invoice Forecast turns that hidden schedule into a month-by-month
+              cash-flow picture across every active job &mdash; right inside Reports.
+            </p>
+            <p class="s-tweaks-sublede">
+              Each month stacks what you've already <strong>collected</strong>,
+              what's <strong>committed</strong> on sold jobs, and what's still
+              <strong>projected</strong> on jobs you haven't closed yet. Hover any
+              bar for the per-job breakdown, then export the whole view to CSV.
+            </p>
+
+            <div class="s-tweaks-ctas">
+              <a href="#pricing" class="btn btn--primary">
+                <i class="ph ph-chart-line-up" aria-hidden="true"></i>
+                Get Power User
+              </a>
+              <a href="/guides/invoice-forecast.html" class="btn btn--ghost">Read the guide</a>
+            </div>
+
+            <div class="s-tweaks-shortcuts">
+              <span><i class="ph ph-stack" aria-hidden="true"></i> Paid · committed · projected</span>
+              <span><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Set it up per company</span>
+              <span><i class="ph ph-file-csv" aria-hidden="true"></i> Export to CSV</span>
+            </div>
+          </div>
+
+          <!-- Demo mockup: monthly stacked-bar cash-flow forecast -->
+          <div class="s-forecast-demo" aria-hidden="true">
+            <div class="s-tweaks-demo-chrome">
+              <div class="s-tweaks-demo-traffic">
+                <span style="background:#FF5F57"></span>
+                <span style="background:#FEBC2E"></span>
+                <span style="background:#28C840"></span>
+              </div>
+              <div class="s-tweaks-demo-url">JT Power Tools — Invoice Forecast</div>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);border-top:0;border-radius:0 0 12px 12px;padding:18px 16px 16px;">
+              <!-- Legend -->
+              <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-subtle);margin-bottom:14px;">
+                <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#10b981;"></span>Paid</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#0d9488;"></span>Committed</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);"></span>Projected</span>
+              </div>
+
+              <!-- Bars -->
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;height:170px;border-bottom:1px solid var(--border);padding-bottom:0;">
+                <!-- Jun -->
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
+                  <div style="height:34px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
+                  <div style="height:40px;background:#0d9488;"></div>
+                  <div style="height:62px;background:#10b981;border-radius:0 0 3px 3px;"></div>
+                </div>
+                <!-- Jul -->
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
+                  <div style="height:48px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
+                  <div style="height:54px;background:#0d9488;"></div>
+                  <div style="height:30px;background:#10b981;border-radius:0 0 3px 3px;"></div>
+                </div>
+                <!-- Aug -->
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
+                  <div style="height:70px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
+                  <div style="height:46px;background:#0d9488;border-radius:0 0 3px 3px;"></div>
+                </div>
+                <!-- Sep -->
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
+                  <div style="height:58px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
+                  <div style="height:30px;background:#0d9488;border-radius:0 0 3px 3px;"></div>
+                </div>
+                <!-- Oct -->
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
+                  <div style="height:44px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
+                  <div style="height:22px;background:#0d9488;border-radius:0 0 3px 3px;"></div>
+                </div>
+              </div>
+
+              <!-- Month labels -->
+              <div style="display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:11px;font-weight:600;color:var(--ink-subtle);text-align:center;">
+                <span style="flex:1;">Jun</span>
+                <span style="flex:1;">Jul</span>
+                <span style="flex:1;">Aug</span>
+                <span style="flex:1;">Sep</span>
+                <span style="flex:1;">Oct</span>
+              </div>
+
+              <!-- Collected tile -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:10px 12px;background:var(--surface-inset);border:1px solid var(--border);border-radius:8px;">
+                <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-subtle);">Collected YTD</span>
+                <span style="font-size:18px;font-weight:700;color:var(--ink);">$184,250</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini value cards -->
+        <div class="s-tweaks-mini">
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-chart-bar" aria-hidden="true"></i></div>
+            <h5>CASH FLOW AT A GLANCE</h5>
+            <p>A monthly bar chart of upcoming invoices, dated by each invoice's scheduled task — so you see when money is set to come in across every active job.</p>
+          </div>
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-stack" aria-hidden="true"></i></div>
+            <h5>PAID · COMMITTED · PROJECTED</h5>
+            <p>Every bar stacks money already collected, what's committed on sold jobs, and what's still projected on jobs you haven't closed — a forecast and a schedule in one.</p>
+          </div>
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-sliders-horizontal" aria-hidden="true"></i></div>
+            <h5>SET UP FOR YOUR COMPANY</h5>
+            <p>Nothing's hardcoded — pick which task type(s) mark an invoice and which signed contract means a job is "sold." Your choices are remembered per company.</p>
+          </div>
+          <div class="s-tweaks-mini-card">
+            <div class="s-tweaks-mini-icon"><i class="ph ph-file-csv" aria-hidden="true"></i></div>
+            <h5>FILTER &amp; EXPORT</h5>
+            <p>Frame any stretch with a From/To period filter, widen it to include closed jobs, and export the whole view — month, date, job, amount, status — to CSV.</p>
+          </div>
+        </div>
+
+        <!-- Pull quote -->
+        <div class="s-tweaks-pull">
+          <div class="s-tweaks-pull-label">Why it matters</div>
+          <p class="s-tweaks-pull-quote">
+            The invoices are already on your schedule. Invoice Forecast just shows
+            you the money before it lands &mdash; so you can plan the next month,
+            not react to it.
+          </p>
+        </div>
+        </div><!-- /panel: invoice-forecast -->
 
         <!-- ── Panel: Email to Job (v4.9.3) ── -->
         <div class="s-ship-panel" id="email-to-job" role="tabpanel" aria-labelledby="tab-email-to-job" hidden>
@@ -1100,6 +1245,7 @@
             <div class="s-pricing-trial s-pricing-trial--power">7-Day Free Trial</div>
             <ul class="s-pricing-features s-pricing-features--power">
               <li><i class="ph ph-check"></i>Everything in Pro</li>
+              <li class="s-pricing-feature--highlight"><i class="ph-fill ph-chart-line-up"></i>Invoice Forecast</li>
               <li><i class="ph ph-check"></i>Job Switcher Filter</li>
               <li><i class="ph ph-check"></i>Budget Changelog</li>
               <li><i class="ph ph-check"></i>Unassigned Availability</li>

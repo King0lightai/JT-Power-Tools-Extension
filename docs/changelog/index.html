@@ -55,11 +55,111 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.9.12 — Invoice Forecast launch (incl. Paid layer), per-job email domain, Custom Field Filter scrollbar fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.12</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">June 28, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📈</span> Invoice Forecast (New &mdash; Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">See your cash flow coming, right inside Reports</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A new <strong>Invoice Forecast</strong> tab in JobTread's Reports charts your upcoming invoices by month &mdash; dated by each invoice's scheduled task &mdash; so you can see when money is set to come in. Each month splits into <strong>committed</strong> (invoices on sold jobs) and <strong>projected</strong> (invoices on jobs not yet sold), with per-job amounts on hover.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Money already collected counts too</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A <strong>Paid</strong> layer adds every invoice you've actually been paid on &mdash; including deposits you bill on approval with no scheduled task &mdash; so each month shows collected cash <em>plus</em> what's still scheduled. Comes with a <strong>Collected</strong> total, a Paid bar on the chart, and a <strong>Type</strong> column (Paid / Committed / Projected) in both the detail table and the CSV export.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Filter it, set it up for your company, export it</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A month-by-month detail table lists every upcoming invoice with its status, a From/To period filter frames any stretch you care about, and an Include-closed-jobs toggle widens the view. Because Power Tools serves every company, nothing's hardcoded &mdash; you pick which task type(s) mark an invoice and which signed contract means a job is "sold," and your choices are remembered per company. Export the whole view to CSV anytime.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📧</span> Per-Job Email</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">New job email addresses on a cleaner domain</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New per-job email addresses are now issued on <code>jtptjob.com</code>. Any address already in use keeps working exactly as before &mdash; nothing you've shared with a client or subcontractor changes.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter: no more scrolling through empty space</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">When you filtered the Job Switcher down to a handful of jobs, the list still scrolled as if all your jobs were there &mdash; leaving a long stretch of blank space below the results. The scroll area now matches what's actually showing.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.9.11 — Firefox sidebar, sign-in fixes, theme polish -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.9.11</span>
+                <span class="version-date">June 28, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🦊</span> Firefox</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Sidebar support, matching Chrome's side panel</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Firefox can now open Power Tools in a sidebar that stays put beside JobTread while you work &mdash; the same persistent experience Chrome's side panel already had.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Features no longer show as locked while you're signed in</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A wiring bug could make every feature appear locked even though your account was logged in and your license was valid. Fixed &mdash; your tier is read correctly again.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Portal stays signed in</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The JT Power Tools account portal was quietly signing people out about half an hour after login. It now keeps your session alive the way it should.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme: alert backgrounds readable on dark themes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Alert callouts (notes, warnings) were too light against dark custom themes. Their backgrounds are now darkened to keep the text legible.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.10 — Schedule Expand/Collapse All, Pave Explorer, side-panel default, Tweaks date-shading, theme & popup polish -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.10</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">June 21, 2026</span>
             </div>
 

@@ -1574,7 +1574,16 @@ const CustomFieldFilterFeature = (() => {
     // Store original content if not already stored
     if (!jobListContainer.dataset.originalHtml) {
       jobListContainer.dataset.originalHtml = jobListContainer.innerHTML;
+      // JobTread's native virtual list keeps a large inline padding-bottom as a
+      // "scroll runway" sized for ALL jobs. Our filtered set is shorter, so that
+      // runway would leave empty whitespace below the rows. Stash the original so
+      // restoreJobListDisplay can put it back, then collapse it below.
+      jobListContainer.dataset.originalPaddingBottom = jobListContainer.style.paddingBottom || '';
     }
+
+    // Collapse the virtualization runway so the scroll area matches the filtered
+    // rows — no scrolling through empty space when the list shrinks.
+    jobListContainer.style.paddingBottom = '0px';
 
     // Track loaded jobs for pagination
     if (!append) {
@@ -1783,6 +1792,13 @@ const CustomFieldFilterFeature = (() => {
 
     jobListContainer.innerHTML = jobListContainer.dataset.originalHtml;
     delete jobListContainer.dataset.originalHtml;
+
+    // Restore the native virtualization runway we collapsed while filtering, so
+    // the native list scrolls correctly again.
+    if (jobListContainer.dataset.originalPaddingBottom !== undefined) {
+      jobListContainer.style.paddingBottom = jobListContainer.dataset.originalPaddingBottom;
+      delete jobListContainer.dataset.originalPaddingBottom;
+    }
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────

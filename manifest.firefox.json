@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "JT Power Tools",
-  "version": "4.9.11",
+  "version": "4.9.12",
   "description": "Supercharge JobTread with 20+ productivity features for contractors.",
   "icons": {
     "16": "icons/icon16-light.png",
@@ -135,11 +135,13 @@
         "features/gantt-lines.js",
         "features/reverse-thread-order.js",
         "features/task-type-filter.js",
+        "features/invoice-forecast.js",
         "features/job-access-collapse.js",
         "features/org-logo.js",
         "features/inspect-for-ai.js",
         "features/pave-capture.js",
         "features/pave-explorer-bridge.js",
+        "features/tweak-engine/storage.js",
         "features/tweak-engine/alert-modal.js",
         "features/tweak-engine/system-banner.js",
         "features/tweak-engine/describe.js",
@@ -147,6 +149,7 @@
         "features/tweak-engine/builder-emit.js",
         "features/tweak-engine/builder.js",
         "features/tweak-engine/index.js",
+        "features/tweak-engine/share-loader.js",
         "content.js"
       ],
       "run_at": "document_end"
@@ -169,6 +172,7 @@
     "styles/availability-filter.css",
     "styles/gantt-lines.css",
     "styles/task-type-filter.css",
+    "styles/invoice-forecast.css",
     "styles/jt-tools-tokens.css",
     "styles/tweak-builder.css",
     "tweaks/edit.html",
