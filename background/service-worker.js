@@ -251,7 +251,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Keep channel open for async response
 
       case 'FETCH_EXTENSION_GRANT_KEY':
-        // Fetch extension grant key from server for a specific org
+        // Fetch extension grant key from server for a specific org.
+        // Security: this returns a full org API credential — enforce the same
+        // sender check its sibling handlers use before doing any work.
+        if (!isAllowedApiSender(sender)) {
+          console.warn('JT-Tools: Rejected grant-key request from untrusted sender:', sender);
+          sendResponse({ success: false, error: 'Untrusted sender' });
+          return false;
+        }
         handleFetchExtensionGrantKey(message.orgName)
           .then(result => {
             sendResponse(result);

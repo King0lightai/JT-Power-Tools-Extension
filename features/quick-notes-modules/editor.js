@@ -906,13 +906,40 @@ const QuickNotesEditor = (() => {
   }
 
   /**
+   * Apply a sanitized href to a cleaned anchor clone (TWK-2). cloneNode() copies
+   * the raw href, so strip it and only re-add a sanitized one; drop it entirely
+   * if unsafe/empty. A pasted <a href="javascript:..."> must not become a live
+   * clickable link in the contenteditable.
+   * @param {HTMLElement} cleanChild - The cloned (sanitized) anchor
+   * @param {HTMLElement} sourceChild - The original pasted anchor
+   */
+  function applySafeAnchorHref(cleanChild, sourceChild) {
+    cleanChild.removeAttribute('href');
+    cleanChild.removeAttribute('target');
+    cleanChild.removeAttribute('rel');
+    if (!sourceChild.hasAttribute('href')) return;
+    const safeHref = window.Sanitizer
+      ? window.Sanitizer.sanitizeURL(sourceChild.getAttribute('href'), '')
+      : '';
+    if (!safeHref) return;
+    cleanChild.setAttribute('href', safeHref);
+    cleanChild.setAttribute('target', '_blank');
+    cleanChild.setAttribute('rel', 'noopener noreferrer');
+  }
+
+  /**
    * Clean pasted HTML content
    * @param {string} html - Raw pasted HTML
    * @returns {DocumentFragment} Cleaned content
    */
   function cleanPastedHtml(html) {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    // SECURITY (TWK-1): parse the raw clipboard HTML inertly. Assigning to
+    // innerHTML would parse the markup in the live document and fire
+    // resource/handler loads (e.g. <img src=x onerror=...>) BEFORE the allowlist
+    // walk runs. DOMParser produces a detached document that never loads
+    // resources or executes handlers, so the walk below runs on inert nodes.
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tempDiv = doc.body;
 
     const allowedTags = ['b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del', 'code', 'a', 'br'];
 
@@ -925,11 +952,9 @@ const QuickNotesEditor = (() => {
           const tagName = child.tagName.toLowerCase();
           if (allowedTags.includes(tagName)) {
             const cleanChild = cleanHTML(child);
-            // Preserve href for links
-            if (tagName === 'a' && child.hasAttribute('href')) {
-              cleanChild.setAttribute('href', child.getAttribute('href'));
-              cleanChild.setAttribute('target', '_blank');
-              cleanChild.setAttribute('rel', 'noopener noreferrer');
+            // Preserve href for links, but sanitize it first (TWK-2).
+            if (tagName === 'a') {
+              applySafeAnchorHref(cleanChild, child);
             }
             clone.appendChild(cleanChild);
           } else {

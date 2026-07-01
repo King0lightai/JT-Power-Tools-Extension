@@ -146,7 +146,9 @@ const FormsPdfExporter = (() => {
     const labelUsed = writeWrappedText(doc, labelText, MARGIN_X, cursor.y + 0.14, CONTENT_WIDTH, LINE_HEIGHT);
     cursor.y += 0.14 + labelUsed + SP_AFTER_LABEL;
 
-    if (!value || typeof value !== 'object' || typeof value.dataUrl !== 'string' || value.dataUrl.length === 0) {
+    // Require a data:image/ URL — never pass an arbitrary (e.g. tampered
+    // https://) URL to addImage, which would trigger an outbound fetch (FRM-1).
+    if (!value || typeof value !== 'object' || typeof value.dataUrl !== 'string' || !/^data:image\//.test(value.dataUrl)) {
       // Empty signature slot — render an underline so a printed-and-rescanned
       // workflow still shows the user where to sign.
       ensureSpace(doc, cursor, 0.6);

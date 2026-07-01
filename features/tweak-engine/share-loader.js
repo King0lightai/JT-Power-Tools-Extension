@@ -151,8 +151,13 @@ const TweakShareLoader = (() => {
       p.appendChild(el('p', { style: 'color:#b0b0b0;margin:0 0 12px;' }, tweak.description));
     }
     if (tweak.css) {
-      const pre = el('pre', { textContent: tweak.css.slice(0, 2000) });
-      pre.style.cssText = 'background:#1f1f1f;border:1px solid #404040;border-radius:6px;padding:10px;overflow:auto;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#d0d0d0;margin:0 0 12px;';
+      // SECURITY (TWK-3): show the FULL CSS in a scrollable pre. The import
+      // dialog is the only informed-consent gate, and doImport applies all of
+      // it — truncating the preview let a malicious tweak hide a payload after
+      // the cutoff. textContent keeps it inert; max-height + overflow keep the
+      // dialog usable for long tweaks.
+      const pre = el('pre', { textContent: tweak.css });
+      pre.style.cssText = 'background:#1f1f1f;border:1px solid #404040;border-radius:6px;padding:10px;max-height:280px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#d0d0d0;margin:0 0 12px;';
       p.appendChild(pre);
     } else {
       p.appendChild(el('p', { style: 'color:#a0a0a0;margin:0 0 12px;' }, 'No CSS — DOM actions only.'));

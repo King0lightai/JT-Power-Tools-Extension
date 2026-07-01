@@ -145,6 +145,13 @@ const Sanitizer = (() => {
         return defaultUrl;
       }
 
+      // Reject scheme-relative URLs (//host) — the browser resolves them to
+      // https://host, contrary to the http/https/relative-only contract.
+      if (trimmed.startsWith('//')) {
+        console.warn('Sanitizer: Scheme-relative URL rejected:', url);
+        return defaultUrl;
+      }
+
       // Only allow http, https, and relative URLs
       if (trimmed.startsWith('http://') ||
           trimmed.startsWith('https://') ||

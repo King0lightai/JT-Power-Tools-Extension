@@ -79,6 +79,16 @@ const DOMHelpers = (() => {
           Object.assign(element.style, value);
         } else if (key.startsWith('data-')) {
           element.setAttribute(key, value);
+        } else if (/^(?:innerHTML|outerHTML|srcdoc)$/i.test(key) || /^on/i.test(key)) {
+          // Security: never inject raw markup or event handlers through the
+          // "safe" helper — these are XSS sinks. Skip them.
+          console.warn('DOMHelpers: refusing to set unsafe property:', key);
+        } else if (/^(?:href|src|xlink:href)$/i.test(key)) {
+          // Route URL-bearing attributes through the sanitizer to neutralize
+          // javascript:/data:/scheme-relative payloads.
+          element[key] = (typeof window !== 'undefined' && window.Sanitizer && window.Sanitizer.sanitizeURL)
+            ? window.Sanitizer.sanitizeURL(value)
+            : value;
         } else {
           element[key] = value;
         }

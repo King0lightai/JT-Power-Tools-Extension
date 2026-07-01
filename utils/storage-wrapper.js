@@ -99,7 +99,9 @@ const StorageWrapper = (() => {
             resolve(false);
             return;
           }
-          const bytes = json.length;
+          // Measure UTF-8 bytes, not char count — chrome.storage quotas are
+          // in bytes, so multibyte content must be sized by its encoded length.
+          const bytes = new TextEncoder().encode(json).length;
           if (bytes > MAX_ITEM_BYTES) {
             console.error('JT-Tools Storage: Value for key', key, 'exceeds per-item cap', bytes, '>', MAX_ITEM_BYTES);
             resolve(false);

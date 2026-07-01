@@ -383,6 +383,51 @@ function cleanupFeature(featureKey) {
   }
 }
 
+// Appearance modes are mutually exclusive. Two active at once make Custom
+// Theme's palette fight Dark Mode and the page renders washed-out. Order =
+// precedence (Dark Mode wins, since it was the survivor in the observed
+// conflict). Enforced on cold load (initializeAllFeatures) AND on hot toggle
+// (handleSettingsChange) so a live toggle can't leave two modes active.
+const APPEARANCE_MODES = ['darkMode', 'rgbTheme', 'contrastFix'];
+
+/**
+ * Resolve which single appearance mode should win when more than one is active.
+ * @param {string[]} activeModes - appearance mode keys currently enabled
+ * @param {string|null} preferred - a mode to prefer (e.g. the one the user just
+ *   toggled on); falls back to precedence order when null or not active
+ * @returns {string|null} the winning mode key, or null if none active
+ */
+function resolveAppearanceMode(activeModes, preferred = null) {
+  const modes = APPEARANCE_MODES.filter(m => activeModes.includes(m));
+  if (modes.length === 0) return null;
+  if (preferred && modes.includes(preferred)) return preferred;
+  return modes[0];
+}
+
+/**
+ * Enforce appearance-mode mutual exclusion on hot toggle. If a live toggle turns
+ * one appearance mode on while another is still active, force the losers off in
+ * `mergedSettings` so the transition loop in handleSettingsChange cleans them up
+ * (and currentSettings is updated to the resolved state), matching the cold-load
+ * path. Mutates `mergedSettings` in place.
+ * @param {Object} mergedSettings - The incoming (merged) settings object
+ */
+function enforceSingleAppearanceModeOnToggle(mergedSettings) {
+  const newlyEnabled = APPEARANCE_MODES.find(
+    m => mergedSettings[m] && !currentSettings[m] && featureModules[m]
+  );
+  if (!newlyEnabled) return;
+
+  const enabled = APPEARANCE_MODES.filter(m => mergedSettings[m]);
+  if (enabled.length <= 1) return;
+
+  const winner = resolveAppearanceMode(enabled, newlyEnabled);
+  for (const mode of enabled) {
+    if (mode !== winner) mergedSettings[mode] = false;
+  }
+  console.log(`JT-Tools: Appearance mode ${winner} enabled; disabling the others (${enabled.filter(m => m !== winner).join(', ')}) — mutually exclusive.`);
+}
+
 // Initialize all enabled features
 //
 // Features init concurrently, not one-at-a-time. Each feature's init() is
@@ -408,15 +453,15 @@ async function initializeAllFeatures() {
 
   // Appearance modes are mutually exclusive. The popup enforces this on toggle,
   // but stored settings (older versions, cross-device sync, manual edits) can
-  // still arrive with more than one enabled — and when they do, Custom Theme's
-  // palette fights Dark Mode and the page renders washed-out. Enforce a single
-  // winner here at the apply layer. Order = precedence (Dark Mode wins, since it
-  // was the survivor in the observed conflict).
-  const APPEARANCE_MODES = ['darkMode', 'rgbTheme', 'contrastFix'];
+  // still arrive with more than one enabled. Enforce a single winner here at the
+  // apply layer.
   const enabledModes = APPEARANCE_MODES.filter(key => keysToInit.has(key));
   if (enabledModes.length > 1) {
-    for (const mode of enabledModes.slice(1)) keysToInit.delete(mode);
-    console.log(`JT-Tools: Multiple appearance modes enabled (${enabledModes.join(', ')}); keeping ${enabledModes[0]} and skipping the rest — they are mutually exclusive.`);
+    const winner = resolveAppearanceMode(enabledModes);
+    for (const mode of enabledModes) {
+      if (mode !== winner) keysToInit.delete(mode);
+    }
+    console.log(`JT-Tools: Multiple appearance modes enabled (${enabledModes.join(', ')}); keeping ${winner} and skipping the rest — they are mutually exclusive.`);
   }
 
   await Promise.allSettled([...keysToInit].map(key => initializeFeature(key)));
@@ -442,6 +487,10 @@ async function handleSettingsChange(newSettings) {
       : newSettings;
 
     console.log('JT-Tools: Settings changed:', mergedSettings);
+
+    // Enforce appearance-mode mutual exclusion on hot toggle BEFORE the
+    // transition loop runs (the loop then cleans up any losers).
+    enforceSingleAppearanceModeOnToggle(mergedSettings);
 
     // Compare old and new settings
     for (const [key, enabled] of Object.entries(mergedSettings)) {

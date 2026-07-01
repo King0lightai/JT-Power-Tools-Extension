@@ -67,6 +67,12 @@ const TweakValidator = (() => {
   const EXTENSION_UI_PREFIXES = ['.jt-tools-', '.jt-popup-', '.jt-tweak-edit-'];
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+  // Mirrors the CSS sanitizer's FORBIDDEN_BARE_SELECTORS. The CSS path
+  // auto-scopes selectors and rejects bare page-wide selectors, but the
+  // action path (hide/setText/setStyle) runs raw querySelectorAll against
+  // the whole document, so it needs the same guard.
+  const FORBIDDEN_BARE_SELECTORS = new Set(['html', 'body', ':root', '*']);
+
   // Defense-in-depth: explicit blocklist for setStyle values. These should
   // never appear in an action-set inline style; complex backgrounds/animations
   // belong in the css field where the sanitizer can parse them properly.
@@ -89,9 +95,22 @@ const TweakValidator = (() => {
   // historical fall-open behavior where any string passed.
   const SAFE_SELECTOR_CHARSET = /^[a-zA-Z0-9\s\-_#.>+~*:()[\]="',\\^$|@/]+$/;
 
+  // Reject bare/universal/combinator-only selectors that would match the
+  // whole page (body, *, :root, "* > *", " * "). Applied before both the
+  // DOM-parse and charset-fallback branches so a shared tweak can't blank
+  // the page or rewrite every element via an over-broad action selector.
+  function isBareOrUniversalSelector(sel) {
+    const trimmed = sel.trim();
+    if (trimmed.length === 0) return true;
+    const tokens = trimmed.replace(/[>+~]/g, ' ').split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return true; // combinator-only (e.g. ">")
+    return tokens.every(t => FORBIDDEN_BARE_SELECTORS.has(t));
+  }
+
   function isSafeSelector(sel) {
     if (typeof sel !== 'string' || sel.length === 0 || sel.length > MAX_SELECTOR_LEN) return false;
     if (EXTENSION_UI_PREFIXES.some(p => sel.includes(p))) return false;
+    if (isBareOrUniversalSelector(sel)) return false;
 
     // Quick syntax check: must succeed querySelector parse. Preferred
     // path when running inside a content script / popup — the browser

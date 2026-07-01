@@ -42,14 +42,32 @@
   // grant key it fetches privately via the service worker, and the Pave
   // Explorer never needed the live key. Strip it at the source.
   const GRANT_KEY_RE = /("grantKey"\s*:\s*")[^"]*(")/g;
+  // Pave responses can echo the active grant under currentGrant.key — strip it
+  // too so a hostile same-window script can't lift a live credential off the
+  // response body (CTX-3).
+  const CURRENT_GRANT_KEY_RE = /("currentGrant"\s*:\s*\{[^{}]*?"key"\s*:\s*")[^"]*(")/g;
   function redactGrantKey(body) {
     return typeof body === 'string' ? body.replace(GRANT_KEY_RE, '$1<REDACTED>$2') : body;
   }
+  // Response bodies are broadcast on the page-observable bus for the Pave
+  // Explorer, so redact both grantKey and currentGrant.key before emitting (CTX-3).
+  function redactResponseBody(body) {
+    if (typeof body !== 'string') return body;
+    return body
+      .replace(GRANT_KEY_RE, '$1<REDACTED>$2')
+      .replace(CURRENT_GRANT_KEY_RE, '$1<REDACTED>$2');
+  }
+
+  // Per-session nonce handed to us by the ISOLATED "Record for AI" subscriber.
+  // We stamp every capture we emit with it so that subscriber can reject forged
+  // same-window messages (CTX-2). Browse-only control messages omit it.
+  let captureNonce = null;
 
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     const d = event.data;
     if (d && d.source === 'jt-pt-capture-ctl' && typeof d.subscriber === 'string') {
+      if (typeof d.nonce === 'string') captureNonce = d.nonce;
       if (d.on) subscribers.add(d.subscriber);
       else subscribers.delete(d.subscriber);
     }
@@ -96,7 +114,8 @@
         try {
           window.postMessage({
             source: 'jt-pt-capture',
-            payload: { url, status: response.status, requestBody: redactGrantKey(requestBody), responseBody, timestamp: Date.now() },
+            nonce: captureNonce,
+            payload: { url, status: response.status, requestBody: redactGrantKey(requestBody), responseBody: redactResponseBody(responseBody), timestamp: Date.now() },
           }, window.location.origin);
         } catch (e) {
           // Never break the app over a capture failure.
@@ -159,9 +178,10 @@
           try {
             window.postMessage({
               source: 'jt-pt-capture',
+              nonce: captureNonce,
               payload: {
                 url: meta.url, status: this.status,
-                requestBody: redactGrantKey(meta.requestBody), responseBody, timestamp: Date.now(),
+                requestBody: redactGrantKey(meta.requestBody), responseBody: redactResponseBody(responseBody), timestamp: Date.now(),
               },
             }, window.location.origin);
           } catch (e) {

@@ -120,7 +120,9 @@ const ColorUtils = (() => {
    */
   function hexToRgba(hex, alpha) {
     const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
+    // Return a safe transparent default (not the raw input) so a bad hex
+    // can't flow unchanged into caller-built CSS.
+    if (!rgb) return 'rgba(0, 0, 0, 0)';
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
   }
 
@@ -221,7 +223,7 @@ const ColorUtils = (() => {
    */
   function adjustBrightness(hex, amount) {
     const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
+    if (!rgb) return '#000000';
 
     const adjust = (value) => Math.max(0, Math.min(255, value + amount));
 
@@ -241,7 +243,7 @@ const ColorUtils = (() => {
    */
   function adjustBrightnessPercent(hex, percent) {
     const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
+    if (!rgb) return '#000000';
 
     const adjust = (value) => Math.min(255, Math.max(0, Math.round(value + (value * percent / 100))));
 
@@ -258,7 +260,7 @@ const ColorUtils = (() => {
   function blendColors(hex1, hex2, ratio) {
     const rgb1 = hexToRgb(hex1);
     const rgb2 = hexToRgb(hex2);
-    if (!rgb1 || !rgb2) return hex1;
+    if (!rgb1 || !rgb2) return '#000000';
 
     return rgbToHex(
       rgb1.r + (rgb2.r - rgb1.r) * ratio,

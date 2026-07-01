@@ -102,6 +102,22 @@ const LicenseService = (() => {
    * True security is enforced by:
    * - Server-side license validation every 24 hours
    * - License revocation capabilities on the server
+   *
+   * EXT-1 (documented / deferred): The extension source is published to a PUBLIC
+   * repo (.github/workflows/sync-public.yml), so OBFUSCATION_KEY, the tier lists,
+   * and the whole client-side gate are effectively public. Client-side tier gating
+   * is therefore NOT a security control — a determined user can forge a license
+   * blob in chrome.storage and unlock any purely client-side premium feature
+   * (rgbTheme, previewMode, tweak engine/builder, etc.). This cannot be made
+   * unbreakable in a public-source extension and must not be treated as such.
+   * The `signature` field returned by the proxy is stored (verifyLicense) but not
+   * verified here because doing so safely requires server-issued public-key
+   * material that isn't shipped with the client — verifying against anything in
+   * this file would add no real protection. The real defense is that all
+   * high-value features already round-trip to the Worker (API, AI, forms,
+   * invoice-forecast), which re-validates the license server-side on every call.
+   * Any NEW feature of real monetary value must be server-gated the same way
+   * rather than relying on this client tier check.
    */
   const OBFUSCATION_KEY = 'jt-power-tools-v1';
 
@@ -145,7 +161,7 @@ const LicenseService = (() => {
         const licenseData = {
           valid: true,
           key: licenseKey,
-          tier: result.data.tier || TIERS.PRO, // NEW: Store tier (default to PRO for backwards compatibility)
+          tier: result.data.tier || TIERS.ESSENTIAL, // Store tier (default to lowest paid tier — never fail open to PRO)
           purchaseEmail: result.data.purchaseEmail,
           productName: result.data.productName,
           purchaseDate: result.data.purchaseDate,
@@ -262,10 +278,12 @@ const LicenseService = (() => {
   }
 
   /**
-   * Save license data to storage (obfuscated)
-   * Writes to both sync AND local storage for resilience.
-   * Firefox can lose storage.sync data on extension updates when no Firefox Account
-   * is connected, so local serves as a fallback.
+   * Save license data to storage (obfuscated).
+   * SECURITY (EXT-4): stored in chrome.storage.local ONLY. The license blob
+   * contains the Gumroad key, purchase email, and tier — writing it to
+   * chrome.storage.sync replicates that PII to Google's cloud and every signed-in
+   * device, and the XOR obfuscation is not encryption. Grant keys and JWTs are
+   * already local-only for the same reason.
    * @param {Object} licenseData - License data object to save
    */
   async function saveLicenseData(licenseData) {
@@ -277,15 +295,25 @@ const LicenseService = (() => {
         jtToolsLicenseVersion: 2 // Version flag for obfuscated format
       };
 
-      // Write to both sync and local for cross-update resilience
-      await Promise.all([
-        chrome.storage.sync.set(payload).catch(e => logError('Sync save failed:', e)),
-        chrome.storage.local.set(payload).catch(e => logError('Local save failed:', e))
-      ]);
-      log('License data saved (sync + local)');
+      // Local only — never replicate the license blob to cloud sync.
+      await chrome.storage.local.set(payload).catch(e => logError('Local save failed:', e));
+      // Purge any stale sync copy written by pre-EXT-4 versions.
+      cleanupStaleSyncLicense();
+      log('License data saved (local)');
     } catch (error) {
       logError('Error saving license data:', error);
     }
+  }
+
+  /**
+   * One-time cleanup: remove the stale license blob from chrome.storage.sync.
+   * Older versions replicated the license to sync; EXT-4 keeps it local-only,
+   * so purge any lingering cloud copy. Idempotent and safe to call repeatedly.
+   */
+  function cleanupStaleSyncLicense() {
+    chrome.storage.sync
+      .remove(['jtToolsLicense', 'jtToolsLicenseVersion'])
+      .catch(e => logError('Failed to purge stale sync license:', e));
   }
 
   /**
@@ -311,40 +339,39 @@ const LicenseService = (() => {
   }
 
   /**
-   * Get stored license data (deobfuscate if needed)
-   * Tries sync storage first, falls back to local storage.
-   * This prevents Firefox users from being logged out on extension updates
-   * when storage.sync is lost (no Firefox Account connected).
+   * Get stored license data (deobfuscate if needed).
+   * SECURITY (EXT-4): local storage is the primary (and only) store. Sync is
+   * read once as a legacy fallback for installs that predate EXT-4, then the
+   * blob is migrated to local and purged from sync.
    * @returns {Promise<Object|null>} License data object or null
    */
   async function getLicenseData() {
     try {
       const keys = ['jtToolsLicense', 'jtToolsLicenseVersion'];
 
-      // Try sync first (primary)
-      const syncResult = await chrome.storage.sync.get(keys);
-      let licenseData = parseLicenseFromStorage(syncResult);
+      // Local is the primary store.
+      const localResult = await chrome.storage.local.get(keys);
+      let licenseData = parseLicenseFromStorage(localResult);
 
       if (licenseData) {
         // Handle legacy v1 → v2 migration
-        if (typeof syncResult.jtToolsLicense === 'object') {
+        if (typeof localResult.jtToolsLicense === 'object') {
           log('Migrating legacy license data to obfuscated format');
           await saveLicenseData(licenseData);
         }
+        // Purge any stale cloud copy left by pre-EXT-4 versions.
+        cleanupStaleSyncLicense();
         return licenseData;
       }
 
-      // Sync empty — try local fallback (Firefox update recovery)
-      const localResult = await chrome.storage.local.get(keys);
-      licenseData = parseLicenseFromStorage(localResult);
+      // Local empty — try legacy sync copy (pre-EXT-4 installs), then migrate
+      // it to local-only and remove it from cloud sync.
+      const syncResult = await chrome.storage.sync.get(keys);
+      licenseData = parseLicenseFromStorage(syncResult);
 
       if (licenseData) {
-        log('License recovered from local storage fallback — restoring to sync');
-        // Restore to sync so future reads are fast
-        await chrome.storage.sync.set({
-          jtToolsLicense: localResult.jtToolsLicense,
-          jtToolsLicenseVersion: localResult.jtToolsLicenseVersion
-        }).catch(e => logError('Failed to restore license to sync:', e));
+        log('License recovered from legacy sync storage — migrating to local only');
+        await saveLicenseData(licenseData); // writes local + purges sync
         return licenseData;
       }
 
@@ -463,8 +490,8 @@ const LicenseService = (() => {
       if (!licenseData || !licenseData.valid) {
         return null;
       }
-      // Default to PRO for backwards compatibility with existing users
-      return licenseData.tier || TIERS.PRO;
+      // Default to the lowest paid tier when unspecified — never fail open to PRO.
+      return licenseData.tier || TIERS.ESSENTIAL;
     } catch (error) {
       logError('Error getting tier:', error);
       return null;

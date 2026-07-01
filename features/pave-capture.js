@@ -37,6 +37,9 @@ const PaveCaptureFeature = (() => {
   // observable postMessage bus. Cached per org; refetched on org change.
   let grantKey = null;
   let grantKeyOrg = null;
+  // Per-session nonce handed to the MAIN-world sniffer so we can authenticate
+  // the captures it emits (CTX-2). Regenerated on each init.
+  let captureNonce = null;
   // Pending sanitized queries awaiting upload.
   let buffer = [];
 
@@ -58,12 +61,22 @@ const PaveCaptureFeature = (() => {
     isActive = true;
     console.log('PaveCapture: Initializing...');
 
+    // Fresh nonce per recording session. Handed to the MAIN-world sniffer via
+    // the control message below; every capture it emits must carry it back.
+    captureNonce = generateNonce();
+
     messageHandler = (event) => {
       if (event.source !== window) return;
       const d = event.data;
-      if (d && d.source === 'jt-pt-capture' && d.payload) {
-        handleCapture(d.payload);
-      }
+      // Require our nonce (CTX-2). This MAIN world shares its window with the
+      // page, so any page script (a JobTread XSS or a hostile co-installed
+      // MAIN-world extension) can post a same-window 'jt-pt-capture' message.
+      // Without the nonce we handed the sniffer, a blind forgery can't poison
+      // the captured-query knowledge base. Residual: a script actively reading
+      // the control message off the shared bus could learn the nonce — this
+      // still raises the bar well above the prior trust-any-message behavior.
+      if (!d || d.source !== 'jt-pt-capture' || d.nonce !== captureNonce || !d.payload) return;
+      handleCapture(d.payload);
     };
     window.addEventListener('message', messageHandler);
 
@@ -81,12 +94,26 @@ const PaveCaptureFeature = (() => {
   function setRecording(on) {
     try {
       window.postMessage(
-        { source: 'jt-pt-capture-ctl', subscriber: 'upload', on },
+        { source: 'jt-pt-capture-ctl', subscriber: 'upload', on, nonce: captureNonce },
         window.location.origin
       );
     } catch (e) {
       // Same-window post; should never throw, but never break over it.
     }
+  }
+
+  /**
+   * Random per-session nonce used to authenticate the MAIN↔ISOLATED bridge.
+   */
+  function generateNonce() {
+    try {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+    } catch (e) {
+      // fall through to the Math.random fallback
+    }
+    return 'n-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
 
   function handleCapture(payload) {
@@ -323,6 +350,7 @@ const PaveCaptureFeature = (() => {
     buffer = [];
     grantKey = null;
     grantKeyOrg = null;
+    captureNonce = null;
     isActive = false;
     console.log('PaveCapture: Cleaned up');
   }

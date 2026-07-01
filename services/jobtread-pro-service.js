@@ -336,10 +336,10 @@ const JobTreadProService = (() => {
       });
 
       // If JWT auth got 401 (expired token), try refreshing and retrying once
-      if (response.status === 401 && portalJwt && window.AccountService?.refreshToken) {
+      if (response.status === 401 && portalJwt && window.AccountService?.refreshAccessToken) {
         log('JWT expired, attempting refresh...');
-        const refreshed = await window.AccountService.refreshToken();
-        if (refreshed) {
+        const refreshed = await window.AccountService.refreshAccessToken();
+        if (refreshed?.success) {
           const newStored = await chrome.storage.local.get(['jtAccountAccessToken']);
           if (newStored.jtAccountAccessToken) {
             headers['Authorization'] = `Bearer ${newStored.jtAccountAccessToken}`;

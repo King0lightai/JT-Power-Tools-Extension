@@ -371,7 +371,12 @@ const FormsFieldRenderers = (() => {
     const img = document.createElement('img');
     img.className = 'jt-forms-signature-image';
     img.alt = 'Captured signature';
-    img.src = value.dataUrl;
+    // Only ever point src at a data:image/ URL. Instance data comes from the
+    // server and could be tampered to an arbitrary https:// URL, which would
+    // fire an outbound request/beacon on render (FRM-1).
+    if (typeof value.dataUrl === 'string' && /^data:image\//.test(value.dataUrl)) {
+      img.src = value.dataUrl;
+    }
     wrap.appendChild(img);
 
     const meta = document.createElement('div');

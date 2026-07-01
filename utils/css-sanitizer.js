@@ -28,7 +28,6 @@ const CssSanitizer = (() => {
   // CSS-loaded contexts. Tweak authors who need SVG can serve it as an
   // https URL instead.
   const SAFE_DATA_IMAGE_RE = /^data:image\/(?:png|jpe?g|gif|webp|avif|bmp|x-icon|vnd\.microsoft\.icon)(?:;|,)/i;
-  const SAFE_HTTPS_RE = /^https:\/\//i;
 
   // @font-face src=url() allowlist (M9). An attacker-controlled tweak
   // could otherwise force the browser to fetch a font from any HTTPS
@@ -43,14 +42,37 @@ const CssSanitizer = (() => {
     /^https:\/\/fonts\.googleapis\.com\//i,
   ];
 
+  function isSafeFontUrl(value) {
+    return ALLOWED_FONT_HOSTS.some((re) => re.test(value));
+  }
+
+  // CSS-1: Non-font url() is restricted to raster-image data: URIs plus the
+  // same trusted-host allowlist used for @font-face. Arbitrary https:// url()
+  // was previously allowed, which let a shared tweak beacon the user's IP or
+  // exfiltrate DOM attribute values char-by-char via `background:url(...)`.
+  // Chosen over "allow any https" because no product feature needs remote
+  // background images from arbitrary hosts — anything legitimate is either an
+  // inline data:image or served from jobtread.com / the trusted font CDNs.
   function isSafeUrl(value) {
-    if (SAFE_HTTPS_RE.test(value)) return true;
     if (SAFE_DATA_IMAGE_RE.test(value)) return true;
+    if (isSafeFontUrl(value)) return true;
     return false;
   }
 
-  function isSafeFontUrl(value) {
-    return ALLOWED_FONT_HOSTS.some((re) => re.test(value));
+  // Decode CSS identifier escapes (\XX hex, optionally followed by one
+  // whitespace, or \c literal) so obfuscated names like `expr\65ssion` or
+  // `beha\vior` are compared against the blocklist in their canonical form.
+  function normalizeCssIdent(name) {
+    if (typeof name !== 'string') return '';
+    return name
+      .replace(/\\([0-9a-fA-F]{1,6})\s?|\\(.)/g, (m, hex, ch) => {
+        if (hex) {
+          const code = parseInt(hex, 16);
+          return code ? String.fromCodePoint(code) : '';
+        }
+        return ch;
+      })
+      .toLowerCase();
   }
 
   // csstree's walk callback receives `this.atrule` set to the closest
@@ -215,7 +237,7 @@ const CssSanitizer = (() => {
 
         // Reject dangerous declaration properties
         if (node.type === 'Declaration') {
-          const propName = (node.property || '').toLowerCase();
+          const propName = normalizeCssIdent(node.property || '');
           if (propName === 'behavior' || propName === '-moz-binding') {
             errors.push({ reason: 'property `' + propName + '` is not allowed', position: node.loc?.start });
             if (list) list.remove(item);
@@ -224,7 +246,7 @@ const CssSanitizer = (() => {
         }
 
         // expression() — IE legacy code execution
-        if (node.type === 'Function' && (node.name || '').toLowerCase() === 'expression') {
+        if (node.type === 'Function' && normalizeCssIdent(node.name || '') === 'expression') {
           errors.push({ reason: 'expression() is not allowed', position: node.loc?.start });
           node.children = csstree.List ? new csstree.List() : { head: null, tail: null };
           return;
@@ -240,7 +262,7 @@ const CssSanitizer = (() => {
           if (!ok) {
             const expected = inFontFace
               ? '@font-face url() must be on the font allowlist (jobtread.com / fonts.gstatic.com / fonts.googleapis.com)'
-              : 'url() must be https:// or a raster image data URI (svg+xml not allowed)';
+              : 'url() must be a raster image data URI (svg+xml not allowed) or an allowlisted host (jobtread.com / fonts.gstatic.com / fonts.googleapis.com)';
             errors.push({ reason: expected + ', got: ' + value.slice(0, 80), position: node.loc?.start });
             node.value = '';
           }
@@ -255,9 +277,9 @@ const CssSanitizer = (() => {
         // browsers drop. Cleaner than trying to recover the inner URL
         // from a tokenizer-recovery context.
         if (node.type === 'Raw' && typeof node.value === 'string') {
-          if (/url\s*\(/i.test(node.value)) {
+          if (/url\s*\(|expression\s*\(|behavior|@import|@charset/i.test(node.value)) {
             errors.push({
-              reason: 'url() inside an unparsed/raw value is not allowed (use a clean declaration)',
+              reason: 'a disallowed construct (url/expression/behavior/@import/@charset) inside an unparsed/raw value is not allowed (use a clean declaration)',
               position: node.loc?.start,
             });
             node.value = '';
