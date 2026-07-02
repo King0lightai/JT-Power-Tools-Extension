@@ -13,7 +13,7 @@
 ### Task 1: D1 Database — Create `team_templates` Table
 
 **Files:**
-- Modify: `server/licsense proxy.txt` (add table creation SQL as reference comment near top, ~line 1-10)
+- Modify: `server/license-proxy/src/worker.js` (add table creation SQL as reference comment near top, ~line 1-10)
 - Run: D1 SQL via Cloudflare dashboard or wrangler CLI
 
 **Step 1: Run the D1 migration**
@@ -52,7 +52,7 @@ Expected: One row with `team_templates`.
 ### Task 2: License Proxy — Add Team Templates Endpoints
 
 **Files:**
-- Modify: `server/licsense proxy.txt`
+- Modify: `server/license-proxy/src/worker.js`
   - Route registration: ~line 1207 (after `team-notes/delete` case)
   - New handler functions: after `handleTeamNotesDelete` (~line 2061)
 
