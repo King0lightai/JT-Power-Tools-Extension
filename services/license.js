@@ -505,17 +505,6 @@ const LicenseService = (() => {
   }
 
   /**
-   * Get the current subscription tier
-   * @returns {Promise<string|null>} Tier name ('essential', 'pro', 'power_user') or null if no license
-   */
-  // Rank tiers so the effective tier can be resolved as the higher of two.
-  const TIER_RANK = {
-    [TIERS.ESSENTIAL]: 1,
-    [TIERS.PRO]: 2,
-    [TIERS.POWER_USER]: 3
-  };
-
-  /**
    * Read the tier from the logged-in portal account, straight from
    * chrome.storage.local so it works in any context (popup and content-script
    * gate) without depending on AccountService being initialized or loaded first.
