@@ -54,6 +54,9 @@ const AssistantPanelFeature = (() => {
   let poolBannerEl = null;
   let glowEl = null;
   let sessionId = null;
+  // Draft cards already rendered this session (draft id / idempotency key) —
+  // each draft arrives on two frames and must render once.
+  const renderedDraftKeys = new Set();
   let abortController = null;
   let sending = false;
   let statusChecked = false; // profile/skills nudge fires once per page load
@@ -755,6 +758,7 @@ const AssistantPanelFeature = (() => {
 
   function resetSession() {
     sessionId = null;
+    renderedDraftKeys.clear();
     if (abortController) abortController.abort();
     const messages = panelEl?.querySelector('[data-jt-role="messages"]');
     if (messages) messages.replaceChildren();
@@ -812,6 +816,15 @@ const AssistantPanelFeature = (() => {
   function appendDraftCard(draft) {
     const messages = messagesEl();
     if (!messages) return;
+
+    // Each draft arrives twice — a streaming draft_proposed frame AND the done
+    // frame's proposed_writes (kept as a fallback for dropped frames). Render
+    // once: key on the persisted id, falling back to the idempotency key.
+    const key = draft.id || draft.idempotencyKey;
+    if (key) {
+      if (renderedDraftKeys.has(key)) return;
+      renderedDraftKeys.add(key);
+    }
 
     const card = el('div', 'jt-assistant-draft');
     card.appendChild(el('div', 'jt-assistant-draft-title', 'Proposed change (draft)'));
@@ -1361,6 +1374,7 @@ const AssistantPanelFeature = (() => {
     removeStyles();
 
     sessionId = null;
+    renderedDraftKeys.clear();
     sending = false;
     statusChecked = false;
     launcherDrag = null;
