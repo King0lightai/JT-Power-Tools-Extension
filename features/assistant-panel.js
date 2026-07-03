@@ -20,6 +20,10 @@
  */
 const AssistantPanelFeature = (() => {
   const AGENT_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev/agent/chat';
+  // Sibling endpoints (sessions/session/status) share AGENT_URL's origin and path.
+  const AGENT_BASE = AGENT_URL.replace(/\/chat$/, '');
+  const PORTAL_PROFILE_URL = 'https://app.jtpowertools.com/dashboard#team';
+  const LAUNCHER_POS_KEY = 'jtAssistantLauncherPos';
 
   // One-click job audit — the canned "find something I didn't ask about"
   // prompt. Sent as the task; the chip label is what shows in the chat.
@@ -47,6 +51,9 @@ const AssistantPanelFeature = (() => {
   let sessionId = null;
   let abortController = null;
   let sending = false;
+  let statusChecked = false; // profile/skills nudge fires once per page load
+  let launcherDrag = null; // { startY, startTop, moved } while a drag is in progress
+  let justDragged = false; // suppress the click that follows a drag-release
   const eventListeners = []; // document/window-level — must be removed in cleanup()
 
   // ─── Utilities ────────────────────────────────────────────────────
@@ -61,6 +68,193 @@ const AssistantPanelFeature = (() => {
     if (className) node.className = className;
     if (text !== undefined) node.textContent = text;
     return node;
+  }
+
+  // ─── Markdown (assistant answers only — escape-first, never raw) ──────
+  // Every character of model output is HTML-escaped before any regex runs,
+  // so the transforms below can only ever inject the fixed tag set we emit.
+  // Prefers window.Sanitizer (matches the rest of the extension) with a
+  // local fallback so the renderer works even if Sanitizer hasn't loaded.
+
+  function escapeText(text) {
+    const s = text == null ? '' : String(text);
+    if (window.Sanitizer && typeof window.Sanitizer.escapeHTML === 'function') {
+      return window.Sanitizer.escapeHTML(s);
+    }
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Returns an attribute-safe href, or '' when the URL is unsafe (js:, data:,
+  // etc.) so the caller can drop the link and keep the text.
+  function safeHref(url) {
+    let clean = '';
+    if (window.Sanitizer && typeof window.Sanitizer.sanitizeURL === 'function') {
+      clean = window.Sanitizer.sanitizeURL(url, '');
+    } else {
+      const t = String(url || '').trim();
+      if (/^(https?:\/\/|\/|#)/i.test(t) && !/["'<>\s`]/.test(t)) clean = t;
+    }
+    if (!clean || clean === '#') return '';
+    if (window.Sanitizer && typeof window.Sanitizer.escapeAttr === 'function') {
+      return window.Sanitizer.escapeAttr(clean);
+    }
+    return clean.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Inline transforms run on ALREADY-escaped text.
+  function inlineMarkdown(escaped) {
+    let html = escaped;
+    // Links [text](url) — url through safeHref; drop the link (keep text) if unsafe.
+    html = html.replace(/\[([^\]\n]+)\]\(([^)\n]+)\)/g, (_m, text, url) => {
+      const href = safeHref(url);
+      if (!href) return text;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    });
+    html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(?<!\*)\*(?!\*)([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
+    return html;
+  }
+
+  function splitTableRow(line) {
+    let s = line.trim();
+    if (s.startsWith('|')) s = s.slice(1);
+    if (s.endsWith('|')) s = s.slice(0, -1);
+    return s.split('|').map((c) => c.trim());
+  }
+
+  function renderTable(headerLine, bodyLines) {
+    const headers = splitTableRow(headerLine);
+    let html = '<table class="jt-assistant-md-table"><thead><tr>';
+    html += headers.map((c) => `<th>${inlineMarkdown(escapeText(c))}</th>`).join('');
+    html += '</tr></thead><tbody>';
+    for (const row of bodyLines) {
+      const cells = splitTableRow(row);
+      html += '<tr>' + cells.map((c) => `<td>${inlineMarkdown(escapeText(c))}</td>`).join('') + '</tr>';
+    }
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // Block-level renderer. Returns an HTML string safe to assign to innerHTML.
+  function renderMarkdown(src) {
+    const lines = (src == null ? '' : String(src)).split('\n');
+    const out = [];
+    let para = [];
+    let i = 0;
+
+    const flushPara = () => {
+      if (!para.length) return;
+      out.push(`<p>${para.map((l) => inlineMarkdown(escapeText(l))).join('<br>')}</p>`);
+      para = [];
+    };
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // Fenced code block
+      if (/^```/.test(trimmed)) {
+        flushPara();
+        const buf = [];
+        i++;
+        while (i < lines.length && !/^```/.test(lines[i].trim())) {
+          buf.push(lines[i]);
+          i++;
+        }
+        i++; // consume closing fence
+        out.push(`<pre><code>${escapeText(buf.join('\n'))}</code></pre>`);
+        continue;
+      }
+
+      // Heading (# / ## → h3, deeper → h4 — compact chat scale)
+      const heading = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      if (heading) {
+        flushPara();
+        const level = heading[1].length <= 2 ? 3 : 4;
+        out.push(`<h${level}>${inlineMarkdown(escapeText(heading[2]))}</h${level}>`);
+        i++;
+        continue;
+      }
+
+      // GitHub-style pipe table: a row followed by a |---|---| separator
+      if (
+        trimmed.includes('|') &&
+        i + 1 < lines.length &&
+        lines[i + 1].includes('-') &&
+        /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1])
+      ) {
+        flushPara();
+        const headerLine = line;
+        i += 2; // skip header + separator
+        const bodyRows = [];
+        while (i < lines.length && lines[i].includes('|') && lines[i].trim() !== '') {
+          bodyRows.push(lines[i]);
+          i++;
+        }
+        out.push(renderTable(headerLine, bodyRows));
+        continue;
+      }
+
+      // Unordered list
+      if (/^[-*]\s+/.test(trimmed)) {
+        flushPara();
+        const items = [];
+        while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) {
+          items.push(lines[i].trim().replace(/^[-*]\s+/, ''));
+          i++;
+        }
+        out.push(`<ul>${items.map((it) => `<li>${inlineMarkdown(escapeText(it))}</li>`).join('')}</ul>`);
+        continue;
+      }
+
+      // Ordered list
+      if (/^\d+\.\s+/.test(trimmed)) {
+        flushPara();
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+          items.push(lines[i].trim().replace(/^\d+\.\s+/, ''));
+          i++;
+        }
+        out.push(`<ol>${items.map((it) => `<li>${inlineMarkdown(escapeText(it))}</li>`).join('')}</ol>`);
+        continue;
+      }
+
+      if (trimmed === '') {
+        flushPara();
+        i++;
+        continue;
+      }
+
+      para.push(line);
+      i++;
+    }
+
+    flushPara();
+    return out.join('');
+  }
+
+  // Relative "time ago" — no shared helper exists in this module.
+  function relativeTime(unixSeconds) {
+    if (!unixSeconds) return '';
+    const diffSec = Math.round((Date.now() - unixSeconds * 1000) / 1000);
+    if (diffSec < 45) return 'just now';
+    const min = Math.round(diffSec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.round(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.round(hr / 24);
+    if (day < 7) return `${day}d ago`;
+    const wk = Math.round(day / 7);
+    if (wk < 5) return `${wk}w ago`;
+    const mo = Math.round(day / 30);
+    if (mo < 12) return `${mo}mo ago`;
+    return `${Math.round(day / 365)}y ago`;
   }
 
   // ─── Styles ───────────────────────────────────────────────────────
@@ -222,8 +416,84 @@ const AssistantPanelFeature = (() => {
     launcherEl.setAttribute('aria-label', 'Open JT Power Tools Assistant');
     launcherEl.title = 'JT Power Tools Assistant';
     launcherEl.textContent = 'AI';
-    launcherEl.addEventListener('click', togglePanel);
+    // Click toggles the panel — but a click that followed a drag is swallowed.
+    launcherEl.addEventListener('click', onLauncherClick);
+    launcherEl.addEventListener('pointerdown', onLauncherPointerDown);
     document.body.appendChild(launcherEl);
+    // Move/up ride on the document so a fast drag that outruns the button
+    // still tracks — document-level, so they must be removed in cleanup().
+    addListener(document, 'pointermove', onLauncherPointerMove);
+    addListener(document, 'pointerup', onLauncherPointerUp);
+    restoreLauncherPos();
+  }
+
+  function onLauncherClick() {
+    if (justDragged) {
+      justDragged = false;
+      return;
+    }
+    togglePanel();
+  }
+
+  // Vertical-only drag along the right edge. A 5px movement threshold keeps a
+  // plain click from being read as a drag.
+  function onLauncherPointerDown(e) {
+    if (e.button != null && e.button !== 0) return;
+    justDragged = false; // fresh press — don't inherit a stale drag's suppression
+    const rect = launcherEl.getBoundingClientRect();
+    launcherDrag = { startY: e.clientY, startTop: rect.top, moved: false };
+  }
+
+  function onLauncherPointerMove(e) {
+    if (!launcherDrag || !launcherEl) return;
+    const dy = e.clientY - launcherDrag.startY;
+    if (!launcherDrag.moved && Math.abs(dy) < 5) return;
+    launcherDrag.moved = true;
+    launcherEl.classList.add('jt-assistant-launcher-dragging');
+    setLauncherTop(launcherDrag.startTop + dy);
+  }
+
+  function onLauncherPointerUp() {
+    if (!launcherDrag) return;
+    const { moved } = launcherDrag;
+    launcherDrag = null;
+    if (launcherEl) launcherEl.classList.remove('jt-assistant-launcher-dragging');
+    if (moved) {
+      justDragged = true; // the trailing click is not a toggle
+      const top = parseInt(launcherEl?.style.top || '', 10);
+      if (!Number.isNaN(top)) persistLauncherPos(top);
+    }
+  }
+
+  // Clamp within the viewport (top 60px … bottom 24px) and pin to the right edge.
+  function setLauncherTop(top) {
+    if (!launcherEl) return;
+    const h = launcherEl.offsetHeight || 40;
+    const maxTop = Math.max(60, window.innerHeight - h - 24);
+    const clamped = Math.max(60, Math.min(top, maxTop));
+    launcherEl.style.top = `${clamped}px`;
+    launcherEl.style.bottom = 'auto';
+    launcherEl.style.transform = 'none';
+    return clamped;
+  }
+
+  function persistLauncherPos(top) {
+    try {
+      chrome.storage.local.set({ [LAUNCHER_POS_KEY]: top });
+    } catch {
+      // Non-fatal — the launcher just won't remember its spot.
+    }
+  }
+
+  function restoreLauncherPos() {
+    try {
+      chrome.storage.local.get(LAUNCHER_POS_KEY, (res) => {
+        const top = res && res[LAUNCHER_POS_KEY];
+        if (typeof top === 'number' && launcherEl) setLauncherTop(top);
+      });
+    } catch {
+      // Non-fatal — fall back to the CSS default position.
+    }
   }
 
   function buildPanel() {
@@ -235,6 +505,11 @@ const AssistantPanelFeature = (() => {
     const header = el('div', 'jt-assistant-header');
     header.appendChild(el('span', 'jt-assistant-title', 'Assistant'));
     const headerActions = el('div', 'jt-assistant-header-actions');
+    const historyBtn = el('button', 'jtt-btn jt-assistant-history-btn', '◷');
+    historyBtn.type = 'button';
+    historyBtn.title = 'Chat history';
+    historyBtn.setAttribute('aria-label', 'Chat history');
+    historyBtn.addEventListener('click', () => void openHistory());
     const newBtn = el('button', 'jtt-btn jt-assistant-new-btn', 'New chat');
     newBtn.type = 'button';
     newBtn.title = 'Start a fresh session';
@@ -243,6 +518,7 @@ const AssistantPanelFeature = (() => {
     closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Close assistant');
     closeBtn.addEventListener('click', togglePanel);
+    headerActions.appendChild(historyBtn);
     headerActions.appendChild(newBtn);
     headerActions.appendChild(closeBtn);
     header.appendChild(headerActions);
@@ -252,6 +528,11 @@ const AssistantPanelFeature = (() => {
     const messages = el('div', 'jt-assistant-messages');
     messages.dataset.jtRole = 'messages';
     panelEl.appendChild(messages);
+
+    // Chat-history view — swaps in over the messages area (hidden by default).
+    const history = el('div', 'jt-assistant-history');
+    history.dataset.jtRole = 'history';
+    panelEl.appendChild(history);
 
     // Status line (tool activity)
     const status = el('div', 'jt-assistant-status');
@@ -302,6 +583,10 @@ const AssistantPanelFeature = (() => {
     if (launcherEl) launcherEl.classList.toggle('jt-assistant-launcher-hidden', open);
     if (open) {
       renderChips(); // the SPA route may have changed since last open
+      if (!statusChecked) {
+        statusChecked = true; // once per page load, whatever the result
+        void checkProfileStatus();
+      }
       const input = panelEl.querySelector('[data-jt-role="input"]');
       if (input) input.focus();
     }
@@ -340,6 +625,22 @@ const AssistantPanelFeature = (() => {
     const messages = messagesEl();
     if (!messages) return;
     messages.appendChild(el('div', 'jt-assistant-note', text));
+    scrollToBottom();
+  }
+
+  // A completed assistant turn loaded from history: optional "Read: …" tool
+  // line above the markdown-rendered answer.
+  function appendAssistantTurn(turn) {
+    const messages = messagesEl();
+    if (!messages) return;
+    const bubble = el('div', 'jt-assistant-bubble jt-assistant-bubble-assistant jt-assistant-md');
+    if (Array.isArray(turn.tools) && turn.tools.length) {
+      bubble.appendChild(el('div', 'jt-assistant-tools-line', `Read: ${turn.tools.join(', ')}`));
+    }
+    const body = el('div', 'jt-assistant-md-body');
+    body.innerHTML = renderMarkdown(turn.text || '');
+    bubble.appendChild(body);
+    messages.appendChild(bubble);
     scrollToBottom();
   }
 
@@ -434,6 +735,7 @@ const AssistantPanelFeature = (() => {
 
     abortController = new AbortController();
     let assistantBubble = null;
+    let assistantText = ''; // raw markdown accumulated across deltas
 
     try {
       const response = await fetch(AGENT_URL, {
@@ -459,7 +761,10 @@ const AssistantPanelFeature = (() => {
       }
 
       const ensureBubble = () => {
-        if (!assistantBubble) assistantBubble = appendBubble('assistant', '');
+        if (!assistantBubble) {
+          assistantBubble = appendBubble('assistant', '');
+          assistantBubble.classList.add('jt-assistant-md');
+        }
         return assistantBubble;
       };
 
@@ -468,7 +773,8 @@ const AssistantPanelFeature = (() => {
         // Server truth wins: replace streamed text with the final answer
         // if they diverge (e.g. multi-iteration runs).
         if (frame.answer && ensureBubble()) {
-          assistantBubble.textContent = frame.answer;
+          assistantText = frame.answer;
+          assistantBubble.innerHTML = renderMarkdown(assistantText);
         }
         for (const draft of frame.proposed_writes || []) appendDraftCard(draft);
         setUsage(frame.usage);
@@ -481,7 +787,10 @@ const AssistantPanelFeature = (() => {
       const frameHandlers = {
         text_delta: (frame) => {
           if (ensureBubble()) {
-            assistantBubble.textContent += frame.text;
+            assistantText += frame.text;
+            // Re-render the whole bubble per delta — cheap at chat scale and
+            // keeps in-progress markdown (lists, code) looking right.
+            assistantBubble.innerHTML = renderMarkdown(assistantText);
             scrollToBottom();
           }
           setStatus('');
@@ -558,6 +867,161 @@ const AssistantPanelFeature = (() => {
     return detail?.error || `The assistant returned an error (HTTP ${status}).`;
   }
 
+  // ─── Non-streaming agent endpoints (sessions / session / status) ──────
+
+  async function agentPost(path, payload) {
+    try {
+      const auth = await resolveBearer();
+      if (auth.error) return { error: auth.error };
+      const res = await fetch(`${AGENT_BASE}/${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.bearer}`,
+          'X-Account-Token': auth.accountToken,
+        },
+        body: JSON.stringify(payload || {}),
+      });
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}));
+        return { error: friendlyHttpError(res.status, detail) };
+      }
+      return { data: await res.json() };
+    } catch (err) {
+      return { error: `Could not reach the assistant: ${err.message}` };
+    }
+  }
+
+  // ─── Chat history ─────────────────────────────────────────────────────
+
+  function historyEl() {
+    return panelEl?.querySelector('[data-jt-role="history"]');
+  }
+
+  function closeHistory() {
+    panelEl?.classList.remove('jt-assistant-showing-history');
+  }
+
+  async function openHistory() {
+    if (!panelEl) return;
+    panelEl.classList.add('jt-assistant-showing-history');
+    const view = historyEl();
+    if (!view) return;
+    view.replaceChildren();
+
+    const bar = el('div', 'jt-assistant-history-bar');
+    const back = el('button', 'jtt-btn jt-assistant-history-back', '← Back');
+    back.type = 'button';
+    back.addEventListener('click', closeHistory);
+    bar.appendChild(back);
+    bar.appendChild(el('span', 'jt-assistant-history-heading', 'Chat history'));
+    view.appendChild(bar);
+
+    const list = el('div', 'jt-assistant-history-list');
+    list.appendChild(el('div', 'jt-assistant-history-loading', 'Loading…'));
+    view.appendChild(list);
+
+    const result = await agentPost('sessions', { limit: 20 });
+    // Bail if the user navigated away from the history view while loading.
+    if (!panelEl || !panelEl.classList.contains('jt-assistant-showing-history')) return;
+    list.replaceChildren();
+
+    if (result.error) {
+      closeHistory();
+      appendSystemNote(result.error);
+      return;
+    }
+
+    const sessions = (result.data && result.data.sessions) || [];
+    if (!sessions.length) {
+      list.appendChild(el('div', 'jt-assistant-history-empty', 'No past chats yet.'));
+      return;
+    }
+    for (const session of sessions) {
+      const row = el('button', 'jt-assistant-history-row');
+      row.type = 'button';
+      row.appendChild(el('div', 'jt-assistant-history-row-title', session.title || 'Untitled'));
+      const parts = [];
+      const when = relativeTime(session.updatedAt);
+      if (when) parts.push(when);
+      parts.push(`${session.messageCount || 0} messages`);
+      row.appendChild(el('div', 'jt-assistant-history-row-meta', parts.join(' · ')));
+      row.addEventListener('click', () => void loadSession(session.id));
+      list.appendChild(row);
+    }
+  }
+
+  async function loadSession(id) {
+    const result = await agentPost('session', { id });
+    if (result.error) {
+      closeHistory();
+      appendSystemNote(result.error);
+      return;
+    }
+    const data = result.data || {};
+    if (abortController) abortController.abort();
+    const messages = messagesEl();
+    if (messages) messages.replaceChildren();
+    // Continue this conversation on the next send.
+    sessionId = (data.session && data.session.id) || id;
+    for (const turn of data.messages || []) {
+      if (turn.role === 'user') appendBubble('user', turn.text || '');
+      else appendAssistantTurn(turn);
+    }
+    setStatus('');
+    closeHistory();
+  }
+
+  // ─── Profile / skills nudge ───────────────────────────────────────────
+
+  async function checkProfileStatus() {
+    // Status failures are silent — no nudge, no error surfaced.
+    const result = await agentPost('status', {});
+    if (!result || result.error || !result.data) return;
+    const { profileExists, skillsCount } = result.data;
+    if (profileExists === false) {
+      renderProfileNudge();
+    } else if (profileExists === true && skillsCount === 0) {
+      renderSkillsHint();
+    }
+  }
+
+  function renderProfileNudge() {
+    const messages = messagesEl();
+    if (!messages || messages.querySelector('[data-jt-role="profile-nudge"]')) return;
+    const card = el('div', 'jt-assistant-nudge');
+    card.dataset.jtRole = 'profile-nudge';
+
+    const dismiss = el('button', 'jt-assistant-nudge-dismiss', '×');
+    dismiss.type = 'button';
+    dismiss.setAttribute('aria-label', 'Dismiss');
+    dismiss.addEventListener('click', () => card.remove());
+    card.appendChild(dismiss);
+
+    card.appendChild(el('div', 'jt-assistant-nudge-title', 'Teach the assistant how your company works'));
+    card.appendChild(
+      el(
+        'div',
+        'jt-assistant-nudge-copy',
+        'Answers get sharper when the assistant knows your trades, pricing, and stage names.'
+      )
+    );
+    const btn = el('button', 'jtt-btn jtt-btn-primary jt-assistant-nudge-btn', 'Set up your Assistant profile');
+    btn.type = 'button';
+    btn.addEventListener('click', () => window.open(PORTAL_PROFILE_URL, '_blank', 'noopener'));
+    card.appendChild(btn);
+
+    messages.prepend(card);
+  }
+
+  function renderSkillsHint() {
+    const messages = messagesEl();
+    if (!messages || messages.querySelector('[data-jt-role="skills-hint"]')) return;
+    const hint = el('div', 'jt-assistant-skills-hint', 'Add skills to teach procedures — Portal → Skills');
+    hint.dataset.jtRole = 'skills-hint';
+    messages.prepend(hint);
+  }
+
   // ─── Lifecycle ────────────────────────────────────────────────────
 
   function init() {
@@ -612,6 +1076,9 @@ const AssistantPanelFeature = (() => {
 
     sessionId = null;
     sending = false;
+    statusChecked = false;
+    launcherDrag = null;
+    justDragged = false;
     isActive = false;
     console.log('AssistantPanel: Cleaned up');
   }

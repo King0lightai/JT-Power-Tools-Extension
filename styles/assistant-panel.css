@@ -3,13 +3,14 @@
    matches the popup / tweak builder surfaces exactly. All classes are
    prefixed jt-assistant-. */
 
-/* Launcher — floating tab on the right edge */
+/* Launcher — floating tab on the right edge, parked bottom-right clear of
+   horizontal scrollbars and JobTread's bottom edge. Draggable vertically;
+   a dragged position overrides `bottom` via an inline `top` (JS). */
 .jt-assistant-launcher {
   /* Layout */
   position: fixed;
   right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 96px;
   z-index: 2147483000;
   /* Spacing */
   padding: 10px 8px;
@@ -21,12 +22,17 @@
   /* Typography */
   font: 700 12px 'Inter', system-ui, sans-serif;
   letter-spacing: 0.5px;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .jt-assistant-launcher:hover {
   background: #d93d00;
+}
+
+.jt-assistant-launcher-dragging {
+  cursor: grabbing;
 }
 
 .jt-assistant-launcher-hidden {
@@ -298,4 +304,243 @@
 .jt-assistant-pool-banner-exhausted {
   border-left-color: var(--jtt-danger);
   color: var(--jtt-text);
+}
+
+/* Rendered markdown inside assistant bubbles — compact chat-scale sizing.
+   Block layout, so the bubble's pre-wrap is dropped for these. */
+.jt-assistant-bubble.jt-assistant-md {
+  white-space: normal;
+}
+
+.jt-assistant-md p,
+.jt-assistant-md-body p {
+  margin: 0 0 6px;
+}
+
+.jt-assistant-md p:last-child,
+.jt-assistant-md-body p:last-child {
+  margin-bottom: 0;
+}
+
+.jt-assistant-md h3,
+.jt-assistant-md h4 {
+  margin: 8px 0 4px;
+  color: var(--jtt-text);
+  line-height: 1.3;
+}
+
+.jt-assistant-md h3 { font-size: 14px; }
+.jt-assistant-md h4 { font-size: 13px; }
+
+.jt-assistant-md ul,
+.jt-assistant-md ol {
+  margin: 4px 0 6px;
+  padding-left: 20px;
+}
+
+.jt-assistant-md li {
+  margin: 2px 0;
+}
+
+.jt-assistant-md a {
+  color: var(--jtt-primary);
+  text-decoration: underline;
+}
+
+.jt-assistant-md code {
+  background: var(--jtt-bg-sunken);
+  border: 1px solid var(--jtt-border);
+  border-radius: var(--jtt-radius-sm);
+  padding: 1px 4px;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.jt-assistant-md pre {
+  background: var(--jtt-bg-sunken);
+  border: 1px solid var(--jtt-border);
+  border-radius: var(--jtt-radius);
+  padding: 8px 10px;
+  margin: 4px 0 6px;
+  overflow-x: auto;
+}
+
+.jt-assistant-md pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.jt-assistant-md-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 4px 0 6px;
+  font-size: 12px;
+}
+
+.jt-assistant-md-table th,
+.jt-assistant-md-table td {
+  border: 1px solid var(--jtt-border);
+  padding: 4px 7px;
+  text-align: left;
+}
+
+.jt-assistant-md-table th {
+  background: var(--jtt-bg-2);
+  color: var(--jtt-text);
+  font-weight: 600;
+}
+
+/* Tool-call line above a history-loaded assistant answer */
+.jt-assistant-tools-line {
+  font-size: 10px;
+  color: var(--jtt-text-muted);
+  margin-bottom: 4px;
+}
+
+/* History header button */
+.jt-assistant-history-btn {
+  font-size: 14px;
+  padding: 5px 8px;
+  line-height: 1;
+}
+
+/* History view — swaps in over the messages/composer area */
+.jt-assistant-history {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.jt-assistant-showing-history .jt-assistant-history {
+  display: block;
+}
+
+.jt-assistant-showing-history .jt-assistant-messages,
+.jt-assistant-showing-history .jt-assistant-status,
+.jt-assistant-showing-history .jt-assistant-chips,
+.jt-assistant-showing-history .jt-assistant-pool-banner,
+.jt-assistant-showing-history .jt-assistant-composer,
+.jt-assistant-showing-history .jt-assistant-footer {
+  display: none;
+}
+
+.jt-assistant-history-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.jt-assistant-history-back {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.jt-assistant-history-heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--jtt-text);
+}
+
+.jt-assistant-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jt-assistant-history-loading,
+.jt-assistant-history-empty {
+  font-size: 12px;
+  color: var(--jtt-text-muted);
+  padding: 6px 2px;
+}
+
+.jt-assistant-history-row {
+  /* Layout */
+  display: block;
+  width: 100%;
+  text-align: left;
+  /* Colors */
+  background: var(--jtt-bg-elev);
+  border: 1px solid var(--jtt-border);
+  border-radius: var(--jtt-radius);
+  /* Spacing */
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.jt-assistant-history-row:hover {
+  background: var(--jtt-bg-hover);
+  border-color: var(--jtt-primary);
+}
+
+.jt-assistant-history-row-title {
+  font-size: 13px;
+  color: var(--jtt-text);
+  margin-bottom: 2px;
+}
+
+.jt-assistant-history-row-meta {
+  font-size: 11px;
+  color: var(--jtt-text-muted);
+}
+
+/* Profile nudge — prominent CTA card at the top of the messages area */
+.jt-assistant-nudge {
+  position: relative;
+  align-self: stretch;
+  background: var(--jtt-bg-2);
+  border: 1px solid var(--jtt-primary);
+  border-radius: var(--jtt-radius);
+  padding: 12px 12px 12px;
+}
+
+.jt-assistant-nudge-dismiss {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: var(--jtt-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.jt-assistant-nudge-dismiss:hover {
+  color: var(--jtt-text);
+}
+
+.jt-assistant-nudge-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--jtt-text);
+  margin: 0 16px 4px 0;
+}
+
+.jt-assistant-nudge-copy {
+  font-size: 12px;
+  color: var(--jtt-text-2);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.jt-assistant-nudge-btn {
+  width: 100%;
+}
+
+/* Skills hint — slim one-line chip when a profile exists but has no skills */
+.jt-assistant-skills-hint {
+  align-self: stretch;
+  background: var(--jtt-bg-elev);
+  border: 1px solid var(--jtt-border);
+  border-left: 3px solid var(--jtt-primary);
+  border-radius: var(--jtt-radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--jtt-text-2);
 }
