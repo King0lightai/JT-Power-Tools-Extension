@@ -1,11 +1,15 @@
-/* AI Assistant Panel — right-side chat drawer (Agent Core).
-   Built on the .jt-tools-surface token system (jt-tools-tokens.css) so it
-   matches the popup / tweak builder surfaces exactly. All classes are
-   prefixed jt-assistant-. */
+/* AI Assistant Panel — right-side docked chat sidebar (Agent Core).
+   The panel follows the page's active JT Power Tools theme via panel-scoped
+   --jta-* variables (see the "Theme tokens" block): light is the default
+   (stock JobTread), body.jt-dark-mode maps to warm-neutral greys, and
+   body.jt-custom-theme (RGB theme) maps to the user's generated palette.
+   All classes are prefixed jt-assistant-. */
 
 /* Launcher — floating tab on the right edge, parked bottom-right clear of
    horizontal scrollbars and JobTread's bottom edge. Draggable vertically;
-   a dragged position overrides `bottom` via an inline `top` (JS). */
+   a dragged position overrides `bottom` via an inline `top` (JS). The
+   launcher stays brand-orange in every theme — it is a fixed brand mark,
+   not a themed surface. */
 .jt-assistant-launcher {
   /* Layout */
   position: fixed;
@@ -84,7 +88,80 @@
   }
 }
 
-/* Panel — right drawer */
+/* ── Theme tokens ──────────────────────────────────────────────────────
+   Panel-scoped variables the whole panel keys off. Light is the default
+   (white/near-white surfaces, dark text, subtle borders) so the panel
+   matches stock JobTread. body.jt-dark-mode remaps them to warm-neutral
+   greys (the project dark palette — never slate blues). body.jt-custom-theme
+   remaps them to the user's RGB palette via the --jt-theme-* custom
+   properties rgb-theme.js sets on :root, each with a light fallback so a
+   missing var never breaks contrast. If both theme classes are somehow
+   present the RGB block wins (declared last, equal specificity) — in
+   practice the popup makes Dark Mode and the RGB theme mutually exclusive. */
+.jt-assistant-panel {
+  --jta-bg: #ffffff;
+  --jta-bg-2: #f6f7f9;
+  --jta-bg-elev: #eef0f3;
+  --jta-bg-hover: #e4e7eb;
+  --jta-bg-sunken: #f0f1f4;
+  --jta-input-bg: #ffffff;
+  --jta-border: #e3e5ea;
+  --jta-border-2: #cfd3da;
+  --jta-text: #1f2430;
+  --jta-text-2: #3b4250;
+  --jta-text-muted: #6b7280;
+  --jta-text-subtle: #949bab;
+  --jta-accent: #fe4c0d;
+  --jta-accent-hover: #d93d00;
+  --jta-accent-fg: #ffffff;
+  --jta-warn: #b45309;
+  --jta-danger: #dc2626;
+  color: var(--jta-text);
+}
+
+body.jt-dark-mode .jt-assistant-panel {
+  --jta-bg: #2c2c2c;
+  --jta-bg-2: #252525;
+  --jta-bg-elev: #333333;
+  --jta-bg-hover: #3a3a3a;
+  --jta-bg-sunken: #1f1f1f;
+  --jta-input-bg: #1f1f1f;
+  --jta-border: #404040;
+  --jta-border-2: #505050;
+  --jta-text: #f2ede3;
+  --jta-text-2: #e0d8c8;
+  --jta-text-muted: #b0b0b0;
+  --jta-text-subtle: #909090;
+  --jta-accent: #fe4c0d;
+  --jta-accent-hover: #d93d00;
+  --jta-accent-fg: #ffffff;
+  --jta-warn: #fbbf24;
+  --jta-danger: #f87171;
+}
+
+body.jt-custom-theme .jt-assistant-panel {
+  --jta-bg: var(--jt-theme-background, #ffffff);
+  --jta-bg-2: var(--jt-theme-background-subtle, #f6f7f9);
+  --jta-bg-elev: var(--jt-theme-background-elevated, #eef0f3);
+  --jta-bg-hover: var(--jt-theme-background-muted, #e4e7eb);
+  --jta-bg-sunken: var(--jt-theme-background-muted, #f0f1f4);
+  --jta-input-bg: var(--jt-theme-background, #ffffff);
+  --jta-border: var(--jt-theme-border, #e3e5ea);
+  --jta-border-2: var(--jt-theme-border-strong, #cfd3da);
+  --jta-text: var(--jt-theme-text, #1f2430);
+  --jta-text-2: var(--jt-theme-text-secondary, #3b4250);
+  --jta-text-muted: var(--jt-theme-text-muted, #6b7280);
+  --jta-text-subtle: var(--jt-theme-text-muted, #949bab);
+  --jta-accent: var(--jt-theme-primary, #fe4c0d);
+  --jta-accent-hover: var(--jt-theme-primary-hover, #d93d00);
+  --jta-accent-fg: #ffffff;
+  --jta-warn: #d97706;
+  --jta-danger: #dc2626;
+}
+
+/* Panel — right drawer that DOCKS and pushes the page (JS sets margin-right
+   on JobTread's app root). Width is JS-controlled (drag handle + persistence);
+   the 380px here is only the pre-JS fallback. */
 .jt-assistant-panel {
   /* Layout */
   position: fixed;
@@ -92,18 +169,41 @@
   right: 0;
   height: 100vh;
   width: 380px;
-  max-width: 90vw;
+  min-width: 300px;
+  max-width: 50vw;
   z-index: 2147483001;
   display: none;
   flex-direction: column;
   /* Colors */
-  background: var(--jtt-bg);
-  border-left: 1px solid var(--jtt-border);
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.35);
+  background: var(--jta-bg);
+  border-left: 1px solid var(--jta-border);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.18);
+  /* Smooth docking + resize (suppressed inline during an active drag) */
+  transition: width 0.2s ease;
 }
 
 .jt-assistant-panel.jt-assistant-open {
   display: flex;
+}
+
+/* Resize handle — thin strip on the panel's left edge, drag to resize.
+   Absolutely positioned so it doesn't disturb the flex column. */
+.jt-assistant-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 3;
+  background: transparent;
+  transition: background 150ms ease;
+  touch-action: none;
+}
+
+.jt-assistant-resize-handle:hover,
+.jt-assistant-resize-handle.jt-assistant-resize-active {
+  background: var(--jta-accent);
 }
 
 /* Header */
@@ -112,14 +212,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: var(--jtt-bg-2);
-  border-bottom: 1px solid var(--jtt-border);
+  background: var(--jta-bg-2);
+  border-bottom: 1px solid var(--jta-border);
 }
 
 .jt-assistant-title {
   font-weight: 600;
   font-size: 14px;
-  color: var(--jtt-text);
+  color: var(--jta-text);
 }
 
 .jt-assistant-header-actions {
@@ -136,6 +236,44 @@
 .jt-assistant-new-btn {
   font-size: 11px;
   padding: 5px 8px;
+}
+
+/* Themed buttons + inputs inside the panel. The base .jtt-btn / .jtt-input
+   layout comes from jt-tools-tokens.css (via the panel's .jt-tools-surface
+   class); these panel-scoped rules re-point the COLORS onto --jta-* so they
+   follow the active theme. Equal specificity to the token rules, but this
+   sheet loads after them, so it wins. */
+.jt-assistant-panel .jtt-btn {
+  background: var(--jta-bg-elev);
+  color: var(--jta-text-2);
+  border-color: var(--jta-border-2);
+}
+
+.jt-assistant-panel .jtt-btn:hover {
+  background: var(--jta-bg-hover);
+  color: var(--jta-text);
+}
+
+.jt-assistant-panel .jtt-btn-primary {
+  background: var(--jta-accent);
+  color: var(--jta-accent-fg);
+  border-color: var(--jta-accent);
+}
+
+.jt-assistant-panel .jtt-btn-primary:hover {
+  background: var(--jta-accent-hover);
+  border-color: var(--jta-accent-hover);
+  color: var(--jta-accent-fg);
+}
+
+.jt-assistant-panel .jtt-input {
+  background: var(--jta-input-bg);
+  color: var(--jta-text);
+  border-color: var(--jta-border-2);
+}
+
+.jt-assistant-panel .jtt-input:focus {
+  border-color: var(--jta-accent);
 }
 
 /* Messages */
@@ -160,30 +298,30 @@
 
 .jt-assistant-bubble-user {
   align-self: flex-end;
-  background: var(--jtt-primary);
-  color: var(--jtt-primary-fg);
+  background: var(--jta-accent);
+  color: var(--jta-accent-fg);
 }
 
 .jt-assistant-bubble-assistant {
   align-self: flex-start;
-  background: var(--jtt-bg-elev);
-  color: var(--jtt-text-2);
-  border: 1px solid var(--jtt-border);
+  background: var(--jta-bg-elev);
+  color: var(--jta-text-2);
+  border: 1px solid var(--jta-border);
 }
 
 .jt-assistant-note {
   align-self: center;
   text-align: center;
   font-size: 11px;
-  color: var(--jtt-text-muted);
+  color: var(--jta-text-muted);
   padding: 4px 8px;
 }
 
 /* Draft cards (proposed writes awaiting Phase 2 Apply flow) */
 .jt-assistant-draft {
   align-self: stretch;
-  background: var(--jtt-bg-2);
-  border: 1px dashed var(--jtt-border-2);
+  background: var(--jta-bg-2);
+  border: 1px dashed var(--jta-border-2);
   border-radius: var(--jtt-radius);
   padding: 8px 10px;
 }
@@ -191,13 +329,13 @@
 .jt-assistant-draft-title {
   font-size: 11px;
   font-weight: 600;
-  color: var(--jtt-warn);
+  color: var(--jta-warn);
   margin-bottom: 4px;
 }
 
 .jt-assistant-draft-summary {
   font-size: 12px;
-  color: var(--jtt-text-2);
+  color: var(--jta-text-2);
   margin-bottom: 6px;
 }
 
@@ -211,7 +349,7 @@
   min-height: 16px;
   padding: 0 12px 4px;
   font-size: 11px;
-  color: var(--jtt-text-muted);
+  color: var(--jta-text-muted);
   font-style: italic;
 }
 
@@ -228,9 +366,9 @@
 }
 
 .jt-assistant-chip {
-  background: var(--jtt-bg-elev);
-  color: var(--jtt-text-2);
-  border: 1px solid var(--jtt-border-2);
+  background: var(--jta-bg-elev);
+  color: var(--jta-text-2);
+  border: 1px solid var(--jta-border-2);
   border-radius: 999px;
   padding: 5px 11px;
   font: 12px 'Inter', system-ui, sans-serif;
@@ -239,14 +377,14 @@
 }
 
 .jt-assistant-chip:hover {
-  background: var(--jtt-bg-hover);
-  border-color: var(--jtt-primary);
-  color: var(--jtt-text);
+  background: var(--jta-bg-hover);
+  border-color: var(--jta-accent);
+  color: var(--jta-text);
 }
 
 .jt-assistant-chip:first-child {
-  border-color: var(--jtt-primary);
-  color: var(--jtt-primary);
+  border-color: var(--jta-accent);
+  color: var(--jta-accent);
   font-weight: 600;
 }
 
@@ -254,8 +392,8 @@
   display: flex;
   gap: 8px;
   padding: 10px 12px;
-  background: var(--jtt-bg-2);
-  border-top: 1px solid var(--jtt-border);
+  background: var(--jta-bg-2);
+  border-top: 1px solid var(--jta-border);
 }
 
 .jt-assistant-input {
@@ -271,24 +409,24 @@
 
 .jt-assistant-footer {
   padding: 4px 12px 8px;
-  background: var(--jtt-bg-2);
+  background: var(--jta-bg-2);
   font-size: 10px;
-  color: var(--jtt-text-subtle);
+  color: var(--jta-text-subtle);
   text-align: right;
   min-height: 14px;
 }
 
 /* Credit-pool status banner — slim strip pinned above the composer while the
-   org's credits run low or run out. Rides the warm-dark surface tokens so it
-   reads on any JobTread theme (the panel itself is always the dark surface). */
+   org's credits run low or run out. Rides the panel's themed surface tokens so
+   it reads on whichever theme is active. */
 .jt-assistant-pool-banner {
   /* Layout */
   padding: 7px 12px;
   /* Colors */
-  background: var(--jtt-bg-elev);
-  color: var(--jtt-text-2);
-  border-top: 1px solid var(--jtt-border);
-  border-left: 3px solid var(--jtt-warn);
+  background: var(--jta-bg-elev);
+  color: var(--jta-text-2);
+  border-top: 1px solid var(--jta-border);
+  border-left: 3px solid var(--jta-warn);
   /* Typography */
   font-size: 11px;
   line-height: 1.4;
@@ -296,14 +434,14 @@
 
 /* Low: amber accent — a heads-up, responses may downgrade. */
 .jt-assistant-pool-banner-low {
-  border-left-color: var(--jtt-warn);
-  color: var(--jtt-text-2);
+  border-left-color: var(--jta-warn);
+  color: var(--jta-text-2);
 }
 
 /* Exhausted: red accent — reduced mode until top-up/reset. */
 .jt-assistant-pool-banner-exhausted {
-  border-left-color: var(--jtt-danger);
-  color: var(--jtt-text);
+  border-left-color: var(--jta-danger);
+  color: var(--jta-text);
 }
 
 /* Rendered markdown inside assistant bubbles — compact chat-scale sizing.
@@ -325,7 +463,7 @@
 .jt-assistant-md h3,
 .jt-assistant-md h4 {
   margin: 8px 0 4px;
-  color: var(--jtt-text);
+  color: var(--jta-text);
   line-height: 1.3;
 }
 
@@ -343,13 +481,13 @@
 }
 
 .jt-assistant-md a {
-  color: var(--jtt-primary);
+  color: var(--jta-accent);
   text-decoration: underline;
 }
 
 .jt-assistant-md code {
-  background: var(--jtt-bg-sunken);
-  border: 1px solid var(--jtt-border);
+  background: var(--jta-bg-sunken);
+  border: 1px solid var(--jta-border);
   border-radius: var(--jtt-radius-sm);
   padding: 1px 4px;
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
@@ -357,8 +495,8 @@
 }
 
 .jt-assistant-md pre {
-  background: var(--jtt-bg-sunken);
-  border: 1px solid var(--jtt-border);
+  background: var(--jta-bg-sunken);
+  border: 1px solid var(--jta-border);
   border-radius: var(--jtt-radius);
   padding: 8px 10px;
   margin: 4px 0 6px;
@@ -380,21 +518,21 @@
 
 .jt-assistant-md-table th,
 .jt-assistant-md-table td {
-  border: 1px solid var(--jtt-border);
+  border: 1px solid var(--jta-border);
   padding: 4px 7px;
   text-align: left;
 }
 
 .jt-assistant-md-table th {
-  background: var(--jtt-bg-2);
-  color: var(--jtt-text);
+  background: var(--jta-bg-2);
+  color: var(--jta-text);
   font-weight: 600;
 }
 
 /* Tool-call line above a history-loaded assistant answer */
 .jt-assistant-tools-line {
   font-size: 10px;
-  color: var(--jtt-text-muted);
+  color: var(--jta-text-muted);
   margin-bottom: 4px;
 }
 
@@ -441,7 +579,7 @@
 .jt-assistant-history-heading {
   font-size: 13px;
   font-weight: 600;
-  color: var(--jtt-text);
+  color: var(--jta-text);
 }
 
 .jt-assistant-history-list {
@@ -453,7 +591,7 @@
 .jt-assistant-history-loading,
 .jt-assistant-history-empty {
   font-size: 12px;
-  color: var(--jtt-text-muted);
+  color: var(--jta-text-muted);
   padding: 6px 2px;
 }
 
@@ -463,8 +601,8 @@
   width: 100%;
   text-align: left;
   /* Colors */
-  background: var(--jtt-bg-elev);
-  border: 1px solid var(--jtt-border);
+  background: var(--jta-bg-elev);
+  border: 1px solid var(--jta-border);
   border-radius: var(--jtt-radius);
   /* Spacing */
   padding: 8px 10px;
@@ -473,27 +611,27 @@
 }
 
 .jt-assistant-history-row:hover {
-  background: var(--jtt-bg-hover);
-  border-color: var(--jtt-primary);
+  background: var(--jta-bg-hover);
+  border-color: var(--jta-accent);
 }
 
 .jt-assistant-history-row-title {
   font-size: 13px;
-  color: var(--jtt-text);
+  color: var(--jta-text);
   margin-bottom: 2px;
 }
 
 .jt-assistant-history-row-meta {
   font-size: 11px;
-  color: var(--jtt-text-muted);
+  color: var(--jta-text-muted);
 }
 
 /* Profile nudge — prominent CTA card at the top of the messages area */
 .jt-assistant-nudge {
   position: relative;
   align-self: stretch;
-  background: var(--jtt-bg-2);
-  border: 1px solid var(--jtt-primary);
+  background: var(--jta-bg-2);
+  border: 1px solid var(--jta-accent);
   border-radius: var(--jtt-radius);
   padding: 12px 12px 12px;
 }
@@ -504,7 +642,7 @@
   right: 6px;
   background: none;
   border: none;
-  color: var(--jtt-text-muted);
+  color: var(--jta-text-muted);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
@@ -512,19 +650,19 @@
 }
 
 .jt-assistant-nudge-dismiss:hover {
-  color: var(--jtt-text);
+  color: var(--jta-text);
 }
 
 .jt-assistant-nudge-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--jtt-text);
+  color: var(--jta-text);
   margin: 0 16px 4px 0;
 }
 
 .jt-assistant-nudge-copy {
   font-size: 12px;
-  color: var(--jtt-text-2);
+  color: var(--jta-text-2);
   line-height: 1.4;
   margin-bottom: 10px;
 }
@@ -536,11 +674,11 @@
 /* Skills hint — slim one-line chip when a profile exists but has no skills */
 .jt-assistant-skills-hint {
   align-self: stretch;
-  background: var(--jtt-bg-elev);
-  border: 1px solid var(--jtt-border);
-  border-left: 3px solid var(--jtt-primary);
+  background: var(--jta-bg-elev);
+  border: 1px solid var(--jta-border);
+  border-left: 3px solid var(--jta-accent);
   border-radius: var(--jtt-radius-sm);
   padding: 6px 10px;
   font-size: 11px;
-  color: var(--jtt-text-2);
+  color: var(--jta-text-2);
 }

@@ -24,6 +24,9 @@ const AssistantPanelFeature = (() => {
   const AGENT_BASE = AGENT_URL.replace(/\/chat$/, '');
   const PORTAL_PROFILE_URL = 'https://app.jtpowertools.com/dashboard#team';
   const LAUNCHER_POS_KEY = 'jtAssistantLauncherPos';
+  const PANEL_WIDTH_KEY = 'jtAssistantPanelWidth';
+  const DEFAULT_PANEL_WIDTH = 380;
+  const MIN_PANEL_WIDTH = 300;
 
   // One-click job audit — the canned "find something I didn't ask about"
   // prompt. Sent as the task; the chip label is what shows in the chat.
@@ -54,6 +57,15 @@ const AssistantPanelFeature = (() => {
   let statusChecked = false; // profile/skills nudge fires once per page load
   let launcherDrag = null; // { startY, startTop, moved } while a drag is in progress
   let justDragged = false; // suppress the click that follows a drag-release
+  // Docked-sidebar push state. When the panel opens it pushes JobTread's app
+  // root left via an inline margin-right; we stash the root's PRIOR inline
+  // margin/transition so close + cleanup restore them exactly (never assume '').
+  let panelWidth = DEFAULT_PANEL_WIDTH;
+  let squeezeTarget = null; // the pushed element while the panel is open
+  let priorMarginRight = null; // squeezeTarget's inline margin-right before we touched it
+  let priorTransition = null; // …and its inline transition
+  let restoreTimer = null; // defers transition-restore until the close animation ends
+  let panelResizeDrag = null; // { startX, startWidth } while the edge handle is dragged
   const eventListeners = []; // document/window-level — must be removed in cleanup()
 
   // ─── Utilities ────────────────────────────────────────────────────
@@ -496,10 +508,153 @@ const AssistantPanelFeature = (() => {
     }
   }
 
+  // ─── Docked push sidebar (squeeze + edge resize) ─────────────────────
+  // Study note (Smart Resize / job-switcher.js): it pushes JobTread by writing
+  // padding-right onto whichever sibling containers JT itself pads, and lets a
+  // MutationObserver re-apply as the SPA re-renders. Here the panel is a single
+  // persistent dock, so we take the simpler robust route the spec calls out:
+  // one margin-right on JobTread's React mount (#root). #root is normal-flow
+  // (flex column, no fixed width), so a right margin shrinks its used width and
+  // the header/main reflow into the narrower box — a real push, not an overlay.
+  // Falls back to document.body if #root is ever absent.
+
+  function getSqueezeTarget() {
+    return document.getElementById('root') || document.body;
+  }
+
+  function maxPanelWidth() {
+    return Math.round((window.innerWidth || DEFAULT_PANEL_WIDTH * 2) * 0.5);
+  }
+
+  function clampWidth(width) {
+    return Math.max(MIN_PANEL_WIDTH, Math.min(width, maxPanelWidth()));
+  }
+
+  // Live-set the panel width and keep the page squeeze in lockstep.
+  function setPanelWidth(width) {
+    panelWidth = width;
+    if (panelEl) panelEl.style.width = `${width}px`;
+    if (squeezeTarget) squeezeTarget.style.marginRight = `${width}px`;
+  }
+
+  function applySqueeze() {
+    squeezeTarget = getSqueezeTarget();
+    priorMarginRight = squeezeTarget.style.marginRight;
+    priorTransition = squeezeTarget.style.transition;
+    if (restoreTimer) {
+      clearTimeout(restoreTimer);
+      restoreTimer = null;
+    }
+    squeezeTarget.style.transition = 'margin-right 0.2s ease';
+    squeezeTarget.style.marginRight = `${panelWidth}px`;
+    if (panelEl) panelEl.style.width = `${panelWidth}px`;
+  }
+
+  // Animate the page back, then restore the target's prior inline transition
+  // once the animation finishes. Exact restore of margin-right is synchronous.
+  function releaseSqueeze() {
+    if (!squeezeTarget) return;
+    const target = squeezeTarget;
+    const restoreMargin = priorMarginRight;
+    const restoreTransition = priorTransition;
+    target.style.transition = 'margin-right 0.2s ease';
+    target.style.marginRight = restoreMargin == null ? '' : restoreMargin;
+    if (restoreTimer) clearTimeout(restoreTimer);
+    restoreTimer = setTimeout(() => {
+      target.style.transition = restoreTransition == null ? '' : restoreTransition;
+      restoreTimer = null;
+    }, 220);
+    squeezeTarget = null;
+    priorMarginRight = null;
+    priorTransition = null;
+  }
+
+  // Immediate, exact restore for cleanup() — no animation, no lingering timer.
+  function restoreSqueezeImmediate() {
+    if (restoreTimer) {
+      clearTimeout(restoreTimer);
+      restoreTimer = null;
+    }
+    if (squeezeTarget) {
+      squeezeTarget.style.marginRight = priorMarginRight == null ? '' : priorMarginRight;
+      squeezeTarget.style.transition = priorTransition == null ? '' : priorTransition;
+    }
+    squeezeTarget = null;
+    priorMarginRight = null;
+    priorTransition = null;
+  }
+
+  function persistPanelWidth(width) {
+    try {
+      chrome.storage.local.set({ [PANEL_WIDTH_KEY]: width });
+    } catch {
+      // Non-fatal — the panel just won't remember its width.
+    }
+  }
+
+  function restorePanelWidth() {
+    try {
+      chrome.storage.local.get(PANEL_WIDTH_KEY, (res) => {
+        const width = res && res[PANEL_WIDTH_KEY];
+        // Re-clamp on restore: the viewport may be smaller than when saved.
+        if (typeof width === 'number') panelWidth = clampWidth(width);
+      });
+    } catch {
+      // Non-fatal — fall back to the default width.
+    }
+  }
+
+  // Edge handle — same tracked-listener discipline as the launcher drag.
+  // Transitions are suppressed mid-drag so the page tracks the cursor 1:1.
+  function onPanelResizePointerDown(e) {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    panelResizeDrag = { startX: e.clientX, startWidth: panelWidth };
+    document.body.style.userSelect = 'none';
+    if (panelEl) panelEl.style.transition = 'none';
+    if (squeezeTarget) squeezeTarget.style.transition = 'none';
+    const handle = panelEl?.querySelector('.jt-assistant-resize-handle');
+    if (handle) handle.classList.add('jt-assistant-resize-active');
+  }
+
+  function onPanelResizePointerMove(e) {
+    if (!panelResizeDrag) return;
+    // Panel is on the right edge, so dragging left widens it.
+    const delta = panelResizeDrag.startX - e.clientX;
+    setPanelWidth(clampWidth(panelResizeDrag.startWidth + delta));
+  }
+
+  function onPanelResizePointerUp() {
+    if (!panelResizeDrag) return;
+    panelResizeDrag = null;
+    document.body.style.userSelect = '';
+    if (panelEl) panelEl.style.transition = '';
+    if (squeezeTarget) squeezeTarget.style.transition = 'margin-right 0.2s ease';
+    const handle = panelEl?.querySelector('.jt-assistant-resize-handle');
+    if (handle) handle.classList.remove('jt-assistant-resize-active');
+    persistPanelWidth(panelWidth);
+  }
+
+  // Viewport shrank with the panel open — re-clamp so it never exceeds max.
+  function onWindowResize() {
+    if (!panelEl || !panelEl.classList.contains('jt-assistant-open')) return;
+    const clamped = clampWidth(panelWidth);
+    if (clamped !== panelWidth) setPanelWidth(clamped);
+  }
+
   function buildPanel() {
     panelEl = el('div', 'jt-tools-surface jt-assistant-panel');
     panelEl.setAttribute('role', 'dialog');
     panelEl.setAttribute('aria-label', 'JT Power Tools Assistant');
+
+    // Left-edge resize handle. Move/up ride on the document so a fast drag
+    // still tracks — those are tracked via addListener for cleanup().
+    const resizeHandle = el('div', 'jt-assistant-resize-handle');
+    resizeHandle.setAttribute('aria-hidden', 'true');
+    resizeHandle.addEventListener('pointerdown', onPanelResizePointerDown);
+    panelEl.appendChild(resizeHandle);
+    addListener(document, 'pointermove', onPanelResizePointerMove);
+    addListener(document, 'pointerup', onPanelResizePointerUp);
 
     // Header
     const header = el('div', 'jt-assistant-header');
@@ -582,6 +737,7 @@ const AssistantPanelFeature = (() => {
     const open = panelEl.classList.toggle('jt-assistant-open');
     if (launcherEl) launcherEl.classList.toggle('jt-assistant-launcher-hidden', open);
     if (open) {
+      applySqueeze(); // dock: push JobTread left to make room
       renderChips(); // the SPA route may have changed since last open
       if (!statusChecked) {
         statusChecked = true; // once per page load, whatever the result
@@ -589,6 +745,8 @@ const AssistantPanelFeature = (() => {
       }
       const input = panelEl.querySelector('[data-jt-role="input"]');
       if (input) input.focus();
+    } else {
+      releaseSqueeze(); // undock: hand the page's width back
     }
   }
 
@@ -1030,6 +1188,7 @@ const AssistantPanelFeature = (() => {
     console.log('AssistantPanel: Initializing...');
 
     injectStyles();
+    restorePanelWidth();
     buildLauncher();
     buildGlow();
 
@@ -1040,6 +1199,9 @@ const AssistantPanelFeature = (() => {
         togglePanel();
       }
     });
+
+    // Re-clamp the docked width if the viewport shrinks with the panel open.
+    addListener(window, 'resize', onWindowResize);
 
     console.log('AssistantPanel: Initialized');
   }
@@ -1056,6 +1218,12 @@ const AssistantPanelFeature = (() => {
       element.removeEventListener(event, handler);
     });
     eventListeners.length = 0;
+
+    // Undock: hand the page's width back exactly, and unwind any in-flight
+    // resize drag (userSelect was pinned in onPanelResizePointerDown).
+    if (panelResizeDrag) document.body.style.userSelect = '';
+    panelResizeDrag = null;
+    restoreSqueezeImmediate();
 
     if (panelEl) {
       panelEl.remove();
@@ -1079,6 +1247,7 @@ const AssistantPanelFeature = (() => {
     statusChecked = false;
     launcherDrag = null;
     justDragged = false;
+    panelWidth = DEFAULT_PANEL_WIDTH;
     isActive = false;
     console.log('AssistantPanel: Cleaned up');
   }
