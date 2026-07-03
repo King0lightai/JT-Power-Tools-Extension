@@ -30,6 +30,7 @@ const JTDefaults = (() => {
     reverseThreadOrder: false,
     budgetTools: false,
     documentSort: false,
+    printScope: false,      // off by default — adds a Print button to the document preview modal
     inspectForAi: false,    // off by default — most users won't author tweaks
     paveCapture: false,     // off by default — opt-in recording of Pave queries for AI
     tweakEngine: true,      // on by default — installed tweaks should "just work"
@@ -101,7 +102,7 @@ const JTDefaults = (() => {
       id: 'documents',
       title: 'Documents & Text',
       icon: 'ph-file-text',
-      features: ['characterCounter', 'documentSort', 'formatter', 'pdfMarkupTools', 'reverseThreadOrder', 'previewMode']
+      features: ['characterCounter', 'documentSort', 'formatter', 'pdfMarkupTools', 'printScope', 'reverseThreadOrder', 'previewMode']
     },
     {
       id: 'appearance',

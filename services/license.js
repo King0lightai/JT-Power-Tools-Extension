@@ -46,7 +46,8 @@ const LicenseService = (() => {
     'ganttLines',       // Simple visual enhancement for Gantt chart
     'jobAccessCollapse', // Simple UI collapse helper
     'budgetTools',      // Auto Sum — simple totals helper
-    'documentSort'      // Sortable column headers on Job > Documents table
+    'documentSort',     // Sortable column headers on Job > Documents table
+    'printScope'        // Print button on the document preview modal
   ];
 
   // ESSENTIAL tier features ($10) - "I want more"
@@ -484,14 +485,51 @@ const LicenseService = (() => {
    * Get the current subscription tier
    * @returns {Promise<string|null>} Tier name ('essential', 'pro', 'power_user') or null if no license
    */
+  // Rank tiers so the effective tier can be resolved as the higher of two.
+  const TIER_RANK = {
+    [TIERS.ESSENTIAL]: 1,
+    [TIERS.PRO]: 2,
+    [TIERS.POWER_USER]: 3
+  };
+
+  /**
+   * Read the tier from the logged-in portal account, straight from
+   * chrome.storage.local so it works in any context (popup and content-script
+   * gate) without depending on AccountService being initialized or loaded first.
+   * Only returns a known tier; anything else is treated as absent.
+   * @returns {Promise<string|null>}
+   */
+  async function getAccountTier() {
+    try {
+      const stored = await chrome.storage.local.get(['jtAccountUserData']);
+      const t = stored && stored.jtAccountUserData && stored.jtAccountUserData.tier;
+      return TIER_RANK[t] ? t : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Resolve the effective tier as the HIGHER of the portal-account tier and the
+   * Gumroad license tier. The portal account is the subscription system of
+   * record; the Gumroad license is the legacy path. Taking the higher of the two
+   * matches the tier the popup shows for a logged-in account while never
+   * downgrading a user whose paid license exceeds their account tier. Returns
+   * null only when neither grants a tier.
+   * @returns {Promise<string|null>} 'essential' | 'pro' | 'power_user' | null
+   */
   async function getTier() {
     try {
       const licenseData = await getLicenseData();
-      if (!licenseData || !licenseData.valid) {
-        return null;
-      }
-      // Default to the lowest paid tier when unspecified — never fail open to PRO.
-      return licenseData.tier || TIERS.ESSENTIAL;
+      // Default an unspecified-but-valid license to the lowest paid tier — never fail open to PRO.
+      const licenseTier = (licenseData && licenseData.valid)
+        ? (licenseData.tier || TIERS.ESSENTIAL)
+        : null;
+      const accountTier = await getAccountTier();
+
+      if (!licenseTier && !accountTier) return null;
+      const rank = (t) => TIER_RANK[t] || 0;
+      return rank(accountTier) >= rank(licenseTier) ? accountTier : licenseTier;
     } catch (error) {
       logError('Error getting tier:', error);
       return null;

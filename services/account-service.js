@@ -368,6 +368,17 @@ const AccountService = (() => {
       [STORAGE_KEYS.TOKEN_EXPIRY]: tokenExpiry
     });
 
+    // Sync license key from portal FIRST (portal returns licenseKey on the user
+    // object). This must run before the Pro Worker registration below: the Pro
+    // Worker's registerUser reads the stored Gumroad license key from the request
+    // body, so if the license isn't synced yet it rejects with 400 "Missing
+    // licenseKey or deviceId" on the first login (it only self-healed on a later
+    // login once the license was cached).
+    if (data.user?.licenseKey && window.LicenseService) {
+      log('Syncing license key from server');
+      await window.LicenseService.verifyLicense(data.user.licenseKey);
+    }
+
     // Store grant key separately if provided (for Pro Service)
     if (data.grantKey) {
       await chrome.storage.local.set({ jtAccountGrantKey: data.grantKey });
@@ -385,12 +396,6 @@ const AccountService = (() => {
           logError('Pro Worker auto-registration error:', err);
         }
       }
-    }
-
-    // Sync license key from portal (portal returns licenseKey on user object)
-    if (data.user?.licenseKey && window.LicenseService) {
-      log('Syncing license key from server');
-      await window.LicenseService.verifyLicense(data.user.licenseKey);
     }
   }
 

@@ -18,7 +18,7 @@ const HAS_FIREFOX_SIDEBAR = !!(FIREFOX_SIDEBAR_API && typeof FIREFOX_SIDEBAR_API
 
 // All feature toggle IDs (used by master toggle)
 const FEATURE_TOGGLE_IDS = [
-  'kanbanTypeFilter', 'autoCollapseGroups', 'documentSort', 'ganttLines', 'dragDrop',
+  'kanbanTypeFilter', 'autoCollapseGroups', 'documentSort', 'printScope', 'ganttLines', 'dragDrop',
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
@@ -448,6 +448,10 @@ async function checkLicenseStatus() {
   const pdfMarkupToolsCheckbox = document.getElementById('pdfMarkupTools');
   const reverseThreadOrderFeature = document.getElementById('reverseThreadOrderFeature');
   const reverseThreadOrderCheckbox = document.getElementById('reverseThreadOrder');
+  const budgetRowHighlightFeature = document.getElementById('budgetRowHighlightFeature');
+  const budgetRowHighlightCheckbox = document.getElementById('budgetRowHighlight');
+  const invoiceForecastFeature = document.getElementById('invoiceForecastFeature');
+  const invoiceForecastCheckbox = document.getElementById('invoiceForecast');
 
   // POWER USER tier features and UI elements
   const apiCategory = document.getElementById('apiCategory');
@@ -515,6 +519,8 @@ async function checkLicenseStatus() {
       if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = false;
       paveCaptureFeature?.classList.remove('locked');
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = false;
+      invoiceForecastFeature?.classList.remove('locked');
+      if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
@@ -527,6 +533,8 @@ async function checkLicenseStatus() {
       if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = true;
       paveCaptureFeature?.classList.add('locked');
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
+      invoiceForecastFeature?.classList.add('locked');
+      if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -538,6 +546,8 @@ async function checkLicenseStatus() {
     if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = false;
     pdfMarkupToolsFeature?.classList.remove('locked');
     if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = false;
+    budgetRowHighlightFeature?.classList.remove('locked');
+    if (budgetRowHighlightCheckbox) budgetRowHighlightCheckbox.disabled = false;
 
     return { hasLicense: true, tier: tier };
   } else {
@@ -566,6 +576,8 @@ async function checkLicenseStatus() {
     if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = true;
     pdfMarkupToolsFeature?.classList.add('locked');
     if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = true;
+    budgetRowHighlightFeature?.classList.add('locked');
+    if (budgetRowHighlightCheckbox) budgetRowHighlightCheckbox.disabled = true;
 
     // Hide API category and grant key for free users
     apiCategory?.classList.add('hidden');
@@ -578,6 +590,8 @@ async function checkLicenseStatus() {
     if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = true;
     paveCaptureFeature?.classList.add('locked');
     if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
+    invoiceForecastFeature?.classList.add('locked');
+    if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
     // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)
@@ -664,6 +678,7 @@ async function loadSettings() {
     setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
     setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
     setCheckbox('documentSort', settings.documentSort !== undefined ? settings.documentSort : false);
+    setCheckbox('printScope', settings.printScope !== undefined ? settings.printScope : false);
     setCheckbox('budgetTools', settings.budgetTools !== undefined ? settings.budgetTools : false);
     setCheckbox('ganttLines', settings.ganttLines !== undefined ? settings.ganttLines : true);
     setCheckbox('jobAccessCollapse', settings.jobAccessCollapse !== undefined ? settings.jobAccessCollapse : false);
@@ -952,6 +967,7 @@ async function getCurrentSettings() {
     kanbanTypeFilter: getCheckboxValue('kanbanTypeFilter', defaultSettings.kanbanTypeFilter),
     autoCollapseGroups: getCheckboxValue('autoCollapseGroups', defaultSettings.autoCollapseGroups),
     documentSort: getCheckboxValue('documentSort', defaultSettings.documentSort),
+    printScope: getCheckboxValue('printScope', defaultSettings.printScope),
     budgetTools: getCheckboxValue('budgetTools', defaultSettings.budgetTools),
     ganttLines: getCheckboxValue('ganttLines', defaultSettings.ganttLines),
     availabilityFilter: getCheckboxValue('availabilityFilter', false),
@@ -1768,6 +1784,12 @@ function initFeatureHelpLinks() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
+
+  // Keep the popup version label in sync with the manifest so it never drifts.
+  const versionEl = document.querySelector('.version');
+  if (versionEl && chrome.runtime?.getManifest) {
+    versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   if (IS_IN_SIDE_PANEL) {
@@ -3253,7 +3275,10 @@ async function updateAccountUI() {
     const user = AccountService.getCurrentUser();
     document.getElementById('accountEmail').textContent = user?.email || 'Unknown';
     document.getElementById('accountOrg').textContent = user?.orgName || '';
-    document.getElementById('accountTier').textContent = `${LicenseService.getTierDisplayName(user?.tier || (await LicenseService.getTier()))} Tier`;
+    // Show the resolved effective tier (higher of account + license) so the
+    // chip matches the feature gating everywhere else. Fall back to the raw
+    // account tier only if resolution somehow returns null.
+    document.getElementById('accountTier').textContent = `${LicenseService.getTierDisplayName((await LicenseService.getTier()) || user?.tier)} Tier`;
 
     // Update license status indicator
     const licenseStatusEl = document.getElementById('accountLicenseStatus');

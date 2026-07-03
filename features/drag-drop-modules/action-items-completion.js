@@ -281,121 +281,128 @@ const ActionItemsCompletion = (() => {
    * @param {Function} callback - Callback function (success: boolean)
    */
   function completeTaskInIframe(targetUrl, taskId, item, callback) {
-    // Create hidden iframe WITHOUT sandbox to allow full functionality
-    // Make it full-size so toolbar renders, but position it off-screen
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 1920px; height: 1080px; opacity: 0; pointer-events: none; border: none;';
+    // The task page is a full SPA that boots inside the hidden iframe. Its boot
+    // time is variable and occasionally the SPA fails to mount at all (empty
+    // body). The old fixed-setTimeout chain (2.5s to find the sidebar) lost that
+    // race and reported failure. Instead we poll for readiness and retry the
+    // iframe load once if the SPA never mounts.
+    const MAX_ATTEMPTS = 2;          // one retry covers the intermittent no-boot
+    const OVERALL_TIMEOUT_MS = 30000; // hard backstop across all attempts
+    const READY_TIMEOUT_MS = 10000;  // per-attempt: wait for the Progress control
+    const SAVE_ENABLE_TIMEOUT_MS = 4000;
 
-    // NO sandbox attribute - this allows the toolbar to fully render
+    let finished = false;
+    let currentIframe = null;
 
-    // Failsafe timeout
-    const failsafeTimeout = setTimeout(() => {
-      if (iframe.parentNode) {
-        iframe.remove();
+    const overallFailsafe = setTimeout(() => finish(false), OVERALL_TIMEOUT_MS);
+
+    function finish(success) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(overallFailsafe);
+      if (currentIframe && currentIframe.parentNode) {
+        currentIframe.remove();
       }
-      callback(false);
-    }, 15000);
+      callback(success);
+    }
 
-    // When iframe loads, complete the task inside it
-    iframe.onload = () => {
-      // Wait for the page to initialize
-      setTimeout(() => {
+    // Poll getValue() until it returns a truthy value or the timeout elapses.
+    // Resolves with the value, or null on timeout / if we've already finished.
+    function pollFor(getValue, timeoutMs) {
+      return new Promise((resolve) => {
+        const start = Date.now();
+        (function check() {
+          if (finished) return resolve(null);
+          let value = null;
+          try { value = getValue(); } catch (e) { value = null; }
+          if (value) return resolve(value);
+          if (Date.now() - start >= timeoutMs) return resolve(null);
+          setTimeout(check, 100);
+        })();
+      });
+    }
+
+    function retryOrFail(attempt) {
+      if (finished) return;
+      if (currentIframe && currentIframe.parentNode) {
+        currentIframe.remove();
+      }
+      if (attempt + 1 < MAX_ATTEMPTS) {
+        console.log('ActionItems: iframe did not become ready, retrying');
+        runAttempt(attempt + 1);
+      } else {
+        finish(false);
+      }
+    }
+
+    function runAttempt(attempt) {
+      if (finished) return;
+
+      // Hidden, off-screen, full-size iframe (no sandbox so the app fully renders)
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 1920px; height: 1080px; opacity: 0; pointer-events: none; border: none;';
+      currentIframe = iframe;
+
+      iframe.onload = async () => {
+        if (finished) return;
+
+        let iframeDoc;
         try {
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-          // Wait for sidebar to be present (auto-opened by ?taskId= URL param)
-          setTimeout(() => {
-            // Try multiple sidebar selectors for robustness
-            const sidebarSelectors = [
-              'div.overflow-y-auto.overscroll-contain.sticky',
-              'div.sticky.overflow-y-auto',
-              'div[data-is-drag-scroll-boundary="true"]',
-              'div.overflow-y-auto.sticky',
-              'div.sticky[class*="overflow"]'
-            ];
-
-            let sidebar = null;
-            for (const selector of sidebarSelectors) {
-              sidebar = iframeDoc.querySelector(selector);
-              if (sidebar) {
-                break;
-              }
-            }
-
-            if (!sidebar) {
-              clearTimeout(failsafeTimeout);
-              iframe.remove();
-              callback(false);
-              return;
-            }
-
-            // Use Progress checkbox approach to mark task complete
-            const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
-            if (!progressCheckbox) {
-              clearTimeout(failsafeTimeout);
-              iframe.remove();
-              callback(false);
-              return;
-            }
-            progressCheckbox.click();
-
-            // Wait for Save button to appear and become enabled
-            setTimeout(async () => {
-              const saveButton = findSaveButtonInDoc(iframeDoc);
-              if (!saveButton) {
-                clearTimeout(failsafeTimeout);
-                iframe.remove();
-                callback(false);
-                return;
-              }
-
-              // Wait for Save button to become enabled
-              const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
-              if (!isEnabled) {
-                clearTimeout(failsafeTimeout);
-                iframe.remove();
-                callback(false);
-                return;
-              }
-
-              // Click Save button
-              saveButton.click();
-
-              // Also dispatch mouse event for React compatibility
-              const clickEvent = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                view: iframe.contentWindow
-              });
-              saveButton.dispatchEvent(clickEvent);
-
-              // Wait for save to complete
-              setTimeout(() => {
-                clearTimeout(failsafeTimeout);
-                iframe.remove();
-                callback(true);
-              }, 2000);
-            }, 800);
-          }, 1000);
-        } catch (error) {
-          clearTimeout(failsafeTimeout);
-          iframe.remove();
-          callback(false);
+          iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        } catch (e) {
+          return retryOrFail(attempt);
         }
-      }, 1500);
-    };
 
-    iframe.onerror = () => {
-      clearTimeout(failsafeTimeout);
-      iframe.remove();
-      callback(false);
-    };
+        // Wait for the Progress checkbox to render. findProgressCheckboxInDoc
+        // resolves the sidebar + Progress label + button, so this single poll
+        // covers "SPA still booting" and "sidebar not populated yet". If it
+        // never appears, the SPA likely didn't mount — retry the load.
+        const progressCheckbox = await pollFor(
+          () => findProgressCheckboxInDoc(iframeDoc), READY_TIMEOUT_MS
+        );
+        if (finished) return;
+        if (!progressCheckbox) {
+          return retryOrFail(attempt);
+        }
 
-    // Add iframe to page with marker hash so content.js skips feature init
-    document.body.appendChild(iframe);
-    const markerHash = '#jt-completion-iframe';
-    const separator = targetUrl.includes('#') ? '' : markerHash;
-    iframe.src = separator ? targetUrl + markerHash : targetUrl;
+        progressCheckbox.click();
+
+        // Wait for the Save button to appear, then for it to become enabled.
+        const saveButton = await pollFor(
+          () => findSaveButtonInDoc(iframeDoc), SAVE_ENABLE_TIMEOUT_MS
+        );
+        if (finished) return;
+        if (!saveButton) {
+          return finish(false);
+        }
+
+        const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, SAVE_ENABLE_TIMEOUT_MS);
+        if (finished) return;
+        if (!isEnabled) {
+          return finish(false);
+        }
+
+        // Click Save (plus a synthetic event for React compatibility)
+        saveButton.click();
+        saveButton.dispatchEvent(new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: iframe.contentWindow
+        }));
+
+        // Give the save request time to flush before tearing down the iframe.
+        setTimeout(() => finish(true), 1500);
+      };
+
+      iframe.onerror = () => retryOrFail(attempt);
+
+      // Marker hash makes content.js skip feature init inside the iframe.
+      document.body.appendChild(iframe);
+      const markerHash = '#jt-completion-iframe';
+      iframe.src = targetUrl.includes('#') ? targetUrl : targetUrl + markerHash;
+    }
+
+    runAttempt(0);
   }
 
   /**

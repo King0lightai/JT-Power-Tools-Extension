@@ -113,6 +113,11 @@ const featureModules = {
     feature: () => window.DocumentSortFeature,
     instance: null
   },
+  printScope: {
+    name: 'Print Scope',
+    feature: () => window.PrintScopeFeature,
+    instance: null
+  },
   budgetTools: {
     name: 'Budget Tools',
     feature: () => window.BudgetTools,
@@ -208,7 +213,7 @@ let currentSettings = window.JTDefaults
     dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
     darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
-    characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
+    characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, printScope: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
     budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false, invoiceForecast: false,
     jobAccessCollapse: false, orgLogo: false,

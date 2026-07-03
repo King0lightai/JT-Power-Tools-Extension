@@ -164,6 +164,29 @@ div.border-l div.select-none.break-inside-avoid {
     border-color: #ff5600;
 }
 
+/* Dialog-card modals (e.g. the "Preview Document" modal): JobTread's uncolored
+   1px borders — the header's border-b, the footer's border-t, and the content
+   wrapper's .border — keep their light default and read as white lines against
+   the darkened modal. Repaint just those default borders. The border-2 /
+   border-gray-300 borders that form the document body are intentionally NOT
+   targeted, so the scope content is unchanged. */
+.max-w-screen-lg .border,
+.max-w-screen-lg .border-t,
+.max-w-screen-lg .border-b,
+.max-w-screen-lg .border-l,
+.max-w-screen-lg .border-r {
+    border-color: #464646;
+}
+
+/* The "Preview Document" modal wraps its white document in a `bg-gray-200 p-5`
+   band. `bg-gray-200` is intentionally NOT remapped globally (see the AI-launcher
+   note below), so in dark mode that padding band reads as a light-grey frame
+   around the document. Scope the darken to the dialog card's gray-200 padding
+   wrapper only, so JobTread's other bare bg-gray-200 indicators are untouched. */
+.max-w-screen-lg .bg-gray-200.p-5 {
+    background-color: #2c2c2c;
+}
+
 /* Ring color */
 .ring-gray-200 {
     --tw-ring-color: #696969;

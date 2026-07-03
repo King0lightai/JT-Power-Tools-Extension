@@ -25,7 +25,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>POWER TOOLS</h1>
-        <span class="version">v4.9.11</span>
+        <span class="version">v4.9.13</span>
         <button class="header-action-btn" id="refreshBtn" title="Refresh current tab">
           <i class="ph ph-arrows-clockwise"></i>
         </button>
@@ -192,7 +192,7 @@
             <div class="category-header collapsed" data-category="productivity">
               <i class="ph ph-lightning category-icon"></i>
               <span class="category-title">Productivity Tools</span>
-              <span class="category-count">13</span>
+              <span class="category-count">14</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="productivity">
@@ -229,6 +229,23 @@
                   <span class="slider"></span>
                 </label>
               </div>
+
+              <!-- Print Scope — pocketed for a later release; hidden from the
+                   polished build. Code stays wired (manifest, content.js,
+                   print-scope.js, license FREE list) and it's default-off, so
+                   re-enabling is just restoring this toggle. -->
+              <!--
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Print Scope <span class="badge new">New</span></h3>
+                  <p>Adds a Print button to the document preview (from a budget line-item selection) so you can print or save the scope without creating a document</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="printScope" data-feature="printScope">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              -->
 
               <!-- Essential -->
               <div class="feature-item" id="smartJobSwitcherFeature">
@@ -385,7 +402,7 @@
                 </label>
               </div>
 
-              <div class="feature-item">
+              <div class="feature-item" id="budgetRowHighlightFeature">
                 <div class="feature-info">
                   <h3>Budget Row Highlight <i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge essential">Essential</span></h3>
                   <p>Put a circle emoji (🔴🟢🔵…) in any budget field to tint that row</p>
