@@ -18,6 +18,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
     pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
+    assistantPanel: false,
     availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
     taskTypeFilter: false,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },

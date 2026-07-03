@@ -21,6 +21,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, budgetTools: false,
     pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
+    assistantPanel: false,
     availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
     taskTypeFilter: false,
     jobAccessCollapse: false,

@@ -1,0 +1,273 @@
+/* AI Assistant Panel — right-side chat drawer (Agent Core).
+   Built on the .jt-tools-surface token system (jt-tools-tokens.css) so it
+   matches the popup / tweak builder surfaces exactly. All classes are
+   prefixed jt-assistant-. */
+
+/* Launcher — floating tab on the right edge */
+.jt-assistant-launcher {
+  /* Layout */
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2147483000;
+  /* Spacing */
+  padding: 10px 8px;
+  /* Colors */
+  background: #fe4c0d;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px 0 0 6px;
+  /* Typography */
+  font: 700 12px 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.jt-assistant-launcher:hover {
+  background: #d93d00;
+}
+
+.jt-assistant-launcher-hidden {
+  display: none;
+}
+
+/* Launcher breathes while a run is active — visible even with the panel
+   closed, so "the assistant is still working" never goes silent. */
+.jt-assistant-launcher-working {
+  animation: jt-assistant-breathe 1.6s ease-in-out infinite;
+}
+
+/* Working glow — soft brand-orange tint around the viewport while the
+   agent is reading live data. Honest presence signal: it turns on with
+   the run and off with it. pointer-events: none, so it never intercepts
+   the page. */
+.jt-assistant-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482999; /* under the launcher (…3000) and panel (…3001) */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  box-shadow:
+    inset 0 0 0 3px rgba(254, 76, 13, 0.55),
+    inset 0 0 48px rgba(254, 76, 13, 0.18);
+}
+
+.jt-assistant-glow-active {
+  opacity: 1;
+  animation: jt-assistant-glow-breathe 2.2s ease-in-out infinite;
+}
+
+@keyframes jt-assistant-glow-breathe {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+@keyframes jt-assistant-breathe {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 2px 18px rgba(254, 76, 13, 0.8); }
+}
+
+/* Motion sensitivity: keep the state signal, drop the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .jt-assistant-glow-active,
+  .jt-assistant-launcher-working {
+    animation: none;
+  }
+}
+
+/* Panel — right drawer */
+.jt-assistant-panel {
+  /* Layout */
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 380px;
+  max-width: 90vw;
+  z-index: 2147483001;
+  display: none;
+  flex-direction: column;
+  /* Colors */
+  background: var(--jtt-bg);
+  border-left: 1px solid var(--jtt-border);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.35);
+}
+
+.jt-assistant-panel.jt-assistant-open {
+  display: flex;
+}
+
+/* Header */
+.jt-assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--jtt-bg-2);
+  border-bottom: 1px solid var(--jtt-border);
+}
+
+.jt-assistant-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--jtt-text);
+}
+
+.jt-assistant-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.jt-assistant-close-btn {
+  padding: 4px 10px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.jt-assistant-new-btn {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+/* Messages */
+.jt-assistant-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jt-assistant-bubble {
+  max-width: 92%;
+  padding: 8px 11px;
+  border-radius: var(--jtt-radius);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.jt-assistant-bubble-user {
+  align-self: flex-end;
+  background: var(--jtt-primary);
+  color: var(--jtt-primary-fg);
+}
+
+.jt-assistant-bubble-assistant {
+  align-self: flex-start;
+  background: var(--jtt-bg-elev);
+  color: var(--jtt-text-2);
+  border: 1px solid var(--jtt-border);
+}
+
+.jt-assistant-note {
+  align-self: center;
+  text-align: center;
+  font-size: 11px;
+  color: var(--jtt-text-muted);
+  padding: 4px 8px;
+}
+
+/* Draft cards (proposed writes awaiting Phase 2 Apply flow) */
+.jt-assistant-draft {
+  align-self: stretch;
+  background: var(--jtt-bg-2);
+  border: 1px dashed var(--jtt-border-2);
+  border-radius: var(--jtt-radius);
+  padding: 8px 10px;
+}
+
+.jt-assistant-draft-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jtt-warn);
+  margin-bottom: 4px;
+}
+
+.jt-assistant-draft-summary {
+  font-size: 12px;
+  color: var(--jtt-text-2);
+  margin-bottom: 6px;
+}
+
+.jt-assistant-draft-apply[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Status + composer + footer */
+.jt-assistant-status {
+  min-height: 16px;
+  padding: 0 12px 4px;
+  font-size: 11px;
+  color: var(--jtt-text-muted);
+  font-style: italic;
+}
+
+/* Suggested prompt chips */
+.jt-assistant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 8px;
+}
+
+.jt-assistant-chips:empty {
+  display: none;
+}
+
+.jt-assistant-chip {
+  background: var(--jtt-bg-elev);
+  color: var(--jtt-text-2);
+  border: 1px solid var(--jtt-border-2);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: 12px 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.jt-assistant-chip:hover {
+  background: var(--jtt-bg-hover);
+  border-color: var(--jtt-primary);
+  color: var(--jtt-text);
+}
+
+.jt-assistant-chip:first-child {
+  border-color: var(--jtt-primary);
+  color: var(--jtt-primary);
+  font-weight: 600;
+}
+
+.jt-assistant-composer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--jtt-bg-2);
+  border-top: 1px solid var(--jtt-border);
+}
+
+.jt-assistant-input {
+  flex: 1;
+  resize: none;
+  min-height: 40px;
+  max-height: 120px;
+}
+
+.jt-assistant-send {
+  align-self: flex-end;
+}
+
+.jt-assistant-footer {
+  padding: 4px 12px 8px;
+  background: var(--jtt-bg-2);
+  font-size: 10px;
+  color: var(--jtt-text-subtle);
+  text-align: right;
+  min-height: 14px;
+}

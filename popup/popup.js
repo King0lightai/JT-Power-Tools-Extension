@@ -23,7 +23,7 @@ const FEATURE_TOGGLE_IDS = [
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
   'budgetChangelog', 'invoiceForecast', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
-  'jobAccessCollapse', 'orgLogo'
+  'jobAccessCollapse', 'orgLogo', 'assistantPanel'
 ];
 
 // Feature toggles that require a JobTread grant key to function. When a
@@ -35,6 +35,7 @@ const GRANT_KEY_REQUIRED_FEATURES = new Set([
   'taskTypeFilter',
   'availabilityFilter',
   'invoiceForecast',
+  'assistantPanel',
 ]);
 
 const REGISTER_NUDGE_DISMISSED_KEY = 'jtRegisterNudgeDismissed';
@@ -729,6 +730,9 @@ async function loadSettings() {
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
     setCheckbox('invoiceForecast', settings.invoiceForecast !== undefined ? settings.invoiceForecast : false);
     setCheckbox('paveCapture', hasPowerUser && (settings.paveCapture !== undefined ? settings.paveCapture : false));
+
+    // ASSISTANT features - require the Assistant company tier (server-enforced)
+    setCheckbox('assistantPanel', settings.assistantPanel !== undefined ? settings.assistantPanel : false);
     // Forms toggle removed — see Migration 029. The on/off decision is
     // admin-managed in the portal; this popup never reads or writes
     // settings.forms anymore.
@@ -767,6 +771,8 @@ async function loadSettings() {
       // Capture only pays off with MCP access to read it back; both need a
       // portal session, so disable recording when signed out.
       if (settings.paveCapture) featuresToDisable.push('paveCapture');
+      // The assistant needs the org grant key, which needs a portal session.
+      if (settings.assistantPanel) featuresToDisable.push('assistantPanel');
     }
 
     if (featuresToDisable.length > 0) {
@@ -975,6 +981,7 @@ async function getCurrentSettings() {
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     taskTypeFilter: getCheckboxValue('taskTypeFilter', defaultSettings.taskTypeFilter),
     invoiceForecast: getCheckboxValue('invoiceForecast', defaultSettings.invoiceForecast),
+    assistantPanel: getCheckboxValue('assistantPanel', defaultSettings.assistantPanel !== undefined ? defaultSettings.assistantPanel : false),
     paveCapture: getCheckboxValue('paveCapture', defaultSettings.paveCapture !== undefined ? defaultSettings.paveCapture : false),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
     reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),

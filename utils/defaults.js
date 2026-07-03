@@ -47,6 +47,9 @@ const JTDefaults = (() => {
     // API (Experimental) Features
     customFieldFilter: false,
 
+    // Assistant Features (Agent Core — company tier)
+    assistantPanel: false,
+
     // Power User Features (require API connection)
     budgetChangelog: false,
     taskTypeFilter: false,

@@ -30,8 +30,26 @@ const LicenseService = (() => {
   const TIERS = {
     ESSENTIAL: 'essential',
     PRO: 'pro',
-    POWER_USER: 'power_user'
+    POWER_USER: 'power_user',
+    // Agent Core company tiers — above Power User. Server-side is the
+    // real gate (mcp-server/src/tiers.js); this mirror is UX only.
+    ASSISTANT: 'assistant',
+    ASSISTANT_PRO: 'assistant_pro'
   };
+
+  // Tier ordering for "this tier or higher" checks. Keeps tierHasFeature
+  // from enumerating every higher tier at every check site.
+  const TIER_RANK = {
+    [TIERS.ESSENTIAL]: 1,
+    [TIERS.PRO]: 2,
+    [TIERS.POWER_USER]: 3,
+    [TIERS.ASSISTANT]: 4,
+    [TIERS.ASSISTANT_PRO]: 5
+  };
+
+  function tierAtLeast(tier, floor) {
+    return (TIER_RANK[tier] || 0) >= (TIER_RANK[floor] || Infinity);
+  }
 
   // Feature access by tier
   // FREE features - work without any license (hook users)
@@ -87,6 +105,11 @@ const LicenseService = (() => {
   ];
 
   // INTERNAL features - always enabled, not user-toggleable, bypass tier check
+  // ASSISTANT features - Agent Core ($99/mo per company)
+  const ASSISTANT_FEATURES = [
+    'assistantPanel'    // AI Assistant chat panel (server-enforced tier)
+  ];
+
   const INTERNAL_FEATURES = [
     'helpSidebarSupport',
     'keyboardShortcuts'
@@ -567,7 +590,8 @@ const LicenseService = (() => {
     return (
       ESSENTIAL_FEATURES.includes(feature) ||
       PRO_FEATURES.includes(feature) ||
-      POWER_USER_FEATURES.includes(feature)
+      POWER_USER_FEATURES.includes(feature) ||
+      ASSISTANT_FEATURES.includes(feature)
     );
   }
 
@@ -588,19 +612,22 @@ const LicenseService = (() => {
       return false;
     }
 
-    // ESSENTIAL features available to Essential, Pro, and Power User tiers
+    // Rank-based: each feature band is available to its tier and above,
+    // so the Assistant company tiers inherit everything below them.
     if (ESSENTIAL_FEATURES.includes(feature)) {
-      return tier === TIERS.ESSENTIAL || tier === TIERS.PRO || tier === TIERS.POWER_USER;
+      return tierAtLeast(tier, TIERS.ESSENTIAL);
     }
 
-    // PRO features available to Pro and Power User tiers only
     if (PRO_FEATURES.includes(feature)) {
-      return tier === TIERS.PRO || tier === TIERS.POWER_USER;
+      return tierAtLeast(tier, TIERS.PRO);
     }
 
-    // POWER USER features only available to Power User tier
     if (POWER_USER_FEATURES.includes(feature)) {
-      return tier === TIERS.POWER_USER;
+      return tierAtLeast(tier, TIERS.POWER_USER);
+    }
+
+    if (ASSISTANT_FEATURES.includes(feature)) {
+      return tierAtLeast(tier, TIERS.ASSISTANT);
     }
 
     // Unknown feature - default to false for safety
@@ -618,6 +645,8 @@ const LicenseService = (() => {
       case TIERS.ESSENTIAL: return 'Essential';
       case TIERS.PRO: return 'Pro';
       case TIERS.POWER_USER: return 'Power User';
+      case TIERS.ASSISTANT: return 'Assistant';
+      case TIERS.ASSISTANT_PRO: return 'Assistant Pro';
       default: return tier || 'Unknown';
     }
   }
@@ -633,19 +662,21 @@ const LicenseService = (() => {
 
     if (!tier) return features;
 
-    // Essential tier adds Essential features
-    if (tier === TIERS.ESSENTIAL || tier === TIERS.PRO || tier === TIERS.POWER_USER) {
+    // Rank-based: each band applies to its tier and above.
+    if (tierAtLeast(tier, TIERS.ESSENTIAL)) {
       features = features.concat(ESSENTIAL_FEATURES);
     }
 
-    // Pro tier adds Pro features
-    if (tier === TIERS.PRO || tier === TIERS.POWER_USER) {
+    if (tierAtLeast(tier, TIERS.PRO)) {
       features = features.concat(PRO_FEATURES);
     }
 
-    // Power User tier adds Power User features
-    if (tier === TIERS.POWER_USER) {
+    if (tierAtLeast(tier, TIERS.POWER_USER)) {
       features = features.concat(POWER_USER_FEATURES);
+    }
+
+    if (tierAtLeast(tier, TIERS.ASSISTANT)) {
+      features = features.concat(ASSISTANT_FEATURES);
     }
 
     return features;
@@ -677,6 +708,7 @@ const LicenseService = (() => {
     ESSENTIAL_FEATURES,
     PRO_FEATURES,
     POWER_USER_FEATURES,
+    ASSISTANT_FEATURES,
     INTERNAL_FEATURES
   };
 })();
