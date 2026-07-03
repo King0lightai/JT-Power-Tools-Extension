@@ -14,9 +14,11 @@
  * cosmetic as always — the server enforces the tier and returns
  * TIER_NO_ASSISTANT (403), which the panel renders as an upgrade notice.
  *
- * Writes: Phase 1 is read-only. If the server proposes a write draft
- * (draft_proposed frame), the panel renders it as a card; the Apply
- * button ships with the Phase 2 confirm flow.
+ * Writes: when the server proposes a write draft (draft_proposed frame, or
+ * proposed_writes on done), the panel renders it as a card. If the draft was
+ * persisted server-side (draft.persisted && draft.id), the card's Apply button
+ * runs a two-step confirm → POST /agent/confirm; otherwise Apply is disabled
+ * with a re-ask hint. The server is the only thing that executes the write.
  */
 const AssistantPanelFeature = (() => {
   const AGENT_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev/agent/chat';
@@ -67,6 +69,7 @@ const AssistantPanelFeature = (() => {
   let restoreTimer = null; // defers transition-restore until the close animation ends
   let panelResizeDrag = null; // { startX, startWidth } while the edge handle is dragged
   const eventListeners = []; // document/window-level — must be removed in cleanup()
+  const draftConfirmTimers = new Set(); // pending two-step "are you sure?" reset timers
 
   // ─── Utilities ────────────────────────────────────────────────────
 
@@ -802,17 +805,125 @@ const AssistantPanelFeature = (() => {
     scrollToBottom();
   }
 
+  // A proposed write. When the server persisted it (draft.persisted && draft.id)
+  // the card carries a working Apply → confirm flow; otherwise Apply is disabled
+  // with a re-ask hint. All model-authored text (humanSummary, args, result)
+  // goes through textContent — never innerHTML.
   function appendDraftCard(draft) {
     const messages = messagesEl();
     if (!messages) return;
+
     const card = el('div', 'jt-assistant-draft');
     card.appendChild(el('div', 'jt-assistant-draft-title', 'Proposed change (draft)'));
-    card.appendChild(el('div', 'jt-assistant-draft-summary', draft.humanSummary || draft.tool));
-    const apply = el('button', 'jtt-btn jt-assistant-draft-apply', 'Apply (coming soon)');
+    // What will happen, up front.
+    card.appendChild(
+      el('div', 'jt-assistant-draft-summary', draft.humanSummary || draft.tool || 'Proposed write')
+    );
+
+    // Collapsed disclosure: the exact args the write would send (model output).
+    const details = el('details', 'jt-assistant-draft-details');
+    details.appendChild(el('summary', 'jt-assistant-draft-details-summary', 'Details'));
+    let argsText;
+    try {
+      argsText = JSON.stringify(draft.args ?? draft, null, 2);
+    } catch {
+      argsText = String(draft.args ?? '');
+    }
+    details.appendChild(el('pre', 'jt-assistant-draft-args', argsText));
+    card.appendChild(details);
+
+    const apply = el('button', 'jtt-btn jt-assistant-draft-apply', 'Apply');
     apply.type = 'button';
-    apply.disabled = true;
-    apply.title = 'Draft approval ships with the write-enabled release';
+    const note = el('div', 'jt-assistant-draft-note');
+    note.dataset.jtRole = 'draft-note';
+
+    // No server-side draft record → nothing to confirm against.
+    if (!(draft.persisted && draft.id)) {
+      apply.disabled = true;
+      apply.title = 'Could not save this draft — re-ask';
+      card.appendChild(apply);
+      card.appendChild(el('div', 'jt-assistant-draft-hint', 'Could not save this draft — re-ask'));
+      messages.appendChild(card);
+      scrollToBottom();
+      return;
+    }
+
     card.appendChild(apply);
+    card.appendChild(note);
+
+    // Two-step confirm: first click arms for 4s, second click within the window
+    // fires. Less jarring than a modal, and the armed label makes intent clear.
+    let armed = false;
+    let armTimer = null;
+
+    const disarm = () => {
+      armed = false;
+      if (armTimer) {
+        clearTimeout(armTimer);
+        draftConfirmTimers.delete(armTimer);
+        armTimer = null;
+      }
+      apply.classList.remove('jt-assistant-draft-apply-armed');
+      apply.textContent = 'Apply';
+    };
+
+    const showApplied = (label, resultText) => {
+      disarm();
+      apply.remove();
+      note.textContent = '';
+      note.className = 'jt-assistant-draft-note';
+      card.classList.add('jt-assistant-draft-applied');
+      card.appendChild(el('div', 'jt-assistant-draft-status', `✓ ${label}`));
+      if (resultText) {
+        const result = el('details', 'jt-assistant-draft-result');
+        result.appendChild(el('summary', 'jt-assistant-draft-details-summary', 'Result'));
+        result.appendChild(el('pre', 'jt-assistant-draft-result-text', resultText));
+        card.appendChild(result);
+      }
+      scrollToBottom();
+    };
+
+    const runConfirm = async () => {
+      disarm();
+      apply.disabled = true;
+      apply.textContent = 'Applying…';
+      note.textContent = '';
+      note.className = 'jt-assistant-draft-note';
+
+      const result = await agentPost('confirm', { draft_id: draft.id });
+
+      if (result.data && result.data.status === 'executed') {
+        showApplied('Applied', result.data.result_text);
+        return;
+      }
+      // Already applied (someone else, or a double-fire) — success with a note.
+      if (result.status === 409 && result.code === 'DRAFT_ALREADY_EXECUTED') {
+        showApplied('Already applied');
+        return;
+      }
+      // Failed status on a 200, or a hard HTTP error — surface it, re-arm.
+      const message =
+        (result.data && result.data.error) ||
+        result.error ||
+        'The change could not be applied.';
+      note.textContent = message;
+      note.className = 'jt-assistant-draft-note jt-assistant-draft-note-error';
+      apply.disabled = false;
+      apply.textContent = 'Retry apply';
+    };
+
+    apply.addEventListener('click', () => {
+      if (armed) {
+        void runConfirm();
+        return;
+      }
+      armed = true;
+      apply.classList.add('jt-assistant-draft-apply-armed');
+      apply.textContent = 'Apply — are you sure?';
+      armTimer = setTimeout(disarm, 4000);
+      draftConfirmTimers.add(armTimer);
+    });
+
     messages.appendChild(card);
     scrollToBottom();
   }
@@ -1042,7 +1153,10 @@ const AssistantPanelFeature = (() => {
       });
       if (!res.ok) {
         const detail = await res.json().catch(() => ({}));
-        return { error: friendlyHttpError(res.status, detail) };
+        // status + code let callers branch on specific errors (e.g. the confirm
+        // flow treats 409 DRAFT_ALREADY_EXECUTED as success); existing callers
+        // read only `.error`, so this stays backward-compatible.
+        return { error: friendlyHttpError(res.status, detail), status: res.status, code: detail?.code };
       }
       return { data: await res.json() };
     } catch (err) {
@@ -1218,6 +1332,10 @@ const AssistantPanelFeature = (() => {
       element.removeEventListener(event, handler);
     });
     eventListeners.length = 0;
+
+    // Cancel any pending two-step-confirm reset timers (draft cards).
+    draftConfirmTimers.forEach((timer) => clearTimeout(timer));
+    draftConfirmTimers.clear();
 
     // Undock: hand the page's width back exactly, and unwind any in-flight
     // resize drag (userSelect was pinned in onPanelResizePointerDown).

@@ -241,39 +241,55 @@ body.jt-custom-theme .jt-assistant-panel {
 /* Themed buttons + inputs inside the panel. The base .jtt-btn / .jtt-input
    layout comes from jt-tools-tokens.css (via the panel's .jt-tools-surface
    class); these panel-scoped rules re-point the COLORS onto --jta-* so they
-   follow the active theme. Equal specificity to the token rules, but this
-   sheet loads after them, so it wins. */
-.jt-assistant-panel .jtt-btn {
+   follow the active theme.
+
+   Specificity is deliberate: the token rules are `.jt-tools-surface .jtt-btn`
+   (0,2,0). The panel element carries BOTH classes ("jt-tools-surface
+   jt-assistant-panel"), so the compound `.jt-tools-surface.jt-assistant-panel`
+   here is (0,3,0) and always outranks the token rule — no matter which sheet
+   the browser resolved last. The old single-class `.jt-assistant-panel .jtt-btn`
+   was (0,2,0), a tie the token rule could win whenever another feature injected
+   jt-tools-tokens.css after this sheet in document order (buttons + input then
+   rendered dark on the light theme). Compound-class beats an injection-order
+   race without reaching for !important. */
+.jt-tools-surface.jt-assistant-panel .jtt-btn {
   background: var(--jta-bg-elev);
   color: var(--jta-text-2);
   border-color: var(--jta-border-2);
 }
 
-.jt-assistant-panel .jtt-btn:hover {
+.jt-tools-surface.jt-assistant-panel .jtt-btn:hover {
   background: var(--jta-bg-hover);
   color: var(--jta-text);
 }
 
-.jt-assistant-panel .jtt-btn-primary {
+.jt-tools-surface.jt-assistant-panel .jtt-btn-primary {
   background: var(--jta-accent);
   color: var(--jta-accent-fg);
   border-color: var(--jta-accent);
 }
 
-.jt-assistant-panel .jtt-btn-primary:hover {
+.jt-tools-surface.jt-assistant-panel .jtt-btn-primary:hover {
   background: var(--jta-accent-hover);
   border-color: var(--jta-accent-hover);
   color: var(--jta-accent-fg);
 }
 
-.jt-assistant-panel .jtt-input {
+.jt-tools-surface.jt-assistant-panel .jtt-input {
   background: var(--jta-input-bg);
   color: var(--jta-text);
   border-color: var(--jta-border-2);
 }
 
-.jt-assistant-panel .jtt-input:focus {
+.jt-tools-surface.jt-assistant-panel .jtt-input:focus {
   border-color: var(--jta-accent);
+}
+
+/* Disabled .jtt-btn (e.g. a non-persisted draft's Apply) — same compound-class
+   guard so the muted look survives the injection-order race too. */
+.jt-tools-surface.jt-assistant-panel .jtt-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Messages */
@@ -317,13 +333,19 @@ body.jt-custom-theme .jt-assistant-panel {
   padding: 4px 8px;
 }
 
-/* Draft cards (proposed writes awaiting Phase 2 Apply flow) */
+/* Draft cards (proposed writes + the Apply/confirm flow) */
 .jt-assistant-draft {
   align-self: stretch;
   background: var(--jta-bg-2);
   border: 1px dashed var(--jta-border-2);
   border-radius: var(--jtt-radius);
   padding: 8px 10px;
+}
+
+/* Applied: solid border + safe tint so a finished write reads as settled. */
+.jt-assistant-draft-applied {
+  border-style: solid;
+  border-color: var(--jta-border);
 }
 
 .jt-assistant-draft-title {
@@ -334,14 +356,80 @@ body.jt-custom-theme .jt-assistant-panel {
 }
 
 .jt-assistant-draft-summary {
-  font-size: 12px;
-  color: var(--jta-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--jta-text);
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+/* Details disclosure — the raw args JSON (model output, textContent only). */
+.jt-assistant-draft-details,
+.jt-assistant-draft-result {
   margin-bottom: 6px;
 }
 
-.jt-assistant-draft-apply[disabled] {
-  opacity: 0.55;
-  cursor: not-allowed;
+.jt-assistant-draft-details-summary {
+  font-size: 11px;
+  color: var(--jta-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.jt-assistant-draft-args,
+.jt-assistant-draft-result-text {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  background: var(--jta-bg-sunken);
+  border: 1px solid var(--jta-border);
+  border-radius: var(--jtt-radius-sm);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--jta-text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow: auto;
+}
+
+/* Armed state of the two-step confirm — accent outline so "are you sure?"
+   reads as a live commit, not a second passive button. Scoped through the
+   compound panel hook (0,4,0) so it outranks the .jtt-btn colour override
+   above without !important. */
+.jt-tools-surface.jt-assistant-panel .jtt-btn.jt-assistant-draft-apply-armed {
+  border-color: var(--jta-accent);
+  color: var(--jta-accent);
+}
+
+.jt-assistant-draft-hint {
+  font-size: 11px;
+  color: var(--jta-text-muted);
+  margin-top: 6px;
+}
+
+/* Result / error line under the Apply button. */
+.jt-assistant-draft-note {
+  font-size: 11px;
+  color: var(--jta-text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.jt-assistant-draft-note:empty {
+  display: none;
+}
+
+.jt-assistant-draft-note-error {
+  color: var(--jta-danger);
+}
+
+/* Applied confirmation row (✓ + label). */
+.jt-assistant-draft-status {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--jta-text);
+  margin-bottom: 6px;
 }
 
 /* Status + composer + footer */
