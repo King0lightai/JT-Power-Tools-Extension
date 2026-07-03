@@ -32,9 +32,17 @@ const AssistantPanelFeature = (() => {
     'Lead with the most important finding and include dollar amounts. ' +
     'If everything is clean, say so in two sentences.';
 
+  // Org credit-pool status banner copy, keyed by server `pool` frame state.
+  const POOL_COPY = {
+    low: 'Credits are running low — responses may use a lighter model.',
+    exhausted:
+      'Assistant credits are used up for this cycle — running in reduced mode. Top up or wait for the reset.',
+  };
+
   let isActive = false;
   let launcherEl = null;
   let panelEl = null;
+  let poolBannerEl = null;
   let glowEl = null;
   let sessionId = null;
   let abortController = null;
@@ -121,7 +129,15 @@ const AssistantPanelFeature = (() => {
           'No JobTread grant key is configured for this org. Set one up in the JT Power Tools portal.',
       };
     }
-    return { bearer: `${licenseData.key}:${grantKey}` };
+    // Portal access token (governance): the server requires it alongside the
+    // license:grant bearer so it can enforce per-user assistant access.
+    const accountToken = await window.AccountService?.getAccessToken?.();
+    if (!accountToken) {
+      return {
+        error: 'Sign in to your JT Power Tools account (extension popup) to use the assistant.',
+      };
+    }
+    return { bearer: `${licenseData.key}:${grantKey}`, accountToken };
   }
 
   // ─── Suggested prompts (context-aware chips) ──────────────────────
@@ -347,6 +363,22 @@ const AssistantPanelFeature = (() => {
     if (status) status.textContent = text;
   }
 
+  // Org-level credit-pool banner, pinned above the composer. Created on the
+  // first `pool` frame, updated in place on later frames, and persisted for
+  // the session (not cleared between runs). Removed with the panel in cleanup.
+  function renderPoolBanner(state) {
+    const copy = POOL_COPY[state];
+    if (!copy || !panelEl) return;
+    if (!poolBannerEl) {
+      poolBannerEl = el('div', 'jt-assistant-pool-banner');
+      poolBannerEl.dataset.jtRole = 'pool-banner';
+      const composer = panelEl.querySelector('.jt-assistant-composer');
+      panelEl.insertBefore(poolBannerEl, composer);
+    }
+    poolBannerEl.className = `jt-assistant-pool-banner jt-assistant-pool-banner-${state}`;
+    poolBannerEl.textContent = copy;
+  }
+
   function setUsage(usage) {
     const footer = panelEl?.querySelector('[data-jt-role="footer"]');
     if (!footer || !usage) return;
@@ -409,6 +441,7 @@ const AssistantPanelFeature = (() => {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.bearer}`,
+          'X-Account-Token': auth.accountToken,
           Accept: 'text/event-stream',
         },
         body: JSON.stringify({
@@ -454,6 +487,7 @@ const AssistantPanelFeature = (() => {
           setStatus('');
         },
         tool_started: (frame) => setStatus(`Reading ${frame.label || frame.name}…`),
+        pool: (frame) => renderPoolBanner(frame.state),
         draft_proposed: (frame) => appendDraftCard(frame.draft || {}),
         usage: (frame) => setUsage(frame.usage),
         done: handleDone,
@@ -510,6 +544,14 @@ const AssistantPanelFeature = (() => {
         'Your current tier does not include it — see jtpowertools.com/pricing.'
       );
     }
+    if (status === 403 && detail?.code === 'USER_NO_ASSISTANT') {
+      // Admin hasn't enabled the assistant for this user — surface the
+      // server's message verbatim (no pricing link; it's not a tier issue).
+      return detail?.error || "Your admin hasn't enabled the assistant for your account.";
+    }
+    if (status === 401 && (detail?.code === 'ACCOUNT_REQUIRED' || detail?.code === 'ACCOUNT_INVALID')) {
+      return 'Sign in to your JT Power Tools account in the extension popup to use the assistant.';
+    }
     if (status === 401) {
       return 'Authentication failed. Re-check your license and grant key in the JT Power Tools popup.';
     }
@@ -555,6 +597,9 @@ const AssistantPanelFeature = (() => {
       panelEl.remove();
       panelEl = null;
     }
+    // Banner lives inside the panel (removed above); drop the reference so a
+    // fresh init() rebuilds it on the next pool frame.
+    poolBannerEl = null;
     if (launcherEl) {
       launcherEl.remove();
       launcherEl = null;

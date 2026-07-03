@@ -271,3 +271,31 @@
   text-align: right;
   min-height: 14px;
 }
+
+/* Credit-pool status banner — slim strip pinned above the composer while the
+   org's credits run low or run out. Rides the warm-dark surface tokens so it
+   reads on any JobTread theme (the panel itself is always the dark surface). */
+.jt-assistant-pool-banner {
+  /* Layout */
+  padding: 7px 12px;
+  /* Colors */
+  background: var(--jtt-bg-elev);
+  color: var(--jtt-text-2);
+  border-top: 1px solid var(--jtt-border);
+  border-left: 3px solid var(--jtt-warn);
+  /* Typography */
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Low: amber accent — a heads-up, responses may downgrade. */
+.jt-assistant-pool-banner-low {
+  border-left-color: var(--jtt-warn);
+  color: var(--jtt-text-2);
+}
+
+/* Exhausted: red accent — reduced mode until top-up/reset. */
+.jt-assistant-pool-banner-exhausted {
+  border-left-color: var(--jtt-danger);
+  color: var(--jtt-text);
+}
