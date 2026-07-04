@@ -85,6 +85,7 @@ const TweakValidator = (() => {
   const MAX_TEXT_LEN = 500;
   const MAX_SELECTOR_LEN = 500;
   const MAX_MATCH_LEN = 200;
+  const MAX_SELECTOR_CANDIDATES = 5;
 
   // Conservative selector charset for non-DOM environments. Real CSS
   // selectors are far more permissive, but in a service-worker / Node
@@ -186,6 +187,25 @@ const TweakValidator = (() => {
     }
   }
 
+  // Optional fallback selectors — the engine tries `selector` first, then each
+  // candidate in order on a zero-match. Each candidate is held to the SAME
+  // isSafeSelector gate as `selector` (length, extension-UI, bare/universal,
+  // and — server-side — the charset gate), capped at MAX_SELECTOR_CANDIDATES.
+  function validateSelectorCandidates(candidates, fieldPath, errors) {
+    if (!Array.isArray(candidates)) {
+      errors.push({ field: fieldPath, reason: 'selectorCandidates must be an array of selector strings' });
+      return;
+    }
+    if (candidates.length > MAX_SELECTOR_CANDIDATES) {
+      errors.push({ field: fieldPath, reason: `no more than ${MAX_SELECTOR_CANDIDATES} selectorCandidates per action` });
+    }
+    candidates.forEach((cand, ci) => {
+      if (!isSafeSelector(cand)) {
+        errors.push({ field: `${fieldPath}[${ci}]`, reason: 'selector is invalid or targets extension UI' });
+      }
+    });
+  }
+
   function validateAction(action, fieldPath, errors, inThen) {
     if (!action || typeof action !== 'object') {
       errors.push({ field: fieldPath, reason: 'action must be an object' });
@@ -225,6 +245,10 @@ const TweakValidator = (() => {
     // engine's passesDateGuard does the day math against `datetime`.
     if (action.matchDate !== undefined) {
       validateMatchDate(action.matchDate, `${fieldPath}.matchDate`, errors);
+    }
+    // Optional fallback selectors — universal across verbs (like match/matchDate).
+    if (action.selectorCandidates !== undefined) {
+      validateSelectorCandidates(action.selectorCandidates, `${fieldPath}.selectorCandidates`, errors);
     }
     if (action.type === 'addClass' || action.type === 'removeClass') {
       if (typeof action.class !== 'string' || !/^[a-zA-Z_-][a-zA-Z0-9_-]*$/.test(action.class)) {

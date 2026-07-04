@@ -1816,6 +1816,37 @@ body.dark-theme .badge-fail { background: oklch(32% 0.10 25 / 0.4);  color: #fca
    tweak buttons/list 16px deeper than the toggle rows above and every other
    tab's content. Keep only the bottom gap. */
 .jt-tweaks-section { padding: 0 0 16px; }
+
+/* Safe-mode master switch — sits atop the tweaks list as a per-install
+   kill switch (B3). Uses the neutral-grey popup token palette. */
+.jt-tweaks-safemode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+.jt-tweaks-safemode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.jt-tweaks-safemode-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.jt-tweaks-safemode-hint {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
 .jt-tweaks-header {
   display: flex;
   flex-direction: column;

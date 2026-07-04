@@ -4117,6 +4117,22 @@ function showAccountError(formType, message) {
           reBtn.title = 'Clear the auto-disable and retry. If the selector still doesn\'t match, the engine will auto-disable again.';
           reBtn.addEventListener('click', () => clearAutoDisable(tweak.id));
           actions.appendChild(reBtn);
+
+          // Repair opens the in-page builder on the active JobTread tab,
+          // pre-loaded with this tweak and the element picker armed, so the
+          // user re-clicks the element and the builder regenerates the
+          // selector (saved as a new version). Members can repair a personal
+          // tweak; only admins can repair an org_required one (matches the
+          // Edit gate — a member re-picking would be rejected server-side).
+          const canRepair = !isOrgRequired || isAdmin;
+          if (canRepair) {
+            const repairBtn = document.createElement('button');
+            repairBtn.className = 'icon-btn';
+            repairBtn.textContent = 'Repair';
+            repairBtn.title = 'Open JobTread and re-pick the element to fix this tweak\'s selector.';
+            repairBtn.addEventListener('click', () => repairTweak(tweak, repairBtn));
+            actions.appendChild(repairBtn);
+          }
         }
 
         // Share is available to anyone who can see the tweak — export strips
@@ -4185,6 +4201,39 @@ function showAccountError(formType, message) {
         console.warn('clearAutoDisable failed:', e);
       }
       render();
+    }
+
+    /**
+     * Repair an auto-disabled tweak. The builder runs on the JobTread page
+     * (content-script context), not here, so we message the active JT tab to
+     * open the builder pre-loaded with this tweak and the picker armed. The
+     * user re-clicks the element; the builder regenerates the selector and
+     * saves as an update (reusing the tweak's id → new version). If no JT tab
+     * is open we can't reach the builder, so show an inline hint on the button.
+     */
+    async function repairTweak(tweak, btn) {
+      const original = btn ? btn.textContent : null;
+      const tab = await findJtTab();
+      if (!tab) {
+        if (btn) {
+          btn.textContent = 'Open JobTread to repair';
+          setTimeout(() => { btn.textContent = original; }, 2200);
+        }
+        return;
+      }
+      try {
+        await chrome.tabs.update(tab.id, { active: true });
+        await chrome.tabs.sendMessage(tab.id, { type: 'TWEAK_OPEN_REPAIR', tweak });
+        // Land the user on JT so they can re-pick the element. Keep the side
+        // panel open (closing it would collapse the pinned sidebar); the
+        // picker + builder run on the page itself either way.
+        if (!IS_IN_SIDE_PANEL) window.close();
+      } catch (err) {
+        if (btn) {
+          btn.textContent = 'JT tab not ready — reload it';
+          setTimeout(() => { btn.textContent = original; }, 2200);
+        }
+      }
     }
 
     async function toggleTweak(id, enabled) {
@@ -4354,6 +4403,25 @@ function showAccountError(formType, message) {
     const $buildBtn = document.getElementById('tweakBuildBtn');
     if ($buildBtn) {
       $buildBtn.addEventListener('click', () => startPicker('INSPECT_PICK_FOR_BUILDER', $buildBtn, 'Build a tweak'));
+    }
+
+    // Safe-mode master switch (B3). Reads/writes chrome.storage.local
+    // ['jtTweakSafeMode']; the engine's own storage-change listener applies
+    // or tears down tweaks — the popup never messages the page for this.
+    const $safeModeToggle = $section.querySelector('[data-tweaks-safemode-toggle]');
+    if ($safeModeToggle) {
+      chrome.storage.local.get(['jtTweakSafeMode'], (stored) => {
+        $safeModeToggle.checked = stored.jtTweakSafeMode === true;
+      });
+      $safeModeToggle.addEventListener('change', () => {
+        chrome.storage.local.set({ jtTweakSafeMode: $safeModeToggle.checked });
+      });
+      // Reflect changes made elsewhere (another popup/side-panel instance, or
+      // the engine) so the toggle never drifts from the stored value.
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local' || !changes.jtTweakSafeMode) return;
+        $safeModeToggle.checked = changes.jtTweakSafeMode.newValue === true;
+      });
     }
 
     function previewImport() {

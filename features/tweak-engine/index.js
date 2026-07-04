@@ -210,6 +210,24 @@ const TweakEngineFeature = (() => {
     eventListeners.push({ target: window, event: 'pageshow', handler: showHandler });
   }
 
+  /**
+   * Safe mode (B2) — a per-install escape hatch. When on, the engine applies
+   * ZERO tweaks so JobTread loads exactly as it ships, but still runs the
+   * background server refresh so the cache stays warm for when it's turned
+   * off. User-driven only in v1 (never auto-enabled on errors). Reads
+   * chrome.storage.local['jtTweakSafeMode']; defaults to off / fails open on
+   * any read error so a storage hiccup never silently strands the user's
+   * tweaks.
+   */
+  async function isSafeModeOn() {
+    try {
+      const stored = await chrome.storage.local.get(['jtTweakSafeMode']);
+      return stored.jtTweakSafeMode === true;
+    } catch {
+      return false;
+    }
+  }
+
   async function loadAndApply() {
     // Hydrate auto-disabled state before filtering so a tweak that was
     // auto-disabled in a previous session stays disabled until the user
@@ -218,6 +236,16 @@ const TweakEngineFeature = (() => {
     // One-time split of the legacy single-array cache into per-org keys.
     // Idempotent and cheap after the first run (no legacy key → early return).
     await window.TweakStorage.migrateLegacyIfNeeded();
+    // Safe mode short-circuits the apply pass entirely — but we still fall
+    // through to refreshFromServer() below so the cache stays fresh for the
+    // moment the user turns safe mode off.
+    if (await isSafeModeOn()) {
+      console.log('TweakEngine: safe mode ON — 0 tweaks applied');
+      refreshFromServer().catch((err) => {
+        console.log('TweakEngine: server refresh skipped:', err.message);
+      });
+      return;
+    }
     try {
       // Read only the ACTIVE org's bucket — a tab never touches another org's
       // key. matchesContext still applies the enabled / auto-disabled / urlMatch
@@ -598,6 +626,23 @@ const TweakEngineFeature = (() => {
   const consecutiveZeroMatches = new Map();   // tweakId -> { count, since }
   const autoDisabled = new Map();              // tweakId -> { reason, since, lastSuccessfulMatchCount }
 
+  // ─── Performance-budget auto-disable (B6) ────────────────────────
+  // A tweak whose per-pass applier is consistently slow makes JobTread
+  // feel broken even though its selectors still match. Trip the SAME
+  // auto-disable machinery as the zero-match guard (teardown + popup
+  // "Re-enable" recovery) on a streak of over-budget passes. Same
+  // hysteresis discipline as the zero-match trip so a one-off slow frame
+  // (a GC pause, a heavy JT render tick) never trips it:
+  //   - COUNT threshold — N consecutive over-budget passes, and
+  //   - DURATION threshold — the streak must have persisted D ms.
+  // Only observer-driven passes (applyOnce) are timed; a single fast pass
+  // resets the streak. Reuses autoDisableTweak → identical teardown and
+  // "Re-enable" recovery as dom_changed.
+  const APPLY_BUDGET_MS = 50;
+  const PERF_OVERRUN_THRESHOLD = ZERO_MATCH_THRESHOLD;
+  const PERF_STREAK_MIN_DURATION_MS = ZERO_STREAK_MIN_DURATION_MS;
+  const consecutivePerfOverruns = new Map();  // tweakId -> { count, since }
+
   /**
    * Hydrate the in-memory autoDisabled map from chrome.storage.local
    * so an auto-disable persists across page navigations within the
@@ -656,10 +701,15 @@ const TweakEngineFeature = (() => {
     document.documentElement.classList.remove('jt-tweak-' + tweakId);
     activeTweakIds.delete(tweakId);
     consecutiveZeroMatches.delete(tweakId);
+    consecutivePerfOverruns.delete(tweakId);
     // Surface the auto-disable in diagnostics so the popup chip can show
     // a clear reason. Does NOT clear lastError (preserves any prior info).
+    // Message varies by trip reason so the user sees WHY it was disabled.
+    const detail = reason === 'perf_budget_exceeded'
+      ? 'this tweak was slowing the page'
+      : 'selectors stopped matching after JT UI change';
     recordDiagnostic(tweakId, {
-      lastError: 'auto-disabled: ' + reason + ' — selectors stopped matching after JT UI change. Click Re-enable in the popup if you fixed the tweak.',
+      lastError: 'auto-disabled: ' + reason + ' — ' + detail + '. Click Re-enable in the popup if you fixed the tweak.',
       lastErrorAt: Date.now(),
     });
   }
@@ -697,21 +747,59 @@ const TweakEngineFeature = (() => {
     }
   }
 
+  /**
+   * Resolve the elements an action operates on for one pass. Queries the
+   * primary `action.selector` first; if it matches ZERO elements and the
+   * action carries an optional `selectorCandidates` array (validated
+   * upstream), tries each candidate in order and returns the first that
+   * yields ≥1 match. The primary is unchanged whenever it matches, so
+   * existing tweaks with no candidates are unaffected. Returns a NodeList /
+   * array (empty when nothing — primary or any candidate — matched), or null
+   * when the primary selector itself is invalid (caller records + skips).
+   */
+  function resolveActionMatches(action) {
+    let matches;
+    try {
+      matches = document.querySelectorAll(action.selector);
+    } catch {
+      return null; // invalid primary selector — caller records + skips
+    }
+    if (matches.length > 0) return matches;
+    // Primary matched nothing — walk the optional fallback candidates.
+    if (Array.isArray(action.selectorCandidates)) {
+      for (const candidate of action.selectorCandidates) {
+        if (typeof candidate !== 'string' || !candidate) continue;
+        let alt;
+        try {
+          alt = document.querySelectorAll(candidate);
+        } catch {
+          continue; // a bad candidate is skipped, not fatal
+        }
+        if (alt.length > 0) return alt;
+      }
+    }
+    return matches; // empty NodeList — primary AND all candidates missed
+  }
+
   function makeActionApplier(tweak) {
     // Track which (action, element) pairs we've already applied so re-runs
     // are idempotent. WeakSet by element keyed per action index.
     const appliedSets = tweak.actions.map(() => new WeakSet());
 
     return function applyOnce() {
+      // Time the whole per-pass applier so a consistently slow tweak trips
+      // the performance-budget auto-disable (B6). performance.now() is
+      // monotonic; the streak/duration hysteresis lives after the loop.
+      const passStart = performance.now();
       let totalMatches = 0;
       tweak.actions.forEach((action, i) => {
         // onEvent + confirmBeforeAction are wired separately as delegated
         // document listeners — they don't run during the per-element apply loop.
         if (action.type === 'onEvent' || action.type === 'confirmBeforeAction') return;
-        let matches;
-        try {
-          matches = document.querySelectorAll(action.selector);
-        } catch (err) {
+        // Resolve via primary selector, falling back to selectorCandidates
+        // when the primary matches nothing (C1). null = invalid primary.
+        const matches = resolveActionMatches(action);
+        if (matches === null) {
           recordDiagnostic(tweak.id, { lastError: `action[${i}]: invalid selector`, lastErrorAt: Date.now() });
           return;
         }
@@ -734,6 +822,12 @@ const TweakEngineFeature = (() => {
           }
         }
       });
+      // Performance-budget hysteresis (B6). Compare this pass's wall-clock
+      // cost against APPLY_BUDGET_MS. A single under-budget pass resets the
+      // streak so a one-off slow frame never trips; an over-budget streak
+      // that has also persisted for the minimum duration auto-disables the
+      // tweak via the SAME path as the zero-match trip.
+      evaluatePerfBudget(tweak.id, performance.now() - passStart);
       const now = Date.now();
       const partial = { lastMatchCount: totalMatches, lastApplyAt: now };
       if (totalMatches > 0) {
@@ -779,6 +873,32 @@ const TweakEngineFeature = (() => {
       }
       recordDiagnostic(tweak.id, partial);
     };
+  }
+
+  /**
+   * Performance-budget hysteresis for one applyOnce pass (B6). `elapsedMs`
+   * is the wall-clock cost of the pass. Under budget → reset the streak (so
+   * a single fast pass clears any transient slow run and a one-off slow
+   * frame can never trip). Over budget → grow the streak; when it hits both
+   * the count and minimum-duration thresholds, auto-disable via the SAME
+   * path as the zero-match trip (teardown + popup "Re-enable"). Skipped on an
+   * orphaned post-reload script (autoDisableTweak touches chrome.storage).
+   */
+  function evaluatePerfBudget(tweakId, elapsedMs) {
+    if (elapsedMs <= APPLY_BUDGET_MS) {
+      consecutivePerfOverruns.delete(tweakId);
+      return;
+    }
+    let streak = consecutivePerfOverruns.get(tweakId);
+    if (!streak) {
+      streak = { count: 0, since: Date.now() };
+      consecutivePerfOverruns.set(tweakId, streak);
+    }
+    streak.count++;
+    const streakAge = Date.now() - streak.since;
+    if (streak.count >= PERF_OVERRUN_THRESHOLD && streakAge >= PERF_STREAK_MIN_DURATION_MS && isContextValid()) {
+      autoDisableTweak(tweakId, 'perf_budget_exceeded', 0);
+    }
   }
 
   // ─── Date guard helpers (matchDate) ──────────────────────────────
@@ -1083,9 +1203,14 @@ const TweakEngineFeature = (() => {
       const activeOrg = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
       const orgKey = activeOrg ? window.TweakStorage.keyForOrg(activeOrg) : null;
       const tweaksChanged = !!(orgKey && changes[orgKey]);
-      if (!tweaksChanged && !changes.jtTweakAutoDisabled) return;
+      // Safe-mode flips (B2) drive a full teardown + re-apply just like a
+      // tweak-set change: turning it ON tears down everything (loadAndApply
+      // then short-circuits to zero tweaks); turning it OFF hot-re-applies
+      // with no page reload.
+      const safeModeChanged = !!changes.jtTweakSafeMode;
+      if (!tweaksChanged && !changes.jtTweakAutoDisabled && !safeModeChanged) return;
       console.log('TweakEngine: storage changed, re-applying',
-        tweaksChanged ? '(tweaks)' : '(auto-disable map)');
+        safeModeChanged ? '(safe mode)' : (tweaksChanged ? '(tweaks)' : '(auto-disable map)'));
       removeAllAppliedTweaks();
       loadAndApply();
     };
@@ -1281,6 +1406,8 @@ const TweakEngineFeature = (() => {
     teardownUrlChangeListener();
     clearPreview();
     removeAllAppliedTweaks();
+    // Reset the perf-guard hysteresis so a fresh init() starts clean (B6).
+    consecutivePerfOverruns.clear();
     eventListeners.forEach(({ target, event, handler, isChromeListener }) => {
       if (isChromeListener) {
         target.removeListener(handler);
@@ -1298,7 +1425,7 @@ const TweakEngineFeature = (() => {
     cleanup,
     isActive: () => isActive,
     // exposed for the editor's "Test on active tab" message handler + popup refresh button
-    _internals: { loadAndApply, removeAllAppliedTweaks, matchesContext, refreshFromServer, previewTweak, clearPreview, dayOffsetFromToday, passesDateGuard, runAction, dateAttrsForTweak, observedAttrsForTweak }
+    _internals: { loadAndApply, removeAllAppliedTweaks, matchesContext, refreshFromServer, previewTweak, clearPreview, dayOffsetFromToday, passesDateGuard, runAction, dateAttrsForTweak, observedAttrsForTweak, resolveActionMatches, evaluatePerfBudget, isSafeModeOn, makeActionApplier, autoDisabled, consecutivePerfOverruns, APPLY_BUDGET_MS, PERF_OVERRUN_THRESHOLD, PERF_STREAK_MIN_DURATION_MS }
   };
 })();
 

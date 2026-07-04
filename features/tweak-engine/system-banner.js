@@ -9,7 +9,20 @@
  * stays available in the popup as a separate decision.
  *
  * Storage: chrome.storage.local['jtTweakAcknowledged'] —
- *   { [tweakId]: ackTimestampMs }
+ *   { [`${tweakId}@${version}`]: ackTimestampMs }
+ *
+ * Ack is keyed by tweak id AND version (the server's currentVersion). A
+ * bumped version means the id@version ack is absent, so an already-acked
+ * org tweak that an admin edits re-surfaces once — this time framed as an
+ * "Updated" tweak with a plain-English summary of what the new version does
+ * (B4). Re-acking suppresses it until the next version.
+ *
+ * Backward-compat: a legacy id-only ack (from before versioned keying) is
+ * treated as covering whatever version the user currently sees — it is
+ * migrated to the id@version key on first read, so the banner does NOT
+ * re-show spuriously; it only re-shows on a genuine subsequent bump. Least-
+ * surprising: a user who already acked stays acked until there's a real
+ * update.
  *
  * Per-device, by design — each device sees the banner once when a new
  * org_required tweak first lands. Re-showing on a different device is
@@ -74,6 +87,20 @@ const JTTweakSystemBanner = (() => {
   }
 
   /**
+   * The tweak's current server version. Falls back to a stable sentinel so a
+   * tweak that (unexpectedly) lacks currentVersion still keys deterministically
+   * and doesn't re-nag on every load.
+   */
+  function tweakVersion(t) {
+    const v = t && t.currentVersion;
+    return (typeof v === 'number' || typeof v === 'string') ? String(v) : '0';
+  }
+
+  function ackKey(id, version) {
+    return id + '@' + version;
+  }
+
+  /**
    * Read acknowledged map from chrome.storage.local, defaulting to {}.
    */
   async function readAck() {
@@ -86,13 +113,14 @@ const JTTweakSystemBanner = (() => {
   }
 
   /**
-   * Write acknowledgements for the given tweak ids. Merges with existing.
+   * Write acknowledgements for the given (id, version) pairs. Merges with
+   * existing, using the versioned key so a later bump re-surfaces the banner.
    */
-  async function writeAck(tweakIds) {
+  async function writeAck(pairs) {
     const existing = await readAck();
     const now = Date.now();
-    for (const id of tweakIds) {
-      existing[id] = now;
+    for (const { id, version } of pairs) {
+      existing[ackKey(id, version)] = now;
     }
     try {
       await chrome.storage.local.set({ [STORAGE_KEY]: existing });
@@ -102,16 +130,63 @@ const JTTweakSystemBanner = (() => {
   }
 
   /**
-   * Compute which org_required tweaks need to be acknowledged on this
-   * device. Returns the array of tweaks (not just ids) so the caller can
-   * render names. Caller passes the already-loaded tweaks array.
+   * Migrate any legacy id-only ack (a bare tweak id key, no "@version") for
+   * the given org_required tweaks into the versioned key for the version the
+   * user currently sees. Idempotent: only acts when a legacy key exists and
+   * the versioned key doesn't. Prevents a one-time spurious re-show on the
+   * first load after this feature ships. Returns the possibly-updated ack map.
+   */
+  async function migrateLegacyAcks(orgRequired, ack) {
+    let dirty = false;
+    for (const t of orgRequired) {
+      const legacy = ack[t.id];
+      const versioned = ackKey(t.id, tweakVersion(t));
+      // A legacy key is a bare id with a timestamp value and no "@" — the id
+      // itself never contains "@". Migrate it to cover the current version.
+      if (legacy && ack[versioned] === undefined) {
+        ack[versioned] = legacy;
+        delete ack[t.id];
+        dirty = true;
+      } else if (legacy && ack[versioned] !== undefined) {
+        // Already covered by a versioned ack — just drop the stale legacy key.
+        delete ack[t.id];
+        dirty = true;
+      }
+    }
+    if (dirty) {
+      try {
+        await chrome.storage.local.set({ [STORAGE_KEY]: ack });
+      } catch (e) {
+        console.warn('TweakSystemBanner: failed to migrate legacy acks:', e);
+      }
+    }
+    return ack;
+  }
+
+  /**
+   * Compute which org_required tweaks need to be acknowledged on this device
+   * at their CURRENT version. Returns tweaks (not just ids) tagged with
+   * `_isUpdate` — true when a PRIOR version of this tweak was already acked
+   * (so the banner frames it as "Updated"), false on first-ever sight. Caller
+   * passes the already-loaded tweaks array.
    */
   async function findUnacknowledged(tweaks) {
     if (!Array.isArray(tweaks)) return [];
     const orgRequired = tweaks.filter(t => t && t.storageScope === 'org_required');
     if (!orgRequired.length) return [];
-    const ack = await readAck();
-    return orgRequired.filter(t => !ack[t.id]);
+    let ack = await readAck();
+    ack = await migrateLegacyAcks(orgRequired, ack);
+    const result = [];
+    for (const t of orgRequired) {
+      const version = tweakVersion(t);
+      if (ack[ackKey(t.id, version)] !== undefined) continue; // acked at this version
+      // Unacked at this version. It's an UPDATE if any other version of this
+      // tweak was previously acked (a "<id>@" prefix with a different version).
+      const prefix = t.id + '@';
+      const isUpdate = Object.keys(ack).some(k => k.startsWith(prefix) && k !== ackKey(t.id, version));
+      result.push({ ...t, _isUpdate: isUpdate });
+    }
+    return result;
   }
 
   function dismiss() {
@@ -119,6 +194,24 @@ const JTTweakSystemBanner = (() => {
       visibleBanner.parentNode.removeChild(visibleBanner);
     }
     visibleBanner = null;
+  }
+
+  /**
+   * The list-item label for a pending tweak. For an UPDATED tweak, append the
+   * plain-English summary of the new version (via describe.js — the same
+   * summary shown in the builder / import dialog) so the member sees WHAT
+   * changed, not just that it did. describe is best-effort — fall back to the
+   * name alone if it's missing or throws. Rendered via textContent by caller.
+   */
+  function itemLabel(t) {
+    const name = (t && t.name) ? String(t.name).slice(0, 100) : '(unnamed tweak)';
+    if (t && t._isUpdate && window.TweakDescribe) {
+      try {
+        const lines = window.TweakDescribe.describe(t);
+        if (lines && lines.length) return (name + ' — ' + lines.join('; ')).slice(0, 200);
+      } catch { /* fall through to name only */ }
+    }
+    return name.slice(0, 200);
   }
 
   /**
@@ -153,10 +246,20 @@ const JTTweakSystemBanner = (() => {
     body.className = 'jt-tweak-system-banner-body';
     inner.appendChild(body);
 
+    // "Updated" framing when EVERY pending tweak is a re-notify (a prior
+    // version was acked); "required" framing otherwise. A mixed batch (some
+    // new, some updated) keeps the original "required" framing — the safe
+    // default that names all of them; the per-item summary still calls out
+    // what each does.
+    const allUpdates = unackedTweaks.length > 0 && unackedTweaks.every(t => t && t._isUpdate);
+
     const title = document.createElement('p');
     title.className = 'jt-tweak-system-banner-title';
     const count = unackedTweaks.length;
-    title.textContent = 'Your admin has ' + count + ' required tweak' + (count === 1 ? '' : 's') + ' active in this org';
+    const tweakWord = 'tweak' + (count === 1 ? '' : 's');
+    title.textContent = allUpdates
+      ? ('Your admin updated ' + count + ' required ' + tweakWord + ' in this org')
+      : ('Your admin has ' + count + ' required ' + tweakWord + ' active in this org');
     body.appendChild(title);
 
     const list = document.createElement('ul');
@@ -164,7 +267,7 @@ const JTTweakSystemBanner = (() => {
     const shown = unackedTweaks.slice(0, 5);
     for (const t of shown) {
       const li = document.createElement('li');
-      li.textContent = (t && t.name) ? String(t.name).slice(0, 100) : '(unnamed tweak)';
+      li.textContent = itemLabel(t);
       list.appendChild(li);
     }
     if (unackedTweaks.length > shown.length) {
@@ -195,7 +298,7 @@ const JTTweakSystemBanner = (() => {
     visibleBanner = banner;
 
     ackBtn.addEventListener('click', async () => {
-      await writeAck(unackedTweaks.map(t => t.id));
+      await writeAck(unackedTweaks.map(t => ({ id: t.id, version: tweakVersion(t) })));
       dismiss();
     });
     dismissBtn.addEventListener('click', () => dismiss());
@@ -224,7 +327,7 @@ const JTTweakSystemBanner = (() => {
     }
   }
 
-  return { show, dismiss, maybeShowFor, findUnacknowledged };
+  return { show, dismiss, maybeShowFor, findUnacknowledged, writeAck, ackKey, tweakVersion };
 })();
 
 window.JTTweakSystemBanner = JTTweakSystemBanner;

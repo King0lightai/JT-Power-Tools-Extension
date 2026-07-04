@@ -740,6 +740,20 @@
           </div>
 
           <section class="jt-tweaks-section" data-tweaks-section>
+            <!-- Safe-mode master switch — a per-install kill switch that turns
+                 off ALL tweaks at once. Reads/writes chrome.storage.local
+                 ['jtTweakSafeMode']; the engine reacts on its own via its
+                 storage-change listener (no page message needed). -->
+            <div class="jt-tweaks-safemode" data-tweaks-safemode>
+              <div class="jt-tweaks-safemode-info">
+                <span class="jt-tweaks-safemode-label">Disable all tweaks (safe mode)</span>
+                <span class="jt-tweaks-safemode-hint">Turn off all tweaks — JobTread loads exactly as it ships. Your tweaks are kept and come back when you switch this off.</span>
+              </div>
+              <label class="toggle" title="Turn off all tweaks on this device">
+                <input type="checkbox" data-tweaks-safemode-toggle>
+                <span class="slider"></span>
+              </label>
+            </div>
             <div class="jt-tweaks-header">
               <span class="jt-tweaks-org" data-tweaks-org>(no org)</span>
               <div class="jt-tweaks-actions">

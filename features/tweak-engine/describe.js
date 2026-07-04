@@ -68,6 +68,10 @@ const TweakDescribe = (() => {
           const phrase = dateGuardPhrase(a.matchDate);
           if (phrase) line += ' ' + phrase;
         }
+        if (a && Array.isArray(a.selectorCandidates) && a.selectorCandidates.length) {
+          const n = a.selectorCandidates.length;
+          line += ' (with ' + n + ' backup selector' + (n === 1 ? '' : 's') + ')';
+        }
         lines.push(line);
       }
     }

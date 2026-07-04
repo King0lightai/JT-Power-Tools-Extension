@@ -22,6 +22,10 @@ const TweakBuilderFeature = (() => {
   let panel = null;
   let capture = null;
   let intent = null;
+  // Set when opened from the popup's Repair action (C2): the tweak being
+  // repaired. save() reuses its id + storageScope so the re-picked selector
+  // lands as a new version of the same tweak, not a fresh one.
+  let repair = null;
   const values = {};
 
   // Listeners that live for the whole feature lifetime (drained in cleanup()).
@@ -83,12 +87,22 @@ const TweakBuilderFeature = (() => {
   }
 
   function open(ctx) {
-    capture = ctx || {};
+    ctx = ctx || {};
+    // Repair flow (C2): pull the tweak being repaired off the ctx so save()
+    // can reuse its id/scope. The rest of ctx (the re-picked selector, etc.)
+    // stays as the capture the builder authors against.
+    repair = (ctx.repairTweak && typeof ctx.repairTweak === 'object') ? ctx.repairTweak : null;
+    capture = ctx;
     intent = null;
     Object.keys(values).forEach((k) => delete values[k]);
     if (panel) close();
     panel = renderPanel();
     document.body.appendChild(panel);
+    // Prefill the name from the tweak being repaired so the new version keeps
+    // its label. The user still picks the intent and re-confirms the element.
+    if (repair && nameInput && typeof repair.name === 'string') {
+      nameInput.value = repair.name;
+    }
     // Esc closes the builder. Capture phase at document so it fires even when
     // focus is in a form field and before JobTread handles the key. Tracked as
     // a panel listener so close() removes it.
@@ -116,6 +130,7 @@ const TweakBuilderFeature = (() => {
     if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
     panel = null;
     capture = null;
+    repair = null;
     intent = null;
     formContainer = null;
     safeLine = null;
@@ -502,11 +517,14 @@ const TweakBuilderFeature = (() => {
   }
 
   // Server-first (best effort): returns the server's canonical tweak when
-  // available, else the input tweak unchanged. Never throws.
-  async function saveToServer(tweak) {
+  // available, else the input tweak unchanged. Never throws. When repairing
+  // an existing tweak, updates it (new version) rather than creating a new one.
+  async function saveToServer(tweak, isRepair) {
     if (!(window.TweaksApi && window.TweaksApi.isAvailable())) return tweak;
     try {
-      const result = await window.TweaksApi.create(tweak);
+      const result = isRepair
+        ? await window.TweaksApi.update(tweak)
+        : await window.TweaksApi.create(tweak);
       if (result && result.tweak) return result.tweak;
     } catch (err) {
       console.warn('TweakBuilder: server save failed, saving locally only:', err && err.message);
@@ -527,7 +545,11 @@ const TweakBuilderFeature = (() => {
       showError('No active JobTread org detected — open a JobTread page first.');
       return;
     }
-    const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : null;
+    // Repair reuses the broken tweak's id so the re-picked selector saves as
+    // a new version of the same tweak; a fresh build mints a new id.
+    const id = repair && repair.id
+      ? repair.id
+      : ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : null);
     if (!id) {
       showError('Could not generate a tweak id on this browser.');
       return;
@@ -541,13 +563,16 @@ const TweakBuilderFeature = (() => {
       id,
       name: (nameInput && nameInput.value.trim()) || undefined
     });
+    // Preserve the repaired tweak's storage scope (buildTweak defaults to
+    // 'personal') so an org_required tweak stays org_required after repair.
+    if (repair && repair.storageScope) tweak.storageScope = repair.storageScope;
     const v = window.TweakValidator.validate(tweak);
     if (!v.ok) {
       showError(v.errors[0].reason);
       return;
     }
 
-    const canonical = await saveToServer(tweak);
+    const canonical = await saveToServer(tweak, !!repair);
     try {
       await saveToLocal(canonical);
     } catch (err) {

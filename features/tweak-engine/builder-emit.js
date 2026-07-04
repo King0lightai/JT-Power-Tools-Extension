@@ -62,7 +62,16 @@ const TweakBuilderEmit = (() => {
     if (intent === 'restyle') {
       tweak.css = buildRestyleCss(selector, values);
     } else {
-      tweak.actions = [buildAction(intent, values, selector)];
+      const action = buildAction(intent, values, selector);
+      // Resilience (spec C1): carry the picker's fallback selectors so the
+      // engine can recover if JobTread's UI change breaks the primary. Only
+      // for action verbs — restyle emits css, which has no per-action
+      // fallback. The validator caps/re-checks these on save.
+      const candidates = capture && Array.isArray(capture.selectorCandidates)
+        ? capture.selectorCandidates.filter((c) => typeof c === 'string' && c && c !== selector).slice(0, 5)
+        : [];
+      if (candidates.length) action.selectorCandidates = candidates;
+      tweak.actions = [action];
     }
     return tweak;
   }

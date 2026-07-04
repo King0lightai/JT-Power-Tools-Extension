@@ -69,6 +69,15 @@ const InspectForAiFeature = (() => {
         sendResponse({ ok: true });
         return false;
       }
+      if (message && message.type === 'TWEAK_OPEN_REPAIR') {
+        // Repair flow (C2): arm the builder picker carrying the broken tweak.
+        // buildCaptureContext on the re-picked element flows into jt-tweak-build
+        // with this tweak so the builder saves an update (same id).
+        pendingRepairTweak = (message.tweak && typeof message.tweak === 'object') ? message.tweak : null;
+        enterPickerMode({ multi: false, forBuilder: true });
+        sendResponse({ ok: true });
+        return false;
+      }
       if (message && message.type === 'JT_TWEAK_CANCEL') {
         // Sent by the popup when it's pinned as a side panel: keyboard focus
         // stays in the side panel, so this page never sees the Escape keydown.
@@ -119,6 +128,10 @@ const InspectForAiFeature = (() => {
 
   let pickerActive = false;
   let pickerForBuilder = false;
+  // Set when the popup asks to repair an auto-disabled tweak: the picked
+  // element's context is forwarded to the builder alongside this tweak so it
+  // reopens pre-loaded and saves as an update (same id). Cleared on exit.
+  let pendingRepairTweak = null;
   let highlightEl = null;
   let infoEl = null;
   let lastHighlighted = null;
@@ -377,6 +390,9 @@ const InspectForAiFeature = (() => {
     if (!pickerActive) return;
     pickerActive = false;
     pickerForBuilder = false;
+    // Clear repair state — the dispatch above already copied it onto the ctx.
+    // If the picker was cancelled (Esc) it's simply discarded, as intended.
+    pendingRepairTweak = null;
     document.removeEventListener('mousemove', onPickerMouseMove, true);
     document.removeEventListener('click', onPickerClick, true);
     document.removeEventListener('keydown', onPickerKeyDown, true);
@@ -508,6 +524,9 @@ const InspectForAiFeature = (() => {
     } else {
       if (pickerForBuilder) {
         const ctx = buildCaptureContext(el);
+        // Repair flow (C2): carry the broken tweak so the builder reopens
+        // pre-loaded and saves as an update (same id) instead of a new tweak.
+        if (pendingRepairTweak) ctx.repairTweak = pendingRepairTweak;
         window.dispatchEvent(new CustomEvent('jt-tweak-build', { detail: ctx }));
         exitPickerMode();
       } else {
@@ -582,6 +601,7 @@ const InspectForAiFeature = (() => {
     const siblingContext = describeSiblingContext(el);
     return {
       selector,
+      selectorCandidates: buildSelectorCandidates(el, selector),
       snippet: '<' + tag + (classes.length ? ' class="' + classes.join(' ') + '"' : '') + (dataAttrs ? ' ' + dataAttrs : '') + '>',
       ancestors,
       descendants,
@@ -593,6 +613,39 @@ const InspectForAiFeature = (() => {
       // (e.g. ?view=gantt). The AI may need both to scope onEvent properly.
       pathWithQuery: window.location.pathname + window.location.search + window.location.hash
     };
+  }
+
+  // Generate up to 3 fallback selectors for the same element via alternate
+  // finder profiles, so a builder-authored tweak is resilient by default: if
+  // JobTread's next release breaks the primary selector, the engine falls
+  // back to a candidate instead of the tweak silently dying (spec C1). The
+  // structural profile (no classes → tag + nth-child path) survives class
+  // renames; the class-heavy profile survives DOM reparenting. Deduped
+  // against the primary and each other. finder can throw when it can't find a
+  // unique selector — each profile is guarded and simply skipped on failure.
+  // The validator (client + server) re-checks every candidate on save; these
+  // profiles only ever emit ordinary element selectors, so they pass.
+  function buildSelectorCandidates(el, primary) {
+    const profiles = [
+      // Structural: ignore all classes, lean on tag names + nth-child.
+      { className: () => false, tagName: () => true, seedMinLength: 1, optimizedMinLength: 2 },
+      // Class-aware but more anchored (longer optimized path) than the primary.
+      { className: (n) => !TAILWIND_PREFIX_RE.test(n), tagName: () => true, seedMinLength: 2, optimizedMinLength: 3 },
+    ];
+    const out = [];
+    for (const opts of profiles) {
+      let sel;
+      try {
+        sel = window.JTFinder(el, opts);
+      } catch (err) {
+        continue;
+      }
+      if (!sel || sel === primary || out.includes(sel)) continue;
+      if (sel.length > 500 || sel.includes('.jt-tools-') || sel.includes('.jt-popup-')) continue;
+      out.push(sel);
+      if (out.length >= 3) break;
+    }
+    return out;
   }
 
   // Wraps buildStructuralBlock with a try/catch so a serialization failure
