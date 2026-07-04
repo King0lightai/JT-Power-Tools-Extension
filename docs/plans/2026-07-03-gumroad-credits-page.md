@@ -39,8 +39,8 @@ tops the tank back up instantly.
 **How credits work:**
 
 - Every Assistant answer uses a few credits — a typical question costs about
-  5, a deep analysis more. Your plan includes 3,000 credits a month
-  (Assistant) or 7,500 (Assistant Pro).
+  5, a deep analysis more. Your plan includes 5,000 credits a month
+  (Assistant) or 15,000 (Assistant Pro).
 - Credit packs are **one-time purchases** that stack on top of your monthly
   pool. **They never expire** — buy a pack in July, use it in October.
 - Credits are shared by your **whole company**, same as your subscription.
