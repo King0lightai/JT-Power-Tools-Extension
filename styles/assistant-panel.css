@@ -759,6 +759,25 @@ body.jt-custom-theme .jt-assistant-panel {
   width: 100%;
 }
 
+/* Secondary portal link under the primary CTA — quiet, text-only */
+.jt-assistant-nudge-portal-link {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 2px 0;
+  background: none;
+  border: none;
+  color: var(--jta-text-muted);
+  font-size: 11px;
+  text-align: center;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.jt-assistant-nudge-portal-link:hover {
+  color: var(--jta-text-2);
+}
+
 /* Skills hint — slim one-line chip when a profile exists but has no skills */
 .jt-assistant-skills-hint {
   align-self: stretch;

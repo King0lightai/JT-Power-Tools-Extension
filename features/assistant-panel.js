@@ -27,6 +27,10 @@ const AssistantPanelFeature = (() => {
   const PORTAL_PROFILE_URL = 'https://app.jtpowertools.com/dashboard#team';
   const LAUNCHER_POS_KEY = 'jtAssistantLauncherPos';
   const PANEL_WIDTH_KEY = 'jtAssistantPanelWidth';
+  const PENDING_RUN_KEY = 'jtAssistantPendingRun';
+  // Only reopen an interrupted run if it started within this window — an older
+  // stash is almost certainly a run that already finished (or was abandoned).
+  const PENDING_RUN_MAX_AGE_MS = 10 * 60 * 1000;
   const DEFAULT_PANEL_WIDTH = 380;
   const MIN_PANEL_WIDTH = 300;
 
@@ -60,6 +64,7 @@ const AssistantPanelFeature = (() => {
   let abortController = null;
   let sending = false;
   let statusChecked = false; // profile/skills nudge fires once per page load
+  let pendingRecovery = null; // interrupted run to reopen on the next panel open (set at init from storage)
   let launcherDrag = null; // { startY, startTop, moved } while a drag is in progress
   let justDragged = false; // suppress the click that follows a drag-release
   // Docked-sidebar push state. When the panel opens it pushes JobTread's app
@@ -610,6 +615,59 @@ const AssistantPanelFeature = (() => {
     }
   }
 
+  // ─── In-flight run recovery (survives a mid-run reload) ───────────────
+  // A page reload kills this JS context before the answer lands, but the run
+  // keeps going server-side and persists to its session. We stash the active
+  // run so the next load can reopen that session and let it finish.
+
+  function setPendingRun(record) {
+    try {
+      chrome.storage.local.set({ [PENDING_RUN_KEY]: record });
+    } catch {
+      // Non-fatal — recovery just won't be available after a reload.
+    }
+  }
+
+  function clearPendingRun() {
+    try {
+      chrome.storage.local.remove(PENDING_RUN_KEY);
+    } catch {
+      // Non-fatal.
+    }
+  }
+
+  // Read the stash at init. Keep it for the next panel open only when it's
+  // recent AND has a session id to reopen; otherwise drop it now.
+  function loadPendingRecovery() {
+    try {
+      chrome.storage.local.get(PENDING_RUN_KEY, (res) => {
+        const record = res && res[PENDING_RUN_KEY];
+        if (!record) return;
+        const recent =
+          typeof record.startedAt === 'number' &&
+          Date.now() - record.startedAt < PENDING_RUN_MAX_AGE_MS;
+        if (recent && record.sessionId) {
+          pendingRecovery = record;
+        } else {
+          clearPendingRun();
+        }
+      });
+    } catch {
+      // Non-fatal — no recovery this load.
+    }
+  }
+
+  // Reopen the interrupted run's session and explain what happened. Consumed
+  // once, on the first panel open after a reload.
+  async function recoverPendingRun(record) {
+    clearPendingRun();
+    await loadSession(record.sessionId);
+    appendSystemNote(
+      "You reloaded during a run — this is the conversation so far. If the answer hasn't landed " +
+        "yet, it's still finishing; reopen it from History in a moment."
+    );
+  }
+
   // Edge handle — same tracked-listener discipline as the launcher drag.
   // Transitions are suppressed mid-drag so the page tracks the cursor 1:1.
   function onPanelResizePointerDown(e) {
@@ -751,6 +809,12 @@ const AssistantPanelFeature = (() => {
       }
       const input = panelEl.querySelector('[data-jt-role="input"]');
       if (input) input.focus();
+      // Reopen an interrupted run (Feature 1) — once, on the first open after a reload.
+      if (pendingRecovery) {
+        const record = pendingRecovery;
+        pendingRecovery = null;
+        void recoverPendingRun(record);
+      }
     } else {
       releaseSqueeze(); // undock: hand the page's width back
     }
@@ -759,6 +823,7 @@ const AssistantPanelFeature = (() => {
   function resetSession() {
     sessionId = null;
     renderedDraftKeys.clear();
+    clearPendingRun(); // starting fresh abandons any interrupted run
     if (abortController) abortController.abort();
     const messages = panelEl?.querySelector('[data-jt-role="messages"]');
     if (messages) messages.replaceChildren();
@@ -1015,6 +1080,19 @@ const AssistantPanelFeature = (() => {
     setSending(true);
     setStatus('Thinking…');
 
+    // Stash this run so a mid-run reload can reopen its session (Feature 1).
+    // The session id is known up front only when continuing a session; for a
+    // fresh session it arrives on a frame (today only `done` carries it) and we
+    // backfill it via capturePendingSession as soon as any frame surfaces it.
+    const pendingRun = { sessionId: sessionId || null, task, startedAt: Date.now() };
+    setPendingRun(pendingRun);
+    const capturePendingSession = (id) => {
+      if (id && !pendingRun.sessionId) {
+        pendingRun.sessionId = id;
+        setPendingRun(pendingRun);
+      }
+    };
+
     abortController = new AbortController();
     let assistantBubble = null;
     let assistantText = ''; // raw markdown accumulated across deltas
@@ -1051,6 +1129,7 @@ const AssistantPanelFeature = (() => {
       };
 
       const handleDone = (frame) => {
+        clearPendingRun(); // run finished normally — nothing to recover
         sessionId = frame.session_id || sessionId;
         // Server truth wins: replace streamed text with the final answer
         // if they diverge (e.g. multi-iteration runs).
@@ -1083,12 +1162,19 @@ const AssistantPanelFeature = (() => {
         usage: (frame) => setUsage(frame.usage),
         done: handleDone,
         error: (frame) => {
+          clearPendingRun(); // run ended (server error) — nothing to recover
           appendSystemNote(`Something went wrong: ${frame.error}`);
           setStatus('');
         },
       };
 
-      const handleFrame = (frame) => frameHandlers[frame.type]?.(frame);
+      // Capture the session id from any frame that carries one (today only
+      // `done`, but this stays correct if an earlier frame starts including it),
+      // then dispatch to the frame's handler.
+      const handleFrame = (frame) => {
+        if (frame.session_id) capturePendingSession(frame.session_id);
+        frameHandlers[frame.type]?.(frame);
+      };
 
       await consumeSse(response.body, handleFrame);
       scrollToBottom();
@@ -1291,10 +1377,21 @@ const AssistantPanelFeature = (() => {
         'Answers get sharper when the assistant knows your trades, pricing, and stage names.'
       )
     );
-    const btn = el('button', 'jtt-btn jtt-btn-primary jt-assistant-nudge-btn', 'Set up your Assistant profile');
+    // Primary: run the setup interview right here — the server-side skill takes
+    // over from this message (one question at a time, ending in an Apply card).
+    const btn = el('button', 'jtt-btn jtt-btn-primary jt-assistant-nudge-btn', 'Set it up right here');
     btn.type = 'button';
-    btn.addEventListener('click', () => window.open(PORTAL_PROFILE_URL, '_blank', 'noopener'));
+    btn.addEventListener('click', () => {
+      card.remove();
+      void submitTask('Help me set up my assistant profile.');
+    });
     card.appendChild(btn);
+
+    // Secondary: the old portal path, for anyone who'd rather edit it there.
+    const portalLink = el('button', 'jt-assistant-nudge-portal-link', 'or edit it in the portal');
+    portalLink.type = 'button';
+    portalLink.addEventListener('click', () => window.open(PORTAL_PROFILE_URL, '_blank', 'noopener'));
+    card.appendChild(portalLink);
 
     messages.prepend(card);
   }
@@ -1316,6 +1413,7 @@ const AssistantPanelFeature = (() => {
 
     injectStyles();
     restorePanelWidth();
+    loadPendingRecovery(); // reopen an interrupted run on the next panel open
     buildLauncher();
     buildGlow();
 
@@ -1377,6 +1475,7 @@ const AssistantPanelFeature = (() => {
     renderedDraftKeys.clear();
     sending = false;
     statusChecked = false;
+    pendingRecovery = null;
     launcherDrag = null;
     justDragged = false;
     panelWidth = DEFAULT_PANEL_WIDTH;
