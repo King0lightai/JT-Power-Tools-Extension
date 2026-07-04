@@ -78,7 +78,7 @@ In `server/mcp-server/src/tweaks-handler.js`, reuse the exact `shared_tweaks` ra
 
 ### B1. Server-side kill switch (instant revoke)
 
-Add a nullable `revoked_at INTEGER` column to `tweaks` (new migration `044_tweak_kill_switch.sql`).
+Add a nullable `revoked_at INTEGER` column to `tweaks` (new migration `045_tweak_kill_switch.sql` — renumbered from 044 to avoid a collision with `044_skill_scope.sql` that landed on main in parallel).
 
 - `listTweaksData` excludes `revoked_at IS NOT NULL` rows exactly like `deleted_at` — so a revoked tweak stops distributing on the next refresh (≤ one refresh cycle) to every member, without a hard delete (reversible; version history intact).
 - New handler `revokeTweakData(env, account, tweakId, { revoked })` — admin-only for `org_required`, author-or-admin for `personal`. Sets/clears `revoked_at`.
@@ -156,7 +156,7 @@ In `portal/` tweaks admin, add a read-only health column per org tweak driven by
 ## Cross-cutting
 
 - **Validator parity is sacred.** Every schema change in this spec (`selectorCandidates`) lands in the client validator (`utils/tweak-validator.js`) **and** the server validator (`server/mcp-server/src/tweaks-validator.js`) in the same PR, with corpus + parity coverage (A2). Same for any sanitizer touch.
-- **Migrations are applied manually** via `wrangler d1 execute --file` (per project memory) — not `migrations apply`. The migration file (`044_tweak_kill_switch.sql`) is authored and referenced; deployment is a separate human step.
+- **Migrations are applied manually** via `wrangler d1 execute --file` (per project memory) — not `migrations apply`. The migration file (`045_tweak_kill_switch.sql`) is authored and referenced; deployment is a separate human step.
 - **CHANGELOG.md** gets an `[Unreleased]` entry per workstream (Added/Improved/Security), naming the feature and user impact, per `.claude/rules/changelog.md`.
 - **No `innerHTML`** anywhere in new UI — `utils/dom-helpers.js` (`createElement`/`textContent`) only. The `describe()` and banner render paths stay on `textContent` (keeps UTL-1/UTL-2 from ever becoming stored XSS).
 - **Lifecycle:** any new listener/observer/style added in `index.js` must be torn down by `removeAllAppliedTweaks`; safe-mode and perf-guard state must reset cleanly on `cleanup()`.
