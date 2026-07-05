@@ -92,8 +92,18 @@ const OrgDetector = (() => {
    * A placeholder counts as an org-search placeholder if, after stripping
    * "Search ", the remainder is non-empty, doesn't match a known generic
    * noun ("jobs", "tasks", etc.), doesn't end in ellipsis (those are
-   * typically search-anywhere inputs), and starts with an uppercase
-   * letter (org names are proper nouns).
+   * typically search-anywhere inputs), and isn't a purely-lowercase word or
+   * phrase.
+   *
+   * That last guard is the discriminator: JobTread's generic in-context search
+   * placeholders ("Search jobs", "Search files") are always lowercase common
+   * nouns, while org display names are proper nouns or handles — they carry a
+   * capital ("Acme Builders"), a digit ("3M Remodeling"), or a symbol
+   * ("@designREMODEL") somewhere. So we reject only the all-lowercase shape and
+   * accept everything else, rather than whitelisting one leading character at a
+   * time. The one case this can't resolve is an org literally named in all
+   * lowercase with no digits/symbols (e.g. "acme") — indistinguishable from a
+   * generic noun by placeholder alone, so we treat it as generic.
    */
   function isOrgPlaceholder(placeholder) {
     if (typeof placeholder !== 'string') return false;
@@ -103,7 +113,7 @@ const OrgDetector = (() => {
     if (!remainder) return false;
     if (remainder.endsWith('...') || remainder.endsWith('…')) return false;
     if (NON_ORG_PLACEHOLDER_REMAINDERS.has(remainder.toLowerCase())) return false;
-    if (!/^[A-Z]/.test(remainder)) return false;
+    if (/^[a-z\s]+$/.test(remainder)) return false;
     return true;
   }
 
