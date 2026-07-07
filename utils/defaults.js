@@ -47,8 +47,9 @@ const JTDefaults = (() => {
     // API (Experimental) Features
     customFieldFilter: false,
 
-    // Assistant Features (Agent Core — company tier)
-    assistantPanel: false,
+    // Assistant Features (Agent Core — company tier). Admin-controlled in the
+    // portal; loaded unconditionally and self-gated in assistant-panel.js init().
+    assistantPanel: true,
 
     // Power User Features (require API connection)
     budgetChangelog: false,

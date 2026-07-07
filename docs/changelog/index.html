@@ -55,11 +55,79 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.10.0 — Tweak Engine safety net (safe mode, repair, auto-disable, admin kill switch, org health), formatter fix, org-detection fix; AI Assistant teased -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.0</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">July 7, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🛡️</span> Tweaks: a real safety net (Pro)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">One switch to turn every tweak off</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A new <strong>"Disable all tweaks (safe mode)"</strong> master toggle in the popup's Tweaks section turns off every tweak at once, so JobTread loads exactly as it ships. A bad tweak is now a five-second recovery instead of a headache &mdash; your tweaks are kept and come right back when you switch it off.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Broken tweak? Repair it in place</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">When a tweak stops working because JobTread moved something, its card now shows a <strong>Repair</strong> button. Click it and the in-page builder opens with the element picker ready and the tweak pre-loaded &mdash; re-click the element, save, done. No rebuilding from scratch.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks bow out gracefully</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A tweak that consistently slows the page now disables itself with a clear reason and a one-click Re-enable (a single slow frame won't trip it). And tweaks can now carry backup selectors, so a small JobTread UI change no longer silently kills them &mdash; tweaks built in the point-and-click builder get backups automatically.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">For admins: an instant kill switch and a health view</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Admins can now <strong>revoke</strong> a company-wide tweak instantly &mdash; it drops off every teammate's browser on their next refresh, without deleting it or losing version history; un-revoke brings it right back. A new <strong>Health</strong> column on the org-tweaks table shows, per tweak, how many members it's applying to vs. not matching vs. erroring &mdash; so you can spot and fix a broken company tweak before the support tickets start.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> Coming soon: the AI Assistant</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Something big is taking shape</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">We've been hard at work on an <strong>AI Assistant</strong> that lives right inside JobTread and understands your jobs, budgets, and schedule. It's still in development and rolling out to select companies &mdash; more to share soon. Nothing changes for your account today.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter: no more stray toolbars on the Budget</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Opening a Document's line items and then jumping to the Budget tab could leave a formatting toolbar stuck on every budget group row until you reloaded. Fixed &mdash; the toolbars now stay where they belong.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tweak sharing works for every company name</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Companies whose name doesn't start with a capital letter &mdash; <code>@handle</code> orgs, digit-first names like "3M Remodeling," or lowercase brands like "iBuild Homes" &mdash; weren't being recognized, so shared-tweak links failed with "open a JobTread org first." Your company is detected correctly now.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.9.12 — Invoice Forecast launch (incl. Paid layer), per-job email domain, Custom Field Filter scrollbar fix -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.9.12</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">June 28, 2026</span>
             </div>
 

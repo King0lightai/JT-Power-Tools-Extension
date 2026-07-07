@@ -91,8 +91,15 @@ const FormatterToolbar = (() => {
     const row = field.closest('.flex.min-w-max');
     if (!row) return false;
 
-    const scrollContainer = row.closest('.overflow-auto');
-    return scrollContainer !== null;
+    // The `.overflow-auto` scroll ancestor is the usual confirmation signal, but
+    // during SPA navigation (e.g. Document → Budget tab) React mounts the row
+    // before its scroll container is attached. If we required `.overflow-auto`
+    // here, isAnyBudgetTableField would return false mid-mount, bypassing the
+    // guards in embedToolbarForField and leaving stray inline toolbars on budget
+    // group rows. On a budget/catalog path, a non-sidebar/non-label/non-custom
+    // textarea inside a `.flex.min-w-max` row IS a budget table cell regardless of
+    // whether the scroll wrapper has landed yet.
+    return true;
   }
 
   /**
@@ -1868,6 +1875,23 @@ const FormatterToolbar = (() => {
     }
   }
 
+  /**
+   * Defense-in-depth cleanup for stray budget/catalog toolbars.
+   *
+   * Budget/catalog Description toolbars are body-appended (jt-toolbar-budget-adaptive)
+   * and positioned on focus — a correct one NEVER lives inside a table row. So any
+   * `.jt-formatter-toolbar-embedded` found INSIDE a `.flex.min-w-max` row on a
+   * budget/catalog page is a stray created during an SPA transition; remove it.
+   * Called from initializeFields on every pass so leftovers can't persist.
+   */
+  function removeStrayBudgetToolbars() {
+    const path = window.location.pathname;
+    if (!path.endsWith('/budget') && !path.includes('/catalog')) return;
+    document.querySelectorAll('.flex.min-w-max .jt-formatter-toolbar-embedded').forEach(toolbar => {
+      toolbar.remove();
+    });
+  }
+
   // Public API
   return {
     getActiveToolbar,
@@ -1882,7 +1906,8 @@ const FormatterToolbar = (() => {
     scheduleHide,
     embedToolbarForField,
     injectExpandCollapseAllButton,
-    removeExpandCollapseAllButton
+    removeExpandCollapseAllButton,
+    removeStrayBudgetToolbars
   };
 })();
 

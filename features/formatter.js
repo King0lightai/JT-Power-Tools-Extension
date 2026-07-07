@@ -171,6 +171,11 @@ const FormatterFeature = (() => {
       }
     });
 
+    // Defense-in-depth: sweep away any embedded toolbar that landed INSIDE a
+    // budget/catalog table row (only possible via a mid-navigation race). Correct
+    // budget Description toolbars are body-appended, so this never touches them.
+    Toolbar().removeStrayBudgetToolbars();
+
     // Find all textareas that should have the formatter
     const fields = [];
 

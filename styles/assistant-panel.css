@@ -486,9 +486,13 @@ body.jt-custom-theme .jt-assistant-panel {
 
 .jt-assistant-input {
   flex: 1;
+  /* Height is driven by autoGrowInput() in assistant-panel.js — grows with
+     the prompt so longer messages stay readable, then scrolls past the
+     max-height. resize:none because the JS owns the height. */
   resize: none;
   min-height: 40px;
-  max-height: 120px;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .jt-assistant-send {

@@ -93,6 +93,15 @@ const AssistantPanelFeature = (() => {
     return node;
   }
 
+  // Grow the composer textarea to fit its content (clamped by the CSS
+  // max-height, past which it scrolls). Setting height to 'auto' first lets
+  // the field shrink again when text is deleted.
+  function autoGrowInput(input) {
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = `${input.scrollHeight}px`;
+  }
+
   // ─── Markdown (assistant answers only — escape-first, never raw) ──────
   // Every character of model output is HTML-escaped before any regex runs,
   // so the transforms below can only ever inject the fixed tag set we emit.
@@ -770,6 +779,9 @@ const AssistantPanelFeature = (() => {
     input.rows = 2;
     input.placeholder = 'Ask about this job, the schedule, the budget…';
     input.dataset.jtRole = 'input';
+    // Auto-grow with the prompt so longer messages stay readable, up to the
+    // CSS max-height (then it scrolls). Reset in handleSend() after clearing.
+    input.addEventListener('input', () => autoGrowInput(input));
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -1059,6 +1071,7 @@ const AssistantPanelFeature = (() => {
     const task = (input?.value || '').trim();
     if (!task) return;
     input.value = '';
+    input.style.height = ''; // collapse back to the base height after send
     await submitTask(task, task);
   }
 
@@ -1406,8 +1419,26 @@ const AssistantPanelFeature = (() => {
 
   // ─── Lifecycle ────────────────────────────────────────────────────
 
-  function init() {
+  async function init() {
     if (isActive) return;
+
+    // The AI Assistant toggle was removed from the popup — enablement is an
+    // admin/company decision in the JT Power Tools Portal. Self-gate on the
+    // Assistant company tier so the launcher only appears for entitled
+    // companies; the server still enforces per-user access on every request.
+    // Fail closed on any error so we never surface the launcher to a company
+    // that isn't on the Assistant tier.
+    try {
+      const tier = await window.LicenseService?.getTier?.();
+      if (!window.LicenseService?.tierHasFeature?.(tier, 'assistantPanel')) {
+        console.log('AssistantPanel: tier gate — not on the Assistant tier, skipping');
+        return;
+      }
+    } catch (err) {
+      console.warn('AssistantPanel: tier check failed, skipping init', err);
+      return;
+    }
+
     isActive = true;
     console.log('AssistantPanel: Initializing...');
 
