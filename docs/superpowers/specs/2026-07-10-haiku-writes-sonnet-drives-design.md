@@ -42,12 +42,14 @@ The no-call guardrail is satisfied *by the routing itself*: only turns that
 genuinely need no tool go to Haiku, so "Haiku answered without a tool" is correct
 there, never a skipped lookup.
 
-### 2. The flag — env allowlist
-Worker var `HAIKU_ROUTING_LICENSE_IDS` = comma-separated license IDs. Routing is
-active only when the run's `authContext.license.id` is in that set. Unset/empty →
-**exact current behavior** (Sonnet default everywhere). Kill switch = unset the var.
-Helper `haikuRoutingEnabled(env, licenseId) -> boolean` (in select-model.js or a
-small flag helper), parsed defensively (trim, ignore blanks).
+### 2. The gate — on by default (full production)
+Routing is **ON by default** — the Assistant is single-tenant (Titus) today, so a
+per-license allowlist is just friction. Two controls on `haikuRoutingEnabled(env, licenseId)`:
+- `HAIKU_ROUTING_OFF` (any truthy value) → **global kill switch**, off for everyone.
+- `HAIKU_ROUTING_LICENSE_IDS` (comma-separated) → **optional scoping**: when set,
+  restrict to those licenses; when unset/empty, on for all.
+Kill switch wins over the allowlist. (Original v1 shipped allowlist-gated/off-by-default;
+flipped to default-on 2026-07-10 per "push to full production — only Titus uses the AI anyway.")
 
 ### 3. Wiring into run-agent.js
 At the model-resolution seam (~lines 131-153), when:
