@@ -650,10 +650,45 @@ body.jt-custom-theme .jt-assistant-panel {
 .jt-assistant-showing-history .jt-assistant-messages,
 .jt-assistant-showing-history .jt-assistant-status,
 .jt-assistant-showing-history .jt-assistant-chips,
+.jt-assistant-showing-history .jt-assistant-mode-bar,
 .jt-assistant-showing-history .jt-assistant-pool-banner,
 .jt-assistant-showing-history .jt-assistant-composer,
 .jt-assistant-showing-history .jt-assistant-footer {
   display: none;
+}
+
+/* Savings ↔ Quality dial — segmented control above the composer. Rides the
+   panel's themed surface tokens so it reads on both light and warm-dark. */
+.jt-assistant-mode-bar {
+  display: flex;
+  gap: 2px;
+  margin: 0 12px 8px;
+  padding: 2px;
+  background: var(--jta-bg-elev);
+  border: 1px solid var(--jta-border-2);
+  border-radius: var(--jtt-radius);
+}
+
+.jt-assistant-mode-seg {
+  flex: 1;
+  background: transparent;
+  color: var(--jta-text-2);
+  border: none;
+  border-radius: var(--jtt-radius-sm);
+  padding: 5px 6px;
+  font: 11px 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.jt-assistant-mode-seg:hover {
+  color: var(--jta-text);
+}
+
+.jt-assistant-mode-seg-active {
+  background: var(--jta-accent);
+  color: #fff;
+  font-weight: 600;
 }
 
 .jt-assistant-history-bar {

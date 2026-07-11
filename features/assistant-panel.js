@@ -28,6 +28,15 @@ const AssistantPanelFeature = (() => {
   const LAUNCHER_POS_KEY = 'jtAssistantLauncherPos';
   const PANEL_WIDTH_KEY = 'jtAssistantPanelWidth';
   const PENDING_RUN_KEY = 'jtAssistantPendingRun';
+  // Savings ↔ Quality dial — remembered per-user default, sent as `mode` on each
+  // /agent/chat. Server normalizes anything unknown to 'balanced'.
+  const EFFORT_MODE_KEY = 'jtAssistantEffortMode';
+  const EFFORT_MODES = [
+    { id: 'savings', label: 'Savings', title: 'Cheapest model the safety rules allow + low effort. Money questions still use the smart model.' },
+    { id: 'balanced', label: 'Balanced', title: 'The tuned default — smart routing, low effort only on follow-up turns.' },
+    { id: 'quality', label: 'Quality', title: 'Always the smart model at full effort. Best answers, top cost.' },
+  ];
+  const DEFAULT_EFFORT_MODE = 'balanced';
   // Only reopen an interrupted run if it started within this window — an older
   // stash is almost certainly a run that already finished (or was abandoned).
   const PENDING_RUN_MAX_AGE_MS = 10 * 60 * 1000;
@@ -58,6 +67,7 @@ const AssistantPanelFeature = (() => {
   let poolBannerEl = null;
   let glowEl = null;
   let sessionId = null;
+  let effortMode = DEFAULT_EFFORT_MODE; // Savings↔Quality dial; restored from storage on init
   // Draft cards already rendered this session (draft id / idempotency key) —
   // each draft arrives on two frames and must render once.
   const renderedDraftKeys = new Set();
@@ -624,6 +634,66 @@ const AssistantPanelFeature = (() => {
     }
   }
 
+  // ─── Savings ↔ Quality dial ───────────────────────────────────────────
+
+  function persistEffortMode(mode) {
+    try {
+      chrome.storage.local.set({ [EFFORT_MODE_KEY]: mode });
+    } catch {
+      // Non-fatal — the dial just won't be remembered next time.
+    }
+  }
+
+  function restoreEffortMode() {
+    try {
+      chrome.storage.local.get(EFFORT_MODE_KEY, (res) => {
+        const mode = res && res[EFFORT_MODE_KEY];
+        if (EFFORT_MODES.some((m) => m.id === mode)) {
+          effortMode = mode;
+          renderEffortMode();
+        }
+      });
+    } catch {
+      // Non-fatal — fall back to the default mode.
+    }
+  }
+
+  // Reflect the current effortMode onto the segmented control (if built).
+  function renderEffortMode() {
+    const bar = panelEl?.querySelector('[data-jt-role="mode-bar"]');
+    if (!bar) return;
+    for (const seg of bar.querySelectorAll('.jt-assistant-mode-seg')) {
+      const on = seg.dataset.mode === effortMode;
+      seg.classList.toggle('jt-assistant-mode-seg-active', on);
+      seg.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  // Change the dial (applies to the NEXT turn, not an in-flight run).
+  function setEffortMode(mode) {
+    if (!EFFORT_MODES.some((m) => m.id === mode)) return;
+    effortMode = mode;
+    persistEffortMode(mode);
+    renderEffortMode();
+  }
+
+  function buildModeBar() {
+    const bar = el('div', 'jt-assistant-mode-bar');
+    bar.dataset.jtRole = 'mode-bar';
+    bar.setAttribute('role', 'group');
+    bar.setAttribute('aria-label', 'Response mode');
+    for (const m of EFFORT_MODES) {
+      const seg = el('button', 'jt-assistant-mode-seg', m.label);
+      seg.type = 'button';
+      seg.dataset.mode = m.id;
+      seg.title = m.title;
+      seg.setAttribute('aria-pressed', 'false');
+      seg.addEventListener('click', () => setEffortMode(m.id));
+      bar.appendChild(seg);
+    }
+    return bar;
+  }
+
   // ─── In-flight run recovery (survives a mid-run reload) ───────────────
   // A page reload kills this JS context before the answer lands, but the run
   // keeps going server-side and persists to its session. We stash the active
@@ -772,6 +842,9 @@ const AssistantPanelFeature = (() => {
     chips.dataset.jtRole = 'chips';
     panelEl.appendChild(chips);
 
+    // Savings ↔ Quality dial (segmented control, above the composer)
+    panelEl.appendChild(buildModeBar());
+
     // Composer
     const composer = el('div', 'jt-assistant-composer');
     const input = document.createElement('textarea');
@@ -802,6 +875,7 @@ const AssistantPanelFeature = (() => {
     panelEl.appendChild(footer);
 
     document.body.appendChild(panelEl);
+    renderEffortMode(); // reflect the current (default or restored) dial position
 
     appendSystemNote(
       'Connected to your JobTread data (read-only for now). Answers come from live tool calls, not memory.'
@@ -1123,6 +1197,7 @@ const AssistantPanelFeature = (() => {
           task,
           session_id: sessionId || undefined,
           context: collectPageContext(),
+          mode: effortMode, // Savings↔Quality dial
         }),
         signal: abortController.signal,
       });
@@ -1444,6 +1519,7 @@ const AssistantPanelFeature = (() => {
 
     injectStyles();
     restorePanelWidth();
+    restoreEffortMode(); // remembered Savings↔Quality dial position
     loadPendingRecovery(); // reopen an interrupted run on the next panel open
     buildLauncher();
     buildGlow();
@@ -1503,6 +1579,7 @@ const AssistantPanelFeature = (() => {
     removeStyles();
 
     sessionId = null;
+    effortMode = DEFAULT_EFFORT_MODE; // re-restored from storage on next init
     renderedDraftKeys.clear();
     sending = false;
     statusChecked = false;
