@@ -675,16 +675,21 @@ const CustomThemeFeature = (() => {
       /* Note: .text-white is NOT overridden - it's used intentionally on dark toolbars */
       .text-gray-900,
       .text-gray-800,
-      .text-black {
+      .text-black,
+      .text-slate-900,
+      .text-slate-800 {
         color: ${p.text.primary};
       }
 
       .text-gray-700,
-      .text-gray-600 {
+      .text-gray-600,
+      .text-slate-700,
+      .text-slate-600 {
         color: ${p.text.secondary};
       }
 
-      .text-gray-500 {
+      .text-gray-500,
+      .text-slate-500 {
         color: ${p.text.muted};
       }
 

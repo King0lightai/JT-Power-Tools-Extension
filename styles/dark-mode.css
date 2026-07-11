@@ -400,8 +400,27 @@ div.border-l div.select-none.break-inside-avoid {
         color: #e0e0e0;
     }
 
+    .text-slate-500 {
+        color: #8ba0b8;
+    }
+
     .text-slate-600 {
         color: #9ab0c8;
+    }
+
+    /* Help/tutorial article body copy is text-slate-700; headings climb to
+       slate-800/900. Mirror the gray hierarchy (higher number = lighter in
+       dark) so the whole slate scale stays readable on the dark page. */
+    .text-slate-700 {
+        color: #b9cadb;
+    }
+
+    .text-slate-800 {
+        color: #d3e0ec;
+    }
+
+    .text-slate-900 {
+        color: #eaf1f8;
     }
 
     .text-gray-700 {
