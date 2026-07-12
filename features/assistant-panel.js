@@ -25,6 +25,7 @@ const AssistantPanelFeature = (() => {
   // Sibling endpoints (sessions/session/status) share AGENT_URL's origin and path.
   const AGENT_BASE = AGENT_URL.replace(/\/chat$/, '');
   const PORTAL_PROFILE_URL = 'https://app.jtpowertools.com/dashboard#team';
+  const PORTAL_SKILLS_URL = 'https://app.jtpowertools.com/dashboard#skills';
   const LAUNCHER_POS_KEY = 'jtAssistantLauncherPos';
   const PANEL_WIDTH_KEY = 'jtAssistantPanelWidth';
   const PENDING_RUN_KEY = 'jtAssistantPendingRun';
@@ -1437,12 +1438,51 @@ const AssistantPanelFeature = (() => {
     // Status failures are silent — no nudge, no error surfaced.
     const result = await agentPost('status', {});
     if (!result || result.error || !result.data) return;
-    const { profileExists, skillsCount } = result.data;
+    const { profileExists, skillsCount, pendingProposals } = result.data;
     if (profileExists === false) {
       renderProfileNudge();
     } else if (profileExists === true && skillsCount === 0) {
       renderSkillsHint();
     }
+    // Independent of the profile/skills nudges: if the assistant drafted a
+    // skill from a past session, surface a low-key awareness chip. Approval is
+    // an admin action in the portal — the panel only points there (spec §A).
+    if (Number(pendingProposals) > 0) renderProposalChip(Number(pendingProposals));
+  }
+
+  // Awareness chip for assistant-drafted skills (distillation). Dismissible,
+  // reappears on next open until an admin resolves the proposals (count → 0),
+  // mirroring the profile nudge's no-persistence behavior. Reuses the nudge
+  // CSS classes so no new styles are needed.
+  function renderProposalChip(count) {
+    const messages = messagesEl();
+    if (!messages || messages.querySelector('[data-jt-role="proposal-chip"]')) return;
+    const card = el('div', 'jt-assistant-nudge');
+    card.dataset.jtRole = 'proposal-chip';
+
+    const dismiss = el('button', 'jt-assistant-nudge-dismiss', '×');
+    dismiss.type = 'button';
+    dismiss.setAttribute('aria-label', 'Dismiss');
+    dismiss.addEventListener('click', () => card.remove());
+    card.appendChild(dismiss);
+
+    const noun = count === 1 ? 'a skill' : `${count} skills`;
+    const them = count === 1 ? 'it' : 'them';
+    card.appendChild(el('div', 'jt-assistant-nudge-title', 'The assistant drafted a skill'));
+    card.appendChild(
+      el(
+        'div',
+        'jt-assistant-nudge-copy',
+        `From a recent session, the assistant drafted ${noun} worth saving. An admin can review ${them} in the portal.`
+      )
+    );
+
+    const portalLink = el('button', 'jt-assistant-nudge-portal-link', 'Review in the portal');
+    portalLink.type = 'button';
+    portalLink.addEventListener('click', () => window.open(PORTAL_SKILLS_URL, '_blank', 'noopener'));
+    card.appendChild(portalLink);
+
+    messages.prepend(card);
   }
 
   function renderProfileNudge() {
