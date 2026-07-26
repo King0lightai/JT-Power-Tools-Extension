@@ -3,7 +3,6 @@
  * Integrates with JobTread's native PDF annotation system
  *
  * New Tools:
- * - Highlight tool (uses JobTread's rectangle + yellow color)
  * - Custom stamps library (uses JobTread's text tool)
  * - Line tool shortcut
  * - Enhanced eraser
@@ -98,6 +97,41 @@ const PDFMarkupToolsFeature = (() => {
     custom: [] // User-created stamps stored in Chrome storage
   };
 
+  // ── Custom stamps (per-user, Chrome storage) ──────────────
+  const CUSTOM_STAMPS_KEY = 'pdfCustomStamps';
+
+  /**
+   * Load the user's custom stamps from Chrome storage into stampLibrary.custom.
+   * Each stamp: { icon, copyText, name }. Only copyText is required.
+   */
+  async function loadCustomStamps() {
+    try {
+      const data = await StorageWrapper.get({ [CUSTOM_STAMPS_KEY]: [] });
+      const stamps = data?.[CUSTOM_STAMPS_KEY];
+      if (Array.isArray(stamps)) {
+        stampLibrary.custom = stamps
+          .filter(s => s && typeof s.copyText === 'string' && s.copyText.trim())
+          .map(s => ({
+            icon: typeof s.icon === 'string' ? s.icon.slice(0, 4) : '',
+            copyText: s.copyText.trim().slice(0, 60),
+            name: (s.name || s.copyText).trim().slice(0, 60),
+            isCustom: true,
+          }));
+      }
+    } catch (e) {
+      console.log('PDF Markup Tools: Could not load custom stamps', e);
+    }
+  }
+
+  /** Persist the current custom stamps to Chrome storage. */
+  async function saveCustomStamps() {
+    try {
+      await StorageWrapper.set({ [CUSTOM_STAMPS_KEY]: stampLibrary.custom });
+    } catch (e) {
+      console.log('PDF Markup Tools: Could not save custom stamps', e);
+    }
+  }
+
   /**
    * Inject CSS styles for our new tools
    * Includes dark mode and RGB theme compatibility
@@ -163,12 +197,6 @@ const PDFMarkupToolsFeature = (() => {
         height: 1em;
         width: 1em;
         vertical-align: -0.125em;
-      }
-
-      /* Highlight tool indicator */
-      .jt-highlight-icon {
-        fill: #fbbf24;
-        stroke: #f59e0b;
       }
 
       /* Separator line between tool groups - for dark toolbar */
@@ -401,53 +429,6 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Create SVG icon for highlight tool - simple filled rectangle
-   */
-  function createHighlightIcon() {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', '2');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    svg.setAttribute('class', 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]');
-
-    // Simple rectangle with yellow fill to represent highlight
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', '3');
-    rect.setAttribute('y', '6');
-    rect.setAttribute('width', '18');
-    rect.setAttribute('height', '12');
-    rect.setAttribute('rx', '2');
-    rect.setAttribute('fill', '#fbbf24');
-    rect.setAttribute('fill-opacity', '0.5');
-    rect.setAttribute('stroke', '#f59e0b');
-    svg.appendChild(rect);
-
-    // Horizontal lines to suggest text being highlighted
-    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line1.setAttribute('x1', '6');
-    line1.setAttribute('y1', '10');
-    line1.setAttribute('x2', '18');
-    line1.setAttribute('y2', '10');
-    line1.setAttribute('stroke', '#92400e');
-    line1.setAttribute('stroke-width', '1.5');
-    svg.appendChild(line1);
-
-    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line2.setAttribute('x1', '6');
-    line2.setAttribute('y1', '14');
-    line2.setAttribute('x2', '14');
-    line2.setAttribute('y2', '14');
-    line2.setAttribute('stroke', '#92400e');
-    line2.setAttribute('stroke-width', '1.5');
-    svg.appendChild(line2);
-
-    return svg;
-  }
-
-  /**
    * Create SVG icon for eraser tool
    */
   function createEraserIcon() {
@@ -559,7 +540,6 @@ const PDFMarkupToolsFeature = (() => {
       freedraw: null,
       text: null,
       line: null,      // Arrow/line tool
-      rectangle: null, // Rectangle tool (for highlights)
       circle: null,
       connector: null,
       more: null
@@ -599,10 +579,6 @@ const PDFMarkupToolsFeature = (() => {
       // Arrow/Line tool - diagonal arrow
       else if (svgContent.includes('M13 5h6v6') && svgContent.includes('M19 5 5 19')) {
         jtNativeButtons.line = btn;
-      }
-      // Rectangle tool
-      else if (svgContent.includes('<rect') && svgContent.includes('width="18" height="18"')) {
-        jtNativeButtons.rectangle = btn;
       }
       // Circle tool
       else if (svgContent.includes('<circle') && svgContent.includes('r="10"') && !svgContent.includes('path')) {
@@ -656,34 +632,6 @@ const PDFMarkupToolsFeature = (() => {
 
     return true;
   }
-
-  // Note: Old setHighlightPresets() and setColorOnFirstSwatch() functions removed
-  // Replaced by new configureHighlightSettings() workflow with proper line/fill/opacity control
-
-  /**
-   * Set the value of a color input and trigger React change events
-   */
-  function setColorInputValue(input, hexColor) {
-    if (!input) return;
-
-    // Set the value using native setter
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    ).set;
-
-    nativeInputValueSetter.call(input, hexColor);
-
-    // Dispatch events to trigger React's change detection
-    const inputEvent = new Event('input', { bubbles: true });
-    input.dispatchEvent(inputEvent);
-
-    const changeEvent = new Event('change', { bubbles: true });
-    input.dispatchEvent(changeEvent);
-  }
-
-  // Note: Old setOpacitySlider() and openMoreOptionsAndSetPresets() functions removed
-  // Replaced by setSliderValue() and configureHighlightSettings()
 
   /**
    * Show a notification to the user
@@ -755,234 +703,12 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Handle highlight tool click - activates JobTread's rectangle tool with yellow highlight presets
-   * Workflow: Rectangle tool → Line/Fill swatches appear → Configure colors and opacity
-   */
-  function handleHighlightClick() {
-    const highlightBtn = document.querySelector('[data-jt-tool="highlight"]');
-    if (!highlightBtn) return;
-
-    const wasActive = highlightBtn.classList.contains('active');
-
-    if (!wasActive) {
-      // Activate JobTread's rectangle tool
-      const success = activateJobTreadTool('rectangle');
-
-      if (success) {
-        // Mark our button as active
-        deactivateOtherTools('highlight');
-        highlightBtn.classList.add('active');
-
-        // After rectangle is activated, the line/fill swatches appear in the toolbar
-        // Wait for them to render, then configure (need more time for DOM update)
-        setTimeout(() => {
-          configureHighlightSettings();
-        }, 500);
-
-        showNotification('Highlight tool activated');
-      } else {
-        showNotification('Could not activate highlight tool', 'error');
-      }
-    } else {
-      // Deactivate - click select tool to exit drawing mode
-      highlightBtn.classList.remove('active');
-      const buttons = findJobTreadButtons();
-      if (buttons && buttons.select) {
-        buttons.select.click();
-      }
-      showNotification('Highlight tool deactivated');
-    }
-  }
-
-  /**
-   * Configure highlight settings in the toolbar
-   * JobTread Workflow (after rectangle tool activated):
-   * 1. Line swatch appears (w-7 h-7 border with background-color)
-   * 2. Fill swatch appears below (w-7 h-7 with droplet SVG)
-   * 3. Click LINE → color picker + thickness slider popover
-   * 4. Click FILL → color picker popover, click again → opacity slider
-   */
-  function configureHighlightSettings() {
-    // Find the line swatch - it's a div with w-7 h-7 border and has a background-color or diagonal line
-    // The line swatch is in a flex-col container
-    let lineSwatch = null;
-    let fillSwatch = null;
-
-    // Method 1: Look for the swatch container (flex flex-col space-y-1)
-    const swatchContainers = document.querySelectorAll('div.flex.flex-col.space-y-1');
-
-    for (const container of swatchContainers) {
-      // Line swatch: div.w-7.h-7.border with style background-color or has diagonal SVG
-      const possibleLine = container.querySelector('div.w-7.h-7.border');
-      // Fill swatch: has the droplet SVG path
-      const possibleFill = container.querySelector('svg path[d*="M12 22a7"]');
-
-      if (possibleLine && possibleFill) {
-        lineSwatch = possibleLine;
-        // Fill swatch is the parent container of the SVG
-        fillSwatch = possibleFill.closest('div.w-7.h-7');
-        break;
-      }
-    }
-
-    // Method 2: Search for swatches in toolbar area specifically
-    if (!lineSwatch || !fillSwatch) {
-      // Find the toolbar first
-      const toolbar = document.querySelector('.flex.relative.shadow-line-left.p-1') ||
-                     document.querySelector('.bg-gray-800 .relative');
-
-      if (toolbar) {
-        // Line swatch has border class
-        lineSwatch = toolbar.querySelector('div.w-7.h-7.border');
-
-        // Fill swatch has the droplet icon
-        const dropletPath = toolbar.querySelector('svg path[d*="M12 22a7"]');
-        if (dropletPath) {
-          fillSwatch = dropletPath.closest('div.w-7.h-7');
-        }
-      }
-    }
-
-    // Method 3: Fallback - search entire document
-    if (!lineSwatch || !fillSwatch) {
-      // Line swatch has border-gray-300 class
-      lineSwatch = document.querySelector('div.w-7.h-7.border.border-gray-300.cursor-pointer') ||
-                   document.querySelector('div.w-7.h-7.border.cursor-pointer');
-
-      // Fill swatch has the droplet icon
-      const dropletPath = document.querySelector('svg path[d*="M12 22a7 7 0 0 0 7-7"]') ||
-                         document.querySelector('svg path[d*="M12 22a7"]');
-      if (dropletPath) {
-        fillSwatch = dropletPath.closest('div.w-7.h-7');
-      }
-    }
-
-    // Method 4: Final fallback - any w-7 h-7 elements that look like swatches
-    if (!lineSwatch || !fillSwatch) {
-      const allSwatches = document.querySelectorAll('div.w-7.h-7.cursor-pointer');
-
-      if (allSwatches.length >= 2) {
-        // Typically line is first, fill is second
-        lineSwatch = lineSwatch || allSwatches[0];
-        fillSwatch = fillSwatch || allSwatches[1];
-      }
-    }
-
-    if (!lineSwatch || !fillSwatch) {
-      showNotification('Set colors manually: yellow fill, 50% opacity', 'info');
-      return;
-    }
-
-    configureWithSwatches(lineSwatch, fillSwatch);
-  }
-
-  /**
-   * Configure highlight with found swatches
-   * Workflow:
-   * 1. Click line swatch → set yellow color + minimum thickness → click line swatch to close
-   * 2. Set fill color directly via the hidden input inside fill swatch
-   * 3. Click fill swatch to access opacity slider → set 50% opacity → close
-   */
-  function configureWithSwatches(lineSwatch, fillSwatch) {
-    // Step 1: Click LINE swatch to set yellow color and minimum thickness
-    lineSwatch.click();
-
-    setTimeout(() => {
-      // Set line color to yellow
-      const lineColorInput = document.querySelector('div.z-50 input[type="color"]');
-      if (lineColorInput) {
-        setColorInputValue(lineColorInput, '#FFFF00');
-        // Update the swatch background to show the selected color
-        lineSwatch.style.backgroundColor = '#FFFF00';
-      }
-
-      // Set thickness to minimum
-      const thicknessSlider = document.querySelector('div.z-50 input[type="range"]');
-      if (thicknessSlider) {
-        setSliderValue(thicknessSlider, 1); // Minimum thickness
-      }
-
-      // Step 2: Click line swatch AGAIN to close the popup (it covers fill swatch)
-      setTimeout(() => {
-        lineSwatch.click();
-
-        // Step 3: Set fill color directly - the input is INSIDE the fill swatch (hidden)
-        setTimeout(() => {
-          // Find the hidden color input inside the fill swatch (may be nested in div.relative)
-          let fillColorInput = fillSwatch.querySelector('input[type="color"]');
-
-          // If not found directly, try finding it near the droplet SVG
-          if (!fillColorInput) {
-            const dropletSvg = fillSwatch.querySelector('svg path[d*="M12 22a7"]');
-            if (dropletSvg) {
-              const relativeContainer = dropletSvg.closest('div.relative');
-              if (relativeContainer) {
-                fillColorInput = relativeContainer.querySelector('input[type="color"]');
-              }
-            }
-          }
-
-          // Final fallback - search in parent container
-          if (!fillColorInput && fillSwatch.parentElement) {
-            fillColorInput = fillSwatch.parentElement.querySelector('input[type="color"]');
-          }
-
-          if (fillColorInput) {
-            setColorInputValue(fillColorInput, '#FFFF00');
-            // Update the fill swatch background to show the selected color
-            fillSwatch.style.backgroundColor = '#FFFF00';
-          }
-
-          // Step 4: Click fill swatch to access opacity slider
-          setTimeout(() => {
-            fillSwatch.click();
-
-            setTimeout(() => {
-              // Find opacity slider in the popup
-              const opacitySlider = document.querySelector('div.z-50 input[type="range"]');
-
-              if (opacitySlider) {
-                setSliderValue(opacitySlider, 5); // 50% opacity (5 out of 10)
-              }
-
-              // Step 5: Close the popover by clicking fill swatch again
-              setTimeout(() => {
-                fillSwatch.click();
-                showNotification('Highlight ready! Draw rectangles to highlight.');
-              }, 200);
-            }, 300);
-          }, 300);
-        }, 300);
-      }, 300);
-    }, 350);
-  }
-
-  /**
-   * Set a slider to a specific value
-   */
-  function setSliderValue(slider, value) {
-    if (!slider) return;
-
-    // Set the value using native setter
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    ).set;
-
-    nativeInputValueSetter.call(slider, value);
-
-    // Dispatch events to trigger React's change detection
-    slider.dispatchEvent(new Event('input', { bubbles: true }));
-    slider.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-
-  /**
    * Deactivate all other JT tools (visual state only)
    * JobTread's buttons manage their own state
    * @param {string|null} exceptTool - Tool to keep active, or null to deactivate all
    */
   function deactivateOtherTools(exceptTool) {
-    const tools = ['highlight', 'eraser', 'line'];
+    const tools = ['eraser', 'line'];
 
     tools.forEach(toolName => {
       if (toolName === exceptTool) return;
@@ -1173,13 +899,6 @@ const PDFMarkupToolsFeature = (() => {
     separator.className = 'jt-tool-separator';
 
     // Create our tools
-    const highlightBtn = createToolButton(
-      createHighlightIcon(),
-      'Highlight Tool (JT Enhanced) - Yellow rectangle with 50% opacity',
-      handleHighlightClick
-    );
-    highlightBtn.setAttribute('data-jt-tool', 'highlight');
-
     const eraserBtn = createToolButton(
       createEraserIcon(),
       'Eraser Tool (JT Enhanced)',
@@ -1189,7 +908,6 @@ const PDFMarkupToolsFeature = (() => {
 
     // Append tools to toolbar
     toolContainer.appendChild(separator);
-    toolContainer.appendChild(highlightBtn);
     toolContainer.appendChild(eraserBtn);
 
     // Attach listeners to native buttons so our tools deactivate when JT tools are clicked
@@ -1198,11 +916,10 @@ const PDFMarkupToolsFeature = (() => {
     // Track injected elements
     toolbarEnhancements.set(toolbar, {
       separator,
-      highlightBtn,
       eraserBtn
     });
 
-    injectedTools.push({ toolbar, separator, highlightBtn, eraserBtn });
+    injectedTools.push({ toolbar, separator, eraserBtn });
   }
 
   /**
@@ -1216,14 +933,6 @@ const PDFMarkupToolsFeature = (() => {
     // We need to append our buttons to the end of this container
 
     // Create our tools with horizontal styling
-    const highlightBtn = createHorizontalToolButton(
-      createHighlightIcon(),
-      'Highlight Tool (JT Enhanced) - Yellow rectangle with 50% opacity',
-      handleHighlightClick,
-      'H'
-    );
-    highlightBtn.setAttribute('data-jt-tool', 'highlight');
-
     const eraserBtn = createHorizontalToolButton(
       createEraserIcon(),
       'Eraser Tool (JT Enhanced)',
@@ -1233,7 +942,6 @@ const PDFMarkupToolsFeature = (() => {
     eraserBtn.setAttribute('data-jt-tool', 'eraser');
 
     // Append tools to toolbar
-    toolbar.appendChild(highlightBtn);
     toolbar.appendChild(eraserBtn);
 
     // Attach listeners to native buttons so our tools deactivate when JT tools are clicked
@@ -1241,11 +949,10 @@ const PDFMarkupToolsFeature = (() => {
 
     // Track injected elements
     toolbarEnhancements.set(toolbar, {
-      highlightBtn,
       eraserBtn
     });
 
-    injectedTools.push({ toolbar, highlightBtn, eraserBtn });
+    injectedTools.push({ toolbar, eraserBtn });
   }
 
   /**
@@ -1301,9 +1008,8 @@ const PDFMarkupToolsFeature = (() => {
    * Remove all injected tools
    */
   function removeInjectedTools() {
-    injectedTools.forEach(({ separator, highlightBtn, eraserBtn }) => {
+    injectedTools.forEach(({ separator, eraserBtn }) => {
       separator?.remove();
-      highlightBtn?.remove();
       eraserBtn?.remove();
     });
 
@@ -1352,7 +1058,8 @@ const PDFMarkupToolsFeature = (() => {
     const categories = [
       { key: 'architecture', label: '🏗️ Arch' },
       { key: 'approval', label: '✓ Approval' },
-      { key: 'date', label: '📅 Date' }
+      { key: 'date', label: '📅 Date' },
+      { key: 'custom', label: '⭐ Custom' }
     ];
 
     let activeCategory = 'architecture';
@@ -1365,82 +1072,181 @@ const PDFMarkupToolsFeature = (() => {
       width: 100%;
     `;
 
+    // Insert a stamp's text into the modal textarea (React-compatible).
+    function insertStampText(stamp) {
+      const currentTextarea = modal.querySelector('textarea');
+      if (!currentTextarea) {
+        console.error('PDF Markup Tools: Could not find textarea in modal');
+        return;
+      }
+
+      let label;
+      if (stamp.includeDate) {
+        label = stamp.name.replace(/_/g, ' ') + ' - ' + new Date().toLocaleDateString();
+      } else if (stamp.copyText) {
+        label = stamp.copyText;
+      } else {
+        label = stamp.name.replace(/_/g, ' ');
+      }
+      const text = (stamp.icon ? stamp.icon + ' ' : '') + label;
+
+      const currentValue = currentTextarea.value || '';
+      const start = currentTextarea.selectionStart || currentValue.length;
+      const end = currentTextarea.selectionEnd || currentValue.length;
+      const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
+
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value'
+      ).set;
+      nativeInputValueSetter.call(currentTextarea, newValue);
+      currentTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+      currentTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+      currentTextarea.focus();
+      currentTextarea.selectionStart = currentTextarea.selectionEnd = start + text.length;
+    }
+
+    // Build one stamp button. Uses textContent (never innerHTML) so user-authored
+    // custom-stamp text can't inject markup.
+    function makeStampButton(stamp) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'jt-stamp-btn';
+      btn.style.cssText = `
+        padding: 4px 8px;
+        font-size: 11px;
+        border-width: 1px;
+        border-style: solid;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        transition: background-color 0.15s ease;
+      `;
+      const iconSpan = document.createElement('span');
+      iconSpan.style.fontSize = '14px';
+      iconSpan.textContent = stamp.icon || '';
+      btn.appendChild(iconSpan);
+      btn.appendChild(document.createTextNode(' ' + (stamp.copyText || stamp.name.replace(/_/g, ' '))));
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        insertStampText(stamp);
+      });
+      return btn;
+    }
+
+    // Inline form for adding a new custom stamp (icon optional + text required).
+    function showAddStampForm() {
+      if (stampsContainer.querySelector('.jt-stamp-add-form')) return;
+
+      const form = document.createElement('div');
+      form.className = 'jt-stamp-add-form';
+      form.style.cssText = 'display: flex; gap: 4px; align-items: center; width: 100%; margin-top: 6px;';
+
+      const iconInput = document.createElement('input');
+      iconInput.type = 'text';
+      iconInput.placeholder = 'icon';
+      iconInput.maxLength = 4;
+      iconInput.style.cssText = 'width: 44px; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;';
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.placeholder = 'stamp text (e.g. VERIFY W/ GC)';
+      textInput.maxLength = 60;
+      textInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;';
+
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'jt-stamp-btn';
+      saveBtn.textContent = 'Save';
+      saveBtn.style.cssText = 'padding: 4px 10px; font-size: 11px; border-width: 1px; border-style: solid; border-radius: 4px; cursor: pointer;';
+
+      function commit() {
+        const copyText = textInput.value.trim();
+        if (!copyText) { textInput.focus(); return; }
+        stampLibrary.custom.push({
+          icon: iconInput.value.trim().slice(0, 4),
+          copyText: copyText.slice(0, 60),
+          name: copyText.slice(0, 60),
+          isCustom: true,
+        });
+        saveCustomStamps();
+        renderStamps('custom');
+      }
+
+      saveBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); commit(); });
+      textInput.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      });
+
+      form.appendChild(iconInput);
+      form.appendChild(textInput);
+      form.appendChild(saveBtn);
+      stampsContainer.appendChild(form);
+      textInput.focus();
+    }
+
     function renderStamps(category) {
       stampsContainer.innerHTML = '';
       const stamps = stampLibrary[category] || [];
 
-      stamps.forEach(stamp => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        // Use CSS class for theme-aware styling
-        btn.className = 'jt-stamp-btn';
-        btn.style.cssText = `
-          padding: 4px 8px;
-          font-size: 11px;
-          border-width: 1px;
-          border-style: solid;
-          border-radius: 4px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          white-space: nowrap;
-          transition: background-color 0.15s ease;
-        `;
-        btn.innerHTML = `<span style="font-size: 14px;">${stamp.icon}</span> ${stamp.copyText || stamp.name.replace(/_/g, ' ')}`;
+      stamps.forEach((stamp, idx) => {
+        if (category !== 'custom') {
+          stampsContainer.appendChild(makeStampButton(stamp));
+          return;
+        }
 
-        // Hover is handled by CSS now via .jt-stamp-btn:hover
+        // Custom stamps: button + a delete (×) affordance
+        const wrap = document.createElement('span');
+        wrap.style.cssText = 'display: inline-flex; align-items: stretch;';
 
-        btn.addEventListener('click', (e) => {
+        const btn = makeStampButton(stamp);
+        btn.style.borderTopRightRadius = '0';
+        btn.style.borderBottomRightRadius = '0';
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'jt-stamp-btn';
+        del.title = 'Delete stamp';
+        del.textContent = '×';
+        del.style.cssText = 'padding: 4px 6px; font-size: 12px; border-width: 1px; border-style: solid; border-left: none; border-top-left-radius: 0; border-bottom-left-radius: 0; cursor: pointer;';
+        del.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-
-          // Get fresh reference to textarea in case modal was recreated
-          const currentTextarea = modal.querySelector('textarea');
-          if (!currentTextarea) {
-            console.error('PDF Markup Tools: Could not find textarea in modal');
-            return;
-          }
-
-          // Get the text to insert
-          // All stamps include icon for visual consistency
-          let text;
-          if (stamp.includeDate) {
-            const date = new Date().toLocaleDateString();
-            text = stamp.icon + ' ' + stamp.name.replace(/_/g, ' ') + ' - ' + date;
-          } else if (stamp.copyText) {
-            // Architecture stamps: icon + abbreviation
-            text = stamp.icon + ' ' + stamp.copyText;
-          } else {
-            // Approval stamps: icon + name
-            text = stamp.icon + ' ' + stamp.name.replace(/_/g, ' ');
-          }
-
-          // Get current value and cursor position
-          const currentValue = currentTextarea.value || '';
-          const start = currentTextarea.selectionStart || currentValue.length;
-          const end = currentTextarea.selectionEnd || currentValue.length;
-          const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
-
-          // Set value using native setter for React compatibility
-          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-            window.HTMLTextAreaElement.prototype,
-            'value'
-          ).set;
-          nativeInputValueSetter.call(currentTextarea, newValue);
-
-          // Dispatch events
-          currentTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-          currentTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-
-          // Focus and set cursor position
-          currentTextarea.focus();
-          currentTextarea.selectionStart = currentTextarea.selectionEnd = start + text.length;
-
+          stampLibrary.custom.splice(idx, 1);
+          saveCustomStamps();
+          renderStamps('custom');
         });
 
-        stampsContainer.appendChild(btn);
+        wrap.appendChild(btn);
+        wrap.appendChild(del);
+        stampsContainer.appendChild(wrap);
       });
+
+      if (category === 'custom') {
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'jt-stamp-btn';
+        addBtn.textContent = '＋ Add';
+        addBtn.style.cssText = 'padding: 4px 8px; font-size: 11px; border-width: 1px; border-style: solid; border-radius: 4px; cursor: pointer;';
+        addBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          showAddStampForm();
+        });
+        stampsContainer.appendChild(addBtn);
+
+        if (stamps.length === 0) {
+          const hint = document.createElement('div');
+          hint.textContent = 'No custom stamps yet — add your own shorthand.';
+          hint.style.cssText = 'font-size: 11px; opacity: 0.7; width: 100%; margin-top: 4px;';
+          stampsContainer.appendChild(hint);
+        }
+      }
     }
 
     categories.forEach((cat, index) => {
@@ -1510,7 +1316,6 @@ const PDFMarkupToolsFeature = (() => {
   // ============================================================================
 
   // Takeoff toolkit state
-  let takeoffToolbar = null;
   let takeoffToolbarObserver = null;
 
   /**
@@ -1816,18 +1621,10 @@ const PDFMarkupToolsFeature = (() => {
   function findAllTakeoffToolbars() {
     const results = [];
 
-    // Standard toolbar - has Rotate or Scale Plan buttons
-    const allButtons = document.querySelectorAll('[role="button"]');
-    for (const btn of allButtons) {
-      const text = btn.textContent?.trim() || '';
-      if (text === 'Rotate' || text.includes('Scale Plan')) {
-        const toolbar = btn.closest('div.border-t') || btn.parentElement;
-        if (toolbar) {
-          results.push({ toolbar, type: 'standard' });
-          break; // Only one standard toolbar
-        }
-      }
-    }
+    // Standard single-plan view intentionally has NO print button: JobTread now
+    // exports plans to PDF natively, so printing a single drawing is redundant.
+    // We only inject Print into the comparison view (overlaid v1/v2 layers),
+    // which native export does not cover.
 
     // Comparison view: detect by v1/v2 panels, then use the parent
     // comparison toolbar container (which holds both panels + shared controls
@@ -1851,14 +1648,14 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Create a print button element for the given toolbar type.
-   * In comparison mode, prints the entire visible composite (both layers).
+   * Create the print button for the comparison toolbar.
+   * Prints the entire visible composite (both overlaid v1/v2 layers).
    */
-  function createPrintButton(toolbarType, jtToolbar) {
+  function createPrintButton() {
     const printBtn = document.createElement('div');
     printBtn.setAttribute('role', 'button');
     printBtn.setAttribute('tabindex', '0');
-    printBtn.title = 'Print Drawing Only (auto-fit page size)';
+    printBtn.title = 'Print Comparison (auto-fit page size)';
     printBtn.addEventListener('click', () => printDrawingOnly());
     printBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -1869,16 +1666,9 @@ const PDFMarkupToolsFeature = (() => {
 
     const printerSvg = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
 
-    if (toolbarType === 'comparison') {
-      // Shared comparison toolbar: neutral icon-only style matching zoom controls
-      printBtn.className = 'inline-block align-bottom relative cursor-pointer px-2 content-center text-gray-400 min-w-10 hover:bg-gray-700 jt-takeoff-injected-btn';
-      printBtn.innerHTML = printerSvg;
-    } else {
-      // Standard toolbar styling (icon + text)
-      printBtn.id = 'jt-print-drawing';
-      printBtn.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 rounded-sm border text-center shrink-0 jt-takeoff-injected-btn';
-      printBtn.innerHTML = printerSvg + ' Print';
-    }
+    // Shared comparison toolbar: neutral icon-only style matching zoom controls
+    printBtn.className = 'inline-block align-bottom relative cursor-pointer px-2 content-center text-gray-400 min-w-10 hover:bg-gray-700 jt-takeoff-injected-btn';
+    printBtn.innerHTML = printerSvg;
 
     return printBtn;
   }
@@ -1890,39 +1680,23 @@ const PDFMarkupToolsFeature = (() => {
     const toolbars = findAllTakeoffToolbars();
     if (toolbars.length === 0) return;
 
-    for (const { toolbar: jtToolbar, type: toolbarType } of toolbars) {
+    for (const { toolbar: jtToolbar } of toolbars) {
       // Skip if this toolbar already has our button
       if (jtToolbar.querySelector('.jt-takeoff-injected-btn')) continue;
 
-      const printBtn = createPrintButton(toolbarType, jtToolbar);
+      const printBtn = createPrintButton();
 
-      if (toolbarType === 'standard') {
-        // Standard toolbar: insert before Scale Plan button
-        const scalePlanBtn = Array.from(jtToolbar.querySelectorAll('[role="button"]')).find(btn =>
-          btn.textContent?.includes('Scale Plan')
-        );
-
-        if (scalePlanBtn) {
-          jtToolbar.insertBefore(printBtn, scalePlanBtn);
-        } else {
-          jtToolbar.appendChild(printBtn);
-        }
-
-        // Store reference for cleanup (standard toolbar is the primary)
-        takeoffToolbar = { printBtn, jtToolbar };
-      } else if (toolbarType === 'comparison') {
-        // Comparison toolbar structure:
-        //   [Exit] [middle flex-wrap: v2 panel, v1 panel] [magnify group]
-        // Insert print button right before the magnify group (last child of the bar).
-        const magnifyGroup = jtToolbar.querySelector('div.flex.items-center.group');
-        if (magnifyGroup) {
-          jtToolbar.insertBefore(printBtn, magnifyGroup);
-        } else {
-          jtToolbar.appendChild(printBtn);
-        }
+      // Comparison toolbar structure:
+      //   [Exit] [middle flex-wrap: v2 panel, v1 panel] [magnify group]
+      // Insert print button right before the magnify group (last child of the bar).
+      const magnifyGroup = jtToolbar.querySelector('div.flex.items-center.group');
+      if (magnifyGroup) {
+        jtToolbar.insertBefore(printBtn, magnifyGroup);
+      } else {
+        jtToolbar.appendChild(printBtn);
       }
 
-      console.log(`PDF Markup Tools: Print button injected into ${toolbarType} toolbar`);
+      console.log('PDF Markup Tools: Print button injected into comparison toolbar');
     }
   }
 
@@ -1948,11 +1722,7 @@ const PDFMarkupToolsFeature = (() => {
       takeoffToolbarObserver = null;
     }
 
-    // Remove all injected print buttons (standard + comparison panels)
-    if (takeoffToolbar) {
-      if (takeoffToolbar.printBtn) takeoffToolbar.printBtn.remove();
-      takeoffToolbar = null;
-    }
+    // Remove all injected print buttons (comparison toolbar)
     document.querySelectorAll('.jt-takeoff-injected-btn').forEach(btn => btn.remove());
 
     // Remove any leftover print styles and wrapper
@@ -2013,6 +1783,9 @@ const PDFMarkupToolsFeature = (() => {
     try {
       // Inject CSS
       injectCSS();
+
+      // Load the user's custom stamps (async; the modal reads the live array)
+      loadCustomStamps();
 
       // Find and enhance existing toolbars
       findAndEnhanceToolbars();

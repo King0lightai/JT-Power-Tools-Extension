@@ -130,6 +130,9 @@ const TweaksApi = (() => {
       if (typeof diag.last_apply_at === 'number') body.last_apply_at = diag.last_apply_at;
       if (typeof diag.last_error_at === 'number') body.last_error_at = diag.last_error_at;
       if (typeof diag.last_error_message === 'string') body.last_error_message = diag.last_error_message;
+      // An explicit clear tells the server to null both error columns even
+      // though no last_error_* fields are present in this report.
+      if (diag.clear_error === true) body.clear_error = true;
     }
     log('reportDiagnostics', body);
     return postJson('/admin/tweaks/diagnostics', body);

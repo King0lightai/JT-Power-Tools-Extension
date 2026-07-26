@@ -813,6 +813,21 @@ const JobTreadProService = (() => {
     }
   }
 
+  /**
+   * Sync the Invoice Forecast config (task types + sold-contract names) to the
+   * Pro Worker so the MCP server can build chart-parity forecasts.
+   * @param {Object} config - { taskTypeIds: string[], soldContractNames: string[] }
+   * @returns {Promise<Object>} { ok, updatedAt }
+   */
+  async function saveInvoiceForecastConfig(config) {
+    try {
+      return await workerRequest('saveInvoiceForecastConfig', { config });
+    } catch (error) {
+      logError('saveInvoiceForecastConfig failed:', error);
+      throw error;
+    }
+  }
+
   // Public API
   return {
     // Configuration
@@ -845,6 +860,7 @@ const JobTreadProService = (() => {
     // Invoice Forecast
     getContractDocNames,
     getInvoiceForecast,
+    saveInvoiceForecastConfig,
 
     // Cache management
     clearCache,

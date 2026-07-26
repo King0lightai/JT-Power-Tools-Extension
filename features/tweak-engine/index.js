@@ -433,7 +433,10 @@ const TweakEngineFeature = (() => {
     }
 
     activeTweakIds.add(tweak.id);
-    recordDiagnostic(tweak.id, { lastApplyAt: Date.now(), lastError: null });
+    // Clear both the error message AND its timestamp: the tweak just applied
+    // cleanly, so any prior one-time error (e.g. a library that wasn't loaded
+    // yet) is stale and must stop showing in the popup / on the server.
+    recordDiagnostic(tweak.id, { lastApplyAt: Date.now(), lastError: null, lastErrorAt: null });
   }
 
   // ─── Shared helpers for capture-phase action listeners ──────────────
@@ -740,6 +743,11 @@ const TweakEngineFeature = (() => {
         if (typeof partial.lastApplyAt === 'number') body.last_apply_at = partial.lastApplyAt;
         if (typeof partial.lastErrorAt === 'number') body.last_error_at = partial.lastErrorAt;
         if (typeof partial.lastError === 'string') body.last_error_message = partial.lastError;
+        // An explicit null error in the partial means a clean apply cleared the
+        // error — tell the server to null both error columns (lastErrorAt: null
+        // is intentionally NOT sent as last_error_at; the typeof-number guard
+        // above already drops it, and clear_error does the actual clearing).
+        if (partial.lastError === null) body.clear_error = true;
         if (Object.keys(body).length === 0) continue;
         // Fire and forget — don't await, don't surface errors.
         window.TweaksApi.reportDiagnostics(id, body).catch(() => {});

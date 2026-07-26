@@ -234,7 +234,7 @@ const PreviewModeFeature = (() => {
       const contentEl = activePreview.querySelector('.jt-preview-content');
       if (contentEl) {
         const md = textarea.value;
-        contentEl.innerHTML = md ? markdownToHTML(md) : '<p class="jt-preview-empty">No content to preview</p>';
+        contentEl.innerHTML = md ? window.JTMarkdown.render(md) : '<p class="jt-preview-empty">No content to preview</p>';
       }
 
       // Attach new input handler
@@ -242,7 +242,7 @@ const PreviewModeFeature = (() => {
         const contentEl = activePreview.querySelector('.jt-preview-content');
         if (contentEl) {
           const md = textarea.value;
-          contentEl.innerHTML = md ? markdownToHTML(md) : '<p class="jt-preview-empty">No content to preview</p>';
+          contentEl.innerHTML = md ? window.JTMarkdown.render(md) : '<p class="jt-preview-empty">No content to preview</p>';
         }
       };
       textarea.addEventListener('input', pinnedInputHandler);
@@ -417,7 +417,7 @@ const PreviewModeFeature = (() => {
     // Convert markdown to HTML
     const markdown = textarea.value;
     if (markdown) {
-      content.innerHTML = markdownToHTML(markdown);
+      content.innerHTML = window.JTMarkdown.render(markdown);
     } else {
       content.innerHTML = '<p class="jt-preview-empty">No content to preview</p>';
     }
@@ -449,7 +449,7 @@ const PreviewModeFeature = (() => {
     const updatePreview = () => {
       const markdown = textarea.value;
       if (markdown) {
-        content.innerHTML = markdownToHTML(markdown);
+        content.innerHTML = window.JTMarkdown.render(markdown);
       } else {
         content.innerHTML = '<p class="jt-preview-empty">No content to preview</p>';
       }
@@ -848,7 +848,7 @@ const PreviewModeFeature = (() => {
       const contentEl = preview.querySelector('.jt-preview-content');
       if (contentEl) {
         const markdown = textarea.value;
-        contentEl.innerHTML = markdown ? markdownToHTML(markdown) : '<p class="jt-preview-empty">No content to preview</p>';
+        contentEl.innerHTML = markdown ? window.JTMarkdown.render(markdown) : '<p class="jt-preview-empty">No content to preview</p>';
       }
 
       // Attach new input handler for live updates
@@ -856,7 +856,7 @@ const PreviewModeFeature = (() => {
         const contentEl = preview.querySelector('.jt-preview-content');
         if (contentEl) {
           const md = textarea.value;
-          contentEl.innerHTML = md ? markdownToHTML(md) : '<p class="jt-preview-empty">No content to preview</p>';
+          contentEl.innerHTML = md ? window.JTMarkdown.render(md) : '<p class="jt-preview-empty">No content to preview</p>';
         }
       };
       textarea.addEventListener('input', pinnedInputHandler);
@@ -1075,405 +1075,6 @@ const PreviewModeFeature = (() => {
         }
       });
     }
-  }
-
-  // Parse markdown tables and convert to HTML
-  function parseMarkdownTables(text) {
-    // Split text into lines
-    const lines = text.split('\n');
-    const result = [];
-    let i = 0;
-
-    while (i < lines.length) {
-      const line = lines[i];
-
-      // Check if this line starts a table (contains pipes)
-      if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-        // Collect all table rows
-        const tableRows = [];
-        let j = i;
-
-        while (j < lines.length) {
-          const tableLine = lines[j].trim();
-          if (tableLine.startsWith('|') && tableLine.endsWith('|')) {
-            tableRows.push(tableLine);
-            j++;
-          } else {
-            break;
-          }
-        }
-
-        // Parse table if we have at least one row
-        if (tableRows.length > 0) {
-          const tableHTML = convertTableToHTML(tableRows);
-          result.push(tableHTML);
-          i = j;
-          continue;
-        }
-      }
-
-      result.push(line);
-      i++;
-    }
-
-    return result.join('\n');
-  }
-
-  // Convert markdown table rows to HTML table
-  function convertTableToHTML(rows) {
-    if (rows.length === 0) return '';
-
-    let html = '<table class="jt-markdown-table">\n';
-
-    // Check if second row is separator (contains only |, -, :, and spaces)
-    const hasSeparator = rows.length > 1 && /^[\|\-\s:]+$/.test(rows[1]);
-
-    // Determine header row index
-    const headerIndex = 0;
-    const dataStartIndex = hasSeparator ? 2 : 1;
-
-    // Parse header row
-    if (rows[headerIndex]) {
-      const headerCells = rows[headerIndex]
-        .split('|')
-        .map(cell => cell.trim())
-        .filter(cell => cell.length > 0);
-
-      if (headerCells.length > 0) {
-        html += '  <thead>\n    <tr>\n';
-        headerCells.forEach(cell => {
-          html += `      <th>${escapeHTML(cell)}</th>\n`;
-        });
-        html += '    </tr>\n  </thead>\n';
-      }
-    }
-
-    // Parse data rows
-    if (dataStartIndex < rows.length) {
-      html += '  <tbody>\n';
-      for (let i = dataStartIndex; i < rows.length; i++) {
-        const cells = rows[i]
-          .split('|')
-          .map(cell => cell.trim())
-          .filter(cell => cell.length > 0);
-
-        if (cells.length > 0) {
-          html += '    <tr>\n';
-          cells.forEach(cell => {
-            html += `      <td>${escapeHTML(cell)}</td>\n`;
-          });
-          html += '    </tr>\n';
-        }
-      }
-      html += '  </tbody>\n';
-    }
-
-    html += '</table>';
-    return html;
-  }
-
-  // Delegate to shared Sanitizer utility
-  const escapeHTML = (text) => Sanitizer.escapeHTML(text);
-
-  // Parse and render alerts
-  function parseAlerts(text) {
-    const lines = text.split('\n');
-    const alertBlocks = [];
-    let i = 0;
-
-    while (i < lines.length) {
-      const line = lines[i].trim();
-
-      // Check if this line starts an alert: > [!color:xxx] ### [!icon:xxx] Subject (supports ### or ####)
-      const alertMatch = line.match(/^>\s*\[!color:(\w+)\]\s*#{3,4}\s*\[!icon:\s*(\w+)\]\s*(.+)$/);
-
-      if (alertMatch) {
-        const color = alertMatch[1];
-        const icon = alertMatch[2];
-        const subject = alertMatch[3].trim();
-        const bodyLines = [];
-
-        // Collect subsequent blockquoted lines as body
-        i++;
-        while (i < lines.length && lines[i].trim().startsWith('> ')) {
-          const bodyLine = lines[i].trim().substring(2); // Remove "> "
-          bodyLines.push(bodyLine);
-          i++;
-        }
-
-        const body = bodyLines.join('\n');
-
-        // Render the alert
-        const alertHTML = renderAlert(color, icon, subject, body);
-        const placeholder = `___ALERT_${alertBlocks.length}___`;
-        alertBlocks.push(alertHTML);
-
-        // Replace the alert lines with placeholder
-        const alertLineCount = 1 + bodyLines.length;
-        const startIdx = i - alertLineCount;
-        lines.splice(startIdx, alertLineCount, placeholder);
-
-        // Reset i to account for removed lines
-        i = startIdx + 1;
-      } else {
-        i++;
-      }
-    }
-
-    // Return text with ___ALERT_N___ placeholders still in place.
-    // The caller (markdownToHTML) will resolve them after escaping.
-    return { text: lines.join('\n'), alertBlocks };
-  }
-
-  // Render a single alert
-  function renderAlert(color, icon, subject, body) {
-    // Color mappings - use JT-specific classes that work with dark theme
-    const colorMap = {
-      blue: { border: 'jt-alert-border-blue', bg: 'jt-alert-bg-blue', text: 'jt-alert-text-blue' },
-      yellow: { border: 'jt-alert-border-yellow', bg: 'jt-alert-bg-yellow', text: 'jt-alert-text-yellow' },
-      red: { border: 'jt-alert-border-red', bg: 'jt-alert-bg-red', text: 'jt-alert-text-red' },
-      green: { border: 'jt-alert-border-green', bg: 'jt-alert-bg-green', text: 'jt-alert-text-green' },
-      orange: { border: 'jt-alert-border-orange', bg: 'jt-alert-bg-orange', text: 'jt-alert-text-orange' },
-      purple: { border: 'jt-alert-border-purple', bg: 'jt-alert-bg-purple', text: 'jt-alert-text-purple' }
-    };
-
-    const colors = colorMap[color] || colorMap.blue;
-    const iconSVG = ICON_MAP[icon] || ICON_MAP.infoCircle;
-
-    // Process body inline formatting
-    const processedBody = processInlineFormatting(body);
-
-    // Build the icon SVG element
-    const iconElement = `<svg class="jt-alert-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconSVG}</svg>`;
-
-    return `<div class="jt-alert-box ${colors.border} ${colors.bg}"><div class="jt-alert-subject ${colors.text}">${iconElement}<span>${escapeHTML(subject)}</span></div><div class="jt-alert-body">${processedBody}</div></div>`;
-  }
-
-  // Icon SVG paths - shared between alerts and inline icons
-  const ICON_MAP = {
-    lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"></path>',
-    infoCircle: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
-    info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
-    exclamationTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"></path>',
-    checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path>',
-    octogonAlert: '<path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86z"></path><path d="M12 8v4M12 16h.01"></path>'
-  };
-
-  // Helper to render an inline SVG icon
-  function renderInlineIcon(iconName) {
-    const iconPath = ICON_MAP[iconName] || ICON_MAP.infoCircle;
-    return `<svg class="jt-inline-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>`;
-  }
-
-  // Process inline formatting (can be nested inside block elements)
-  function processInlineFormatting(text) {
-    // Escape HTML entities first to prevent XSS, then apply formatting
-    // Markdown syntax chars (*, ^, _, ~, [, ], (, )) are unaffected by escapeHTML
-    let result = escapeHTML(text);
-
-    // Icons [!icon:name] - render as actual SVG icons
-    result = result.replace(/\[!icon:(\w+)\]/g, (match, iconName) => renderInlineIcon(iconName));
-
-    // Color is intentionally NOT handled here. JobTread only renders [!color:xxx]
-    // when it's at the front of a line (a "return") — see the line-start handler
-    // in markdownToHTML. A mid-paragraph color code renders as literal text in JT,
-    // so we leave it untouched to keep the preview faithful.
-
-    // Links [text](url) - sanitize URL and attr-escape before href interpolation
-    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-      const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
-        ? Sanitizer.sanitizeURL(url, '#')
-        : '#';
-      const hrefAttr = (typeof Sanitizer !== 'undefined' && Sanitizer.escapeAttr)
-        ? Sanitizer.escapeAttr(safeUrl)
-        : safeUrl;
-      return `<a href="${hrefAttr}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-    });
-
-    // Inline formatting (bold, italic, underline, strikethrough)
-    // Using non-greedy matching to properly handle nested formatting
-    result = result.replace(/\*(.+?)\*/g, '<strong>$1</strong>');
-    result = result.replace(/\^(.+?)\^/g, '<em>$1</em>');
-    result = result.replace(/_(.+?)_/g, '<u>$1</u>');
-    result = result.replace(/~(.+?)~/g, '<s>$1</s>');
-
-    return result;
-  }
-
-  // Convert markdown to HTML for preview
-  function markdownToHTML(markdown) {
-    if (!markdown) return '';
-
-    let html = markdown;
-
-    // Parse tables and alerts first - they produce HTML blocks
-    // Use placeholder tokens so we can escape raw text without breaking their output
-    const htmlBlocks = [];
-
-    // Parse tables — produces inline HTML that needs tokenizing
-    html = parseMarkdownTables(html);
-    html = html.replace(/<table[\s\S]*?<\/table>/gi, (match) => {
-      const index = htmlBlocks.length;
-      htmlBlocks.push(match);
-      return `\x00HTMLBLOCK${index}\x00`;
-    });
-
-    // Parse alerts — returns { text, alertBlocks } with ___ALERT_N___ placeholders
-    const alertResult = parseAlerts(html);
-    html = alertResult.text;
-    // Convert alert placeholders to HTMLBLOCK tokens
-    alertResult.alertBlocks.forEach((alertHTML, idx) => {
-      const blockIndex = htmlBlocks.length;
-      htmlBlocks.push(alertHTML);
-      html = html.replace(`___ALERT_${idx}___`, `\x00HTMLBLOCK${blockIndex}\x00`);
-    });
-
-    // Process line by line to handle block-level formatting
-    const lines = html.split('\n');
-    const processedLines = lines.map(line => {
-      let processedLine = line.trim();
-
-      // Restore HTML block placeholders as-is (already safe HTML from our parsers)
-      const blockMatch = processedLine.match(/^\x00HTMLBLOCK(\d+)\x00$/);
-      if (blockMatch) {
-        return htmlBlocks[parseInt(blockMatch[1])];
-      }
-
-      let isBlockQuote = false;
-      let isColored = false;
-      let colorClass = '';
-
-      // Check for blockquote
-      if (processedLine.startsWith('> ')) {
-        processedLine = processedLine.substring(2);
-        isBlockQuote = true;
-      }
-
-      // Check for color tags [!color:red]
-      const colorMatch = processedLine.match(/^\[!color:(\w+)\]\s*/);
-      if (colorMatch) {
-        colorClass = `jt-color-${colorMatch[1]}`;
-        processedLine = processedLine.substring(colorMatch[0].length);
-        isColored = true;
-      }
-
-      // Check for headings (now that blockquote/color are stripped)
-      let headingLevel = 0;
-      if (processedLine.startsWith('#### ')) {
-        headingLevel = 4;
-        processedLine = processedLine.substring(5);
-      } else if (processedLine.startsWith('### ')) {
-        headingLevel = 3;
-        processedLine = processedLine.substring(4);
-      } else if (processedLine.startsWith('## ')) {
-        headingLevel = 2;
-        processedLine = processedLine.substring(3);
-      } else if (processedLine.startsWith('# ')) {
-        headingLevel = 1;
-        processedLine = processedLine.substring(2);
-      }
-
-      // Check for text alignment
-      let alignment = '';
-      if (processedLine.startsWith('---: ')) {
-        alignment = 'right';
-        processedLine = processedLine.substring(5);
-      } else if (processedLine.startsWith('--: ')) {
-        alignment = 'center';
-        processedLine = processedLine.substring(4);
-      }
-
-      // Check for lists
-      let isBulletList = false;
-      let isNumberedList = false;
-      let listValue = '';
-
-      if (processedLine.startsWith('- ')) {
-        processedLine = processedLine.substring(2);
-        isBulletList = true;
-      } else {
-        const numberedMatch = processedLine.match(/^(\d+)\.\s+(.*)$/);
-        if (numberedMatch) {
-          listValue = numberedMatch[1];
-          processedLine = numberedMatch[2];
-          isNumberedList = true;
-        }
-      }
-
-      // Process inline formatting
-      processedLine = processInlineFormatting(processedLine);
-
-      // Build the HTML from inside out
-      let result = processedLine;
-
-      // Wrap in heading if needed
-      if (headingLevel > 0) {
-        result = `<h${headingLevel}>${result}</h${headingLevel}>`;
-      }
-
-      // Wrap in color if needed
-      if (isColored) {
-        result = `<span class="${colorClass}">${result}</span>`;
-      }
-
-      // Wrap in alignment if needed
-      if (alignment) {
-        result = `<div class="jt-align-${alignment}">${result}</div>`;
-      }
-
-      // Wrap in list item if needed
-      if (isBulletList) {
-        result = `<li>${result}</li>`;
-      } else if (isNumberedList) {
-        result = `<li value="${listValue}">${result}</li>`;
-      }
-
-      // Wrap in blockquote if needed
-      if (isBlockQuote) {
-        result = `<blockquote>${result}</blockquote>`;
-      }
-
-      return result;
-    });
-
-    // Wrap consecutive list items
-    let result = processedLines.join('\n');
-    result = result.replace(/(<li>.*<\/li>\n?)+/g, (match) => {
-      if (match.includes('value=')) {
-        return `<ol>${match}</ol>`;
-      } else {
-        return `<ul>${match}</ul>`;
-      }
-    });
-
-    // FIRST: Preserve paragraph breaks (double+ newlines) with a placeholder
-    // This must happen before blockquote combining to prevent newlines being eaten
-    result = result.replace(/\n\n+/g, '___PARA_BREAK___');
-
-    // Combine consecutive blockquotes into a single blockquote
-    // This ensures "> line1" and "> line2" render as one continuous blockquote
-    result = result.replace(/(<blockquote>[\s\S]*?<\/blockquote>\n?)+/g, (match) => {
-      // Extract content from each blockquote and join with <br>
-      const contents = [];
-      const blockquoteRegex = /<blockquote>([\s\S]*?)<\/blockquote>/g;
-      let blockMatch;
-      while ((blockMatch = blockquoteRegex.exec(match)) !== null) {
-        contents.push(blockMatch[1]);
-      }
-      return `<blockquote>${contents.join('<br>')}</blockquote>`;
-    });
-
-    // Restore paragraph breaks
-    result = result.replace(/___PARA_BREAK___/g, '<div class="jt-paragraph-break"></div>');
-
-    // Preserve remaining single line breaks
-    result = result.replace(/\n/g, '<br>');
-
-    // But remove breaks inside/around block elements
-    result = result.replace(/<\/(h[123]|blockquote|div|li|table|thead|tbody|tr|th|td)><br>/g, '</$1>');
-    result = result.replace(/<br><(h[123]|blockquote|div|li|ul|ol|table|thead|tbody|tr|th|td)/g, '<$1');
-
-    return result;
   }
 
   // Public API

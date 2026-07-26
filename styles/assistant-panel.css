@@ -5,50 +5,6 @@
    body.jt-custom-theme (RGB theme) maps to the user's generated palette.
    All classes are prefixed jt-assistant-. */
 
-/* Launcher — floating tab on the right edge, parked bottom-right clear of
-   horizontal scrollbars and JobTread's bottom edge. Draggable vertically;
-   a dragged position overrides `bottom` via an inline `top` (JS). The
-   launcher stays brand-orange in every theme — it is a fixed brand mark,
-   not a themed surface. */
-.jt-assistant-launcher {
-  /* Layout */
-  position: fixed;
-  right: 0;
-  bottom: 96px;
-  z-index: 2147483000;
-  /* Spacing */
-  padding: 10px 8px;
-  /* Colors */
-  background: #fe4c0d;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px 0 0 6px;
-  /* Typography */
-  font: 700 12px 'Inter', system-ui, sans-serif;
-  letter-spacing: 0.5px;
-  cursor: grab;
-  touch-action: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-}
-
-.jt-assistant-launcher:hover {
-  background: #d93d00;
-}
-
-.jt-assistant-launcher-dragging {
-  cursor: grabbing;
-}
-
-.jt-assistant-launcher-hidden {
-  display: none;
-}
-
-/* Launcher breathes while a run is active — visible even with the panel
-   closed, so "the assistant is still working" never goes silent. */
-.jt-assistant-launcher-working {
-  animation: jt-assistant-breathe 1.6s ease-in-out infinite;
-}
-
 /* Working glow — soft brand-orange tint around the viewport while the
    agent is reading live data. Honest presence signal: it turns on with
    the run and off with it. pointer-events: none, so it never intercepts
@@ -56,7 +12,7 @@
 .jt-assistant-glow {
   position: fixed;
   inset: 0;
-  z-index: 2147482999; /* under the launcher (…3000) and panel (…3001) */
+  z-index: 2147482999; /* under the panel (…3001) */
   pointer-events: none;
   opacity: 0;
   transition: opacity 300ms ease;
@@ -75,15 +31,9 @@
   50% { opacity: 1; }
 }
 
-@keyframes jt-assistant-breathe {
-  0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); }
-  50% { box-shadow: 0 2px 18px rgba(254, 76, 13, 0.8); }
-}
-
 /* Motion sensitivity: keep the state signal, drop the animation. */
 @media (prefers-reduced-motion: reduce) {
-  .jt-assistant-glow-active,
-  .jt-assistant-launcher-working {
+  .jt-assistant-glow-active {
     animation: none;
   }
 }
@@ -98,7 +48,8 @@
    missing var never breaks contrast. If both theme classes are somehow
    present the RGB block wins (declared last, equal specificity) — in
    practice the popup makes Dark Mode and the RGB theme mutually exclusive. */
-.jt-assistant-panel {
+.jt-assistant-panel,
+.jt-assistant-chooser {
   --jta-bg: #ffffff;
   --jta-bg-2: #f6f7f9;
   --jta-bg-elev: #eef0f3;
@@ -119,7 +70,8 @@
   color: var(--jta-text);
 }
 
-body.jt-dark-mode .jt-assistant-panel {
+body.jt-dark-mode .jt-assistant-panel,
+body.jt-dark-mode .jt-assistant-chooser {
   --jta-bg: #2c2c2c;
   --jta-bg-2: #252525;
   --jta-bg-elev: #333333;
@@ -139,7 +91,8 @@ body.jt-dark-mode .jt-assistant-panel {
   --jta-danger: #f87171;
 }
 
-body.jt-custom-theme .jt-assistant-panel {
+body.jt-custom-theme .jt-assistant-panel,
+body.jt-custom-theme .jt-assistant-chooser {
   --jta-bg: var(--jt-theme-background, #ffffff);
   --jta-bg-2: var(--jt-theme-background-subtle, #f6f7f9);
   --jta-bg-elev: var(--jt-theme-background-elevated, #eef0f3);
@@ -292,6 +245,21 @@ body.jt-custom-theme .jt-assistant-panel {
   cursor: not-allowed;
 }
 
+/* Stop state of the Send button while a run streams — neutral, not the accent
+   primary, so it reads as "cancel" rather than "go". Compound (0,3,0) so it
+   outranks the .jtt-btn-primary colour rule regardless of sheet order. */
+.jt-tools-surface.jt-assistant-panel .jt-assistant-send-stop {
+  background: var(--jta-bg-elev);
+  color: var(--jta-text-2);
+  border-color: var(--jta-border-2);
+}
+
+.jt-tools-surface.jt-assistant-panel .jt-assistant-send-stop:hover {
+  background: var(--jta-bg-hover);
+  color: var(--jta-text);
+  border-color: var(--jta-danger);
+}
+
 /* Messages */
 .jt-assistant-messages {
   flex: 1;
@@ -316,6 +284,45 @@ body.jt-custom-theme .jt-assistant-panel {
   align-self: flex-end;
   background: var(--jta-accent);
   color: var(--jta-accent-fg);
+}
+
+/* User message row — wraps the bubble + its hover-revealed Edit control so the
+   Edit button stays a SIBLING of the bubble (bubble textContent = the message
+   only). Column so Edit sits just under the bubble, right-aligned. */
+.jt-assistant-user-row {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  max-width: 92%;
+}
+
+.jt-assistant-user-row .jt-assistant-bubble-user {
+  max-width: 100%;
+}
+
+/* Edit + resend affordance — quiet until you hover the message (or tab to it). */
+.jt-assistant-edit-btn {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  color: var(--jta-text-subtle);
+  font-size: 10px;
+  line-height: 1.4;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+
+.jt-assistant-user-row:hover .jt-assistant-edit-btn,
+.jt-assistant-edit-btn:focus-visible {
+  opacity: 1;
+}
+
+.jt-assistant-edit-btn:hover {
+  color: var(--jta-text-2);
+  text-decoration: underline;
 }
 
 .jt-assistant-bubble-assistant {
@@ -530,10 +537,25 @@ body.jt-custom-theme .jt-assistant-panel {
   color: var(--jta-text-2);
 }
 
+/* Trial: informational, neutral accent — a reduced allowance, not a problem. */
+.jt-assistant-pool-banner-trial {
+  border-left-color: var(--jta-border);
+  color: var(--jta-text-2);
+}
+
 /* Exhausted: red accent — reduced mode until top-up/reset. */
 .jt-assistant-pool-banner-exhausted {
   border-left-color: var(--jta-danger);
   color: var(--jta-text);
+}
+
+/* Composer walled — org is out of credits. Muted + non-interactive. */
+.jt-assistant-composer-blocked {
+  opacity: 0.6;
+}
+.jt-assistant-composer-blocked textarea,
+.jt-assistant-composer-blocked .jt-assistant-send {
+  cursor: not-allowed;
 }
 
 /* Rendered markdown inside assistant bubbles — compact chat-scale sizing.
@@ -651,10 +673,86 @@ body.jt-custom-theme .jt-assistant-panel {
 .jt-assistant-showing-history .jt-assistant-status,
 .jt-assistant-showing-history .jt-assistant-chips,
 .jt-assistant-showing-history .jt-assistant-mode-bar,
+.jt-assistant-showing-history .jt-assistant-autoapply,
+.jt-assistant-showing-history .jt-assistant-bulk-bar,
 .jt-assistant-showing-history .jt-assistant-pool-banner,
 .jt-assistant-showing-history .jt-assistant-composer,
 .jt-assistant-showing-history .jt-assistant-footer {
   display: none;
+}
+
+/* Auto-apply switch — opt-in row above the composer. Reads as a quiet control
+   when off; turns amber (the panel's --jta-warn) when on to signal writes now
+   land without a confirm click. */
+.jt-assistant-autoapply {
+  margin: 0 12px 8px;
+}
+
+.jt-assistant-autoapply-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--jta-bg-elev);
+  border: 1px solid var(--jta-border-2);
+  border-radius: var(--jtt-radius);
+  color: var(--jta-text-2);
+  font: 11px 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.jt-assistant-autoapply-toggle:hover {
+  color: var(--jta-text);
+}
+
+.jt-assistant-autoapply-label {
+  font-weight: 600;
+}
+
+.jt-assistant-autoapply-state {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--jta-bg-sunken);
+  border: 1px solid var(--jta-border-2);
+  color: var(--jta-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.jt-assistant-autoapply-on {
+  border-color: var(--jta-warn);
+}
+
+.jt-assistant-autoapply-on .jt-assistant-autoapply-state {
+  background: var(--jta-warn);
+  border-color: var(--jta-warn);
+  color: #fff;
+}
+
+/* Apply-all bar — appears above the composer when 2+ drafts wait (auto-apply
+   off). Accent left border to draw the eye; one two-step confirm applies all. */
+.jt-assistant-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--jta-bg-elev);
+  border-top: 1px solid var(--jta-border);
+  border-left: 3px solid var(--jta-accent);
+}
+
+.jt-assistant-bulk-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jta-text);
+}
+
+.jt-assistant-bulk-apply {
+  white-space: nowrap;
 }
 
 /* Savings ↔ Quality dial — segmented control above the composer. Rides the
@@ -827,4 +925,58 @@ body.jt-custom-theme .jt-assistant-panel {
   padding: 6px 10px;
   font-size: 11px;
   color: var(--jta-text-2);
+}
+
+/* Activation chooser — the small popover anchored under JobTread's help
+   bubble, offering "JobTread AI" vs the JT Power Tools Assistant. Themed via
+   the same --jta-* tokens as the panel (see the token blocks near the top). */
+.jt-assistant-chooser {
+  /* Layout */
+  position: fixed;
+  z-index: 2147483002; /* above the panel (…3001) so it's never occluded */
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  /* Spacing */
+  padding: 6px;
+  gap: 2px;
+  /* Colors */
+  background: var(--jta-bg);
+  border: 1px solid var(--jta-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.jt-assistant-chooser-item {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  /* Spacing */
+  padding: 8px 10px;
+  /* Colors */
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  /* Typography */
+  text-align: left;
+  cursor: pointer;
+}
+
+.jt-assistant-chooser-item:hover,
+.jt-assistant-chooser-item:focus-visible {
+  background: var(--jta-bg-hover);
+  outline: none;
+}
+
+.jt-assistant-chooser-item-title {
+  color: var(--jta-text);
+  font: 600 13px 'Inter', system-ui, sans-serif;
+}
+
+.jt-assistant-chooser-item-sub {
+  color: var(--jta-text-muted);
+  font: 400 11px 'Inter', system-ui, sans-serif;
 }

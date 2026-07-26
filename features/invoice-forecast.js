@@ -153,6 +153,22 @@ const InvoiceForecastFeature = (() => {
       all[orgKey] = config;
       await chrome.storage.sync.set({ [CONFIG_KEY]: all });
     } catch (e) { /* ignore */ }
+    syncConfigToServer();
+  }
+
+  // Best-effort push of the ORG config (task types + sold names — never the
+  // from/to/includeClosed view state) to the Pro Worker so the MCP server can
+  // serve chart-parity forecasts. Fire-and-forget: a failed sync never blocks
+  // the chart; the MCP just sees stale config until the next successful save.
+  async function syncConfigToServer() {
+    try {
+      if (!config.taskTypeIds.length) return;
+      if (!proServiceReady() || !(await JobTreadProService.isConfigured())) return;
+      await JobTreadProService.saveInvoiceForecastConfig({
+        taskTypeIds: config.taskTypeIds,
+        soldContractNames: config.soldContractNames
+      });
+    } catch (e) { /* best-effort */ }
   }
 
   // ─── VIEW DETECTION + INJECTION ──────────────────────────────
@@ -582,9 +598,9 @@ const InvoiceForecastFeature = (() => {
       m.total += r.amount;
       m[r.category] += r.amount;
       if (r.job) {
-        const j = m.jobs[r.job.id] || (m.jobs[r.job.id] = { name: r.job.name, total: 0, sold: r.jobSold, paid: 0 });
+        const j = m.jobs[r.job.id] || (m.jobs[r.job.id] = { name: r.job.name, total: 0, sold: r.jobSold, paid: 0, committed: 0, projected: 0 });
         j.total += r.amount;
-        if (r.category === 'paid') j.paid += r.amount;
+        j[r.category] += r.amount;
       }
     }
     return {
@@ -757,11 +773,25 @@ const InvoiceForecastFeature = (() => {
   function fmtFull(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
   function fmtM(n) { return n >= 1e6 ? '$' + (n / 1e6).toFixed(2) + 'M' : fmtK(n); }
 
-  // Per-job tooltip suffix: paid-in-full reads as collected; unsold scheduled as projected.
-  function jobTipSuffix(j, showSplit) {
-    if (j.paid && j.paid >= j.total - 0.5) return ' (paid)';
-    if (showSplit && !j.sold) return ' (projected)';
-    return '';
+  // Bar tooltip: paid / committed / projected shown as separate blocks, each
+  // with its own subtotal and per-job breakdown, instead of one mixed list.
+  function monthTip(m, showSplit) {
+    const groups = [
+      ['paid', 'Paid (collected)', m.paid],
+      ['committed', showSplit ? 'Committed (sold)' : 'Scheduled', m.committed]
+    ];
+    if (showSplit) groups.push(['projected', 'Projected (not sold)', m.projected]);
+
+    const blocks = [];
+    for (const [cat, label, total] of groups) {
+      if (total <= 0) continue;
+      const jobs = Object.values(m.jobs)
+        .filter(j => j[cat] > 0)
+        .sort((a, b) => b[cat] - a[cat])
+        .map(j => `  ${j.name || ''}: ${fmtFull(j[cat])}`);
+      blocks.push([`${label} — ${fmtFull(total)}`, ...jobs].join('\n'));
+    }
+    return blocks.join('\n\n');
   }
 
   function monthLabel(key) {
@@ -808,12 +838,11 @@ const InvoiceForecastFeature = (() => {
         const radius = top && bottom ? '3px' : top ? '3px 3px 0 0' : bottom ? '0 0 3px 3px' : '0';
         return `<div class="jt-if-seg ${cls}" style="height:${pct(v)}%;border-radius:${radius}"></div>`;
       }).join('');
-      const jobsTip = Object.values(m.jobs).sort((a, b) => b.total - a.total)
-        .map(j => `${Sanitizer.escapeHTML(j.name || '')}: ${fmtFull(j.total)}${jobTipSuffix(j, showSplit)}`).join('\n');
+      const jobsTip = monthTip(m, showSplit);
       return `
         <div class="jt-if-col">
           <div class="jt-if-col-total">${m.total > 0 ? fmtK(m.total) : ''}</div>
-          <div class="jt-if-bar" title="${Sanitizer.escapeHTML(monthLabel(k))}\n${Sanitizer.escapeHTML(jobsTip)}">
+          <div class="jt-if-bar" title="${Sanitizer.escapeHTML(monthLabel(k))}\n\n${Sanitizer.escapeHTML(jobsTip)}">
             ${segHtml}
           </div>
           <div class="jt-if-col-label">${monthLabel(k)}</div>

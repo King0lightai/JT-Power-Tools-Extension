@@ -100,17 +100,54 @@
   letter-spacing: 0.5px;
 }
 
-/* Preview Content */
+/* ============================================================
+   Preview Content — theme-aware via CSS custom properties
+
+   In LIGHT mode the content area matches JobTread's document
+   preview exactly (white paper, black text, JT's exact colors).
+   In dark mode and custom RGB themes the content follows the
+   extension theme: all colors route through --jt-md-* custom
+   properties whose light defaults live here, and the theme rules
+   below override ONLY those vars (structure stays identical).
+   ============================================================ */
 .jt-preview-content {
+  /* Themeable colors (light defaults = JobTread document) */
+  --jt-md-text: #000;
+  --jt-md-bg: #fff;
+  --jt-md-link: oklch(0.715 0.143 215.221);
+  --jt-md-link-hover: oklch(0.609 0.126 221.723);
+  --jt-md-table-border: oklch(0.928 0.006 264.531);
+  --jt-md-table-head-bg: oklch(0.967 0.003 264.542);
+  --jt-md-table-bg: #fff;
+  /* Per-color text (also used for quote left borders) — oklch 500-tier */
+  --jt-md-red: oklch(0.637 0.237 25.331);
+  --jt-md-blue: oklch(0.623 0.214 259.815);
+  --jt-md-yellow: oklch(0.795 0.184 86.047);
+  --jt-md-green: oklch(0.723 0.219 149.579);
+  --jt-md-purple: oklch(0.627 0.265 303.9);
+  --jt-md-orange: #ff5600;
+  --jt-md-gray: oklch(0.551 0.027 264.364);
+  /* Quote backgrounds — oklch 50-tier tints */
+  --jt-md-quote-bg-red: oklch(0.971 0.013 17.38);
+  --jt-md-quote-bg-blue: oklch(0.97 0.014 254.604);
+  --jt-md-quote-bg-yellow: oklch(0.987 0.026 102.212);
+  --jt-md-quote-bg-green: oklch(0.982 0.018 155.826);
+  --jt-md-quote-bg-purple: oklch(0.977 0.014 308.299);
+  --jt-md-quote-bg-orange: oklch(0.98 0.016 73.684);
+  --jt-md-quote-bg-gray: oklch(0.985 0.002 247.839);
+
   padding: 16px;
   padding-bottom: 24px;
   max-height: 280px;
   overflow-y: auto;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #1f2937 !important;
-  background: white;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--jt-md-text);
+  background: var(--jt-md-bg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* Ensure last line is fully visible when scrolling */
@@ -121,345 +158,95 @@
   width: 100%;
 }
 
-/* Removed wildcard color rule to allow color inheritance from parent elements */
-
 .jt-preview-empty {
-  color: #9ca3af !important;
+  color: #9ca3af;
   font-style: italic;
   text-align: center;
   margin: 20px 0;
 }
 
-/* Formatted Content Styles */
-.jt-preview-content h1 {
-  font-size: 24px;
-  font-weight: 700;
-  margin: 8px 0;
-  color: #1f2937 !important;
-  line-height: 1.3;
-}
+/* ============================================================
+   JobTread markdown content (jt-md-*)
 
-.jt-preview-content h2 {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 6px 0;
-  color: #1f2937 !important;
-  line-height: 1.3;
-}
+   1:1 with the Tailwind v4 classes JobTread emits. Colors are the
+   exact oklch values captured from app.jobtread.com. There are NO
+   vertical margins on any element — spacing comes entirely from the
+   preserved newlines rendered by white-space: pre-wrap.
+   ============================================================ */
 
-.jt-preview-content h3 {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 4px 0;
-  color: #1f2937 !important;
-  line-height: 1.3;
-}
-
-.jt-preview-content h4 {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 4px 0;
-  color: #1f2937 !important;
-  line-height: 1.3;
-}
-
-.jt-preview-content strong,
-.jt-preview-content b {
-  font-weight: 700;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content em,
-.jt-preview-content i {
-  font-style: italic;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content u {
-  text-decoration: underline;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content s,
-.jt-preview-content strike {
-  text-decoration: line-through;
-  opacity: 0.7;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content ul,
-.jt-preview-content ol {
-  margin: 8px 0;
-  padding-left: 24px;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content li {
-  margin: 4px 0;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content ul li {
-  list-style-type: disc;
-}
-
-.jt-preview-content ol li {
-  list-style-type: decimal;
-}
-
-.jt-preview-content blockquote {
-  border-left: 4px solid #9ca3af; /* Gray like JobTread */
-  padding-left: 12px;
-  margin: 8px 0;
-  color: #374151 !important;
-  font-style: normal;
-}
-
-.jt-preview-content a {
-  color: #3b82f6 !important;
-  text-decoration: underline;
-}
-
-.jt-preview-content a:hover {
-  color: #2563eb !important;
-}
+/* Headings */
+.jt-preview-content .jt-md-h1 { font-weight: 700; font-size: 20px; line-height: 28px; }
+.jt-preview-content .jt-md-h2 { font-weight: 700; font-size: 18px; line-height: 28px; }
+.jt-preview-content .jt-md-h3 { font-weight: 700; font-size: 16px; line-height: 24px; }
+.jt-preview-content .jt-md-h4 { font-weight: 700; }
 
 /* Text colors */
-.jt-preview-content .jt-color-red {
-  color: #ef4444 !important;
-  font-weight: 500;
-}
+.jt-preview-content .jt-md-red    { color: var(--jt-md-red); }
+.jt-preview-content .jt-md-blue   { color: var(--jt-md-blue); }
+.jt-preview-content .jt-md-yellow { color: var(--jt-md-yellow); }
+.jt-preview-content .jt-md-green  { color: var(--jt-md-green); }
+.jt-preview-content .jt-md-purple { color: var(--jt-md-purple); }
+.jt-preview-content .jt-md-orange { color: var(--jt-md-orange); }
 
-.jt-preview-content .jt-color-green {
-  color: #10b981 !important;
-  font-weight: 500;
-}
+/* Links — cyan, no underline; hover cyan-600 */
+.jt-preview-content .jt-md-link { color: var(--jt-md-link); text-decoration: none; }
+.jt-preview-content .jt-md-link:hover { color: var(--jt-md-link-hover); }
 
-.jt-preview-content .jt-color-blue {
-  color: #3b82f6 !important;
-  font-weight: 500;
-}
-
-.jt-preview-content .jt-color-yellow {
-  color: #f59e0b !important;
-  font-weight: 500;
-}
-
-.jt-preview-content .jt-color-orange {
-  color: #f97316 !important;
-  font-weight: 500;
-}
-
-.jt-preview-content .jt-color-purple {
-  color: #8b5cf6 !important;
-  font-weight: 500;
-}
-
-/* Make formatted elements inside color spans inherit the color */
-.jt-preview-content .jt-color-red strong,
-.jt-preview-content .jt-color-red b,
-.jt-preview-content .jt-color-red em,
-.jt-preview-content .jt-color-red i,
-.jt-preview-content .jt-color-red u,
-.jt-preview-content .jt-color-red s {
-  color: #ef4444 !important;
-}
-
-.jt-preview-content .jt-color-green strong,
-.jt-preview-content .jt-color-green b,
-.jt-preview-content .jt-color-green em,
-.jt-preview-content .jt-color-green i,
-.jt-preview-content .jt-color-green u,
-.jt-preview-content .jt-color-green s {
-  color: #10b981 !important;
-}
-
-.jt-preview-content .jt-color-blue strong,
-.jt-preview-content .jt-color-blue b,
-.jt-preview-content .jt-color-blue em,
-.jt-preview-content .jt-color-blue i,
-.jt-preview-content .jt-color-blue u,
-.jt-preview-content .jt-color-blue s {
-  color: #3b82f6 !important;
-}
-
-.jt-preview-content .jt-color-yellow strong,
-.jt-preview-content .jt-color-yellow b,
-.jt-preview-content .jt-color-yellow em,
-.jt-preview-content .jt-color-yellow i,
-.jt-preview-content .jt-color-yellow u,
-.jt-preview-content .jt-color-yellow s {
-  color: #f59e0b !important;
-}
-
-.jt-preview-content .jt-color-orange strong,
-.jt-preview-content .jt-color-orange b,
-.jt-preview-content .jt-color-orange em,
-.jt-preview-content .jt-color-orange i,
-.jt-preview-content .jt-color-orange u,
-.jt-preview-content .jt-color-orange s {
-  color: #f97316 !important;
-}
-
-.jt-preview-content .jt-color-purple strong,
-.jt-preview-content .jt-color-purple b,
-.jt-preview-content .jt-color-purple em,
-.jt-preview-content .jt-color-purple i,
-.jt-preview-content .jt-color-purple u,
-.jt-preview-content .jt-color-purple s {
-  color: #8b5cf6 !important;
-}
-
-/* Text alignment */
-.jt-preview-content .jt-align-center {
-  text-align: center;
-}
-
-.jt-preview-content .jt-align-right {
-  text-align: right;
-}
-
-/* Paragraph breaks (empty lines) */
-.jt-preview-content .jt-paragraph-break {
-  display: block;
-  height: 0.75em;
-}
-
-/* Inline Icons */
-.jt-preview-content .jt-inline-icon {
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 4px;
-  color: currentColor;
-}
-
-/* Alerts */
-.jt-preview-content .jt-alert {
-  margin: 8px 0;
+/* Blockquotes / alerts — left border + tinted bg, rounded right corners.
+   Container color = first quoted line's [!color:X] (else gray). */
+.jt-preview-content .jt-md-quote {
   border-left-width: 4px;
-  padding: 0.5rem 1rem;
-  border-radius: 0 0.125rem 0.125rem 0;
+  border-left-style: solid;
+  padding: 8px 16px;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.jt-preview-content .jt-md-quote-gray   { border-left-color: var(--jt-md-gray);   background: var(--jt-md-quote-bg-gray); }
+.jt-preview-content .jt-md-quote-red    { border-left-color: var(--jt-md-red);    background: var(--jt-md-quote-bg-red); }
+.jt-preview-content .jt-md-quote-blue   { border-left-color: var(--jt-md-blue);   background: var(--jt-md-quote-bg-blue); }
+.jt-preview-content .jt-md-quote-yellow { border-left-color: var(--jt-md-yellow); background: var(--jt-md-quote-bg-yellow); }
+.jt-preview-content .jt-md-quote-green  { border-left-color: var(--jt-md-green);  background: var(--jt-md-quote-bg-green); }
+.jt-preview-content .jt-md-quote-purple { border-left-color: var(--jt-md-purple); background: var(--jt-md-quote-bg-purple); }
+.jt-preview-content .jt-md-quote-orange { border-left-color: var(--jt-md-orange); background: var(--jt-md-quote-bg-orange); }
+
+/* Tables — fit-content width, 1px gray-200 border, rounded, white bg;
+   vertical dividers between cells + row top borders. No striping, no hover. */
+.jt-preview-content .jt-md-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--jt-md-table-border);
+  border-radius: 4px;
+  background: var(--jt-md-table-bg);
+  overflow: hidden;
+  width: auto;
+}
+.jt-preview-content .jt-md-thead-row { background: var(--jt-md-table-head-bg); font-weight: 700; }
+.jt-preview-content .jt-md-th { padding: 8px; text-align: left; }
+.jt-preview-content .jt-md-td { padding: 8px; border-top: 1px solid var(--jt-md-table-border); }
+.jt-preview-content .jt-md-th + .jt-md-th,
+.jt-preview-content .jt-md-td + .jt-md-td { border-left: 1px solid var(--jt-md-table-border); }
+
+/* Horizontal rule — 1px gray-200 top border, no margin */
+.jt-preview-content .jt-md-hr {
+  border: 0;
+  border-top: 1px solid var(--jt-md-table-border);
+  height: 1px;
+  margin: 0;
 }
 
-.jt-preview-content .jt-alert .font-bold {
-  font-weight: 700;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
+/* Lists — inline-start padding, standard markers, no margins */
+.jt-preview-content .jt-md-ul { padding-inline-start: 24px; margin: 0; list-style-type: disc; }
+.jt-preview-content .jt-md-ol { padding-inline-start: 24px; margin: 0; list-style-type: decimal; }
+.jt-preview-content .jt-md-ul li,
+.jt-preview-content .jt-md-ol li { display: list-item; }
 
-.jt-preview-content .jt-alert .flex {
-  display: flex;
-}
-
-.jt-preview-content .jt-alert .items-center {
-  align-items: center;
-}
-
-.jt-preview-content .jt-alert .gap-2 {
-  gap: 0.5rem;
-}
-
-/* Alert color variants */
-.jt-preview-content .border-blue-500 {
-  border-color: #3b82f6;
-}
-
-.jt-preview-content .bg-blue-50 {
-  background-color: #eff6ff;
-}
-
-.jt-preview-content .text-blue-500 {
-  color: #3b82f6;
-}
-
-.jt-preview-content .border-yellow-500 {
-  border-color: #f59e0b;
-}
-
-.jt-preview-content .bg-yellow-50 {
-  background-color: #fffbeb;
-}
-
-.jt-preview-content .text-yellow-500 {
-  color: #f59e0b;
-}
-
-.jt-preview-content .border-red-500 {
-  border-color: #ef4444;
-}
-
-.jt-preview-content .bg-red-50 {
-  background-color: #fef2f2;
-}
-
-.jt-preview-content .text-red-500 {
-  color: #ef4444;
-}
-
-.jt-preview-content .border-green-500 {
-  border-color: #10b981;
-}
-
-.jt-preview-content .bg-green-50 {
-  background-color: #f0fdf4;
-}
-
-.jt-preview-content .text-green-500 {
-  color: #10b981;
-}
-
-.jt-preview-content .border-jtOrange {
-  border-color: #ff5600;
-}
-
-.jt-preview-content .bg-orange-50 {
-  background-color: #fff7ed;
-}
-
-.jt-preview-content .text-jtOrange {
-  color: #ff5600;
-}
-
-.jt-preview-content .border-purple-500 {
-  border-color: #8b5cf6;
-}
-
-.jt-preview-content .bg-purple-50 {
-  background-color: #faf5ff;
-}
-
-.jt-preview-content .text-purple-500 {
-  color: #8b5cf6;
-}
-
-/* Tables */
-.jt-preview-content .jt-markdown-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0 0 6px 0;
-  font-size: 13px;
-}
-
-.jt-preview-content .jt-markdown-table th,
-.jt-preview-content .jt-markdown-table td {
-  padding: 8px 12px;
-  text-align: left;
-  border: 1px solid #e5e7eb;
-  color: #1f2937 !important;
-}
-
-.jt-preview-content .jt-markdown-table thead th {
-  background: #f9fafb;
-  font-weight: 600;
-  border-bottom: 2px solid #d1d5db;
-}
-
-.jt-preview-content .jt-markdown-table tbody tr:nth-child(even) {
-  background: #fafafa;
-}
-
-.jt-preview-content .jt-markdown-table tbody tr:hover {
-  background: #f3f4f6;
+/* Inline icons — 1em square, aligned to the text baseline */
+.jt-preview-content .jt-md-icon {
+  display: inline-block;
+  overflow: visible;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
 }
 
 /* Scrollbar styling */
@@ -481,41 +268,12 @@
   background: #9ca3af;
 }
 
-/* Ensure proper spacing */
-.jt-preview-content > *:first-child {
-  margin-top: 0;
-}
-
-.jt-preview-content > *:last-child {
-  margin-bottom: 0;
-}
-
-/* Dark mode support */
+/* Dark mode support — panel chrome + scrollbars (content theming is driven by
+   the .dark-theme / .custom-theme classes the feature JS applies) */
 @media (prefers-color-scheme: dark) {
   .jt-preview-panel {
     background: #1f2937;
     border-color: #4b5563;
-  }
-
-  .jt-preview-content {
-    color: #e5e7eb;
-  }
-
-  .jt-preview-content h1,
-  .jt-preview-content h2,
-  .jt-preview-content h3,
-  .jt-preview-content h4 {
-    color: #f9fafb;
-  }
-
-  .jt-preview-content strong,
-  .jt-preview-content b {
-    color: #f9fafb;
-  }
-
-  .jt-preview-content blockquote {
-    border-left-color: #6b7280; /* Gray in dark mode */
-    color: #d1d5db;
   }
 
   .jt-preview-content::-webkit-scrollbar-track {
@@ -531,7 +289,7 @@
   }
 }
 
-/* Dark Mode Theme - Matches JT Power Tools Dark Mode */
+/* Dark Mode Theme - Matches JT Power Tools Dark Mode (chrome + content) */
 .jt-preview-panel.dark-theme,
 .jt-preview-btn.dark-theme {
   /* Button styles */
@@ -574,152 +332,6 @@
   color: #9ca3af;
 }
 
-.jt-preview-panel.dark-theme .jt-preview-content {
-  background: #2c2c2c;
-  color: #d1d5db !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content * {
-  color: #e5e7eb !important;
-}
-
-/* Ensure all text in dark theme is light - override any inherited styles */
-.jt-preview-panel.dark-theme .jt-preview-content,
-.jt-preview-panel.dark-theme .jt-preview-content p,
-.jt-preview-panel.dark-theme .jt-preview-content span,
-.jt-preview-panel.dark-theme .jt-preview-content div {
-  color: #e5e7eb !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-empty {
-  color: #6b7280 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content h1,
-.jt-preview-panel.dark-theme .jt-preview-content h2,
-.jt-preview-panel.dark-theme .jt-preview-content h3,
-.jt-preview-panel.dark-theme .jt-preview-content h4 {
-  color: #f5f5f5 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content strong,
-.jt-preview-panel.dark-theme .jt-preview-content b {
-  color: #f5f5f5 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content em,
-.jt-preview-panel.dark-theme .jt-preview-content i,
-.jt-preview-panel.dark-theme .jt-preview-content u,
-.jt-preview-panel.dark-theme .jt-preview-content s,
-.jt-preview-panel.dark-theme .jt-preview-content strike {
-  color: #d1d5db !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content ul,
-.jt-preview-panel.dark-theme .jt-preview-content ol,
-.jt-preview-panel.dark-theme .jt-preview-content li {
-  color: #d1d5db !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content blockquote {
-  border-left-color: #6b7280; /* Gray in dark mode */
-  color: #d1d5db !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content a {
-  color: #60a5fa !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content a:hover {
-  color: #93c5fd !important;
-}
-
-/* Text colors for dark theme */
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red {
-  color: #f87171 !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green {
-  color: #34d399 !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue {
-  color: #60a5fa !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow {
-  color: #fbbf24 !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange {
-  color: #fb923c !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple {
-  color: #a78bfa !important;
-  font-weight: 500;
-}
-
-/* Make formatted elements inside color spans inherit the color in dark theme */
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red strong,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red b,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red em,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red i,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red u,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red s {
-  color: #f87171 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green strong,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green b,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green em,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green i,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green u,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green s {
-  color: #34d399 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue strong,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue b,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue em,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue i,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue u,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue s {
-  color: #60a5fa !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow strong,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow b,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow em,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow i,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow u,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow s {
-  color: #fbbf24 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange strong,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange b,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange em,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange i,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange u,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange s {
-  color: #fb923c !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple strong,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple b,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple em,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple i,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple u,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple s {
-  color: #a78bfa !important;
-}
-
 .jt-preview-panel.dark-theme .jt-preview-content::-webkit-scrollbar-track {
   background: #353535;
 }
@@ -732,27 +344,36 @@
   background: #525252;
 }
 
-.jt-preview-panel.dark-theme .jt-preview-content .jt-markdown-table th,
-.jt-preview-panel.dark-theme .jt-preview-content .jt-markdown-table td {
-  border-color: #464646;
-  color: #d1d5db !important;
+/* Dark theme — content follows the extension's neutral-grey dark surface.
+   Overrides ONLY the themeable vars; all structure (sizes, borders, radii)
+   is inherited unchanged. Colors adapt: text/link/table to grey-safe values,
+   formatting colors to Tailwind v4 400-tier, quote fills to translucent tints.
+   Quote left-border colors stay the 500-tier defaults (they read on dark). */
+.jt-preview-panel.dark-theme .jt-preview-content {
+  --jt-md-text: #e0e0e0;
+  --jt-md-bg: #2c2c2c;
+  --jt-md-link: oklch(0.789 0.154 211.53);
+  --jt-md-link-hover: oklch(0.865 0.127 207.078);
+  --jt-md-table-border: #464646;
+  --jt-md-table-head-bg: #353535;
+  --jt-md-table-bg: transparent;
+  --jt-md-red: oklch(0.704 0.191 22.216);
+  --jt-md-blue: oklch(0.707 0.165 254.624);
+  --jt-md-yellow: oklch(0.852 0.199 91.936);
+  --jt-md-green: oklch(0.792 0.209 151.711);
+  --jt-md-purple: oklch(0.714 0.203 305.504);
+  --jt-md-orange: oklch(0.75 0.183 55.934);
+  --jt-md-gray: #9ca3af;
+  --jt-md-quote-bg-red: rgba(251, 44, 54, 0.15);
+  --jt-md-quote-bg-blue: rgba(43, 127, 255, 0.15);
+  --jt-md-quote-bg-yellow: rgba(240, 177, 0, 0.15);
+  --jt-md-quote-bg-green: rgba(0, 201, 81, 0.15);
+  --jt-md-quote-bg-purple: rgba(173, 70, 255, 0.15);
+  --jt-md-quote-bg-orange: rgba(255, 86, 0, 0.15);
+  --jt-md-quote-bg-gray: rgba(255, 255, 255, 0.06);
 }
 
-.jt-preview-panel.dark-theme .jt-preview-content .jt-markdown-table thead th {
-  background: #353535;
-  border-bottom-color: #525252;
-  color: #f5f5f5 !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-markdown-table tbody tr:nth-child(even) {
-  background: #323232;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-markdown-table tbody tr:hover {
-  background: #3a3a3a;
-}
-
-/* Custom Theme Support */
+/* Custom Theme Support (panel chrome + content follow the RGB theme) */
 .jt-preview-btn.custom-theme {
   background: var(--jt-preview-btn-bg, white);
   color: var(--jt-preview-btn-text, #6b7280);
@@ -790,123 +411,6 @@
   color: var(--jt-preview-text-muted, #6b7280);
 }
 
-.jt-preview-panel.custom-theme .jt-preview-content {
-  background: var(--jt-preview-bg, white);
-  color: var(--jt-preview-text, #1f2937) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content * {
-  color: var(--jt-preview-text, #1f2937);
-}
-
-.jt-preview-panel.custom-theme .jt-preview-empty {
-  color: var(--jt-preview-text-muted, #9ca3af) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content h1,
-.jt-preview-panel.custom-theme .jt-preview-content h2,
-.jt-preview-panel.custom-theme .jt-preview-content h3,
-.jt-preview-panel.custom-theme .jt-preview-content h4,
-.jt-preview-panel.custom-theme .jt-preview-content strong,
-.jt-preview-panel.custom-theme .jt-preview-content b {
-  color: var(--jt-preview-text, #1f2937) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content blockquote {
-  border-left-color: var(--jt-preview-blockquote-border, #9ca3af);
-  color: var(--jt-preview-text, #374151) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content a {
-  color: var(--jt-preview-primary, #3b82f6) !important;
-}
-
-/* Text colors for custom theme */
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red {
-  color: var(--jt-color-red, #ef4444) !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green {
-  color: var(--jt-color-green, #10b981) !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue {
-  color: var(--jt-color-blue, #3b82f6) !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow {
-  color: var(--jt-color-yellow, #f59e0b) !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange {
-  color: var(--jt-color-orange, #f97316) !important;
-  font-weight: 500;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple {
-  color: var(--jt-color-purple, #8b5cf6) !important;
-  font-weight: 500;
-}
-
-/* Make formatted elements inside color spans inherit the color in custom theme */
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red strong,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red b,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red em,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red i,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red u,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red s {
-  color: var(--jt-color-red, #ef4444) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green strong,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green b,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green em,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green i,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green u,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green s {
-  color: var(--jt-color-green, #10b981) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue strong,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue b,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue em,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue i,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue u,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue s {
-  color: var(--jt-color-blue, #3b82f6) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow strong,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow b,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow em,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow i,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow u,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow s {
-  color: var(--jt-color-yellow, #f59e0b) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange strong,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange b,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange em,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange i,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange u,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange s {
-  color: var(--jt-color-orange, #f97316) !important;
-}
-
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple strong,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple b,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple em,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple i,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple u,
-.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple s {
-  color: var(--jt-color-purple, #8b5cf6) !important;
-}
-
 .jt-preview-panel.custom-theme .jt-preview-content::-webkit-scrollbar-track {
   background: var(--jt-preview-scrollbar-track, #f3f4f6);
 }
@@ -919,87 +423,26 @@
   background: var(--jt-preview-scrollbar-thumb-hover, #9ca3af);
 }
 
-/* ========================================
-   Alert Box Styles (Theme-aware)
-   ======================================== */
-
-.jt-preview-content .jt-alert-box {
-  margin: 8px 0;
-  padding: 0.5rem 0.75rem;
-  border-left-width: 4px;
-  border-left-style: solid;
-  border-radius: 0;
-  background: transparent !important;
+/* Custom theme — content follows the user's RGB theme colors (the JS sets
+   --jt-preview-* on the panel). Overrides ONLY the themeable vars; per-color
+   formatting text keeps its light 500-tier defaults, and quote fills use the
+   same translucent tints as dark (they work over any base color). */
+.jt-preview-panel.custom-theme .jt-preview-content {
+  --jt-md-text: var(--jt-preview-text, #1f2937);
+  --jt-md-bg: var(--jt-preview-bg, #fff);
+  --jt-md-link: var(--jt-preview-primary, oklch(0.715 0.143 215.221));
+  --jt-md-link-hover: var(--jt-preview-primary, oklch(0.715 0.143 215.221));
+  --jt-md-table-border: var(--jt-preview-border, oklch(0.928 0.006 264.531));
+  --jt-md-table-head-bg: var(--jt-preview-btn-bg, oklch(0.967 0.003 264.542));
+  --jt-md-table-bg: transparent;
+  --jt-md-quote-bg-red: rgba(251, 44, 54, 0.15);
+  --jt-md-quote-bg-blue: rgba(43, 127, 255, 0.15);
+  --jt-md-quote-bg-yellow: rgba(240, 177, 0, 0.15);
+  --jt-md-quote-bg-green: rgba(0, 201, 81, 0.15);
+  --jt-md-quote-bg-purple: rgba(173, 70, 255, 0.15);
+  --jt-md-quote-bg-orange: rgba(255, 86, 0, 0.15);
+  --jt-md-quote-bg-gray: rgba(255, 255, 255, 0.06);
 }
-
-.jt-preview-content .jt-alert-subject {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  margin-bottom: 0;
-}
-
-.jt-preview-content .jt-alert-icon {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.jt-preview-content .jt-alert-body {
-  color: #374151;
-  margin-left: 0;
-  margin-top: 0.125rem;
-}
-
-/* Alert color variants - Light theme */
-.jt-preview-content .jt-alert-border-blue { border-left-color: #3b82f6; }
-.jt-preview-content .jt-alert-bg-blue { background-color: #eff6ff; }
-.jt-preview-content .jt-alert-text-blue { color: #3b82f6; }
-
-.jt-preview-content .jt-alert-border-yellow { border-left-color: #f59e0b; }
-.jt-preview-content .jt-alert-bg-yellow { background-color: #fffbeb; }
-.jt-preview-content .jt-alert-text-yellow { color: #f59e0b; }
-
-.jt-preview-content .jt-alert-border-red { border-left-color: #ef4444; }
-.jt-preview-content .jt-alert-bg-red { background-color: #fef2f2; }
-.jt-preview-content .jt-alert-text-red { color: #ef4444; }
-
-.jt-preview-content .jt-alert-border-green { border-left-color: #10b981; }
-.jt-preview-content .jt-alert-bg-green { background-color: #f0fdf4; }
-.jt-preview-content .jt-alert-text-green { color: #10b981; }
-
-.jt-preview-content .jt-alert-border-orange { border-left-color: #f97316; }
-.jt-preview-content .jt-alert-bg-orange { background-color: #fff7ed; }
-.jt-preview-content .jt-alert-text-orange { color: #f97316; }
-
-.jt-preview-content .jt-alert-border-purple { border-left-color: #8b5cf6; }
-.jt-preview-content .jt-alert-bg-purple { background-color: #faf5ff; }
-.jt-preview-content .jt-alert-text-purple { color: #8b5cf6; }
-
-/* Alert color variants - Dark theme */
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-body {
-  color: #e5e7eb !important;
-}
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-blue { background-color: rgba(59, 130, 246, 0.15); }
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-blue { color: #60a5fa !important; }
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-yellow { background-color: rgba(245, 158, 11, 0.15); }
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-yellow { color: #fbbf24 !important; }
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-red { background-color: rgba(239, 68, 68, 0.15); }
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-red { color: #f87171 !important; }
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-green { background-color: rgba(16, 185, 129, 0.15); }
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-green { color: #34d399 !important; }
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-orange { background-color: rgba(249, 115, 22, 0.15); }
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-orange { color: #fb923c !important; }
-
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-purple { background-color: rgba(139, 92, 246, 0.15); }
-.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-purple { color: #a78bfa !important; }
 
 /* ========================================
    Pinned Mode Styles
@@ -1219,10 +662,6 @@
   .jt-preview-panel {
     width: calc(100vw - 40px) !important;
     max-width: 400px !important;
-  }
-
-  .jt-preview-content {
-    font-size: 13px;
   }
 
   /* Larger touch targets for drag header on mobile */

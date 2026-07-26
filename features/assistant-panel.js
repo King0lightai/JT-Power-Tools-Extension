@@ -26,12 +26,15 @@ const AssistantPanelFeature = (() => {
   const AGENT_BASE = AGENT_URL.replace(/\/chat$/, '');
   const PORTAL_PROFILE_URL = 'https://app.jtpowertools.com/dashboard#team';
   const PORTAL_SKILLS_URL = 'https://app.jtpowertools.com/dashboard#skills';
-  const LAUNCHER_POS_KEY = 'jtAssistantLauncherPos';
   const PANEL_WIDTH_KEY = 'jtAssistantPanelWidth';
   const PENDING_RUN_KEY = 'jtAssistantPendingRun';
   // Savings ↔ Quality dial — remembered per-user default, sent as `mode` on each
   // /agent/chat. Server normalizes anything unknown to 'balanced'.
   const EFFORT_MODE_KEY = 'jtAssistantEffortMode';
+  // Auto-apply dial — opt-in, remembered per-user. When on, proposed writes are
+  // confirmed automatically as they arrive (no manual Apply click). Off by
+  // default: auto-writes stay a deliberate choice (spec §Non-Goals).
+  const AUTO_APPLY_KEY = 'jtAssistantAutoApply';
   const EFFORT_MODES = [
     { id: 'savings', label: 'Savings', title: 'Cheapest model the safety rules allow + low effort. Money questions still use the smart model.' },
     { id: 'balanced', label: 'Balanced', title: 'The tuned default — smart routing, low effort only on follow-up turns.' },
@@ -43,6 +46,30 @@ const AssistantPanelFeature = (() => {
   const PENDING_RUN_MAX_AGE_MS = 10 * 60 * 1000;
   const DEFAULT_PANEL_WIDTH = 380;
   const MIN_PANEL_WIDTH = 300;
+  // How long to keep watching for JobTread's help bubble to render before
+  // giving up. The top bar is usually present on the first look; this only
+  // covers a slow SPA mount. There is no fallback launcher — if the bubble
+  // never appears, the assistant is simply unreachable that session.
+  const BUBBLE_WATCH_MS = 8000;
+  // JobTread's help bubble (top-right question mark) — the control we
+  // intercept to offer a JobTread-AI vs JT-Power-Tools fork. The live bubble
+  // is an icon-only `div[role="button"]` with NO aria-label/title/text, so the
+  // attribute selectors below are defensive (in case JobTread labels it later)
+  // and real matching leans on the SVG signature in looksLikeHelpBubble().
+  // Every candidate is still gated by isTopRightIcon() so a stray element
+  // elsewhere is never bound. This is the one place to update if JobTread
+  // reshuffles that toolbar.
+  const HELP_BUBBLE_SELECTORS = [
+    '[data-testid="help-button"]',
+    'button[aria-label="Help" i]',
+    'button[title="Help" i]',
+    'a[aria-label="Help" i]',
+  ];
+  // The bubble's distinguishing marks, matched inside a candidate:
+  //  • the question-mark "help" glyph — its dot path (`M12 17h.01`) is unique
+  //  • JobTread's purple "AI" sparkle overlay (`.fill-purple-500`)
+  const HELP_GLYPH_SELECTOR = 'svg path[d*="M12 17h"]';
+  const AI_SPARKLE_SELECTOR = '.fill-purple-500';
 
   // One-click job audit — the canned "find something I didn't ask about"
   // prompt. Sent as the task; the chip label is what shows in the chat.
@@ -55,29 +82,55 @@ const AssistantPanelFeature = (() => {
     'Lead with the most important finding and include dollar amounts. ' +
     'If everything is clean, say so in two sentences.';
 
-  // Org credit-pool status banner copy, keyed by server `pool` frame state.
-  const POOL_COPY = {
-    low: 'Credits are running low — responses may use a lighter model.',
-    exhausted:
-      'Assistant credits are used up for this cycle — running in reduced mode. Top up or wait for the reset.',
-  };
+  // Org credit-pool status copy, derived from the server `pool` frame.
+  function poolCopy(frame) {
+    if (frame.trial && frame.state !== 'exhausted' && !frame.blocked) {
+      const endStr = frame.trialEndsAt ? new Date(frame.trialEndsAt * 1000).toLocaleDateString() : null;
+      const remaining = Number(frame.remaining ?? 0);
+      const total = Number(frame.total ?? 0);
+      return `Trial: the assistant runs on a reduced ${total.toLocaleString()}-credit allowance${
+        endStr ? ` until ${endStr}` : ''
+      } (${remaining.toLocaleString()} left). Your full allowance starts when your subscription begins.`;
+    }
+    const remaining = Number(frame.remaining ?? 0);
+    const total = Number(frame.total ?? 0);
+    const resetStr = frame.cycleResetAt
+      ? new Date(frame.cycleResetAt * 1000).toLocaleDateString()
+      : null;
+    if (frame.blocked || frame.state === 'exhausted') {
+      return `Your company is out of Assistant credits this cycle (${remaining.toLocaleString()} of ${total.toLocaleString()} remaining)${
+        resetStr ? ` — resets ${resetStr}` : ''
+      }. Top up or wait for the reset to continue.`;
+    }
+    if (frame.state === 'low') {
+      return `Your company has ${remaining.toLocaleString()} of ${total.toLocaleString()} Assistant credits left this cycle. Top up to avoid interruption.`;
+    }
+    return null;
+  }
 
   let isActive = false;
-  let launcherEl = null;
   let panelEl = null;
   let poolBannerEl = null;
+  let composerBlocked = false;
   let glowEl = null;
   let sessionId = null;
   let effortMode = DEFAULT_EFFORT_MODE; // Savings↔Quality dial; restored from storage on init
   // Draft cards already rendered this session (draft id / idempotency key) —
   // each draft arrives on two frames and must render once.
   const renderedDraftKeys = new Set();
+  // Persisted, not-yet-applied draft cards this session, keyed by draft id.
+  // Drives the "Apply all" bar and auto-apply. Each value exposes applyNow()
+  // (fires that card's confirm) — a card removes itself here once applied.
+  const pendingDrafts = new Map();
+  let autoApply = false; // opt-in; drafts confirm without a click when true
+  let bulkBarEl = null; // the "Apply all" bar (built lazily above the composer)
+  let bulkArmed = false; // two-step confirm state for the bulk bar
+  let bulkArmTimer = null; // resets the bulk arm after the window
+  let bulkApplying = false; // guards against re-entry while a bulk pass runs
   let abortController = null;
   let sending = false;
   let statusChecked = false; // profile/skills nudge fires once per page load
   let pendingRecovery = null; // interrupted run to reopen on the next panel open (set at init from storage)
-  let launcherDrag = null; // { startY, startTop, moved } while a drag is in progress
-  let justDragged = false; // suppress the click that follows a drag-release
   // Docked-sidebar push state. When the panel opens it pushes JobTread's app
   // root left via an inline margin-right; we stash the root's PRIOR inline
   // margin/transition so close + cleanup restore them exactly (never assume '').
@@ -89,6 +142,18 @@ const AssistantPanelFeature = (() => {
   let panelResizeDrag = null; // { startX, startWidth } while the edge handle is dragged
   const eventListeners = []; // document/window-level — must be removed in cleanup()
   const draftConfirmTimers = new Set(); // pending two-step "are you sure?" reset timers
+  // Help-bubble activation fork. The assistant is reached exclusively through
+  // JobTread's top-right help bubble: we intercept it and offer a two-option
+  // chooser. If the bubble never renders we keep watching for the watch window
+  // and then give up — there is no floating fallback launcher.
+  let usingBubble = false; // true once the interceptor is bound
+  let helpBubbleEl = null; // the intercepted bubble
+  let helpBubbleHandler = null; // its capture-phase click handler (tracked for removal)
+  let bubbleObserver = null; // watches for a late-rendering bubble
+  let bubbleObserverTimer = null; // bounds how long bubbleObserver runs
+  let passThroughNextBubbleClick = false; // let the next bubble click reach JobTread's own handler
+  let chooserEl = null; // the open activation popover (null = closed)
+  let chooserDismissHandlers = null; // { onDocClick, onKeydown } while the chooser is open
 
   // ─── Utilities ────────────────────────────────────────────────────
 
@@ -437,8 +502,7 @@ const AssistantPanelFeature = (() => {
 
   // ─── Working glow (presence while a run is active) ────────────────
   // Honest signal, not theater: the viewport tints brand-orange only
-  // while the agent is actually reading the org's live data, and the
-  // launcher breathes so the state is visible with the panel closed.
+  // while the agent is actually reading the org's live data.
 
   function buildGlow() {
     glowEl = el('div', 'jt-assistant-glow');
@@ -448,94 +512,206 @@ const AssistantPanelFeature = (() => {
 
   function setWorking(on) {
     if (glowEl) glowEl.classList.toggle('jt-assistant-glow-active', on);
-    if (launcherEl) launcherEl.classList.toggle('jt-assistant-launcher-working', on);
   }
 
   // ─── Panel UI ─────────────────────────────────────────────────────
 
-  function buildLauncher() {
-    launcherEl = el('button', 'jt-assistant-launcher');
-    launcherEl.type = 'button';
-    launcherEl.setAttribute('aria-label', 'Open JT Power Tools Assistant');
-    launcherEl.title = 'JT Power Tools Assistant';
-    launcherEl.textContent = 'AI';
-    // Click toggles the panel — but a click that followed a drag is swallowed.
-    launcherEl.addEventListener('click', onLauncherClick);
-    launcherEl.addEventListener('pointerdown', onLauncherPointerDown);
-    document.body.appendChild(launcherEl);
-    // Move/up ride on the document so a fast drag that outruns the button
-    // still tracks — document-level, so they must be removed in cleanup().
-    addListener(document, 'pointermove', onLauncherPointerMove);
-    addListener(document, 'pointerup', onLauncherPointerUp);
-    restoreLauncherPos();
+  // ─── Help-bubble activation fork ──────────────────────────────────────
+  // JobTread's top-right question-mark bubble opens its built-in AI help
+  // chat. We intercept the click and show a two-option chooser: keep going to
+  // JobTread AI, or open the JT Power Tools Assistant. This is the only entry
+  // point — there is no floating launcher.
+
+  function isOurElement(node) {
+    return Boolean(
+      node.closest &&
+        node.closest('.jt-assistant-chooser, .jt-assistant-panel')
+    );
   }
 
-  function onLauncherClick() {
-    if (justDragged) {
-      justDragged = false;
+  // Gate every candidate on being a small control in the top-right corner.
+  // This is also what keeps jsdom (zero-size rects) and stray page buttons
+  // from ever being bound.
+  function isTopRightIcon(node) {
+    const r = node.getBoundingClientRect();
+    if (!r || r.width === 0 || r.height === 0) return false;
+    if (r.width > 80 || r.height > 80) return false; // an icon button, not a wide control
+    if (r.top > 140) return false; // within the top bar
+    const vw = window.innerWidth || 0;
+    if (r.right < vw - 260) return false; // in the right-hand cluster
+    return true;
+  }
+
+  // A candidate is the help bubble if it carries the question-mark help glyph
+  // or JobTread's purple AI sparkle. querySelector tolerates a missing node.
+  function looksLikeHelpBubble(node) {
+    if (!node.querySelector) return false;
+    return Boolean(
+      node.querySelector(HELP_GLYPH_SELECTOR) || node.querySelector(AI_SPARKLE_SELECTOR)
+    );
+  }
+
+  function findHelpBubble() {
+    for (const sel of HELP_BUBBLE_SELECTORS) {
+      const node = document.querySelector(sel);
+      if (node && !isOurElement(node) && isTopRightIcon(node)) return node;
+    }
+    // Heuristic sweep: a top-right control carrying the help/AI affordance —
+    // the SVG signature, a "help" label, or a literal "?".
+    for (const node of document.querySelectorAll('button, a[role="button"], [role="button"]')) {
+      if (isOurElement(node) || !isTopRightIcon(node)) continue;
+      if (looksLikeHelpBubble(node)) return node;
+      const meta = `${node.getAttribute('aria-label') || ''} ${node.getAttribute('title') || ''}`.toLowerCase();
+      if (meta.includes('help')) return node;
+      if ((node.textContent || '').trim() === '?') return node;
+    }
+    return null;
+  }
+
+  // Bind the bubble if it's already there; otherwise keep watching so a
+  // late-rendering bubble is still picked up within the watch window.
+  function setupEntryPoint() {
+    if (tryBindHelpBubble()) return;
+    startBubbleWatch();
+  }
+
+  function tryBindHelpBubble() {
+    if (usingBubble) return true;
+    const bubble = findHelpBubble();
+    if (!bubble) return false;
+    helpBubbleEl = bubble;
+    helpBubbleHandler = onBubbleClick;
+    // Capture phase so we run before JobTread's own React handler.
+    bubble.addEventListener('click', helpBubbleHandler, true);
+    usingBubble = true;
+    stopBubbleWatch();
+    return true;
+  }
+
+  function startBubbleWatch() {
+    if (bubbleObserver) return;
+    bubbleObserver = new MutationObserver(() => tryBindHelpBubble());
+    bubbleObserver.observe(document.body, { childList: true, subtree: true });
+    // Give up after the watch window. With no fallback launcher, log so a
+    // support session can tell the assistant never attached.
+    bubbleObserverTimer = setTimeout(() => {
+      stopBubbleWatch();
+      if (!usingBubble) {
+        console.warn('AssistantPanel: JobTread help bubble not found — assistant unreachable this session');
+      }
+    }, BUBBLE_WATCH_MS);
+  }
+
+  function stopBubbleWatch() {
+    if (bubbleObserver) {
+      bubbleObserver.disconnect();
+      bubbleObserver = null;
+    }
+    if (bubbleObserverTimer) {
+      clearTimeout(bubbleObserverTimer);
+      bubbleObserverTimer = null;
+    }
+  }
+
+  function onBubbleClick(e) {
+    if (passThroughNextBubbleClick) {
+      passThroughNextBubbleClick = false;
+      return; // our re-fire — let JobTread's native handler run (JobTread AI)
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    toggleChooser();
+  }
+
+  function toggleChooser() {
+    if (chooserEl) {
+      closeChooser();
       return;
     }
-    togglePanel();
+    openChooser();
   }
 
-  // Vertical-only drag along the right edge. A 5px movement threshold keeps a
-  // plain click from being read as a drag.
-  function onLauncherPointerDown(e) {
-    if (e.button != null && e.button !== 0) return;
-    justDragged = false; // fresh press — don't inherit a stale drag's suppression
-    const rect = launcherEl.getBoundingClientRect();
-    launcherDrag = { startY: e.clientY, startTop: rect.top, moved: false };
+  function buildChooserItem(title, sub, onClick) {
+    const item = el('button', 'jt-assistant-chooser-item');
+    item.type = 'button';
+    item.setAttribute('role', 'menuitem');
+    item.appendChild(el('span', 'jt-assistant-chooser-item-title', title));
+    item.appendChild(el('span', 'jt-assistant-chooser-item-sub', sub));
+    item.addEventListener('click', onClick);
+    return item;
   }
 
-  function onLauncherPointerMove(e) {
-    if (!launcherDrag || !launcherEl) return;
-    const dy = e.clientY - launcherDrag.startY;
-    if (!launcherDrag.moved && Math.abs(dy) < 5) return;
-    launcherDrag.moved = true;
-    launcherEl.classList.add('jt-assistant-launcher-dragging');
-    setLauncherTop(launcherDrag.startTop + dy);
+  function openChooser() {
+    if (!helpBubbleEl) return;
+    chooserEl = el('div', 'jt-tools-surface jt-assistant-chooser');
+    chooserEl.setAttribute('role', 'menu');
+    chooserEl.setAttribute('aria-label', 'Choose an assistant');
+    chooserEl.appendChild(
+      buildChooserItem('JobTread AI', "JobTread's built-in help chat", chooseJobTread)
+    );
+    chooserEl.appendChild(
+      buildChooserItem(
+        'JT Power Tools Assistant',
+        'Answers from your live JobTread data',
+        choosePowerTools
+      )
+    );
+    document.body.appendChild(chooserEl);
+    positionChooser();
+
+    // Dismiss on an outside click or Escape. The opening click was already
+    // stopped at the bubble and these listeners are added afterward, so they
+    // only ever see later events.
+    const onDocClick = (ev) => {
+      if (
+        chooserEl &&
+        !chooserEl.contains(ev.target) &&
+        ev.target !== helpBubbleEl &&
+        !(helpBubbleEl && helpBubbleEl.contains(ev.target))
+      ) {
+        closeChooser();
+      }
+    };
+    const onKeydown = (ev) => {
+      if (ev.key === 'Escape') closeChooser();
+    };
+    chooserDismissHandlers = { onDocClick, onKeydown };
+    document.addEventListener('click', onDocClick, true);
+    document.addEventListener('keydown', onKeydown, true);
   }
 
-  function onLauncherPointerUp() {
-    if (!launcherDrag) return;
-    const { moved } = launcherDrag;
-    launcherDrag = null;
-    if (launcherEl) launcherEl.classList.remove('jt-assistant-launcher-dragging');
-    if (moved) {
-      justDragged = true; // the trailing click is not a toggle
-      const top = parseInt(launcherEl?.style.top || '', 10);
-      if (!Number.isNaN(top)) persistLauncherPos(top);
+  // Anchor the popover under the bubble, aligned to its right edge.
+  function positionChooser() {
+    if (!chooserEl || !helpBubbleEl) return;
+    const r = helpBubbleEl.getBoundingClientRect();
+    const vw = window.innerWidth || 0;
+    chooserEl.style.top = `${Math.round(r.bottom + 8)}px`;
+    chooserEl.style.right = `${Math.max(8, Math.round(vw - r.right))}px`;
+  }
+
+  function chooseJobTread() {
+    closeChooser();
+    if (!helpBubbleEl) return;
+    passThroughNextBubbleClick = true;
+    helpBubbleEl.click(); // re-fire the native handler → JobTread's own AI chat
+  }
+
+  function choosePowerTools() {
+    closeChooser();
+    if (!panelEl || !panelEl.classList.contains('jt-assistant-open')) {
+      togglePanel();
     }
   }
 
-  // Clamp within the viewport (top 60px … bottom 24px) and pin to the right edge.
-  function setLauncherTop(top) {
-    if (!launcherEl) return;
-    const h = launcherEl.offsetHeight || 40;
-    const maxTop = Math.max(60, window.innerHeight - h - 24);
-    const clamped = Math.max(60, Math.min(top, maxTop));
-    launcherEl.style.top = `${clamped}px`;
-    launcherEl.style.bottom = 'auto';
-    launcherEl.style.transform = 'none';
-    return clamped;
-  }
-
-  function persistLauncherPos(top) {
-    try {
-      chrome.storage.local.set({ [LAUNCHER_POS_KEY]: top });
-    } catch {
-      // Non-fatal — the launcher just won't remember its spot.
+  function closeChooser() {
+    if (chooserDismissHandlers) {
+      document.removeEventListener('click', chooserDismissHandlers.onDocClick, true);
+      document.removeEventListener('keydown', chooserDismissHandlers.onKeydown, true);
+      chooserDismissHandlers = null;
     }
-  }
-
-  function restoreLauncherPos() {
-    try {
-      chrome.storage.local.get(LAUNCHER_POS_KEY, (res) => {
-        const top = res && res[LAUNCHER_POS_KEY];
-        if (typeof top === 'number' && launcherEl) setLauncherTop(top);
-      });
-    } catch {
-      // Non-fatal — fall back to the CSS default position.
+    if (chooserEl) {
+      chooserEl.remove();
+      chooserEl = null;
     }
   }
 
@@ -678,6 +854,164 @@ const AssistantPanelFeature = (() => {
     renderEffortMode();
   }
 
+  // ─── Auto-apply dial ──────────────────────────────────────────────────
+  // A single opt-in switch above the composer. Off by default; when the user
+  // turns it on, new drafts confirm automatically AND any already-pending
+  // drafts are applied now, so "stop clicking Apply" means exactly that.
+
+  function persistAutoApply(on) {
+    try {
+      chrome.storage.local.set({ [AUTO_APPLY_KEY]: on });
+    } catch {
+      // Non-fatal — the switch just won't be remembered next time.
+    }
+  }
+
+  function restoreAutoApply() {
+    try {
+      chrome.storage.local.get(AUTO_APPLY_KEY, (res) => {
+        if (res && res[AUTO_APPLY_KEY] === true) {
+          autoApply = true;
+          renderAutoApply();
+        }
+      });
+    } catch {
+      // Non-fatal — fall back to off.
+    }
+  }
+
+  // Reflect autoApply onto the switch (if built).
+  function renderAutoApply() {
+    const toggle = panelEl?.querySelector('[data-jt-role="auto-apply"]');
+    if (!toggle) return;
+    toggle.classList.toggle('jt-assistant-autoapply-on', autoApply);
+    toggle.setAttribute('aria-checked', autoApply ? 'true' : 'false');
+    const state = toggle.querySelector('.jt-assistant-autoapply-state');
+    if (state) state.textContent = autoApply ? 'On' : 'Off';
+  }
+
+  function setAutoApply(on) {
+    autoApply = on;
+    persistAutoApply(on);
+    renderAutoApply();
+    // Turning it on applies whatever's already waiting; the bulk bar is moot
+    // while auto-apply is live, so updateBulkBar() hides it either way.
+    updateBulkBar();
+    if (on) void applyAllPending();
+  }
+
+  function buildAutoApplyToggle() {
+    const row = el('div', 'jt-assistant-autoapply');
+    const toggle = el('button', 'jt-assistant-autoapply-toggle');
+    toggle.type = 'button';
+    toggle.dataset.jtRole = 'auto-apply';
+    toggle.setAttribute('role', 'switch');
+    toggle.setAttribute('aria-checked', 'false');
+    toggle.title =
+      'When on, proposed changes are applied automatically as they arrive — no confirm click.';
+    toggle.appendChild(el('span', 'jt-assistant-autoapply-label', 'Auto-apply changes'));
+    toggle.appendChild(el('span', 'jt-assistant-autoapply-state', 'Off'));
+    toggle.addEventListener('click', () => setAutoApply(!autoApply));
+    row.appendChild(toggle);
+    return row;
+  }
+
+  // ─── Bulk apply ("Apply all") ─────────────────────────────────────────
+  // A slim bar above the composer, shown only when 2+ persisted drafts are
+  // waiting (and auto-apply is off). One two-step confirm applies them all,
+  // reusing each card's own confirm path so every write still runs through
+  // /agent/confirm with its idempotency key.
+
+  function removeBulkBar() {
+    if (bulkArmTimer) {
+      clearTimeout(bulkArmTimer);
+      draftConfirmTimers.delete(bulkArmTimer);
+      bulkArmTimer = null;
+    }
+    bulkArmed = false;
+    if (bulkBarEl) {
+      bulkBarEl.remove();
+      bulkBarEl = null;
+    }
+  }
+
+  function disarmBulk() {
+    if (bulkArmTimer) {
+      clearTimeout(bulkArmTimer);
+      draftConfirmTimers.delete(bulkArmTimer);
+      bulkArmTimer = null;
+    }
+    bulkArmed = false;
+    const btn = bulkBarEl?.querySelector('[data-jt-role="bulk-apply"]');
+    if (btn) btn.classList.remove('jt-assistant-draft-apply-armed');
+    updateBulkBar();
+  }
+
+  function onBulkApplyClick() {
+    if (bulkApplying) return;
+    if (bulkArmed) {
+      disarmBulk();
+      void applyAllPending();
+      return;
+    }
+    bulkArmed = true;
+    const btn = bulkBarEl?.querySelector('[data-jt-role="bulk-apply"]');
+    if (btn) btn.classList.add('jt-assistant-draft-apply-armed');
+    bulkArmTimer = setTimeout(disarmBulk, 4000);
+    draftConfirmTimers.add(bulkArmTimer);
+    updateBulkBar();
+  }
+
+  async function applyAllPending() {
+    if (bulkApplying) return;
+    bulkApplying = true;
+    const btn = bulkBarEl?.querySelector('[data-jt-role="bulk-apply"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Applying…';
+    }
+    // Snapshot first — each applyNow() removes its draft from pendingDrafts on
+    // success, so iterating the live map would skip entries.
+    for (const draft of [...pendingDrafts.values()]) {
+      await draft.applyNow();
+    }
+    bulkApplying = false;
+    const liveBtn = bulkBarEl?.querySelector('[data-jt-role="bulk-apply"]');
+    if (liveBtn) liveBtn.disabled = false;
+    updateBulkBar();
+  }
+
+  // Show/refresh the bar when 2+ drafts wait and auto-apply is off; otherwise
+  // remove it. Called whenever the pending set changes.
+  function updateBulkBar() {
+    if (!panelEl) return;
+    const count = pendingDrafts.size;
+    if (count < 2 || autoApply) {
+      removeBulkBar();
+      return;
+    }
+    if (!bulkBarEl) {
+      bulkBarEl = el('div', 'jt-assistant-bulk-bar');
+      bulkBarEl.dataset.jtRole = 'bulk-bar';
+      const label = el('span', 'jt-assistant-bulk-label');
+      label.dataset.jtRole = 'bulk-label';
+      const btn = el('button', 'jtt-btn jt-assistant-bulk-apply', 'Apply all');
+      btn.type = 'button';
+      btn.dataset.jtRole = 'bulk-apply';
+      btn.addEventListener('click', onBulkApplyClick);
+      bulkBarEl.appendChild(label);
+      bulkBarEl.appendChild(btn);
+      const composer = panelEl.querySelector('.jt-assistant-composer');
+      panelEl.insertBefore(bulkBarEl, composer);
+    }
+    const label = bulkBarEl.querySelector('[data-jt-role="bulk-label"]');
+    if (label) label.textContent = `${count} proposed changes`;
+    const btn = bulkBarEl.querySelector('[data-jt-role="bulk-apply"]');
+    if (btn && !bulkApplying) {
+      btn.textContent = bulkArmed ? `Apply all ${count} — are you sure?` : `Apply all (${count})`;
+    }
+  }
+
   function buildModeBar() {
     const bar = el('div', 'jt-assistant-mode-bar');
     bar.dataset.jtRole = 'mode-bar';
@@ -748,7 +1082,7 @@ const AssistantPanelFeature = (() => {
     );
   }
 
-  // Edge handle — same tracked-listener discipline as the launcher drag.
+  // Edge handle — document-level move/up listeners, tracked for removal.
   // Transitions are suppressed mid-drag so the page tracks the cursor 1:1.
   function onPanelResizePointerDown(e) {
     if (e.button != null && e.button !== 0) return;
@@ -846,12 +1180,16 @@ const AssistantPanelFeature = (() => {
     // Savings ↔ Quality dial (segmented control, above the composer)
     panelEl.appendChild(buildModeBar());
 
+    // Auto-apply switch (opt-in — applies drafts without a confirm click)
+    panelEl.appendChild(buildAutoApplyToggle());
+
     // Composer
     const composer = el('div', 'jt-assistant-composer');
     const input = document.createElement('textarea');
     input.className = 'jtt-input jt-assistant-input';
     input.rows = 2;
     input.placeholder = 'Ask about this job, the schedule, the budget…';
+    input.dataset.jtBasePlaceholder = input.placeholder; // restored when the composer wall lifts
     input.dataset.jtRole = 'input';
     // Auto-grow with the prompt so longer messages stay readable, up to the
     // CSS max-height (then it scrolls). Reset in handleSend() after clearing.
@@ -865,7 +1203,15 @@ const AssistantPanelFeature = (() => {
     const sendBtn = el('button', 'jtt-btn jtt-btn-primary jt-assistant-send', 'Send');
     sendBtn.type = 'button';
     sendBtn.dataset.jtRole = 'send';
-    sendBtn.addEventListener('click', () => void handleSend());
+    // Doubles as Stop while a run is in flight — cancels the stream instead of
+    // sending. Enter in the textarea only ever sends.
+    sendBtn.addEventListener('click', () => {
+      if (sending) {
+        stopRun();
+        return;
+      }
+      void handleSend();
+    });
     composer.appendChild(input);
     composer.appendChild(sendBtn);
     panelEl.appendChild(composer);
@@ -877,16 +1223,16 @@ const AssistantPanelFeature = (() => {
 
     document.body.appendChild(panelEl);
     renderEffortMode(); // reflect the current (default or restored) dial position
+    renderAutoApply(); // reflect the current (default or restored) auto-apply state
 
     appendSystemNote(
-      'Connected to your JobTread data (read-only for now). Answers come from live tool calls, not memory.'
+      'Connected to your JobTread data. Answers come from live tool calls, not memory, and changes are drafted for your approval.'
     );
   }
 
   function togglePanel() {
     if (!panelEl) buildPanel();
     const open = panelEl.classList.toggle('jt-assistant-open');
-    if (launcherEl) launcherEl.classList.toggle('jt-assistant-launcher-hidden', open);
     if (open) {
       applySqueeze(); // dock: push JobTread left to make room
       renderChips(); // the SPA route may have changed since last open
@@ -910,6 +1256,8 @@ const AssistantPanelFeature = (() => {
   function resetSession() {
     sessionId = null;
     renderedDraftKeys.clear();
+    pendingDrafts.clear();
+    removeBulkBar();
     clearPendingRun(); // starting fresh abandons any interrupted run
     if (abortController) abortController.abort();
     const messages = panelEl?.querySelector('[data-jt-role="messages"]');
@@ -929,13 +1277,44 @@ const AssistantPanelFeature = (() => {
     if (messages) messages.scrollTop = messages.scrollHeight;
   }
 
-  function appendBubble(role, text) {
+  // `editText` (user bubbles only) is the raw text an Edit click restores to the
+  // composer — for chip sends it's the full prompt, not the short label shown.
+  function appendBubble(role, text, editText) {
     const messages = messagesEl();
     if (!messages) return null;
     const bubble = el('div', `jt-assistant-bubble jt-assistant-bubble-${role}`, text || '');
-    messages.appendChild(bubble);
+    if (role !== 'user') {
+      messages.appendChild(bubble);
+      scrollToBottom();
+      return bubble;
+    }
+    // Wrap so the Edit control is a SIBLING of the bubble, never a child — the
+    // bubble's textContent stays exactly the message (tests and copy rely on it).
+    const row = el('div', 'jt-assistant-user-row');
+    row.appendChild(bubble);
+    const editBtn = el('button', 'jt-assistant-edit-btn', 'Edit');
+    editBtn.type = 'button';
+    editBtn.title = 'Edit and resend this message';
+    editBtn.setAttribute('aria-label', 'Edit and resend this message');
+    const raw = editText != null ? editText : text || '';
+    editBtn.addEventListener('click', () => startEditMessage(raw));
+    row.appendChild(editBtn);
+    messages.appendChild(row);
     scrollToBottom();
     return bubble;
+  }
+
+  // Pull a past message back into the composer to tweak and resend. Stops any
+  // in-flight run first so the edited version isn't racing the old one.
+  function startEditMessage(text) {
+    if (sending) stopRun();
+    const input = panelEl?.querySelector('[data-jt-role="input"]');
+    if (!input) return;
+    input.value = text;
+    autoGrowInput(input);
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+    scrollToBottom();
   }
 
   function appendSystemNote(text) {
@@ -1048,7 +1427,13 @@ const AssistantPanelFeature = (() => {
       scrollToBottom();
     };
 
+    // Applied/failed drops the draft out of the pending set (or leaves it for a
+    // retry), then refreshes the "Apply all" bar. Returns true on success so a
+    // bulk/auto pass can tell what landed.
+    let applying = false;
     const runConfirm = async () => {
+      if (applying) return false;
+      applying = true;
       disarm();
       apply.disabled = true;
       apply.textContent = 'Applying…';
@@ -1056,15 +1441,20 @@ const AssistantPanelFeature = (() => {
       note.className = 'jt-assistant-draft-note';
 
       const result = await agentPost('confirm', { draft_id: draft.id });
+      applying = false;
 
       if (result.data && result.data.status === 'executed') {
         showApplied('Applied', result.data.result_text);
-        return;
+        pendingDrafts.delete(draft.id);
+        updateBulkBar();
+        return true;
       }
       // Already applied (someone else, or a double-fire) — success with a note.
       if (result.status === 409 && result.code === 'DRAFT_ALREADY_EXECUTED') {
         showApplied('Already applied');
-        return;
+        pendingDrafts.delete(draft.id);
+        updateBulkBar();
+        return true;
       }
       // Failed status on a 200, or a hard HTTP error — surface it, re-arm.
       const message =
@@ -1075,6 +1465,7 @@ const AssistantPanelFeature = (() => {
       note.className = 'jt-assistant-draft-note jt-assistant-draft-note-error';
       apply.disabled = false;
       apply.textContent = 'Retry apply';
+      return false;
     };
 
     apply.addEventListener('click', () => {
@@ -1091,6 +1482,14 @@ const AssistantPanelFeature = (() => {
 
     messages.appendChild(card);
     scrollToBottom();
+
+    // Register for bulk/auto-apply (applyNow fires this card's own confirm).
+    pendingDrafts.set(draft.id, { applyNow: () => runConfirm() });
+    if (autoApply) {
+      void runConfirm(); // auto-apply confirms it now; updateBulkBar runs on settle
+    } else {
+      updateBulkBar();
+    }
   }
 
   function setStatus(text) {
@@ -1101,8 +1500,12 @@ const AssistantPanelFeature = (() => {
   // Org-level credit-pool banner, pinned above the composer. Created on the
   // first `pool` frame, updated in place on later frames, and persisted for
   // the session (not cleared between runs). Removed with the panel in cleanup.
-  function renderPoolBanner(state) {
-    const copy = POOL_COPY[state];
+  function renderPoolBanner(frame) {
+    // The composer's blocked state must track every pool frame, independent of
+    // whether there's banner copy to show — otherwise a recovered `blocked:false`
+    // frame with no copy (e.g. state:'normal' after a top-up) can never clear it.
+    setComposerBlocked(!!frame.blocked);
+    const copy = poolCopy(frame);
     if (!copy || !panelEl) return;
     if (!poolBannerEl) {
       poolBannerEl = el('div', 'jt-assistant-pool-banner');
@@ -1110,8 +1513,26 @@ const AssistantPanelFeature = (() => {
       const composer = panelEl.querySelector('.jt-assistant-composer');
       panelEl.insertBefore(poolBannerEl, composer);
     }
-    poolBannerEl.className = `jt-assistant-pool-banner jt-assistant-pool-banner-${state}`;
+    const variant = frame.trial && frame.state === 'normal' ? 'trial' : frame.state;
+    poolBannerEl.className = `jt-assistant-pool-banner jt-assistant-pool-banner-${variant}`;
     poolBannerEl.textContent = copy;
+  }
+
+  // Wall the composer when the org is out of credits: disable input + Send and
+  // refuse new runs. An in-flight run is unaffected (the wall arrives instead of
+  // a run, never mid-stream). Re-enabled by a later non-blocked pool frame.
+  function setComposerBlocked(blocked) {
+    composerBlocked = blocked;
+    const input = panelEl?.querySelector('[data-jt-role="input"]');
+    const sendBtn = panelEl?.querySelector('[data-jt-role="send"]');
+    if (input) {
+      input.disabled = blocked;
+      input.placeholder = blocked
+        ? 'Out of Assistant credits — top up or wait for the reset.'
+        : input.dataset.jtBasePlaceholder || input.placeholder;
+    }
+    if (sendBtn && !sending) sendBtn.disabled = blocked;
+    panelEl?.querySelector('.jt-assistant-composer')?.classList.toggle('jt-assistant-composer-blocked', blocked);
   }
 
   function setUsage(usage) {
@@ -1121,14 +1542,29 @@ const AssistantPanelFeature = (() => {
     footer.textContent = `Session: ${usage.outputTokens ?? 0} tokens out · ~$${(cents / 100).toFixed(2)}`;
   }
 
+  // Abort the in-flight run. The fetch rejects with AbortError (swallowed in
+  // submitTask's catch), then its finally clears the sending state. We drop the
+  // pending-run stash too — a deliberate stop shouldn't offer to resume.
+  function stopRun() {
+    if (abortController) abortController.abort();
+    clearPendingRun();
+    setStatus('');
+    appendSystemNote('Stopped.');
+  }
+
   function setSending(state) {
     sending = state;
     setWorking(state);
     const sendBtn = panelEl?.querySelector('[data-jt-role="send"]');
     if (sendBtn) {
-      sendBtn.disabled = state;
-      sendBtn.textContent = state ? '…' : 'Send';
+      // Stay enabled while sending so it can act as Stop.
+      sendBtn.disabled = false;
+      sendBtn.textContent = state ? 'Stop' : 'Send';
+      sendBtn.classList.toggle('jt-assistant-send-stop', state);
+      sendBtn.setAttribute('aria-label', state ? 'Stop the assistant' : 'Send message');
     }
+    // When a run ends while the org is walled, keep Send disabled.
+    if (!state && composerBlocked && sendBtn) sendBtn.disabled = true;
     // Chips make no sense mid-run; they re-render for the (possibly new)
     // page when the run finishes.
     const chips = panelEl?.querySelector('[data-jt-role="chips"]');
@@ -1156,7 +1592,7 @@ const AssistantPanelFeature = (() => {
    * the server.
    */
   async function submitTask(task, displayText) {
-    if (sending || !panelEl) return;
+    if (sending || composerBlocked || !panelEl) return;
 
     const auth = await resolveBearer();
     if (auth.error) {
@@ -1164,7 +1600,7 @@ const AssistantPanelFeature = (() => {
       return;
     }
 
-    appendBubble('user', displayText || task);
+    appendBubble('user', displayText || task, task);
     setSending(true);
     setStatus('Thinking…');
 
@@ -1246,7 +1682,7 @@ const AssistantPanelFeature = (() => {
           setStatus('');
         },
         tool_started: (frame) => setStatus(`Reading ${frame.label || frame.name}…`),
-        pool: (frame) => renderPoolBanner(frame.state),
+        pool: (frame) => renderPoolBanner(frame),
         draft_proposed: (frame) => appendDraftCard(frame.draft || {}),
         usage: (frame) => setUsage(frame.usage),
         done: handleDone,
@@ -1304,6 +1740,12 @@ const AssistantPanelFeature = (() => {
   }
 
   function friendlyHttpError(status, detail) {
+    if (detail?.code === 'ORG_MISMATCH') {
+      return (
+        "The assistant isn't set up for this organization yet. Ask your admin to " +
+        'add an AI grant key for this org in the JT Power Tools portal.'
+      );
+    }
     if (status === 403 && detail?.code === 'TIER_NO_ASSISTANT') {
       return (
         'The AI Assistant is part of the Assistant plan ($99/mo per company). ' +
@@ -1319,7 +1761,11 @@ const AssistantPanelFeature = (() => {
       return 'Sign in to your JT Power Tools account in the extension popup to use the assistant.';
     }
     if (status === 401) {
-      return 'Authentication failed. Re-check your license and grant key in the JT Power Tools popup.';
+      return (
+        "The assistant couldn't authenticate for this organization. If it keeps " +
+        'happening, ask your admin to check the AI grant key for this org in the ' +
+        'JT Power Tools portal.'
+      );
     }
     return detail?.error || `The assistant returned an error (HTTP ${status}).`;
   }
@@ -1420,6 +1866,11 @@ const AssistantPanelFeature = (() => {
     }
     const data = result.data || {};
     if (abortController) abortController.abort();
+    // The old session's draft cards are being cleared from the DOM — drop their
+    // pending records and the bulk bar so they don't outlive their cards.
+    renderedDraftKeys.clear();
+    pendingDrafts.clear();
+    removeBulkBar();
     const messages = messagesEl();
     if (messages) messages.replaceChildren();
     // Continue this conversation on the next send.
@@ -1532,6 +1983,24 @@ const AssistantPanelFeature = (() => {
     messages.prepend(hint);
   }
 
+  // ─── Per-user seat gate ───────────────────────────────────────────
+  // The portal's per-member Assistant toggle (accounts.assistant_access,
+  // Migration 036) rides on the stored account user object — the same place
+  // `tier` comes from. Read chrome.storage directly so this doesn't depend on
+  // AccountService's init order. A MISSING field (an account payload cached
+  // before this shipped, refreshed on the next token refresh) is treated as
+  // ENABLED: the server enforces the seat on every request, so a stale client
+  // copy can only briefly expose the entry point, never grant real access.
+  async function userAssistantAccessAllowed() {
+    try {
+      const stored = await chrome.storage.local.get(['jtAccountUserData']);
+      const user = stored && stored.jtAccountUserData;
+      return !(user && user.assistantAccess === false);
+    } catch {
+      return true; // fail open on a storage error; the server still gates use
+    }
+  }
+
   // ─── Lifecycle ────────────────────────────────────────────────────
 
   async function init() {
@@ -1539,9 +2008,9 @@ const AssistantPanelFeature = (() => {
 
     // The AI Assistant toggle was removed from the popup — enablement is an
     // admin/company decision in the JT Power Tools Portal. Self-gate on the
-    // Assistant company tier so the launcher only appears for entitled
+    // Assistant company tier so the entry point only appears for entitled
     // companies; the server still enforces per-user access on every request.
-    // Fail closed on any error so we never surface the launcher to a company
+    // Fail closed on any error so we never surface the assistant to a company
     // that isn't on the Assistant tier.
     try {
       const tier = await window.LicenseService?.getTier?.();
@@ -1554,14 +2023,23 @@ const AssistantPanelFeature = (() => {
       return;
     }
 
+    // Per-user seat: skip binding for members an admin has opted out of the
+    // Assistant in the portal. The server still enforces this on every request;
+    // this keeps the chooser from ever appearing for a disabled seat.
+    if (!(await userAssistantAccessAllowed())) {
+      console.log('AssistantPanel: per-user gate — Assistant disabled for this account, skipping');
+      return;
+    }
+
     isActive = true;
     console.log('AssistantPanel: Initializing...');
 
     injectStyles();
     restorePanelWidth();
     restoreEffortMode(); // remembered Savings↔Quality dial position
+    restoreAutoApply(); // remembered auto-apply opt-in
     loadPendingRecovery(); // reopen an interrupted run on the next panel open
-    buildLauncher();
+    setupEntryPoint(); // intercept JobTread's help bubble (the only entry point)
     buildGlow();
 
     // Esc closes the panel — document-level, so it must be tracked for
@@ -1591,9 +2069,22 @@ const AssistantPanelFeature = (() => {
     });
     eventListeners.length = 0;
 
-    // Cancel any pending two-step-confirm reset timers (draft cards).
+    // Cancel any pending two-step-confirm reset timers (draft cards + bulk bar).
     draftConfirmTimers.forEach((timer) => clearTimeout(timer));
     draftConfirmTimers.clear();
+    removeBulkBar();
+    pendingDrafts.clear();
+
+    // Help-bubble fork: unbind the interceptor, stop watching, close the popover.
+    stopBubbleWatch();
+    closeChooser();
+    if (helpBubbleEl && helpBubbleHandler) {
+      helpBubbleEl.removeEventListener('click', helpBubbleHandler, true);
+    }
+    helpBubbleEl = null;
+    helpBubbleHandler = null;
+    usingBubble = false;
+    passThroughNextBubbleClick = false;
 
     // Undock: hand the page's width back exactly, and unwind any in-flight
     // resize drag (userSelect was pinned in onPanelResizePointerDown).
@@ -1608,10 +2099,6 @@ const AssistantPanelFeature = (() => {
     // Banner lives inside the panel (removed above); drop the reference so a
     // fresh init() rebuilds it on the next pool frame.
     poolBannerEl = null;
-    if (launcherEl) {
-      launcherEl.remove();
-      launcherEl = null;
-    }
     if (glowEl) {
       glowEl.remove();
       glowEl = null;
@@ -1619,13 +2106,15 @@ const AssistantPanelFeature = (() => {
     removeStyles();
 
     sessionId = null;
+    composerBlocked = false;
     effortMode = DEFAULT_EFFORT_MODE; // re-restored from storage on next init
+    autoApply = false; // re-restored from storage on next init
+    bulkArmed = false;
+    bulkApplying = false;
     renderedDraftKeys.clear();
     sending = false;
     statusChecked = false;
     pendingRecovery = null;
-    launcherDrag = null;
-    justDragged = false;
     panelWidth = DEFAULT_PANEL_WIDTH;
     isActive = false;
     console.log('AssistantPanel: Cleaned up');

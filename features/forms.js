@@ -65,6 +65,18 @@ const FormsFeature = (() => {
     return !!(window.AccountService && window.AccountService.isLoggedIn && window.AccountService.isLoggedIn());
   }
 
+  /**
+   * Rank-based tier gate for Forms. Forms is a Power User feature, but the
+   * Assistant / Assistant Pro company tiers rank ABOVE Power User and inherit
+   * it — so we ask LicenseService.tierHasFeature (rank-based) rather than an
+   * exact `tier === 'power_user'`, which silently locked those higher tiers out.
+   */
+  function tierAllowsForms(tier) {
+    return !!(window.LicenseService
+      && typeof window.LicenseService.tierHasFeature === 'function'
+      && window.LicenseService.tierHasFeature(tier, 'forms'));
+  }
+
   // ─── Stylesheet ─────────────────────────────────────────────────────
 
   function injectStylesheet() {
@@ -876,7 +888,7 @@ const FormsFeature = (() => {
     }
 
     const tier = await getTier();
-    if (tier !== 'power_user') {
+    if (!tierAllowsForms(tier)) {
       log('init: tier gate — current tier is', tier);
       return;
     }

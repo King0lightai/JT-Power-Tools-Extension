@@ -3880,6 +3880,20 @@ function showAccountError(formType, message) {
     }
 
     /**
+     * True when a recorded error is stale: the tweak has applied cleanly
+     * (a newer lastApplyAt) since the error was recorded. A one-time error
+     * like "css-tree library not loaded" shouldn't display forever once the
+     * tweak applies fine. Auto-disabled tweaks don't get a fresh lastApplyAt
+     * after being disabled, so this naturally leaves their error visible.
+     */
+    function isStaleTweakError(d) {
+      return !!(d && d.lastError &&
+        typeof d.lastApplyAt === 'number' &&
+        typeof d.lastErrorAt === 'number' &&
+        d.lastApplyAt > d.lastErrorAt);
+    }
+
+    /**
      * Update the at-a-glance summary line above the tweak list. Visible
      * for any user (admin or member) so support / CS can ask "do you
      * have any active Power Tools tweaks?" and the user can read the
@@ -3896,7 +3910,7 @@ function showAccountError(formType, message) {
         if (t.enabled === false) continue;
         active++;
         const d = diag[t.id] || {};
-        if (d.lastError) errored++;
+        if (d.lastError && !isStaleTweakError(d)) errored++;
         else if (d.lastMatchCount === 0) noMatches++;
       }
       const parts = [active + ' active'];
@@ -3936,7 +3950,8 @@ function showAccountError(formType, message) {
           lines.push('   last applied: ' + new Date(d.lastApplyAt).toISOString());
         }
         if (d.lastError) {
-          lines.push('   last error: ' + d.lastError);
+          const staleNote = isStaleTweakError(d) ? ' (stale — applied successfully since)' : '';
+          lines.push('   last error: ' + d.lastError + staleNote);
           if (d.lastErrorAt) {
             lines.push('   last error at: ' + new Date(d.lastErrorAt).toISOString());
           }
@@ -3993,7 +4008,7 @@ function showAccountError(formType, message) {
         const d = diag[tweak.id] || {};
         const autoDisabledEntry = autoDisabledMap[tweak.id];
         const isAutoDisabled = !!autoDisabledEntry;
-        const hasWarning = !!d.lastError || d.lastMatchCount === 0 || isAutoDisabled;
+        const hasWarning = (!!d.lastError && !isStaleTweakError(d)) || d.lastMatchCount === 0 || isAutoDisabled;
         const isOrgRequired = tweak.storageScope === 'org_required';
         const isLocallyDisabled = isOrgRequired && tweak.enabled === false;
 
@@ -4078,7 +4093,7 @@ function showAccountError(formType, message) {
             '. JT likely shipped a UI change. Edit the tweak\'s selector or click Re-enable to retry.';
           status.appendChild(icon);
           status.appendChild(label);
-        } else if (d.lastError) {
+        } else if (d.lastError && !isStaleTweakError(d)) {
           status.classList.add('error');
           const icon = document.createElement('span');
           icon.className = 'icon';
