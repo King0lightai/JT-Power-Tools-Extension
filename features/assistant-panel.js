@@ -613,6 +613,28 @@ const AssistantPanelFeature = (() => {
     }
   }
 
+  // JobTread is a SPA: switching orgs remounts the top bar (including the help
+  // bubble) without a page reload, so our bound bubble node goes stale and the
+  // assistant stops opening until a manual refresh. Re-attach the entry point to
+  // the fresh bubble, and start a clean session so a conversation from the
+  // previous org doesn't carry across the switch. Fired by OrgDetector's
+  // `jt-org-changed` window event (registered in init(), removed in cleanup()).
+  function handleOrgChange() {
+    if (!isActive) return;
+    if (helpBubbleEl && helpBubbleHandler) {
+      helpBubbleEl.removeEventListener('click', helpBubbleHandler, true);
+    }
+    helpBubbleEl = null;
+    helpBubbleHandler = null;
+    usingBubble = false;
+    passThroughNextBubbleClick = false;
+    stopBubbleWatch();
+    closeChooser(); // any open chooser popover belonged to the old bubble
+    setupEntryPoint(); // re-bind to the current (possibly new) bubble
+    // Only the built panel holds a session worth resetting.
+    if (panelEl) resetSession();
+  }
+
   function onBubbleClick(e) {
     if (passThroughNextBubbleClick) {
       passThroughNextBubbleClick = false;
@@ -2052,6 +2074,10 @@ const AssistantPanelFeature = (() => {
 
     // Re-clamp the docked width if the viewport shrinks with the panel open.
     addListener(window, 'resize', onWindowResize);
+
+    // JobTread SPA org switches don't reload the page — re-attach the entry
+    // point and reset the session when the active org changes.
+    addListener(window, 'jt-org-changed', handleOrgChange);
 
     console.log('AssistantPanel: Initialized');
   }
