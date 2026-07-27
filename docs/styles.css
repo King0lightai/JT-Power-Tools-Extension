@@ -1039,6 +1039,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
    button text when the href points at a gumroad.com/l/ URL. Hide it so
    the tier-specific styling stays clean. */
 .s-pricing-btn .logo-full { display: none; }
+.s-assist-btn .logo-full { display: none; }
 
 .s-pricing-trial {
   font-family: var(--font-sub);
@@ -1060,6 +1061,90 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 .s-pricing-features--essential i { color: var(--teal); }
 .s-pricing-features--pro i { color: var(--orange); }
 .s-pricing-features--power i { color: var(--purple); }
+
+/* Assistant — AI tier spotlight band */
+.s-assist {
+  position: relative;
+  margin-top: 20px;
+  padding: 40px;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 2px solid var(--purple);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 40px;
+  align-items: center;
+  overflow: hidden;
+}
+.s-assist::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--purple), var(--orange));
+}
+.s-assist-ribbon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--purple) 14%, transparent);
+  color: var(--purple);
+  font-family: var(--font-sub);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+}
+.s-assist-tier {
+  font-family: var(--font-sub);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--purple);
+}
+.s-assist-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.02;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  margin: 10px 0 12px;
+  color: var(--ink);
+}
+.s-assist-desc { font-size: 15px; color: var(--ink-muted); max-width: 46ch; margin: 0 0 20px; }
+.s-assist-price { display: flex; align-items: baseline; gap: 6px; }
+.s-assist-amount { font-family: var(--font-display); font-size: 56px; line-height: 0.9; color: var(--ink); }
+.s-assist-period { font-family: var(--font-body); font-weight: 500; font-size: 14px; color: var(--ink-subtle); }
+.s-assist-meter { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-muted); margin: 10px 0 20px; }
+.s-assist-meter i { color: var(--purple); }
+.s-assist-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  border: 2px solid var(--purple);
+  background: var(--purple);
+  color: #fff;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.s-assist-btn:hover { background: transparent; color: var(--purple); }
+.s-assist-note { font-size: 12px; color: var(--ink-subtle); margin: 12px 0 0; }
+.s-assist-features { display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.s-assist-features li { display: flex; align-items: flex-start; gap: 10px; color: var(--ink); }
+.s-assist-features i { flex-shrink: 0; margin-top: 2px; font-size: 16px; color: var(--purple); }
+@media (max-width: 860px) {
+  .s-assist { grid-template-columns: 1fr; gap: 28px; padding: 32px 24px; }
+  .s-assist-ribbon { position: static; margin-bottom: 16px; align-self: flex-start; }
+}
 
 .s-pricing-trust {
   text-align: center;
