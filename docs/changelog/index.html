@@ -55,11 +55,122 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.10.4 — Auto Sequence (free), JobTread native Forms via MCP, PT Forms renamed -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.4</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">July 30, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📅</span> Auto Sequence &mdash; put a schedule back in date order (Free)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">One button, and the rows follow the dates again</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Dragging schedule items pushes and pulls their <strong>dates</strong>, but JobTread's manual sequence never follows &mdash; so in Gantt view the bars end up marching backwards down the rows and someone has to hand-resequence the whole job. <strong>Auto Sequence</strong> is a new button in the schedule's mass-actions panel that re-orders the items inside each group to match their start dates. It shows you exactly what will move before it moves anything.</li>
+                            <li class="sub-item"><strong>An item can never leave its group.</strong> A task only ever competes with its siblings, so something in BIDDING stays in BIDDING &mdash; landing last in that group if it's the furthest out. Your top-level phase groups are never re-ordered either: that order is your process, not a function of dates.</li>
+                            <li class="sub-item"><strong>Dates are never touched.</strong> The writes carry sequence only, so a resequence can't ripple your schedule or set off a dependency cascade. Same-day items keep their existing order, so pressing the button twice does nothing the second time.</li>
+                            <li class="sub-item">Free for everyone, and it lives with the rest of the schedule tools. It reads your schedule through the JobTread API, so it needs a grant key connected to your account &mdash; if there isn't one, the panel tells you where to add it.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📋</span> JobTread's new Forms, available to your AI (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Build, fill, and request JobTread Forms from Claude or ChatGPT</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread shipped its own <strong>Forms</strong> feature, and Power Tools MCP now drives it end to end &mdash; list and read forms, build new ones, fill a form on a job, customer, or vendor, request one from a teammate or an outside email address, and update or delete submissions. You can address fields by name <em>or</em> by their stable id, and answers are checked against each field's allowed options before anything is sent, so a bad value comes back naming the field instead of silently vanishing.</li>
+                            <li class="sub-item"><strong>One-time reconnect required.</strong> JobTread added new permissions when it shipped Forms, and existing connections don't pick up new permissions on their own. Clicking "reconnect" is <em>not</em> enough &mdash; you have to revoke your old authorization in JobTread and authorize fresh. Until you do, form actions will fail with a message telling you exactly that.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Power Tools Forms is now "PT Forms" &mdash; and it's staying</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Power Tools' own per-job Forms are unchanged and going nowhere; they've simply been renamed to <strong>PT Forms</strong> so JobTread's native Forms can take the plain name. Nothing was migrated, deleted, or altered, and the Forms tab in the extension works exactly as before.</li>
+                            <li class="sub-item">The two do genuinely different jobs. <strong>PT Forms keeps one shared record per job</strong> &mdash; the PM starts it, the designer adds to it next week, the super finishes it on site, and it stays a single document nobody overwrites. <strong>JobTread's Forms collect a submission from each person</strong>, and bring reviewer fields, external requests, workflow triggers, and reporting. Use whichever matches what you're actually doing.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.10.2 — Invoice Forecast via MCP/AI (chart-parity forecast in AI clients, per-company config sync) -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.2</span>
+                <span class="version-date">July 14, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📈</span> Invoice Forecast, now for your AI (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Ask your AI about upcoming invoices &mdash; get the chart's numbers</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Claude, ChatGPT, and any other AI client connected through Power Tools MCP can now pull your <strong>Invoice Forecast</strong> &mdash; the same committed, projected, and paid monthly totals as the Reports chart, so "what's invoicing in September?" gets the answer you'd see on screen. You can also frame a date range or include closed jobs, just like in Reports.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Set it up once, works everywhere</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Invoice Forecast picker in Reports now saves your setup &mdash; which task types mark an invoice and which signed contract means "sold" &mdash; to your company's account. Every AI client gets accurate forecasts with zero configuration on their end. Companies that haven't set up Invoice Forecast yet get a simpler draft-based estimate, with a pointer to the two-minute setup.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎓</span> AI Knowledge: every JobTread tutorial, on tap (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Ask your AI how to do anything in JobTread</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Transcripts from <strong>200+ official JobTread tutorial videos</strong> are now part of the Power Tools knowledge base. Ask Claude, ChatGPT, or any connected AI client "how do I set up cost groups?" or "how does the schedule baseline work?" and it answers from JobTread's own training material &mdash; no more digging through videos to find the right one.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">👁️</span> Preview Mode: a spitting image of JobTread (Pro)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">What you preview is exactly what your client sees</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Preview Mode's panel was rebuilt from JobTread's actual document rendering, so it now matches the native "Preview Document" view detail for detail: correct heading sizes, JobTread-style tables and alert blocks, cyan links, JobTread's exact colors, and text alignment markers (<code>-:-</code> centers, <code>--:</code> right-aligns) that behave just like the real document.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">The preview follows your theme</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">In light mode the preview matches the printed document exactly; with Dark Mode or a Custom Theme it renders on your theme's surface with formatting colors adapted for legibility &mdash; same structure and spacing either way.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Tweaks &amp; Forms AI tools: bogus "key not attributed" error is gone</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">AI clients connected with a grant key (Claude Code, Cursor) were wrongly blocked with a "rotate this key" message when saving Tweaks or Forms &mdash; even with a perfectly good key. Fixed on the server; older keys created before per-user keys existed work again too, no reconfiguration needed.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.10.0 — Tweak Engine safety net (safe mode, repair, auto-disable, admin kill switch, org health), formatter fix, org-detection fix; AI Assistant teased -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.10.0</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">July 7, 2026</span>
             </div>
 

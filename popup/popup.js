@@ -317,7 +317,10 @@ async function checkApiStatus() {
       // Persist disabled state so features actually turn off on the JobTread page.
       // Without this, storage keeps saying the features are enabled even though
       // the UI shows them as off, leaving the features "stuck active".
-      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast', 'autoSequence']);
+      // autoSequence is deliberately absent: it is a free feature, so silently
+      // switching it off would just make it vanish. It stays on and explains in
+      // the panel that a grant key is needed (see NO_KEY_RE in the feature).
+      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast']);
     }
   }
 }
@@ -453,8 +456,6 @@ async function checkLicenseStatus() {
   const budgetRowHighlightCheckbox = document.getElementById('budgetRowHighlight');
   const invoiceForecastFeature = document.getElementById('invoiceForecastFeature');
   const invoiceForecastCheckbox = document.getElementById('invoiceForecast');
-  const autoSequenceFeature = document.getElementById('autoSequenceFeature');
-  const autoSequenceCheckbox = document.getElementById('autoSequence');
 
   // POWER USER tier features and UI elements
   const apiCategory = document.getElementById('apiCategory');
@@ -524,8 +525,6 @@ async function checkLicenseStatus() {
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = false;
       invoiceForecastFeature?.classList.remove('locked');
       if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = false;
-      autoSequenceFeature?.classList.remove('locked');
-      if (autoSequenceCheckbox) autoSequenceCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
@@ -540,8 +539,6 @@ async function checkLicenseStatus() {
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
       invoiceForecastFeature?.classList.add('locked');
       if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
-      autoSequenceFeature?.classList.add('locked');
-      if (autoSequenceCheckbox) autoSequenceCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -599,11 +596,10 @@ async function checkLicenseStatus() {
     if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
     invoiceForecastFeature?.classList.add('locked');
     if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
-    autoSequenceFeature?.classList.add('locked');
-    if (autoSequenceCheckbox) autoSequenceCheckbox.disabled = true;
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
-    // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)
+    // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups,
+    // autoSequence)
 
     return { hasLicense: false, tier: null };
   }
@@ -691,6 +687,7 @@ async function loadSettings() {
     setCheckbox('budgetTools', settings.budgetTools !== undefined ? settings.budgetTools : false);
     setCheckbox('ganttLines', settings.ganttLines !== undefined ? settings.ganttLines : true);
     setCheckbox('jobAccessCollapse', settings.jobAccessCollapse !== undefined ? settings.jobAccessCollapse : false);
+    setCheckbox('autoSequence', settings.autoSequence !== undefined ? settings.autoSequence : false);
 
     // ESSENTIAL features - require any license (Essential, Pro, Power User)
     setCheckbox('quickNotes', hasEssentialFeatures && (settings.quickNotes !== undefined ? settings.quickNotes : true));
@@ -984,6 +981,7 @@ async function getCurrentSettings() {
     printScope: getCheckboxValue('printScope', defaultSettings.printScope),
     budgetTools: getCheckboxValue('budgetTools', defaultSettings.budgetTools),
     ganttLines: getCheckboxValue('ganttLines', defaultSettings.ganttLines),
+    autoSequence: getCheckboxValue('autoSequence', defaultSettings.autoSequence),
     availabilityFilter: getCheckboxValue('availabilityFilter', false),
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),

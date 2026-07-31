@@ -65,7 +65,11 @@ const LicenseService = (() => {
     'jobAccessCollapse', // Simple UI collapse helper
     'budgetTools',      // Auto Sum — simple totals helper
     'documentSort',     // Sortable column headers on Job > Documents table
-    'printScope'        // Print button on the document preview modal
+    'printScope',       // Print button on the document preview modal
+    // Date-driven schedule resequencing. NOTE: the only free feature that talks to
+    // the Pave API, so it needs a configured grant key — it degrades to an
+    // actionable "connect a grant key" message rather than working DOM-only.
+    'autoSequence'
   ];
 
   // ESSENTIAL tier features ($10) - "I want more"
@@ -101,8 +105,7 @@ const LicenseService = (() => {
     'aiKnowledge',       // AI-powered assistance
     'forms',             // Per-job Forms drawer (template-driven submissions)
     'paveCapture',       // Record real Pave queries for the MCP (jt_captured_queries)
-    'invoiceForecast',   // Org-wide invoice release forecast in /reports (API-powered)
-    'autoSequence'       // Date-driven schedule resequencing (API read + position writes)
+    'invoiceForecast'    // Org-wide invoice release forecast in /reports (API-powered)
   ];
 
   // INTERNAL features - always enabled, not user-toggleable, bypass tier check

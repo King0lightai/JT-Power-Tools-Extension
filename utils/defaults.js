@@ -19,6 +19,7 @@ const JTDefaults = (() => {
     kanbanTypeFilter: false,
     autoCollapseGroups: false,
     ganttLines: true,
+    autoSequence: false,
 
     // Free Features - Productivity Tools
     formatter: true,
@@ -94,7 +95,7 @@ const JTDefaults = (() => {
       id: 'schedule',
       title: 'Schedule & Calendar',
       icon: 'ph-calendar-blank',
-      features: ['autoCollapseGroups', 'ganttLines', 'kanbanTypeFilter', 'availabilityFilter', 'dragDrop', 'taskTypeFilter']
+      features: ['autoCollapseGroups', 'autoSequence', 'ganttLines', 'kanbanTypeFilter', 'availabilityFilter', 'dragDrop', 'taskTypeFilter']
     },
     {
       id: 'budget',

@@ -35,6 +35,8 @@ const AutoSequenceFeature = (() => {
 
   const PANEL_SELECTOR = 'div.z-30.absolute.right-0';
   const MASS_ACTIONS_RE = /mass\s+(\w+\s+)?actions/i;
+  // JobTreadAPI throws this when no grant key is configured for the current org.
+  const NO_KEY_RE = /API key not configured/i;
   const CONTAINER_CLASS = 'jt-autoseq';
   const PAGE_SIZE = 100;
   const MAX_PAGES = 20;
@@ -271,7 +273,11 @@ const AutoSequenceFeature = (() => {
           await JobTreadAPI.paveQuery({
             updateTask: {
               $: { id: move.taskId, positionAfterTaskId: move.afterTaskId },
-              task: { id: {} }
+              // Pave reads this as an entity lookup, not a bare result
+              // projection, so it needs its own `$`. Omit it and every write
+              // 400s with: A non-null value is required at
+              // "updateTask"."task"."$". Matches query-builder.js update().
+              task: { $: { id: move.taskId }, id: {} }
             }
           });
         } catch (error) {
@@ -390,6 +396,12 @@ const AutoSequenceFeature = (() => {
     } catch (error) {
       console.error('AutoSequence: Failed to read schedule:', error);
       if (!isActiveState) return;
+      // Auto Sequence is free but reads and writes through the Pave API, so it
+      // still needs a grant key. Say what to do instead of leaking the raw error.
+      if (NO_KEY_RE.test(error.message || '')) {
+        renderMessage(el, 'Auto Sequence needs a JobTread grant key. Add one in your JT Power Tools account at app.jtpowertools.com, then reload this page.', true);
+        return;
+      }
       renderMessage(el, `Could not read the schedule: ${error.message}`, true);
     }
   }
