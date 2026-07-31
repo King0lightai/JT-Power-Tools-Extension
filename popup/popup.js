@@ -22,7 +22,7 @@ const FEATURE_TOGGLE_IDS = [
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
-  'budgetChangelog', 'invoiceForecast', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
+  'budgetChangelog', 'invoiceForecast', 'autoSequence', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
   'jobAccessCollapse', 'orgLogo'
 ];
 
@@ -35,6 +35,7 @@ const GRANT_KEY_REQUIRED_FEATURES = new Set([
   'taskTypeFilter',
   'availabilityFilter',
   'invoiceForecast',
+  'autoSequence',
 ]);
 
 const REGISTER_NUDGE_DISMISSED_KEY = 'jtRegisterNudgeDismissed';
@@ -316,7 +317,7 @@ async function checkApiStatus() {
       // Persist disabled state so features actually turn off on the JobTread page.
       // Without this, storage keeps saying the features are enabled even though
       // the UI shows them as off, leaving the features "stuck active".
-      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast']);
+      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast', 'autoSequence']);
     }
   }
 }
@@ -452,6 +453,8 @@ async function checkLicenseStatus() {
   const budgetRowHighlightCheckbox = document.getElementById('budgetRowHighlight');
   const invoiceForecastFeature = document.getElementById('invoiceForecastFeature');
   const invoiceForecastCheckbox = document.getElementById('invoiceForecast');
+  const autoSequenceFeature = document.getElementById('autoSequenceFeature');
+  const autoSequenceCheckbox = document.getElementById('autoSequence');
 
   // POWER USER tier features and UI elements
   const apiCategory = document.getElementById('apiCategory');
@@ -521,6 +524,8 @@ async function checkLicenseStatus() {
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = false;
       invoiceForecastFeature?.classList.remove('locked');
       if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = false;
+      autoSequenceFeature?.classList.remove('locked');
+      if (autoSequenceCheckbox) autoSequenceCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
@@ -535,6 +540,8 @@ async function checkLicenseStatus() {
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
       invoiceForecastFeature?.classList.add('locked');
       if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
+      autoSequenceFeature?.classList.add('locked');
+      if (autoSequenceCheckbox) autoSequenceCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -592,6 +599,8 @@ async function checkLicenseStatus() {
     if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
     invoiceForecastFeature?.classList.add('locked');
     if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
+    autoSequenceFeature?.classList.add('locked');
+    if (autoSequenceCheckbox) autoSequenceCheckbox.disabled = true;
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
     // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)

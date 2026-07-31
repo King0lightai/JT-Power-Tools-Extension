@@ -101,7 +101,8 @@ const LicenseService = (() => {
     'aiKnowledge',       // AI-powered assistance
     'forms',             // Per-job Forms drawer (template-driven submissions)
     'paveCapture',       // Record real Pave queries for the MCP (jt_captured_queries)
-    'invoiceForecast'    // Org-wide invoice release forecast in /reports (API-powered)
+    'invoiceForecast',   // Org-wide invoice release forecast in /reports (API-powered)
+    'autoSequence'       // Date-driven schedule resequencing (API read + position writes)
   ];
 
   // INTERNAL features - always enabled, not user-toggleable, bypass tier check

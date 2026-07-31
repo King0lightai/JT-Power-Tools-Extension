@@ -1,0 +1,97 @@
+/* Auto Sequence — panel block injected into the schedule mass-actions panel.
+   Colors arrive as custom properties set by the feature's theme detection
+   (light / dark / custom theme), so this file carries structure only. */
+.jt-autoseq {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  /* Spacing */
+  padding: 12px 16px;
+  /* Colors */
+  background: var(--jt-autoseq-bg, #fafafa);
+  border-bottom: 1px solid var(--jt-autoseq-border, #e5e7eb);
+  color: var(--jt-autoseq-text, #374151);
+  /* Typography */
+  font-size: 12px;
+}
+
+.jt-autoseq-heading {
+  /* Spacing */
+  margin-bottom: 8px;
+  /* Colors */
+  color: var(--jt-autoseq-heading, #6b7280);
+  /* Typography */
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.jt-autoseq-note {
+  margin-bottom: 10px;
+  color: var(--jt-autoseq-secondary, #9ca3af);
+  line-height: 1.45;
+}
+
+.jt-autoseq-error {
+  margin-bottom: 10px;
+  color: #dc2626;
+  line-height: 1.45;
+}
+
+/* Per-group preview list */
+.jt-autoseq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.jt-autoseq-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.jt-autoseq-group {
+  overflow: hidden;
+  color: var(--jt-autoseq-text, #374151);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-autoseq-count {
+  flex-shrink: 0;
+  color: var(--jt-autoseq-secondary, #9ca3af);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Buttons */
+.jt-autoseq-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.jt-autoseq-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--jt-autoseq-border, #e5e7eb);
+  border-radius: 4px;
+  color: var(--jt-autoseq-text, #374151);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.jt-autoseq-btn:hover {
+  opacity: 0.8;
+}
+
+.jt-autoseq-btn-primary {
+  background: #fe4c0d;
+  border-color: #fe4c0d;
+  color: #ffffff;
+}

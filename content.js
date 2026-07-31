@@ -143,6 +143,11 @@ const featureModules = {
     feature: () => window.AvailabilityFilterFeature,
     instance: null
   },
+  autoSequence: {
+    name: 'Auto Sequence',
+    feature: () => window.AutoSequenceFeature,
+    instance: null
+  },
   ganttLines: {
     name: 'Fat Gantt',
     feature: () => window.GanttLinesFeature,
@@ -221,6 +226,7 @@ let currentSettings = window.JTDefaults
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, printScope: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
     budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false, invoiceForecast: false,
+    autoSequence: false,
     jobAccessCollapse: false, orgLogo: false,
     inspectForAi: false, paveCapture: false, tweakEngine: true, forms: true, assistantPanel: true,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },

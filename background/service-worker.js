@@ -24,6 +24,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
     assistantPanel: true,
     availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
     taskTypeFilter: false,
+    autoSequence: false,
     jobAccessCollapse: false,
     orgLogo: false,
     // Forms always loads in the content script but self-gates on the
