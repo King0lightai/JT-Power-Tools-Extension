@@ -1170,8 +1170,10 @@ const FormatterToolbar = (() => {
     // Watch for resize
     if (window.ResizeObserver) {
       const resizeObserver = new ResizeObserver(() => {
-        // Self-disconnect once the toolbar is detached so the observer and the
-        // toolbar it closes over can be garbage-collected.
+        // Belt-and-braces only — do NOT rely on this to free the observer.
+        // A detached element never resizes, so this callback never runs again
+        // after removal. Teardown is destroyToolbar()'s job; every removal
+        // path must go through it.
         if (!toolbar.isConnected) {
           resizeObserver.disconnect();
           toolbar._resizeObserver = null;
@@ -1513,11 +1515,7 @@ const FormatterToolbar = (() => {
             budgetScrollCleanup();
             budgetScrollCleanup = null;
           }
-          if (toolbar._resizeObserver) {
-            toolbar._resizeObserver.disconnect();
-            toolbar._resizeObserver = null;
-          }
-          toolbar.remove();
+          destroyToolbar(toolbar);
           return;
         }
         // Reset sticky positioning from previous focus — ensures only ONE toolbar
@@ -1553,7 +1551,7 @@ const FormatterToolbar = (() => {
 
     // Remove any old floating expanded toolbar (legacy cleanup)
     if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-      activeToolbar.remove();
+      destroyToolbar(activeToolbar);
       activeToolbar = null;
     }
 
@@ -1605,11 +1603,7 @@ const FormatterToolbar = (() => {
           budgetScrollCleanup();
           budgetScrollCleanup = null;
         }
-        if (activeToolbar._resizeObserver) {
-          activeToolbar._resizeObserver.disconnect();
-          activeToolbar._resizeObserver = null;
-        }
-        activeToolbar.remove();
+        destroyToolbar(activeToolbar);
       } else if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
         // Reset from sticky back to normal document flow
         activeToolbar.style.position = 'relative';
@@ -1622,7 +1616,7 @@ const FormatterToolbar = (() => {
         activeToolbar.classList.remove('jt-toolbar-sticky-active');
       } else {
         // For floating toolbars, remove from DOM
-        activeToolbar.remove();
+        destroyToolbar(activeToolbar);
       }
       activeToolbar = null;
       activeField = null;
@@ -1888,8 +1882,34 @@ const FormatterToolbar = (() => {
     const path = window.location.pathname;
     if (!path.endsWith('/budget') && !path.includes('/catalog')) return;
     document.querySelectorAll('.flex.min-w-max .jt-formatter-toolbar-embedded').forEach(toolbar => {
-      toolbar.remove();
+      destroyToolbar(toolbar);
     });
+  }
+
+  /**
+   * Tear down a toolbar: disconnect its ResizeObserver, then detach it.
+   *
+   * ALWAYS use this instead of a bare `toolbar.remove()`. A ResizeObserver
+   * keeps a strong reference to what it observes, so detaching a toolbar
+   * without disconnecting pins the whole subtree (~15 SVG buttons) as
+   * unreachable-but-retained DOM. It costs no CPU — it just accumulates —
+   * which is why the symptom was climbing memory with a flat CPU graph and
+   * no console output.
+   *
+   * The observer cannot be relied on to clean itself up: its self-disconnect
+   * runs inside its own callback, and a detached element never resizes, so
+   * that callback never fires again.
+   *
+   * Safe to call with null, with a toolbar that has no observer, and twice on
+   * the same toolbar.
+   */
+  function destroyToolbar(toolbar) {
+    if (!toolbar) return;
+    if (toolbar._resizeObserver) {
+      toolbar._resizeObserver.disconnect();
+      toolbar._resizeObserver = null;
+    }
+    toolbar.remove();
   }
 
   // Public API
@@ -1907,7 +1927,8 @@ const FormatterToolbar = (() => {
     embedToolbarForField,
     injectExpandCollapseAllButton,
     removeExpandCollapseAllButton,
-    removeStrayBudgetToolbars
+    removeStrayBudgetToolbars,
+    destroyToolbar
   };
 })();
 

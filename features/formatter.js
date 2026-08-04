@@ -17,6 +17,8 @@ const FormatterFeature = (() => {
   // Local state (minimal - most moved to modules)
   let scrollTimeout = null;
   let observer = null;
+  // Pending rAF handle for the coalesced mutation scan (see init()).
+  let pendingScan = null;
   let isActive = false;
   let styleElement = null;
 
@@ -41,15 +43,27 @@ const FormatterFeature = (() => {
       // Inject expand/collapse all button on budget pages
       Toolbar().injectExpandCollapseAllButton();
 
-      // Watch for budget textareas (with error handling)
+      // Watch for budget textareas (with error handling).
+      //
+      // Coalesced onto one animation frame. initializeFields() is expensive —
+      // it queries every textarea and walks ancestors calling getComputedStyle
+      // — and it MUTATES the DOM (sweeping and embedding toolbars), so running
+      // it inline per mutation means our own writes re-trigger us. React
+      // re-rendering a large document fires mutations in bursts; one pass per
+      // frame is enough and keeps the two from fighting. Same shape as
+      // budget-row-highlight's `() => schedule()`.
       observer = new MutationObserver(() => {
-        try {
-          initializeFields();
-          // Re-inject expand/collapse all button if budget header re-renders
-          Toolbar().injectExpandCollapseAllButton();
-        } catch (error) {
-          console.error('Formatter: Error in MutationObserver callback:', error);
-        }
+        if (pendingScan) return;
+        pendingScan = requestAnimationFrame(() => {
+          pendingScan = null;
+          try {
+            initializeFields();
+            // Re-inject expand/collapse all button if budget header re-renders
+            Toolbar().injectExpandCollapseAllButton();
+          } catch (error) {
+            console.error('Formatter: Error in MutationObserver callback:', error);
+          }
+        });
       });
 
       observer.observe(document.body, {
@@ -91,6 +105,20 @@ const FormatterFeature = (() => {
       observer.disconnect();
       observer = null;
     }
+
+    // Cancel any scan queued for the next frame — otherwise it runs after
+    // cleanup and re-embeds toolbars for a feature that is now off.
+    if (pendingScan !== null) {
+      cancelAnimationFrame(pendingScan);
+      pendingScan = null;
+    }
+
+    // Tear down every embedded toolbar, disconnecting its ResizeObserver.
+    // Without this, turning the formatter off left the toolbars — and the
+    // observers pinning them in memory — behind until a page reload.
+    document.querySelectorAll('.jt-formatter-toolbar-embedded').forEach(toolbar => {
+      Toolbar().destroyToolbar(toolbar);
+    });
 
     // Remove event listeners
     window.removeEventListener('scroll', handleScroll, true);
@@ -157,17 +185,20 @@ const FormatterFeature = (() => {
     // Clean up orphaned embedded toolbars whose associated fields no longer exist in the DOM
     // This prevents "ghost" toolbars from accumulating when React re-renders budget tables
     // Budget adaptive toolbars are appended to document.body and are NOT removed by React
+    // Torn down via destroyToolbar so each toolbar's ResizeObserver is
+    // disconnected — a bare .remove() leaves the observer holding the detached
+    // toolbar alive, which is what wedged the tab on React-heavy documents.
     const allEmbeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     allEmbeddedToolbars.forEach(toolbar => {
       const fieldId = toolbar.dataset.forField;
       if (fieldId) {
         const associatedField = document.querySelector(`[data-formatter-id="${fieldId}"]`);
         if (!associatedField || !document.body.contains(associatedField)) {
-          toolbar.remove();
+          Toolbar().destroyToolbar(toolbar);
         }
       } else if (toolbar.parentElement === document.body) {
         // Body-appended toolbar with no field association — orphaned, remove it
-        toolbar.remove();
+        Toolbar().destroyToolbar(toolbar);
       }
     });
 
@@ -479,7 +510,7 @@ const FormatterFeature = (() => {
         const fmtId = field.dataset.formatterId;
         if (fmtId) {
           const staleToolbar = document.querySelector(`.jt-formatter-toolbar-embedded[data-for-field="${fmtId}"]`);
-          if (staleToolbar) staleToolbar.remove();
+          if (staleToolbar) Toolbar().destroyToolbar(staleToolbar);
         }
         const controller = fieldControllers.get(field);
         if (controller) {
