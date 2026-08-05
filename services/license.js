@@ -69,6 +69,9 @@ const LicenseService = (() => {
     // Date-driven schedule resequencing. NOTE: the only free feature that talks to
     // the Pave API, so it needs a configured grant key — it degrades to an
     // actionable "connect a grant key" message rather than working DOM-only.
+    // Free accounts CAN hold a grant key: portal registration with no license
+    // key mints a free-tier license, and the portal's API Keys section is
+    // admin-only on every tier. Don't re-gate either without re-tiering this.
     'autoSequence'
   ];
 

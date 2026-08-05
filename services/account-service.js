@@ -175,6 +175,61 @@ const AccountService = (() => {
   }
 
   /**
+   * Attach a Gumroad license key to a signed-in FREE account.
+   *
+   * For users who created a free account (to hold a JobTread grant key for
+   * Auto Sequence) and later bought a plan. The server upgrades the existing
+   * license row in place, so grant keys, notes, and team stay attached.
+   *
+   * @param {string} licenseKey - The key from the user's Gumroad receipt
+   */
+  async function attachLicense(licenseKey) {
+    if (!licenseKey || !licenseKey.trim()) {
+      return { success: false, error: 'License key is required' };
+    }
+
+    try {
+      const response = await authenticatedFetch('/auth/attach-license', {
+        method: 'POST',
+        body: JSON.stringify({ licenseKey: licenseKey.trim() })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        logError('License attach failed', result.error);
+        return { success: false, error: result.error || 'Could not attach that license key' };
+      }
+
+      // Deliberately NOT storeAuthData(): this response carries no
+      // refreshToken, and storeAuthData would overwrite the stored one with
+      // undefined and sign the user out on the next token expiry.
+      accessToken = result.accessToken;
+      currentUser = result.user;
+      tokenExpiry = Date.now() + (result.expiresIn * 1000);
+
+      await chrome.storage.local.set({
+        [STORAGE_KEYS.ACCESS_TOKEN]: accessToken,
+        [STORAGE_KEYS.USER_DATA]: currentUser,
+        [STORAGE_KEYS.TOKEN_EXPIRY]: tokenExpiry
+      });
+
+      // The client-side tier gate reads from LicenseService, not from the
+      // account object — without this the popup would show the new tier while
+      // every premium feature stayed locked until the next sign-in.
+      if (result.user?.licenseKey && window.LicenseService) {
+        await window.LicenseService.verifyLicense(result.user.licenseKey);
+      }
+
+      log('License attached, upgraded to ' + result.user?.tier);
+      return { success: true, data: result };
+    } catch (error) {
+      logError('License attach error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  /**
    * Login with email and password
    * @param {string} email - User email
    * @param {string} password - User password
@@ -1400,6 +1455,7 @@ const AccountService = (() => {
     register,
     login,
     logout,
+    attachLicense,
     refreshAccessToken,
     requestPasswordReset,
     resetPassword,

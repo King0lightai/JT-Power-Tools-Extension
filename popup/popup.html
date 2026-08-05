@@ -874,6 +874,19 @@
                 </div>
               </div>
 
+              <!-- Attach a purchased license. Only shown to the OWNER of a
+                   free account — popup.js updateAccountUI() toggles it.
+                   Paid accounts change plans on Gumroad. -->
+              <div class="attach-license-card" id="attachLicenseCard" style="display: none;">
+                <h3><i class="ph ph-crown"></i> Bought a plan?</h3>
+                <p>Paste your Gumroad license key to upgrade. Your grant keys and settings stay put.</p>
+                <div class="attach-license-row">
+                  <input type="text" id="attachLicenseKey" placeholder="License key" autocomplete="off">
+                  <button id="attachLicenseBtn" class="btn-primary btn-small">Attach</button>
+                </div>
+                <div class="account-error" id="attachLicenseError" style="display: none;"></div>
+              </div>
+
               <!-- Job Email card — only visible when:
                    (a) account is on a Power User tier
                    (b) active browser tab is on a /jobs/<id> route

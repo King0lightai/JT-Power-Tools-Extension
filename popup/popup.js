@@ -3155,6 +3155,18 @@ function setupAccountEventListeners() {
     logoutBtn.addEventListener('click', handleLogout);
   }
 
+  // Attach license button (free → paid upgrade)
+  const attachLicenseBtn = document.getElementById('attachLicenseBtn');
+  if (attachLicenseBtn) {
+    attachLicenseBtn.addEventListener('click', handleAttachLicense);
+  }
+  const attachLicenseKey = document.getElementById('attachLicenseKey');
+  if (attachLicenseKey) {
+    attachLicenseKey.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleAttachLicense();
+    });
+  }
+
   // Show register form
   const showRegisterBtn = document.getElementById('showRegisterBtn');
   if (showRegisterBtn) {
@@ -3337,6 +3349,16 @@ async function updateAccountUI() {
     // Hide get-license CTA
     const getLicenseCta = document.getElementById('getLicenseCta');
     if (getLicenseCta) getLicenseCta.style.display = 'none';
+
+    // Attach-license card: only the OWNER of a free account can upgrade in
+    // place. Paid accounts change plans on Gumroad, and a member can't
+    // re-plan the whole license. Server enforces both checks independently.
+    const attachCard = document.getElementById('attachLicenseCard');
+    if (attachCard) {
+      const effectiveTier = (await LicenseService.getTier()) || user?.tier;
+      attachCard.style.display =
+        (effectiveTier === 'free' && user?.role === 'owner') ? 'block' : 'none';
+    }
 
     return;
   }
@@ -3525,6 +3547,56 @@ async function handleRegister() {
 }
 
 /**
+ * Handle attaching a purchased license to a free account.
+ *
+ * The server upgrades the existing license row in place, so the user's grant
+ * keys, notes, and team survive the upgrade. On success the whole popup is
+ * re-read: the tier chip, feature gates, and API status all change at once.
+ */
+async function handleAttachLicense() {
+  const input = document.getElementById('attachLicenseKey');
+  const btn = document.getElementById('attachLicenseBtn');
+  const errorEl = document.getElementById('attachLicenseError');
+  if (!input || !btn) return;
+
+  const licenseKey = input.value.trim();
+  if (!licenseKey) {
+    showAccountError('attachLicense', 'Please enter your license key');
+    return;
+  }
+
+  if (errorEl) errorEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+
+  try {
+    const result = await AccountService.attachLicense(licenseKey);
+
+    if (result.success) {
+      input.value = '';
+      // Re-read everything the tier drives: the chip, the premium toggles,
+      // API status, and the MCP credentials panel.
+      await updateAccountUI();
+      await loadSettings();
+      await checkApiStatus();
+      if (typeof updateMcpCredentialsDisplay === 'function') {
+        await updateMcpCredentialsDisplay();
+      }
+      const tierName = LicenseService.getTierDisplayName(result.data?.user?.tier);
+      showStatus(`Upgraded to ${tierName}!`, 'success');
+    } else {
+      showAccountError('attachLicense', result.error || 'Could not attach that license key');
+    }
+  } catch (error) {
+    console.error('Attach license error:', error);
+    showAccountError('attachLicense', 'An error occurred. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Attach';
+  }
+}
+
+/**
  * Handle logout
  */
 async function handleLogout() {
@@ -3701,7 +3773,8 @@ function showAccountError(formType, message) {
     'login': 'loginError',
     'register': 'registerError',
     'forgot': 'forgotError',
-    'reset': 'resetError'
+    'reset': 'resetError',
+    'attachLicense': 'attachLicenseError'
   };
 
   const errorEl = document.getElementById(errorIds[formType]);

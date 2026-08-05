@@ -2445,3 +2445,73 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
   color: #b91c1c;
 }
 .job-email-card .je-error.is-visible { display: block; }
+
+/* Attach License Card - upgrade a free account with a Gumroad key.
+   Token-driven so light/dark follow the popup's theme layer. */
+.attach-license-card {
+  /* Layout */
+  margin-top: 12px;
+  padding: 12px 14px 14px;
+  /* Colors */
+  background: var(--bg-surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md, 6px);
+}
+
+.attach-license-card h3 {
+  /* Layout */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Spacing */
+  margin: 0 0 4px;
+  /* Typography */
+  font-family: var(--ff-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.attach-license-card p {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+.attach-license-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attach-license-row input {
+  /* Layout */
+  flex: 1;
+  min-width: 0;
+  /* Spacing */
+  padding: 8px 10px;
+  /* Colors */
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  color: var(--fg-strong);
+  /* Typography */
+  font-size: 12px;
+}
+
+.attach-license-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.attach-license-row input::placeholder {
+  color: var(--fg-subtle);
+}
+
+.attach-license-card .account-error {
+  margin-top: 10px;
+}

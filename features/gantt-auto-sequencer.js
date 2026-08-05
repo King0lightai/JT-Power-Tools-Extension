@@ -399,7 +399,7 @@ const AutoSequenceFeature = (() => {
       // Auto Sequence is free but reads and writes through the Pave API, so it
       // still needs a grant key. Say what to do instead of leaking the raw error.
       if (NO_KEY_RE.test(error.message || '')) {
-        renderMessage(el, 'Auto Sequence needs a JobTread grant key. Add one in your JT Power Tools account at app.jtpowertools.com, then reload this page.', true);
+        renderMessage(el, 'Auto Sequence needs a JobTread grant key. Create a free JT Power Tools account at app.jtpowertools.com, add your key, then reload this page.', true);
         return;
       }
       renderMessage(el, `Could not read the schedule: ${error.message}`, true);
