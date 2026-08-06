@@ -2,7 +2,7 @@
  * FormsActionBarInjector
  *
  * Finds JT's job action bar (the row of Edit Job / Message / Document /
- * Task / overflow-dots buttons) and injects a "Forms" button into it.
+ * Task / overflow-dots buttons) and injects a "Worksheets" button into it.
  * The button uses JT's exact Tailwind utility classes so it matches the
  * surrounding chrome pixel-for-pixel.
  *
@@ -23,7 +23,7 @@
  *   Tapping the hamburger opens a Popper-positioned dropdown menu with
  *   the actions (Edit Job, Message, Document, Task, To-Do, Daily Log,
  *   Time Entry). In that mode we DON'T inject inline; instead we detect
- *   the open popover and append a "Forms" entry there. Popper.js destroys
+ *   the open popover and append a "Worksheets" entry there. Popper.js destroys
  *   the popover on close, so the observer re-injects every time it opens.
  *
  * Public API:
@@ -145,8 +145,8 @@ const FormsActionBarInjector = (() => {
    * @returns {HTMLElement}
    */
   // Clipboard-with-lines stroke icon (matches JT's stroke-icon style) plus
-  // the "Forms" label — shared verbatim by the inline and menu buttons.
-  const FORMS_ICON_HTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg> Forms';
+  // the "Worksheets" label — shared verbatim by the inline and menu buttons.
+  const FORMS_ICON_HTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg> Worksheets';
 
   /**
    * Build the shared Forms trigger element: a role="button" div carrying the

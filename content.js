@@ -204,7 +204,7 @@ const featureModules = {
     instance: null
   },
   forms: {
-    name: 'Forms',
+    name: 'Worksheets',
     feature: () => window.FormsFeature,
     instance: null
   },

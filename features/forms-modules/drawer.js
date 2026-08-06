@@ -114,7 +114,7 @@ const FormsDrawer = (() => {
     const drawer = document.createElement('aside');
     drawer.className = 'jt-forms-drawer';
     drawer.setAttribute('role', 'dialog');
-    drawer.setAttribute('aria-label', 'Job Forms');
+    drawer.setAttribute('aria-label', 'Job Worksheets');
     drawer.setAttribute('aria-modal', 'false');
     // Inline visibility:hidden defends against a CSS-not-loaded-yet flash:
     // mount() runs immediately after injectStylesheet() with only one short
@@ -139,11 +139,11 @@ const FormsDrawer = (() => {
     back.type = 'button';
     back.className = 'jt-forms-back';
     back.hidden = true;
-    back.textContent = '← All forms';
+    back.textContent = '← All worksheets';
 
     const title = document.createElement('h2');
     title.className = 'jt-forms-title';
-    title.textContent = 'Forms';
+    title.textContent = 'Worksheets';
 
     const statusPill = document.createElement('span');
     statusPill.className = 'jt-forms-status-pill';
@@ -151,7 +151,7 @@ const FormsDrawer = (() => {
     const printBtn = document.createElement('button');
     printBtn.type = 'button';
     printBtn.className = 'jt-forms-print';
-    printBtn.setAttribute('aria-label', 'Print form');
+    printBtn.setAttribute('aria-label', 'Print worksheet');
     // Lucide-style "printer" SVG (stroke icon, matches JT visual weight)
     printBtn.innerHTML = ''
       + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" '

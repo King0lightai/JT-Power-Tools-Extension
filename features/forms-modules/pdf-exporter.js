@@ -205,7 +205,7 @@ const FormsPdfExporter = (() => {
     // Title
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(FS_TITLE);
-    const title = (template && template.name) ? template.name : 'Form';
+    const title = (template && template.name) ? template.name : 'Worksheet';
     const titleUsed = writeWrappedText(doc, title, MARGIN_X, cursor.y + 0.20, CONTENT_WIDTH, LINE_HEIGHT * 1.4);
     cursor.y += 0.20 + titleUsed;
 
@@ -270,7 +270,7 @@ const FormsPdfExporter = (() => {
   function buildFilename(template, generatedAt) {
     const at = generatedAt instanceof Date ? generatedAt : new Date();
     const stamp = at.toISOString().replace(/[:T.]/g, '-').slice(0, 19);
-    const safeName = String((template && template.name) || 'Form')
+    const safeName = String((template && template.name) || 'Worksheet')
       .replace(/[^a-z0-9 \-_]/gi, '')
       .replace(/\s+/g, ' ')
       .trim()

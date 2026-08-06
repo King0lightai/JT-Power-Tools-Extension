@@ -243,7 +243,7 @@ const FormsFeature = (() => {
     activeSchema = null;
     activeInstance = null;
 
-    window.FormsDrawer.setTitle('Forms');
+    window.FormsDrawer.setTitle('Worksheets');
     window.FormsDrawer.setBackVisible(false);
     window.FormsDrawer.setStatusPill(null, '');
     if (typeof window.FormsDrawer.setSavePdfVisible === 'function') {
@@ -345,7 +345,7 @@ const FormsFeature = (() => {
     if (fields.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'jt-forms-empty-state';
-      empty.textContent = 'This form has no fields yet.';
+      empty.textContent = 'This worksheet has no fields yet.';
       container.appendChild(empty);
       return;
     }
@@ -411,7 +411,7 @@ const FormsFeature = (() => {
           let text;
           if (status === 401) text = 'Auth error — please re-login';
           else if (status === 403) text = 'Permission denied';
-          else if (status === 404) text = 'Form deleted';
+          else if (status === 404) text = 'Worksheet deleted';
           else text = 'Save failed (' + status + ')';
           window.FormsDrawer.setStatusPill('offline', text);
         } else {
@@ -517,7 +517,7 @@ const FormsFeature = (() => {
     if (!container) return;
     const div = document.createElement('div');
     div.className = 'jt-forms-loading-state';
-    div.textContent = 'Loading forms...';
+    div.textContent = 'Loading worksheets...';
     container.appendChild(div);
   }
 
@@ -529,7 +529,7 @@ const FormsFeature = (() => {
 
     const heading = document.createElement('p');
     heading.className = 'jt-forms-empty-heading';
-    heading.textContent = 'No forms have been created yet.';
+    heading.textContent = 'No worksheets have been created yet.';
     wrap.appendChild(heading);
 
     const subtitle = document.createElement('p');
@@ -542,7 +542,7 @@ const FormsFeature = (() => {
     link.href = 'https://app.jtpowertools.com/dashboard.html#forms';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.textContent = 'Open the Forms builder';
+    link.textContent = 'Open the Worksheet Builder';
     wrap.appendChild(link);
 
     container.appendChild(wrap);
@@ -556,7 +556,7 @@ const FormsFeature = (() => {
 
     const title = document.createElement('p');
     title.className = 'jt-forms-error-title';
-    title.textContent = 'Could not load forms';
+    title.textContent = 'Could not load worksheets';
     wrap.appendChild(title);
 
     const detail = document.createElement('p');
@@ -759,7 +759,7 @@ const FormsFeature = (() => {
     header.className = 'jt-forms-print-header';
 
     const h1 = document.createElement('h1');
-    h1.textContent = activeTemplate.name || 'Form';
+    h1.textContent = activeTemplate.name || 'Worksheet';
     header.appendChild(h1);
 
     const ctx = document.createElement('div');
@@ -804,7 +804,7 @@ const FormsFeature = (() => {
         const flush = window.FormsSaveEngine.forceSave();
         if (flush && typeof flush.then === 'function') await flush;
       } catch (saveErr) {
-        showToast('Could not save form before exporting: ' + (saveErr && saveErr.message
+        showToast('Could not save worksheet before exporting: ' + (saveErr && saveErr.message
           ? saveErr.message : 'unknown error'));
         return;
       }
@@ -828,7 +828,7 @@ const FormsFeature = (() => {
         fileName,
         jobId: currentJob.jobId,
         contentType: 'application/pdf',
-        message: 'Signed form: ' + (activeTemplate.name || 'Form'),
+        message: 'Signed worksheet: ' + (activeTemplate.name || 'Worksheet'),
       });
 
       showToast('Saved to Job Files: ' + (file && file.name ? file.name : fileName));
