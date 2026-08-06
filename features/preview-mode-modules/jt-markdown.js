@@ -130,7 +130,7 @@ const JTMarkdown = (() => {
   //   [!icon:name]->  <div>[svg]\n{rest}</div> (terminal; unknown -> no svg)
   // A line that matches ANY prefix renders as a block (no trailing newline);
   // a plain line emits its content followed by "\n".
-  function renderLine(line) {
+  function consumePrefixes(line) {
     let rest = line;
     const wrappers = [];
     let icon = null;
@@ -179,6 +179,28 @@ const JTMarkdown = (() => {
       }
     }
 
+    return { wrappers, icon, rest };
+  }
+
+  // Applies a prefix pipeline's wrappers around already-rendered inner HTML,
+  // outermost first (encounter order).
+  function applyWrappers(wrappers, html) {
+    let out = html;
+    for (let k = wrappers.length - 1; k >= 0; k--) {
+      out = wrappers[k].open + out + wrappers[k].close;
+    }
+    return out;
+  }
+
+  // Identity of a prefix run — consecutive list lines only merge into one list
+  // when their prefixes match exactly, so a colored item never absorbs (or is
+  // absorbed by) an uncolored one.
+  function wrapperKey(wrappers) {
+    return wrappers.map((w) => w.open).join('');
+  }
+
+  function renderLine(line) {
+    const { wrappers, icon, rest } = consumePrefixes(line);
     const isBlock = wrappers.length > 0 || icon !== null;
     let html;
 
@@ -192,9 +214,7 @@ const JTMarkdown = (() => {
       html = processInline(rest);
     }
 
-    for (let k = wrappers.length - 1; k >= 0; k--) {
-      html = wrappers[k].open + html + wrappers[k].close;
-    }
+    html = applyWrappers(wrappers, html);
 
     return isBlock ? html : html + '\n';
   }
@@ -275,9 +295,16 @@ const JTMarkdown = (() => {
   // --- Entry point -----------------------------------------------------------
 
   // Multi-line block constructs, each grouping consecutive matching lines.
+  // These are recognised on the raw line — they carry no prefix pipeline.
   const BLOCKS = [
     { match: isBlockquote, build: renderBlockquote },
-    { match: isTableRow, build: renderTable },
+    { match: isTableRow, build: renderTable }
+  ];
+
+  // Lists are recognised on the line *after* its prefixes are consumed, so
+  // "[!color:red] - item" is a bulleted item inside a red wrapper rather than
+  // literal "- item" text.
+  const LIST_BLOCKS = [
     { match: isBullet, build: renderBulletList },
     { match: isNumbered, build: renderNumberedList }
   ];
@@ -303,6 +330,21 @@ const JTMarkdown = (() => {
         const group = [];
         while (i < lines.length && block.match(lines[i])) group.push(lines[i++]);
         out.push(block.build(group));
+        continue;
+      }
+
+      const head = consumePrefixes(line);
+      const list = head.icon === null && LIST_BLOCKS.find((b) => b.match(head.rest));
+      if (list) {
+        const key = wrapperKey(head.wrappers);
+        const group = [];
+        while (i < lines.length) {
+          const p = consumePrefixes(lines[i]);
+          if (p.icon !== null || !list.match(p.rest) || wrapperKey(p.wrappers) !== key) break;
+          group.push(p.rest);
+          i++;
+        }
+        out.push(applyWrappers(head.wrappers, list.build(group)));
         continue;
       }
 
