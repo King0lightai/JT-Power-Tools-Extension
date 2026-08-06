@@ -720,6 +720,30 @@ body.dark-theme input:checked + .slider { background: var(--jt-orange); }
 .master-toggle-bar.locked { opacity: 0.45; }
 .master-toggle-bar.locked .toggle { pointer-events: none; }
 
+/* A locked row must not read as ON. Locking only greys the row and sets the
+   checkbox disabled — `checked` is left alone on purpose, so a preference
+   survives a lapse and comes back on upgrade. But a disabled checkbox keeps
+   rendering its checked state, so a feature that was on before the lock
+   showed an orange, ON-looking slider on a greyed row while the feature was
+   not running. Render the off position for locked rows; the checkbox state
+   underneath is untouched. */
+.feature-item.locked input:checked + .slider,
+.master-toggle-bar.locked input:checked + .slider,
+.feature-item.disabled input:checked + .slider {
+  background: var(--rule-strong);
+  box-shadow: none;
+}
+.feature-item.locked input:checked + .slider:before,
+.master-toggle-bar.locked input:checked + .slider:before,
+.feature-item.disabled input:checked + .slider:before {
+  transform: translateX(0);
+}
+body.dark-theme .feature-item.locked input:checked + .slider,
+body.dark-theme .master-toggle-bar.locked input:checked + .slider,
+body.dark-theme .feature-item.disabled input:checked + .slider {
+  background: var(--jt-coal-300);
+}
+
 .feature-item.disabled { opacity: 0.5; cursor: not-allowed; }
 .feature-item.disabled .toggle { pointer-events: none; opacity: 0.5; }
 .feature-item.disabled .feature-info { color: var(--fg-subtle); }

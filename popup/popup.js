@@ -3441,6 +3441,24 @@ async function showAccountForm(formType) {
 /**
  * Handle login form submission
  */
+/**
+ * Re-apply license gating after the signed-in identity changes.
+ *
+ * Signing in, registering, and signing out all change which tier the popup
+ * should be showing, but only the init path and the license-activation path
+ * ever re-ran the gating — so after signing in you had to close and reopen
+ * the popup before your features unlocked. checkLicenseStatus() adds and
+ * removes the .locked treatment; loadSettings() re-reads the stored toggles
+ * that gating may have just changed.
+ *
+ * Deliberately does NOT call renderFeatureCategories() — that reparents the
+ * toggle rows and has already run once at init.
+ */
+async function refreshLicenseGating() {
+  await checkLicenseStatus();
+  await loadSettings();
+}
+
 async function handleLogin() {
   const emailInput = document.getElementById('loginEmail');
   const passwordInput = document.getElementById('loginPassword');
@@ -3465,6 +3483,10 @@ async function handleLogin() {
       // Clear form
       emailInput.value = '';
       passwordInput.value = '';
+      // Unlock the Features tab for the tier we just signed in as, before
+      // touching the account panel — otherwise the popup keeps showing the
+      // signed-out gating until it is closed and reopened.
+      await refreshLicenseGating();
       // Update UI — refresh account, API status, and MCP credentials
       // (login auto-registers the grant key via JobTreadProService)
       await updateAccountUI();
@@ -3527,6 +3549,9 @@ async function handleRegister() {
       nameInput.value = '';
       emailInput.value = '';
       passwordInput.value = '';
+      // Registering with a license key changes the tier the popup should
+      // show, so re-gate before the account panel repaints.
+      await refreshLicenseGating();
       // Update UI — refresh account, API status, and MCP credentials
       await updateAccountUI();
       await checkApiStatus();
@@ -3575,9 +3600,11 @@ async function handleAttachLicense() {
     if (result.success) {
       input.value = '';
       // Re-read everything the tier drives: the chip, the premium toggles,
-      // API status, and the MCP credentials panel.
+      // API status, and the MCP credentials panel. refreshLicenseGating()
+      // covers the toggles — loadSettings() alone re-reads the stored values
+      // but leaves every row's .locked treatment on the pre-upgrade tier.
       await updateAccountUI();
-      await loadSettings();
+      await refreshLicenseGating();
       await checkApiStatus();
       if (typeof updateMcpCredentialsDisplay === 'function') {
         await updateMcpCredentialsDisplay();
@@ -3636,8 +3663,10 @@ async function handleLogout() {
     // Notify content script to deactivate features
     chrome.runtime.sendMessage({ type: 'SETTINGS_UPDATED', settings: updated });
 
-    // Reload settings UI to reflect disabled state
-    await loadSettings();
+    // Reload settings UI and re-lock the rows the signed-out tier can't use.
+    // Without the gating pass the toggles read as unlocked until the popup is
+    // reopened, even though the features are now off.
+    await refreshLicenseGating();
     await updateAccountUI();
     if (typeof updateMcpCredentialsDisplay === 'function') {
       await updateMcpCredentialsDisplay();
@@ -3888,6 +3917,18 @@ function showAccountError(formType, message) {
     async function refreshFromServerSilent() {
       if (!window.TweaksApi || !window.TweaksApi.isAvailable()) return;
       if (!activeOrg) return;
+      // Tweaks are Pro, and the server enforces that. Below Pro this pull is a
+      // request that can only 403 — once per popup open, and it surfaces in the
+      // console looking like a bug. Skip it; render() falls back to the cache
+      // exactly as it does when the server is unreachable.
+      try {
+        if (window.LicenseService) {
+          const tier = await window.LicenseService.getTier();
+          if (!window.LicenseService.tierHasFeature(tier, 'tweakEngine')) return;
+        }
+      } catch (_e) {
+        // Tier unknown — fall through and let the server decide.
+      }
       try {
         const { tweaks, diagnostics } = await window.TweaksApi.list(activeOrg);
         // Per-org keys: replace only this org's bucket — no cross-org merge.

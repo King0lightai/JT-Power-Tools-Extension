@@ -37,6 +37,9 @@ const AutoSequenceFeature = (() => {
   const MASS_ACTIONS_RE = /mass\s+(\w+\s+)?actions/i;
   // JobTreadAPI throws this when no grant key is configured for the current org.
   const NO_KEY_RE = /API key not configured/i;
+  // Deep link to where the key actually gets added. A member (non-admin) lands
+  // on Account instead — the portal redirects a hidden section itself.
+  const PORTAL_KEYS_URL = 'https://app.jtpowertools.com/dashboard#api-keys';
   const CONTAINER_CLASS = 'jt-autoseq';
   const PAGE_SIZE = 100;
   const MAX_PAGES = 20;
@@ -329,6 +332,30 @@ const AutoSequenceFeature = (() => {
     again.addEventListener('click', () => renderIdle(el));
   }
 
+  // The no-grant-key dead end. Telling someone to "go to app.jtpowertools.com"
+  // and leaving them to type it is the step most people drop at, so the URL is
+  // a button that opens the portal's API Keys section directly. Auto Sequence
+  // is free, so this is often a user's first contact with the portal — the
+  // copy says an account costs nothing before it asks them to make one.
+  function renderNoKey(el) {
+    clear(el);
+    addEl(el, 'div', 'jt-autoseq-heading', 'Auto Sequence');
+    addEl(el, 'div', 'jt-autoseq-note',
+      'Auto Sequence reads and writes through JobTread\'s API, so it needs a grant key. ' +
+      'A JT Power Tools account is free — add your key there, then reload this page.');
+
+    const actions = addEl(el, 'div', 'jt-autoseq-actions');
+    const open = addEl(actions, 'button', 'jt-autoseq-btn jt-autoseq-btn-primary', 'Add your grant key');
+    open.type = 'button';
+    open.addEventListener('click', () => {
+      window.open(PORTAL_KEYS_URL, '_blank', 'noopener,noreferrer');
+    });
+
+    const again = addEl(actions, 'button', 'jt-autoseq-btn', 'Start over');
+    again.type = 'button';
+    again.addEventListener('click', () => renderIdle(el));
+  }
+
   function renderDone(el, result) {
     clear(el);
     addEl(el, 'div', 'jt-autoseq-heading', 'Auto Sequence');
@@ -399,7 +426,7 @@ const AutoSequenceFeature = (() => {
       // Auto Sequence is free but reads and writes through the Pave API, so it
       // still needs a grant key. Say what to do instead of leaking the raw error.
       if (NO_KEY_RE.test(error.message || '')) {
-        renderMessage(el, 'Auto Sequence needs a JobTread grant key. Create a free JT Power Tools account at app.jtpowertools.com, add your key, then reload this page.', true);
+        renderNoKey(el);
         return;
       }
       renderMessage(el, `Could not read the schedule: ${error.message}`, true);
