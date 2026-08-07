@@ -75,6 +75,7 @@
         "features/drag-drop-modules/action-items-completion.js",
         "features/task-completion-checkboxes.js",
         "features/contrast-fix.js",
+        "features/formatter-modules/dialects.js",
         "features/formatter-modules/detection.js",
         "features/formatter-modules/formats.js",
         "features/formatter-modules/toolbar.js",

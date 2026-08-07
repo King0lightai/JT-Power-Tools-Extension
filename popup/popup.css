@@ -192,18 +192,6 @@ header {
   padding: 14px 16px 12px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule);
-  position: relative;
-}
-
-/* faint orange flame baseline — echo of the hero accent rule */
-header::after {
-  content: '';
-  position: absolute;
-  left: 16px;
-  bottom: -1px;
-  width: 36px;
-  height: 2px;
-  background: var(--accent);
 }
 
 .header-content {

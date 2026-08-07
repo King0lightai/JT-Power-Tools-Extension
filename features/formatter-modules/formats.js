@@ -103,12 +103,26 @@ const FormatterFormats = (() => {
   }
 
   /**
+   * Get the dialect's marker set, defaulting to JobTread's — the marker set
+   * every caller used before dialects existed. See formatter-modules/dialects.js.
+   * @param {Object} options - Options passed to applyFormat/removeFormat
+   * @returns {Object} Marker set with bold/italic/underline/strikethrough
+   */
+  function resolveDialect(options) {
+    return (options && options.dialect) ||
+      (window.FormatterDialects ? window.FormatterDialects.JOBTREAD : { bold: '*', italic: '^', underline: '_', strikethrough: '~' });
+  }
+
+  /**
    * Remove a format from the field
    * @param {HTMLTextAreaElement} field - The textarea field
    * @param {string} format - The format to remove
-   * @param {Object} options - Additional options
+   * @param {Object} options - Additional options. `options.dialect` selects
+   *   the marker set (default: JobTread's) — must match whatever dialect
+   *   applyFormat() and detectActiveFormats() were called with.
    */
   function removeFormat(field, format, options = {}) {
+    const dialect = resolveDialect(options);
     const start = field.selectionStart;
     const end = field.selectionEnd;
     const text = field.value;
@@ -129,13 +143,8 @@ const FormatterFormats = (() => {
       case 'italic':
       case 'underline':
       case 'strikethrough':
-        const markerMap = {
-          'bold': '*',
-          'italic': '^',
-          'underline': '_',
-          'strikethrough': '~'
-        };
-        const marker = markerMap[format];
+        const marker = dialect[format];
+        const markerLen = marker.length;
 
         if (hasSelection) {
           // Check if selection is exactly wrapped by markers
@@ -144,9 +153,9 @@ const FormatterFormats = (() => {
 
           if (before.endsWith(marker) && after.startsWith(marker)) {
             // Remove the wrapping markers
-            newText = before.slice(0, -1) + text.substring(start, end) + after.slice(1);
-            newCursorPos = start - 1;
-            newSelectionEnd = end - 1;
+            newText = before.slice(0, -markerLen) + text.substring(start, end) + after.slice(markerLen);
+            newCursorPos = start - markerLen;
+            newSelectionEnd = end - markerLen;
           } else {
             // Selection is inside formatted text or contains markers
             // Find the enclosing format markers on the current line
@@ -159,13 +168,13 @@ const FormatterFormats = (() => {
               const beforeLine = text.substring(0, lineStart);
               const afterLine = text.substring(lineEndPos);
               const newLineText = lineText.substring(0, pair.open) +
-                                 lineText.substring(pair.open + 1, pair.close) +
-                                 lineText.substring(pair.close + 1);
+                                 lineText.substring(pair.open + markerLen, pair.close) +
+                                 lineText.substring(pair.close + markerLen);
               newText = beforeLine + newLineText + afterLine;
 
               // Adjust positions (one marker removed before selection)
-              newCursorPos = start - 1;
-              newSelectionEnd = end - 1;
+              newCursorPos = start - markerLen;
+              newSelectionEnd = end - markerLen;
             } else {
               // Selection contains markers, remove them from inside
               const selection = text.substring(start, end);
@@ -185,12 +194,12 @@ const FormatterFormats = (() => {
             const beforeLine = text.substring(0, lineStart);
             const afterLine = text.substring(lineEndPos);
             const newLineText = lineText.substring(0, pair.open) +
-                               lineText.substring(pair.open + 1, pair.close) +
-                               lineText.substring(pair.close + 1);
+                               lineText.substring(pair.open + markerLen, pair.close) +
+                               lineText.substring(pair.close + markerLen);
             newText = beforeLine + newLineText + afterLine;
 
             // Adjust cursor position (one marker removed before cursor)
-            newCursorPos = start - 1;
+            newCursorPos = start - markerLen;
           } else {
             return; // No format found to remove
           }
@@ -240,20 +249,23 @@ const FormatterFormats = (() => {
    * Find the marker pair that encloses the given position
    * @param {string} line - Line text
    * @param {number} pos - Position within the line
-   * @param {string} marker - Marker character
+   * @param {string} marker - Marker string (one or more characters — see
+   *   findMarkerPairs in detection.js for why doubled markers like `__` are
+   *   matched as an exact substring rather than character-by-character)
    * @returns {Object|null} {open, close} or null if not found
    */
   function findEnclosingPair(line, pos, marker) {
+    const len = marker.length;
     let i = 0;
 
-    while (i < line.length) {
-      if (line[i] === marker) {
+    while (i <= line.length - len) {
+      if (line.substr(i, len) === marker) {
         const openPos = i;
         let closePos = -1;
 
         // Look for closing marker
-        for (let j = i + 1; j < line.length; j++) {
-          if (line[j] === marker) {
+        for (let j = i + len; j <= line.length - len; j++) {
+          if (line.substr(j, len) === marker) {
             closePos = j;
             break;
           }
@@ -261,10 +273,10 @@ const FormatterFormats = (() => {
 
         if (closePos !== -1) {
           // Check if position is inside this pair
-          if (pos > openPos && pos <= closePos) {
+          if (pos >= openPos + len && pos <= closePos) {
             return { open: openPos, close: closePos };
           }
-          i = closePos + 1;
+          i = closePos + len;
         } else {
           i++;
         }
@@ -321,9 +333,14 @@ const FormatterFormats = (() => {
    * Apply a format to the field
    * @param {HTMLTextAreaElement} field - The textarea field
    * @param {string} format - The format to apply
-   * @param {Object} options - Additional options (e.g., color)
+   * @param {Object} options - Additional options (e.g., color). `options.dialect`
+   *   selects the marker set for bold/italic/underline/strikethrough (default:
+   *   JobTread's — see formatter-modules/dialects.js). Quick Notes passes its
+   *   own dialect here and to detectActiveFormats() so the toolbar emits and
+   *   toggles markers its own renderer actually understands.
    */
   function applyFormat(field, format, options = {}) {
+    const dialect = resolveDialect(options);
     const start = field.selectionStart;
     const end = field.selectionEnd;
     const text = field.value;
@@ -331,12 +348,12 @@ const FormatterFormats = (() => {
     const hasSelection = selection.length > 0;
 
     // Check if format is already active
-    const activeFormats = window.FormatterDetection.detectActiveFormats(field);
+    const activeFormats = window.FormatterDetection.detectActiveFormats(field, dialect);
 
     // Toggle logic for inline formats
     if (['bold', 'italic', 'underline', 'strikethrough'].includes(format)) {
       if (activeFormats[format]) {
-        removeFormat(field, format);
+        removeFormat(field, format, options);
         return;
       }
     }
@@ -365,24 +382,14 @@ const FormatterFormats = (() => {
 
     switch(format) {
       case 'bold':
-        replacement = hasSelection ? `*${selection}*` : '**';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
-
       case 'italic':
-        replacement = hasSelection ? `^${selection}^` : '^^';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
-
       case 'underline':
-        replacement = hasSelection ? `_${selection}_` : '__';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
+      case 'strikethrough': {
+        const marker = dialect[format];
+        replacement = hasSelection ? `${marker}${selection}${marker}` : `${marker}${marker}`;
+        cursorPos = hasSelection ? start + replacement.length : start + marker.length;
         break;
-
-      case 'strikethrough':
-        replacement = hasSelection ? `~${selection}~` : '~~';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
+      }
 
       case 'h1':
         const lineStart = before.lastIndexOf('\n') + 1;

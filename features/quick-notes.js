@@ -5,7 +5,6 @@
  * Dependencies:
  * - features/quick-notes-modules/storage.js (QuickNotesStorage)
  * - features/quick-notes-modules/markdown.js (QuickNotesMarkdown)
- * - features/quick-notes-modules/editor.js (QuickNotesEditor)
  */
 
 const QuickNotesFeature = (() => {
@@ -63,7 +62,6 @@ const QuickNotesFeature = (() => {
   // Module references (loaded after DOM ready)
   const getStorage = () => window.QuickNotesStorage || {};
   const getMarkdown = () => window.QuickNotesMarkdown || {};
-  const getEditor = () => window.QuickNotesEditor || {};
 
   // Constants from storage module (with fallbacks)
   const MIN_WIDTH = 320;
@@ -767,10 +765,15 @@ const QuickNotesFeature = (() => {
   // Render a single note item HTML
   function renderNoteItem(note, markdown) {
     const previewContent = (note.content || '').slice(0, 150);
+    // Sidebar snippets are a single line of plain text, never rendered
+    // blocks — strip every tag (table, div, span, …) that parseMarkdown
+    // produced rather than just <div>, so a note starting with a pipe
+    // table (or any other block markup) can't blow out the list row.
+    // parseMarkdown already HTML-escaped the underlying text, so the
+    // result stays safe to drop straight into innerHTML.
     const parsedPreview = (markdown.parseMarkdown ? markdown.parseMarkdown(previewContent) : previewContent)
-      .replace(/<div[^>]*>/g, ' ')
-      .replace(/<\/div>/g, ' ')
-      .replace(/\n/g, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
 
     const escapedTitle = markdown.escapeHtml ? markdown.escapeHtml(note.title || 'Untitled Note') : (note.title || 'Untitled Note');
@@ -1330,13 +1333,30 @@ const QuickNotesFeature = (() => {
     return text.trim().split(/\s+/).filter(w => w.length > 0).length;
   }
 
+  /**
+   * The character offset where line `lineIndex` starts in `text`, using the
+   * same `text.split('\n')` line numbering as parseMarkdown()'s `data-line`
+   * stamps. Used to land the caret at the START of a clicked line when a
+   * rendered preview block drops into the textarea below — not a pixel- or
+   * character-accurate reproduction of the click point, which parseMarkdown's
+   * lossy rendering (stripped markers, "•" for "- ", table cells) makes
+   * unrecoverable in general.
+   */
+  function getLineStartOffset(text, lineIndex) {
+    const lines = text.split('\n');
+    let offset = 0;
+    for (let i = 0; i < lineIndex && i < lines.length; i++) {
+      offset += lines[i].length + 1; // +1 for the '\n' the split() consumed
+    }
+    return offset;
+  }
+
   // Render note editor with WYSIWYG contenteditable
   function renderNoteEditor() {
     const editorContainer = notesPanel.querySelector('.jt-notes-editor');
     if (!editorContainer) return;
 
     const markdown = getMarkdown();
-    const editor = getEditor();
     const currentNotes = getCurrentNotes();
     const currentNote = currentNotes.find(n => n.id === currentNoteId);
 
@@ -1520,20 +1540,16 @@ const QuickNotesFeature = (() => {
     const preview = editorContainer.querySelector('.jt-notes-preview');
     const previewToggleBtn = editorContainer.querySelector('.jt-notes-preview-btn');
     let saveTimeout;
-    // Notes are re-read far more than they are written, so a note opens in
-    // preview and drops to the textarea on click. Local to this render pass
-    // (editorContainer.innerHTML is rebuilt per note) so it can't leak the
-    // previous note's edit/preview state onto the next one — every note
-    // opens in preview.
+    // Notes are re-read far more than they are written, so a note with
+    // content opens in preview and drops to the textarea on click; an empty
+    // note opens straight into edit (see the toggleNotePreview(hasContent)
+    // call below). Local to this render pass (editorContainer.innerHTML is
+    // rebuilt per note) so it can't leak the previous note's edit/preview
+    // state onto the next one.
     let showingPreview = true;
 
     // Initialize content from markdown
     contentInput.value = currentNote.content || '';
-
-    // Reset editor history
-    if (editor.resetHistory) {
-      editor.resetHistory(currentNote.content || '');
-    }
 
     // Debounced save function
     const debouncedSave = (field, value) => {
@@ -1593,35 +1609,36 @@ const QuickNotesFeature = (() => {
      * Tick/untick the source line behind a rendered checkbox. Rewrites exactly
      * that line so the rest of the note is untouched.
      *
-     * Counts source lines using QuickNotesMarkdown.CHECKBOX_LINE_RE — the same
-     * regex parseMarkdown() uses to decide which lines get a rendered <input>.
-     * A looser, independently-maintained regex here (previously
-     * /^-\s+\[[ xX]\]/, which also matched "-  [ ]" two-space lines the
-     * renderer treats as plain text) would count lines that never rendered a
-     * checkbox, desyncing "nth rendered checkbox" from "nth matching source
-     * line" and ticking the wrong one.
+     * Identity, not counting: parseMarkdown() stamps each rendered checkbox
+     * with `data-line`, the line's own index into content.split('\n'). We
+     * read that index straight off the clicked element — no second pass that
+     * re-classifies lines and no assumption that "lines matching
+     * CHECKBOX_LINE_RE" and "lines that rendered a checkbox" are the same
+     * set (they aren't, e.g. a checkbox line containing a markdown link
+     * used to render as a mangled bullet with no <input> at all, which threw
+     * off any scheme that counted rendered boxes against re-matched lines).
+     * If the attribute is missing or not a valid index, do nothing rather
+     * than guess.
      */
     function toggleCheckboxLine(box) {
       const checkboxLineRe = window.QuickNotesMarkdown && window.QuickNotesMarkdown.CHECKBOX_LINE_RE;
       if (!checkboxLineRe) return;
 
-      const boxes = [...preview.querySelectorAll('input[type="checkbox"]')];
-      const nth = boxes.indexOf(box);
-      if (nth < 0) return;
+      const lineAttr = box.getAttribute('data-line');
+      if (lineAttr === null) return;
+      const lineIndex = Number(lineAttr);
+      if (!Number.isInteger(lineIndex) || lineIndex < 0) return;
 
       const lines = contentInput.value.split('\n');
-      let seen = -1;
-      for (let i = 0; i < lines.length; i++) {
-        const match = checkboxLineRe.exec(lines[i]);
-        if (!match) continue;
-        seen++;
-        if (seen !== nth) continue;
-        const checked = /x/i.test(match[1]);
-        lines[i] = checked
-          ? lines[i].replace(checkboxLineRe, '- [ ]')
-          : lines[i].replace(checkboxLineRe, '- [x]');
-        break;
-      }
+      if (lineIndex >= lines.length) return;
+
+      const match = checkboxLineRe.exec(lines[lineIndex]);
+      if (!match) return; // stale/mismatched index — never guess
+
+      const checked = /x/i.test(match[1]);
+      lines[lineIndex] = checked
+        ? lines[lineIndex].replace(checkboxLineRe, '- [ ]')
+        : lines[lineIndex].replace(checkboxLineRe, '- [x]');
 
       contentInput.value = lines.join('\n');
       debouncedSave('content', contentInput.value);
@@ -1631,6 +1648,16 @@ const QuickNotesFeature = (() => {
     // Clicking the rendered note drops into edit — except on a checkbox,
     // which toggles in place and stays in preview, and except on a link,
     // which should navigate rather than be swallowed into edit mode.
+    //
+    // Every rendered block carries a `data-line` stamp (see markdown.js)
+    // naming its source line's index in content.split('\n'). Read it off
+    // whatever block was clicked — via closest(), so it works whether the
+    // click landed on the block itself or on inline markup nested inside it
+    // (a <strong>, an <a>, a table <td>) — and land the caret at that
+    // line's start once the textarea is visible. A click that doesn't land
+    // on any stamped block (e.g. the pane's empty margin) falls back to
+    // whatever the browser does on focus() alone; landing on the right
+    // LINE, not the exact character, is the goal here.
     preview.addEventListener('click', (e) => {
       const box = e.target.closest('input[type="checkbox"]');
       if (box) {
@@ -1639,13 +1666,26 @@ const QuickNotesFeature = (() => {
         return;
       }
       if (e.target.closest('a')) return;
+
+      const lineEl = e.target.closest('[data-line]');
+      const lineIndex = lineEl ? Number(lineEl.dataset.line) : NaN;
+
       toggleNotePreview(false);
+
+      if (Number.isInteger(lineIndex) && lineIndex >= 0) {
+        const offset = getLineStartOffset(contentInput.value, lineIndex);
+        contentInput.setSelectionRange(offset, offset);
+      }
     });
 
     // A note opens rendered — reading is the far more common case than
-    // editing. This also applies the initial hidden/visible split, since the
-    // markup above only marks the preview hidden by default.
-    toggleNotePreview(true);
+    // editing — except an empty note, which has nothing to render: preview
+    // of '' is a blank pane with no hint, while the textarea's placeholder
+    // only shows once it's actually visible. This also applies the initial
+    // hidden/visible split, since the markup above only marks the preview
+    // hidden by default.
+    const hasContent = !!(currentNote.content || '').trim();
+    toggleNotePreview(hasContent);
 
     // Title input handler
     titleInput.addEventListener('input', (e) => {
@@ -1708,17 +1748,44 @@ const QuickNotesFeature = (() => {
     /**
      * Light the toolbar buttons that apply at the caret. Reads the textarea's
      * own text — no queryCommandState, which only ever worked on contenteditable.
+     *
+     * Quick Notes' own renderer (quick-notes-modules/markdown.js) speaks a
+     * different markdown dialect than JobTread's fields — bold **x**, italic
+     * _x_, underline __x__, strikethrough ~~x~~ — so detection must be told
+     * that dialect explicitly. Passing nothing here would fall back to
+     * FormatterDetection's JobTread default and light the wrong buttons.
      */
     function updateToolbarState() {
-      if (!window.FormatterDetection) return;
-      const active = window.FormatterDetection.detectActiveFormats(contentInput);
+      if (!window.FormatterDetection || !window.FormatterDialects) return;
+      const active = window.FormatterDetection.detectActiveFormats(
+        contentInput,
+        window.FormatterDialects.QUICK_NOTES
+      );
       toolbar.querySelectorAll('.jt-notes-format-btn').forEach((btn) => {
         const fmt = btn.dataset.format;
         btn.classList.toggle('is-active', !!active[fmt]);
       });
     }
 
-    // Toolbar button clicks — same engine every JobTread text field uses.
+    // Apply a format via the shared FormatterFormats engine, persist, and
+    // refresh the toolbar's active-state highlighting. The single path used
+    // by both toolbar button clicks and the Ctrl+B/I/U/K keyboard shortcuts
+    // below, so a shortcut can never drift from what clicking the matching
+    // button does (dialect included — QUICK_NOTES, not JobTread's default).
+    function applyToolbarFormat(format) {
+      if (!window.FormatterFormats || !window.FormatterDialects) return;
+      contentInput.focus();
+      window.FormatterFormats.applyFormat(contentInput, format, {
+        dialect: window.FormatterDialects.QUICK_NOTES
+      });
+      debouncedSave('content', contentInput.value);
+      updateToolbarState();
+    }
+
+    // Toolbar button clicks — same engine every JobTread text field uses,
+    // parameterized with Quick Notes' own marker dialect (see
+    // updateToolbarState above) so applying and toggling agree with what
+    // QuickNotesMarkdown.parseMarkdown actually renders.
     toolbar.addEventListener('click', (e) => {
       const btn = e.target.closest('.jt-notes-format-btn');
       if (!btn) return;
@@ -1735,11 +1802,7 @@ const QuickNotesFeature = (() => {
         return;
       }
 
-      if (!window.FormatterFormats) return;
-      contentInput.focus();
-      window.FormatterFormats.applyFormat(contentInput, format);
-      debouncedSave('content', contentInput.value);
-      updateToolbarState();
+      applyToolbarFormat(format);
     });
 
     // Content input changes (auto-save). The textarea's value IS the stored
@@ -1752,8 +1815,27 @@ const QuickNotesFeature = (() => {
       if (showingPreview) renderPreviewMarkup();
     });
 
-    // Enter continues (or exits) a list line via the shared textarea engine.
+    // Ctrl/Cmd+B/I/U/K keyboard shortcuts, plus Enter continuing (or exiting)
+    // a list line via the shared textarea engine.
+    //
+    // The shortcuts have to be wired here rather than relying on the Text
+    // Formatter's own global handler (formatter.js handleKeydown): that one
+    // only fires on fields that pass Detection().isFormatterField(), which
+    // the Quick Notes textarea never matches. Routed through the exact same
+    // applyToolbarFormat() path as clicking the toolbar button — not a
+    // second copy of the marker logic — so a shortcut can never drift from
+    // what its button does.
+    const SHORTCUT_KEY_FORMATS = { b: 'bold', i: 'italic', u: 'underline', k: 'link' };
     contentInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const format = SHORTCUT_KEY_FORMATS[e.key.toLowerCase()];
+        if (format) {
+          e.preventDefault();
+          applyToolbarFormat(format);
+          return;
+        }
+      }
+
       if (e.key === 'Enter' && !e.shiftKey && window.FormatterFormats) {
         // Returns true when it continued or exited a list.
         if (window.FormatterFormats.handleEnterKey(contentInput, e)) {
@@ -1787,9 +1869,16 @@ const QuickNotesFeature = (() => {
     // textarea holds text, and the preview renderer escapes every character it
     // renders (quick-notes-modules/markdown.js), so there is nothing left to
     // sanitize. Don't re-add one: preventDefault + insertText only forfeits
-    // undo. Checkbox ticks and link clicks are handled on the *preview*
-    // surface (see the preview click handler above), not here — a textarea has
-    // no child elements to click.
+    // undo.
+    //
+    // No checkbox/Ctrl+click-link/table-context-menu handlers here either:
+    // a <textarea> is a replaced form control with no light-DOM children, so
+    // `e.target` for any mouse event inside it is always the textarea itself
+    // — `e.target.type === 'checkbox'`, `e.target.tagName === 'A'`, and
+    // `e.target.closest('th, td')` can never match. Checkbox ticks and link
+    // clicks are handled on the *preview* surface instead (see the preview
+    // click handler above) — the raw markdown in the textarea has no
+    // checkboxes, links, or tables to click on as elements.
 
     // Focus handling
     if (currentNote.title === 'Untitled Note') {
@@ -1801,9 +1890,8 @@ const QuickNotesFeature = (() => {
   }
 
   // ============================================================
-  // NOTE: The following functions moved to modules:
-  // - resetHistory → quick-notes-modules/editor.js
-  // - processInlineFormatting, parseMarkdown, escapeHtml → quick-notes-modules/markdown.js
+  // NOTE: Markdown rendering (processInlineFormatting, parseMarkdown,
+  // escapeHtml) lives in quick-notes-modules/markdown.js.
   // ============================================================
 
   // Detect and apply theme

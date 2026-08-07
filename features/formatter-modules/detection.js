@@ -414,9 +414,15 @@ const FormatterDetection = (() => {
   /**
    * Detect active formats at current cursor position or selection
    * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {Object} [dialect] - Marker set to detect against (default: JobTread's).
+   *   See features/formatter-modules/dialects.js — the same dialect passed to
+   *   applyFormat() must be passed here, or toggle state (and toggle-off) desyncs.
    * @returns {Object} Object with active format flags
    */
-  function detectActiveFormats(field) {
+  function detectActiveFormats(field, dialect) {
+    const activeDialect = dialect ||
+      (window.FormatterDialects ? window.FormatterDialects.JOBTREAD : { bold: '*', italic: '^', underline: '_', strikethrough: '~' });
+
     const start = field.selectionStart;
     const end = field.selectionEnd;
     const text = field.value;
@@ -450,12 +456,15 @@ const FormatterDetection = (() => {
     }
 
     // For inline formats (bold, italic, underline, strikethrough),
-    // we need to check if the cursor/selection is inside format markers
+    // we need to check if the cursor/selection is inside format markers.
+    // Markers are looked up per-dialect so Quick Notes' doubled markers
+    // (__underline__, ~~strike~~) don't get detected against JobTread's
+    // single-character set, or vice versa.
     const markerMap = {
-      '*': 'bold',
-      '^': 'italic',
-      '_': 'underline',
-      '~': 'strikethrough'
+      [activeDialect.bold]: 'bold',
+      [activeDialect.italic]: 'italic',
+      [activeDialect.underline]: 'underline',
+      [activeDialect.strikethrough]: 'strikethrough'
     };
 
     // Check each format type
@@ -477,6 +486,8 @@ const FormatterDetection = (() => {
    * @returns {boolean} True if inside the format
    */
   function isInsideFormat(text, start, end, marker) {
+    const len = marker.length;
+
     // Get the current line boundaries (formats don't span lines)
     const lineStart = text.lastIndexOf('\n', start - 1) + 1;
     const lineEnd = text.indexOf('\n', end);
@@ -496,14 +507,14 @@ const FormatterDetection = (() => {
         // For a selection, check if it's:
         // 1. Exactly wrapped by markers (for toggle off): *[hello]*
         // 2. Fully contained within markers: *[hel]lo* or *he[ll]o*
-        const isExactlyWrapped = (pair.open === relStart - 1 && pair.close === relEnd);
-        const isContainedWithin = (relStart > pair.open && relEnd <= pair.close);
+        const isExactlyWrapped = (pair.open + len === relStart && pair.close === relEnd);
+        const isContainedWithin = (relStart >= pair.open + len && relEnd <= pair.close);
         if (isExactlyWrapped || isContainedWithin) {
           return true;
         }
       } else {
         // Cursor is inside if between open and close markers (exclusive of markers)
-        if (relStart > pair.open && relStart <= pair.close) {
+        if (relStart >= pair.open + len && relStart <= pair.close) {
           return true;
         }
       }
@@ -515,21 +526,27 @@ const FormatterDetection = (() => {
   /**
    * Find all paired markers on a line
    * @param {string} line - Line text
-   * @param {string} marker - Marker character
-   * @returns {Array} Array of {open, close} positions
+   * @param {string} marker - Marker string (one or more characters; JobTread's
+   *   dialect uses single characters, Quick Notes' uses doubled ones for
+   *   bold/underline/strikethrough). Pairing looks for the exact marker
+   *   substring, so a doubled marker like `__` is never mistaken for two
+   *   occurrences of a different single-character marker.
+   * @returns {Array} Array of {open, close} positions (index of the first
+   *   character of each marker occurrence)
    */
   function findMarkerPairs(line, marker) {
     const pairs = [];
+    const len = marker.length;
     let i = 0;
 
-    while (i < line.length) {
-      if (line[i] === marker) {
+    while (i <= line.length - len) {
+      if (line.substr(i, len) === marker) {
         // Found opening marker, look for closing marker
         const openPos = i;
         let closePos = -1;
 
-        for (let j = i + 1; j < line.length; j++) {
-          if (line[j] === marker) {
+        for (let j = i + len; j <= line.length - len; j++) {
+          if (line.substr(j, len) === marker) {
             closePos = j;
             break;
           }
@@ -537,7 +554,7 @@ const FormatterDetection = (() => {
 
         if (closePos !== -1) {
           pairs.push({ open: openPos, close: closePos });
-          i = closePos + 1;
+          i = closePos + len;
         } else {
           i++;
         }
