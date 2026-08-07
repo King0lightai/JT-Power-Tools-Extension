@@ -1409,6 +1409,13 @@ const QuickNotesFeature = (() => {
       </div>
       <div class="jt-notes-wysiwyg-container">
         <div class="jt-notes-toolbar">
+          <button class="jt-notes-preview-btn" title="Preview note">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+          <div class="jt-notes-toolbar-divider"></div>
           <button class="jt-notes-format-btn" data-format="bold" title="Bold (Ctrl+B)">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
               <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
@@ -1492,12 +1499,12 @@ const QuickNotesFeature = (() => {
             </svg>
           </button>
         </div>
-        <div
+        <textarea
           class="jt-notes-content-input"
-          contenteditable="true"
-          data-placeholder="Start typing your note..."
+          placeholder="Start typing your note..."
           spellcheck="true"
-        ></div>
+        ></textarea>
+        <div class="jt-notes-preview" hidden></div>
       </div>
       <div class="jt-notes-editor-footer">
         <span class="jt-notes-word-count">${wordCount} words</span>
@@ -1510,14 +1517,18 @@ const QuickNotesFeature = (() => {
     const closeButton = editorContainer.querySelector('.jt-notes-close-button');
     const contentInput = editorContainer.querySelector('.jt-notes-content-input');
     const toolbar = editorContainer.querySelector('.jt-notes-toolbar');
+    const preview = editorContainer.querySelector('.jt-notes-preview');
+    const previewToggleBtn = editorContainer.querySelector('.jt-notes-preview-btn');
     let saveTimeout;
+    // Notes are re-read far more than they are written, so a note opens in
+    // preview and drops to the textarea on click. Local to this render pass
+    // (editorContainer.innerHTML is rebuilt per note) so it can't leak the
+    // previous note's edit/preview state onto the next one — every note
+    // opens in preview.
+    let showingPreview = true;
 
     // Initialize content from markdown
-    if (markdown.parseMarkdownForEditor && currentNote.content) {
-      contentInput.innerHTML = markdown.parseMarkdownForEditor(currentNote.content);
-    } else {
-      contentInput.innerHTML = '<div><br></div>';
-    }
+    contentInput.value = currentNote.content || '';
 
     // Reset editor history
     if (editor.resetHistory) {
@@ -1538,6 +1549,103 @@ const QuickNotesFeature = (() => {
         }
       }, 500);
     };
+
+    /**
+     * Re-render the preview pane's markup from the textarea's current value.
+     * parseMarkdown() renders checkboxes disabled (it also feeds the
+     * read-only notes-list snippet, where they must not be interactive) —
+     * enable them here, scoped to this one preview element, so clicks in
+     * THIS pane can reach the delegated checkbox handler below.
+     */
+    function renderPreviewMarkup() {
+      const md = window.QuickNotesMarkdown;
+      if (!md || !md.parseMarkdown) return;
+      preview.innerHTML = md.parseMarkdown(contentInput.value || '');
+      preview.querySelectorAll('input[type="checkbox"]').forEach((box) => {
+        box.disabled = false;
+      });
+    }
+
+    /**
+     * Swap between the raw textarea and the rendered preview. Never both:
+     * the same model JobTread's own fields and the portal's Notes use.
+     *
+     * The toolbar itself stays visible in both modes — only its format
+     * buttons (bold, italic, etc., which don't apply to a rendered preview)
+     * are hidden via the preview-mode class below. That leaves the Preview
+     * toggle button reachable from preview mode, which is the only way back
+     * to the textarea once you're there other than clicking the note body.
+     */
+    function toggleNotePreview(showPreview) {
+      showingPreview = showPreview;
+      if (showPreview) renderPreviewMarkup();
+      preview.hidden = !showPreview;
+      contentInput.hidden = showPreview;
+      toolbar.classList.toggle('jt-notes-toolbar-preview-mode', showPreview);
+      if (previewToggleBtn) {
+        previewToggleBtn.classList.toggle('is-active', showPreview);
+        previewToggleBtn.title = showPreview ? 'Edit note' : 'Preview note';
+      }
+      if (!showPreview) contentInput.focus();
+    }
+
+    /**
+     * Tick/untick the source line behind a rendered checkbox. Rewrites exactly
+     * that line so the rest of the note is untouched.
+     *
+     * Counts source lines using QuickNotesMarkdown.CHECKBOX_LINE_RE — the same
+     * regex parseMarkdown() uses to decide which lines get a rendered <input>.
+     * A looser, independently-maintained regex here (previously
+     * /^-\s+\[[ xX]\]/, which also matched "-  [ ]" two-space lines the
+     * renderer treats as plain text) would count lines that never rendered a
+     * checkbox, desyncing "nth rendered checkbox" from "nth matching source
+     * line" and ticking the wrong one.
+     */
+    function toggleCheckboxLine(box) {
+      const checkboxLineRe = window.QuickNotesMarkdown && window.QuickNotesMarkdown.CHECKBOX_LINE_RE;
+      if (!checkboxLineRe) return;
+
+      const boxes = [...preview.querySelectorAll('input[type="checkbox"]')];
+      const nth = boxes.indexOf(box);
+      if (nth < 0) return;
+
+      const lines = contentInput.value.split('\n');
+      let seen = -1;
+      for (let i = 0; i < lines.length; i++) {
+        const match = checkboxLineRe.exec(lines[i]);
+        if (!match) continue;
+        seen++;
+        if (seen !== nth) continue;
+        const checked = /x/i.test(match[1]);
+        lines[i] = checked
+          ? lines[i].replace(checkboxLineRe, '- [ ]')
+          : lines[i].replace(checkboxLineRe, '- [x]');
+        break;
+      }
+
+      contentInput.value = lines.join('\n');
+      debouncedSave('content', contentInput.value);
+      toggleNotePreview(true); // re-render, stay in preview
+    }
+
+    // Clicking the rendered note drops into edit — except on a checkbox,
+    // which toggles in place and stays in preview, and except on a link,
+    // which should navigate rather than be swallowed into edit mode.
+    preview.addEventListener('click', (e) => {
+      const box = e.target.closest('input[type="checkbox"]');
+      if (box) {
+        e.preventDefault();
+        toggleCheckboxLine(box);
+        return;
+      }
+      if (e.target.closest('a')) return;
+      toggleNotePreview(false);
+    });
+
+    // A note opens rendered — reading is the far more common case than
+    // editing. This also applies the initial hidden/visible split, since the
+    // markup above only marks the preview hidden by default.
+    toggleNotePreview(true);
 
     // Title input handler
     titleInput.addEventListener('input', (e) => {
@@ -1580,12 +1688,37 @@ const QuickNotesFeature = (() => {
 
     // Prevent toolbar buttons from stealing focus (preserve selection)
     toolbar.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.jt-notes-format-btn')) {
+      if (e.target.closest('.jt-notes-format-btn') || e.target.closest('.jt-notes-preview-btn')) {
         e.preventDefault();
       }
     });
 
-    // Toolbar button clicks
+    // Preview toggle button — the only way back to the rendered view once
+    // the user has dropped into the textarea (other than closing/reopening
+    // the note). Wired separately from the toolbar's format-button click
+    // handler below: it is a view control, not a `data-format` value, and
+    // must never reach FormatterFormats.applyFormat().
+    if (previewToggleBtn) {
+      previewToggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleNotePreview(!showingPreview);
+      });
+    }
+
+    /**
+     * Light the toolbar buttons that apply at the caret. Reads the textarea's
+     * own text — no queryCommandState, which only ever worked on contenteditable.
+     */
+    function updateToolbarState() {
+      if (!window.FormatterDetection) return;
+      const active = window.FormatterDetection.detectActiveFormats(contentInput);
+      toolbar.querySelectorAll('.jt-notes-format-btn').forEach((btn) => {
+        const fmt = btn.dataset.format;
+        btn.classList.toggle('is-active', !!active[fmt]);
+      });
+    }
+
+    // Toolbar button clicks — same engine every JobTread text field uses.
     toolbar.addEventListener('click', (e) => {
       const btn = e.target.closest('.jt-notes-format-btn');
       if (!btn) return;
@@ -1593,93 +1726,45 @@ const QuickNotesFeature = (() => {
       e.preventDefault();
       const format = btn.dataset.format;
 
-      if (editor.applyFormatting) {
-        editor.applyFormatting(contentInput, format, (updatedMarkdown) => {
-          debouncedSave('content', updatedMarkdown);
-        });
-
-        // Immediately update button states after formatting is applied
-        setTimeout(() => {
-          if (editor.updateFormattingButtons) {
-            editor.updateFormattingButtons(contentInput, toolbar);
-          }
-        }, 10);
+      // Undo/redo are the browser's now: a textarea keeps a native, correct
+      // undo stack, so there is no history array to maintain or corrupt.
+      if (format === 'undo' || format === 'redo') {
+        contentInput.focus();
+        document.execCommand(format);
+        debouncedSave('content', contentInput.value);
+        return;
       }
+
+      if (!window.FormatterFormats) return;
+      contentInput.focus();
+      window.FormatterFormats.applyFormat(contentInput, format);
+      debouncedSave('content', contentInput.value);
+      updateToolbarState();
     });
 
-    // Content input changes (auto-save)
+    // Content input changes (auto-save). The textarea's value IS the stored
+    // markdown, so there is nothing to serialize and nothing to normalize.
     contentInput.addEventListener('input', () => {
-      // Periodically normalize content to clean up empty formatting elements
-      // This helps prevent the "wall" issue from accumulating
-      if (editor.normalizeContent) {
-        editor.normalizeContent(contentInput);
-      }
-
-      if (markdown.htmlToMarkdown) {
-        const markdownContent = markdown.htmlToMarkdown(contentInput);
-        debouncedSave('content', markdownContent);
-      }
+      debouncedSave('content', contentInput.value);
+      // Only the visible surface needs re-rendering — while actively typing
+      // (edit mode) the preview is hidden and gets rebuilt fresh next time
+      // toggleNotePreview(true) runs.
+      if (showingPreview) renderPreviewMarkup();
     });
 
-    // Keyboard shortcuts and list handling
+    // Enter continues (or exits) a list line via the shared textarea engine.
     contentInput.addEventListener('keydown', (e) => {
-      // Handle backspace across formatting boundaries (fixes the "wall" issue)
-      if (e.key === 'Backspace' && editor.handleFormattingBoundaryBackspace) {
-        if (editor.handleFormattingBoundaryBackspace(e, contentInput)) {
-          // Event was handled, trigger save
-          setTimeout(() => {
-            if (markdown.htmlToMarkdown) {
-              const markdownContent = markdown.htmlToMarkdown(contentInput);
-              debouncedSave('content', markdownContent);
-            }
-          }, 10);
-          return;
-        }
-      }
-
-      // Handle Enter/Backspace/Delete for list items (bullets, numbers, checkboxes)
-      if (editor.handleListKeydown && (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete')) {
-        if (editor.handleListKeydown(e, contentInput)) {
-          // Event was handled, trigger save
-          setTimeout(() => {
-            if (markdown.htmlToMarkdown) {
-              const markdownContent = markdown.htmlToMarkdown(contentInput);
-              debouncedSave('content', markdownContent);
-            }
-          }, 10);
-          return;
-        }
-      }
-
-      // Handle Ctrl/Cmd shortcuts
-      if (e.ctrlKey || e.metaKey) {
-        let format = null;
-        switch (e.key.toLowerCase()) {
-          case 'b': format = 'bold'; break;
-          case 'i': format = 'italic'; break;
-          case 'u': format = 'underline'; break;
-          case 'k': format = 'link'; break;
-          case 'z': format = e.shiftKey ? 'redo' : 'undo'; break;
-          case 'y': format = 'redo'; break;
-        }
-
-        if (format) {
-          e.preventDefault();
-          if (editor.applyFormatting) {
-            editor.applyFormatting(contentInput, format, (updatedMarkdown) => {
-              debouncedSave('content', updatedMarkdown);
-            });
-
-            // Immediately update button states after formatting is applied
-            setTimeout(() => {
-              if (editor.updateFormattingButtons) {
-                editor.updateFormattingButtons(contentInput, toolbar);
-              }
-            }, 10);
-          }
+      if (e.key === 'Enter' && !e.shiftKey && window.FormatterFormats) {
+        // Returns true when it continued or exited a list.
+        if (window.FormatterFormats.handleEnterKey(contentInput, e)) {
+          debouncedSave('content', contentInput.value);
         }
       }
     });
+
+    // Keep toolbar active-state highlighting in sync with the caret.
+    contentInput.addEventListener('keyup', updateToolbarState);
+    contentInput.addEventListener('click', updateToolbarState);
 
     // Update formatting button states on selection change.
     // Pass toolbar to scope button queries (prevents affecting Text Formatter buttons).
@@ -1689,65 +1774,22 @@ const QuickNotesFeature = (() => {
       document.removeEventListener('selectionchange', selectionChangeHandler);
     }
     selectionChangeHandler = () => {
-      if (document.activeElement === contentInput && editor.updateFormattingButtons && toolbar) {
-        editor.updateFormattingButtons(contentInput, toolbar);
+      if (document.activeElement === contentInput) {
+        updateToolbarState();
       }
     };
     document.addEventListener('selectionchange', selectionChangeHandler);
 
-    // Handle paste to sanitize content
-    contentInput.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const clipboardData = e.clipboardData || window.clipboardData;
-      const html = clipboardData.getData('text/html');
-      const text = clipboardData.getData('text/plain');
-
-      if (html && editor.cleanPastedHtml) {
-        const cleaned = editor.cleanPastedHtml(html);
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(cleaned);
-          range.collapse(false);
-        }
-      } else if (text) {
-        document.execCommand('insertText', false, text);
-      }
-    });
-
-    // Handle checkbox toggles and Ctrl+click to open links
-    contentInput.addEventListener('click', (e) => {
-      // Handle checkbox toggles
-      if (e.target.type === 'checkbox') {
-        const checkboxDiv = e.target.closest('.jt-note-checkbox');
-        if (checkboxDiv) {
-          checkboxDiv.classList.toggle('checked', e.target.checked);
-          // Trigger save
-          contentInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        return;
-      }
-
-      // Handle Ctrl+click (or Cmd+click on Mac) to open links
-      if ((e.ctrlKey || e.metaKey) && e.target.tagName === 'A') {
-        e.preventDefault();
-        const href = e.target.getAttribute('href');
-        if (href) {
-          window.open(href, '_blank', 'noopener,noreferrer');
-        }
-      }
-    });
-
-    // Handle right-click context menu for tables
-    contentInput.addEventListener('contextmenu', (e) => {
-      const cell = e.target.closest('th, td');
-      if (cell && cell.closest('.jt-note-table')) {
-        if (editor.showTableContextMenu) {
-          editor.showTableContextMenu(e, cell, contentInput);
-        }
-      }
-    });
+    // NOTE: no paste handler, deliberately. A textarea already pastes the
+    // clipboard's text/plain flavour and nothing else, straight into the native
+    // undo stack — which is the whole point of this editor. The contenteditable
+    // era intercepted paste to sanitize a text/html flavour into DOM nodes; a
+    // textarea holds text, and the preview renderer escapes every character it
+    // renders (quick-notes-modules/markdown.js), so there is nothing left to
+    // sanitize. Don't re-add one: preventDefault + insertText only forfeits
+    // undo. Checkbox ticks and link clicks are handled on the *preview*
+    // surface (see the preview click handler above), not here — a textarea has
+    // no child elements to click.
 
     // Focus handling
     if (currentNote.title === 'Untitled Note') {
@@ -1759,11 +1801,9 @@ const QuickNotesFeature = (() => {
   }
 
   // ============================================================
-  // NOTE: The following functions have been moved to modules:
-  // - countWords, saveToHistory, undo, redo, updateFormattingButtons,
-  //   applyFormatting → quick-notes-modules/editor.js
-  // - parseMarkdownForEditor, processInlineFormatting, htmlToMarkdown,
-  //   extractInlineMarkdown, parseMarkdown, escapeHtml → quick-notes-modules/markdown.js
+  // NOTE: The following functions moved to modules:
+  // - resetHistory → quick-notes-modules/editor.js
+  // - processInlineFormatting, parseMarkdown, escapeHtml → quick-notes-modules/markdown.js
   // ============================================================
 
   // Detect and apply theme

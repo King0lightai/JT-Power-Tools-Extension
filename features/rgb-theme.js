@@ -946,27 +946,18 @@ const CustomThemeFeature = (() => {
         --jt-notes-input-bg: ${p.background.muted};
       }
 
-      /* Quick Notes pop-outs (folder color picker, table context menu) render at
-         document.body level — outside .jt-quick-notes-panel — so they never
-         inherit the --jt-notes-* vars above. Theme them explicitly via the
-         body-level .jt-custom-theme scope, the same way Character Counter themes
-         its dropdowns. Mirrors the existing dark-mode overrides for these. */
-      .jt-custom-theme .jt-folder-color-picker,
-      .jt-custom-theme .jt-note-table-context-menu {
+      /* The Quick Notes folder color picker renders at document.body level —
+         outside .jt-quick-notes-panel — so it never inherits the --jt-notes-*
+         vars above. Theme it explicitly via the body-level .jt-custom-theme
+         scope, the same way Character Counter themes its dropdowns. Mirrors the
+         existing dark-mode overrides for it. */
+      .jt-custom-theme .jt-folder-color-picker {
         background: ${p.background.elevated} !important;
         border-color: ${p.border.default} !important;
       }
 
       .jt-custom-theme .jt-color-picker-header {
         color: ${p.text.muted} !important;
-      }
-
-      .jt-custom-theme .jt-table-menu-item {
-        color: ${p.text.primary} !important;
-      }
-
-      .jt-custom-theme .jt-table-menu-item:hover {
-        background: ${p.states.hover} !important;
       }
 
       .jt-custom-theme .jt-color-swatch.selected {

@@ -429,6 +429,17 @@ const FormatterFormats = (() => {
         cursorPos = hasSelection ? start + replacement.length : start + 2;
         break;
 
+      // Quick Notes has a checkbox button; JobTread's fields don't. Lives here
+      // so there is one formatting engine rather than a second one in the panel.
+      case 'checkbox':
+        if (hasSelection) {
+          replacement = selection.split('\n').map(line => `- [ ] ${line}`).join('\n');
+        } else {
+          replacement = '- [ ] ';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 6;
+        break;
+
       case 'numbered':
         if (hasSelection) {
           replacement = selection.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
@@ -668,6 +679,37 @@ const FormatterFormats = (() => {
         const after = text.substring(start);
 
         const newText = `\n${nextNumber}. `;
+        newValue = before + newText + after;
+        newCursorPos = start + newText.length;
+      }
+
+      commitListContinuation(field, newValue, newCursorPos);
+
+      return true; // Handled
+    }
+
+    // Checkboxes must be tested before bullets: /^-\s+(.*)$/ also matches
+    // "- [ ] task" and would continue it as a plain bullet, dropping the box.
+    const checkboxMatch = currentLine.match(/^-\s+\[[ xX]\]\s?(.*)$/);
+
+    if (checkboxMatch) {
+      e.preventDefault();
+
+      const lineContent = checkboxMatch[1];
+
+      let newValue;
+      let newCursorPos;
+      if (lineContent.trim() === '') {
+        // Empty checkbox — drop it and leave the list.
+        const before = text.substring(0, lineStart);
+        const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+        newValue = before + after;
+        newCursorPos = lineStart;
+      } else {
+        // Continue with a fresh, unticked box.
+        const before = text.substring(0, start);
+        const after = text.substring(start);
+        const newText = '\n- [ ] ';
         newValue = before + newText + after;
         newCursorPos = start + newText.length;
       }
