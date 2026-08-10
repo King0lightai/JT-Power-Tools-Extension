@@ -18,8 +18,21 @@ const LicenseService = (() => {
   // Product configuration (kept for compatibility)
   const PRODUCT_PERMALINK = 'jtpowertools';
 
-  // Re-validation interval (24 hours)
-  const REVALIDATION_INTERVAL = 24 * 60 * 60 * 1000;
+  // Background re-validation interval.
+  //
+  // Was 24 hours, which meant a customer who upgraded could sit locked out of
+  // the features they had just paid for for the rest of the day — the server
+  // knew within seconds and the extension was the last to hear. One hour
+  // matches the portal's own re-check cadence; the popup additionally forces a
+  // check on open (see FORCE_REVALIDATION_FLOOR), so in practice the interval
+  // only covers tabs left open for a long time.
+  const REVALIDATION_INTERVAL = 60 * 60 * 1000;
+
+  // Floor for forceRevalidate(). Short enough that a customer who just changed
+  // plans can reopen the popup and see it, long enough that reopening in a
+  // panic doesn't make a Gumroad call every time. Mirrors the portal's 60s
+  // throttle on "Re-check my plan".
+  const FORCE_REVALIDATION_FLOOR = 60 * 1000;
 
   // Offline grace period — if a successful revalidation hasn't completed
   // within this window, deny access. Prevents indefinite premium use after
@@ -481,6 +494,50 @@ const LicenseService = (() => {
     }
   }
 
+  /**
+   * Re-check the plan now, ignoring the background interval.
+   *
+   * The escape hatch for a customer whose plan change hasn't landed yet: the
+   * popup calls this on open so upgrading and then opening the popup is enough
+   * to see the new tier, rather than waiting out an interval. Throttled by
+   * FORCE_REVALIDATION_FLOOR so repeated opens don't each cost a Gumroad call.
+   *
+   * @returns {Promise<{changed: boolean, tier: string|null, throttled?: boolean}>}
+   */
+  async function forceRevalidate() {
+    const licenseData = await getLicenseData();
+    if (!licenseData || !licenseData.key) {
+      return { changed: false, tier: null };
+    }
+
+    const previousTier = licenseData.tier || null;
+    const lastRevalidated = licenseData.lastRevalidated || licenseData.verifiedAt || 0;
+    if (Date.now() - lastRevalidated < FORCE_REVALIDATION_FLOOR) {
+      return { changed: false, tier: previousTier, throttled: true };
+    }
+
+    // Reuse the in-flight revalidation if one is already running, so opening
+    // the popup mid-background-check doesn't fire a second request.
+    let result;
+    if (revalidationInProgress && revalidationPromise) {
+      result = await revalidationPromise;
+    } else {
+      revalidationInProgress = true;
+      revalidationPromise = revalidateLicense();
+      try {
+        result = await revalidationPromise;
+      } finally {
+        revalidationInProgress = false;
+        revalidationPromise = null;
+      }
+    }
+
+    // A failed re-check (revoked, cancelled, network) leaves nothing to report
+    // a tier from — removeLicense() has already run for the non-network cases.
+    const tier = result?.success ? (result.data?.tier || null) : null;
+    return { changed: tier !== previousTier, tier };
+  }
+
   // Check if re-validation is needed on startup
   async function checkRevalidationNeeded() {
     const licenseData = await getLicenseData();
@@ -683,6 +740,7 @@ const LicenseService = (() => {
     // License management
     verifyLicense,
     revalidateLicense,
+    forceRevalidate,
     getLicenseData,
     hasValidLicense,
     removeLicense,

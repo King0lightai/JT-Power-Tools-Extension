@@ -1833,6 +1833,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const licenseStatus = await checkLicenseStatus();
   const { hasLicense, tier } = licenseStatus;
 
+  // Re-check the plan with Gumroad in the background. Opening the popup is the
+  // clearest "did my upgrade land yet?" signal we get, and waiting out the
+  // background interval meant a customer could pay and still see their new
+  // features locked. Deliberately not awaited — the popup renders against the
+  // tier we already know, and re-gates below only if the answer changed.
+  // Throttled to once a minute inside forceRevalidate().
+  if (hasLicense && typeof LicenseService?.forceRevalidate === 'function') {
+    LicenseService.forceRevalidate()
+      .then(async (result) => {
+        if (!result?.changed) return;
+        console.log('Popup: plan changed to', result.tier, '— re-gating');
+        await refreshLicenseGating();
+        await updateAccountUI();
+      })
+      .catch((err) => console.error('Popup: plan re-check failed:', err));
+  }
+
   // Check API status
   await checkApiStatus();
 
