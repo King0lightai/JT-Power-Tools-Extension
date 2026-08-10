@@ -13,6 +13,17 @@
  * No chrome.* APIs. Security: all text is escaped via Sanitizer.escapeHTML
  * before inline processing; link URLs go through Sanitizer.sanitizeURL +
  * escapeAttr. The renderer never emits unescaped user text.
+ *
+ * Options (both opt-in, default off, so Preview Mode's parity output —
+ * tests/features/preview-mode-renderer.test.js — never sees either one):
+ *   - taskLists: `- [ ]`/`- [x]` renders as an interactive checkbox.
+ *   - lineAnchors: every rendered top-level block (a plain line, a heading/
+ *     color/align/icon wrapper, a bullet or numbered list item) is stamped
+ *     with `data-line="<n>"`, its own index into text.split('\n'). Quick
+ *     Notes uses this to map a click in its preview pane back to the
+ *     source line (see quick-notes.js's click handler) — Preview Mode has
+ *     no click-to-edit feature and never passes it. `data-line` is always
+ *     this generated index, never derived from note text.
  */
 
 const JTMarkdown = (() => {
@@ -183,11 +194,19 @@ const JTMarkdown = (() => {
   }
 
   // Applies a prefix pipeline's wrappers around already-rendered inner HTML,
-  // outermost first (encounter order).
-  function applyWrappers(wrappers, html) {
+  // outermost first (encounter order). When `lineIndex` is given, it is
+  // stamped as `data-line` on the OUTERMOST wrapper only (wrappers[0] —
+  // the last one applied below) — never on inner nested wrappers, so a
+  // multi-prefix line (e.g. a colored heading) gets exactly one data-line,
+  // on the element a click would actually land in first.
+  function applyWrappers(wrappers, html, lineIndex) {
     let out = html;
     for (let k = wrappers.length - 1; k >= 0; k--) {
-      out = wrappers[k].open + out + wrappers[k].close;
+      let open = wrappers[k].open;
+      if (k === 0 && lineIndex !== null && lineIndex !== undefined) {
+        open = open.slice(0, -1) + ` data-line="${lineIndex}">`;
+      }
+      out = open + out + wrappers[k].close;
     }
     return out;
   }
@@ -199,7 +218,12 @@ const JTMarkdown = (() => {
     return wrappers.map((w) => w.open).join('');
   }
 
-  function renderLine(line) {
+  // `lineIndex`/`options` are only used for the opt-in `lineAnchors` stamp
+  // below (see its own comment) — every other call site of renderLine
+  // (blockquote lines) omits them, which is exactly "flag off", so their
+  // output is untouched.
+  function renderLine(line, lineIndex, options) {
+    const lineAnchors = !!(options && options.lineAnchors);
     const { wrappers, icon, rest } = consumePrefixes(line);
     const isBlock = wrappers.length > 0 || icon !== null;
     let html;
@@ -207,14 +231,25 @@ const JTMarkdown = (() => {
     if (icon !== null) {
       const svg = ICONS[icon];
       const inner = processInline(rest);
+      // Only stamp the icon's own wrapper div when it's the OUTERMOST
+      // element (no other prefix wraps it) — otherwise the outer wrapper
+      // gets the stamp via applyWrappers below, and stamping both would
+      // put data-line on two nested elements for one line.
+      const iconAttr = (lineAnchors && wrappers.length === 0) ? ` data-line="${lineIndex}"` : '';
       html = svg
-        ? `<div><svg class="jt-md-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>\n${inner}</div>`
-        : `<div>${inner}</div>`;
+        ? `<div${iconAttr}><svg class="jt-md-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>\n${inner}</div>`
+        : `<div${iconAttr}>${inner}</div>`;
     } else {
       html = processInline(rest);
+      // A plain line has no wrapper element at all by default — wrap it in
+      // an inline <span> (not a block <div>, which would force its own line
+      // break on top of the '\n' the caller already joins lines with).
+      if (lineAnchors && wrappers.length === 0) {
+        html = `<span data-line="${lineIndex}">${html}</span>`;
+      }
     }
 
-    html = applyWrappers(wrappers, html);
+    html = applyWrappers(wrappers, html, lineAnchors ? lineIndex : null);
 
     return isBlock ? html : html + '\n';
   }
@@ -261,15 +296,44 @@ const JTMarkdown = (() => {
     return html;
   }
 
-  function renderBulletList(lines) {
-    const items = lines.map((l) => `<li>${processInline(l.replace(/^- /, ''))}</li>`).join('');
+  // Task-list marker — only consulted when options.taskLists is on. Kept out
+  // of the default path entirely so Preview Mode's parity output never sees it.
+  const TASK_MARKER = /^\[([ xX])\]\s?(.*)$/;
+
+  // options.lineAnchors (opt-in, same shape as taskLists — see its own
+  // comment above renderBulletList/renderNumberedList's callers in render())
+  // stamps every rendered <li> with the source line's own index into
+  // text.split('\n') — using lineIndices, not the item's position within the
+  // list, so a list that starts mid-note still points at the right line. A
+  // checkbox item ends up with data-line on both its <li> and its <input>;
+  // harmless (same index either way) and keeps the checkbox tick handler's
+  // own data-line read on the <input> working unchanged.
+  function renderBulletList(lines, lineIndices, options) {
+    const taskLists = !!(options && options.taskLists);
+    const lineAnchors = !!(options && options.lineAnchors);
+    const items = lines.map((l, idx) => {
+      const content = l.replace(/^- /, '');
+      const lineIndex = lineIndices ? lineIndices[idx] : idx;
+      const liAttr = lineAnchors ? ` data-line="${lineIndex}"` : '';
+      const m = taskLists ? TASK_MARKER.exec(content) : null;
+      if (m) {
+        const checked = /x/i.test(m[1]);
+        return `<li${liAttr}><input type="checkbox" data-line="${lineIndex}"${checked ? ' checked' : ''}> ${processInline(m[2])}</li>`;
+      }
+      return `<li${liAttr}>${processInline(content)}</li>`;
+    }).join('');
     return `<ul class="jt-md-ul">${items}</ul>`;
   }
 
-  function renderNumberedList(lines) {
+  function renderNumberedList(lines, lineIndices, options) {
+    const lineAnchors = !!(options && options.lineAnchors);
     const first = /^(\d+)\. /.exec(lines[0]);
     const start = first ? first[1] : '1';
-    const items = lines.map((l) => `<li>${processInline(l.replace(/^\d+\. /, ''))}</li>`).join('');
+    const items = lines.map((l, idx) => {
+      const lineIndex = lineIndices ? lineIndices[idx] : idx;
+      const liAttr = lineAnchors ? ` data-line="${lineIndex}"` : '';
+      return `<li${liAttr}>${processInline(l.replace(/^\d+\. /, ''))}</li>`;
+    }).join('');
     return `<ol class="jt-md-ol" start="${escAttr(start)}">${items}</ol>`;
   }
 
@@ -309,7 +373,7 @@ const JTMarkdown = (() => {
     { match: isNumbered, build: renderNumberedList }
   ];
 
-  function render(text) {
+  function render(text, options) {
     if (text === null || text === undefined || text === '') return '';
 
     const lines = String(text).split('\n').map((l) => l.replace(/\r$/, ''));
@@ -338,17 +402,19 @@ const JTMarkdown = (() => {
       if (list) {
         const key = wrapperKey(head.wrappers);
         const group = [];
+        const groupLineIndices = [];
         while (i < lines.length) {
           const p = consumePrefixes(lines[i]);
           if (p.icon !== null || !list.match(p.rest) || wrapperKey(p.wrappers) !== key) break;
           group.push(p.rest);
+          groupLineIndices.push(i);
           i++;
         }
-        out.push(applyWrappers(head.wrappers, list.build(group)));
+        out.push(applyWrappers(head.wrappers, list.build(group, groupLineIndices, options)));
         continue;
       }
 
-      out.push(renderLine(line));
+      out.push(renderLine(line, i, options));
       i++;
     }
 

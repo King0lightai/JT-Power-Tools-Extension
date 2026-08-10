@@ -697,6 +697,14 @@ const AccountService = (() => {
               title: note.title || 'Untitled',
               content: note.content || '',
               isPinned: !!note.isPinned,
+              // Carry the dialect-conversion marker (storage.js stamps
+              // 'jt1' once a note's content is in JobTread's markdown
+              // dialect). Omitted entirely when the note has none —
+              // JSON.stringify drops an undefined value — so the server
+              // stores NULL rather than defaulting to 'jt1'. Without this,
+              // a note this client already converted syncs up unmarked,
+              // and the server-side migration converts it a second time.
+              contentFormat: note.contentFormat,
             }),
           });
           const result = await resp.json();
@@ -916,6 +924,12 @@ const AccountService = (() => {
       // `content` only travels in the per-page response from /pages/get;
       // tree responses omit it for payload size.
       content: page.content ?? '',
+      // Round-trip the dialect-conversion marker back onto the flat note.
+      // Without this, the note this client sent up already stamped 'jt1'
+      // comes back from the merge with no marker at all — the NEXT local
+      // load would see contentFormat !== 'jt1' and run the (deliberately
+      // non-idempotent) converter over already-converted content again.
+      contentFormat: page.contentFormat ?? null,
       folder: sectionName || 'General',
       isPinned: !!page.isPinned,
       createdAt: page.createdAt || page.created_at || null,
@@ -1036,6 +1050,15 @@ const AccountService = (() => {
           title: note.title || 'Untitled Note',
           content: note.content || '',
           isPinned: !!note.isPinned,
+          // Same hole as the personal-notes upsert above (see the comment
+          // there): omit the field entirely rather than defaulting it, so
+          // a team note that has never carried this marker still syncs up
+          // NULL, not a false jt1. Team notes have no local client-side
+          // conversion pass — pageToFlatNote() is the only place this
+          // field is ever populated on `note` — so without this, editing
+          // an already-migrated team page (rename, content edit) would
+          // downgrade its marker to NULL on the very next save.
+          contentFormat: note.contentFormat,
         }),
       });
       const result = await response.json();

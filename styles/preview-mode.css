@@ -109,11 +109,18 @@
    extension theme: all colors route through --jt-md-* custom
    properties whose light defaults live here, and the theme rules
    below override ONLY those vars (structure stays identical).
+
+   The token block below (everything but --jt-md-text/--jt-md-bg,
+   which only this floating panel uses for its own paper-white
+   background) is shared with Quick Notes' docked preview pane
+   (.jt-notes-preview, styles/quick-notes.css) so the jt-md-* rules
+   further down render identically in both surfaces without a second
+   copy of these values — see quick-notes.css for why it can't just
+   carry the .jt-preview-content class instead (this rule's own
+   padding/max-height/font-size are specific to the floating panel).
    ============================================================ */
-.jt-preview-content {
-  /* Themeable colors (light defaults = JobTread document) */
-  --jt-md-text: #000;
-  --jt-md-bg: #fff;
+.jt-preview-content,
+.jt-notes-preview {
   --jt-md-link: oklch(0.715 0.143 215.221);
   --jt-md-link-hover: oklch(0.609 0.126 221.723);
   --jt-md-table-border: oklch(0.928 0.006 264.531);
@@ -135,6 +142,12 @@
   --jt-md-quote-bg-purple: oklch(0.977 0.014 308.299);
   --jt-md-quote-bg-orange: oklch(0.98 0.016 73.684);
   --jt-md-quote-bg-gray: oklch(0.985 0.002 247.839);
+}
+
+.jt-preview-content {
+  /* Themeable colors (light defaults = JobTread document) */
+  --jt-md-text: #000;
+  --jt-md-bg: #fff;
 
   padding: 16px;
   padding-bottom: 24px;
@@ -172,46 +185,56 @@
    exact oklch values captured from app.jobtread.com. There are NO
    vertical margins on any element — spacing comes entirely from the
    preserved newlines rendered by white-space: pre-wrap.
+
+   Every selector below also matches inside Quick Notes' preview pane
+   (.jt-notes-preview) — same renderer output (window.JTMarkdown.render),
+   same classes, so one set of rules styles both instead of a second,
+   drifting copy. Quick Notes supplies its own font-size/line-height/
+   padding/white-space on .jt-notes-preview itself (quick-notes.css);
+   only the jt-md-* structural rules and their --jt-md-* color tokens
+   are shared.
    ============================================================ */
 
 /* Headings */
-.jt-preview-content .jt-md-h1 { font-weight: 700; font-size: 20px; line-height: 28px; }
-.jt-preview-content .jt-md-h2 { font-weight: 700; font-size: 18px; line-height: 28px; }
-.jt-preview-content .jt-md-h3 { font-weight: 700; font-size: 16px; line-height: 24px; }
-.jt-preview-content .jt-md-h4 { font-weight: 700; }
+.jt-preview-content .jt-md-h1, .jt-notes-preview .jt-md-h1 { font-weight: 700; font-size: 20px; line-height: 28px; }
+.jt-preview-content .jt-md-h2, .jt-notes-preview .jt-md-h2 { font-weight: 700; font-size: 18px; line-height: 28px; }
+.jt-preview-content .jt-md-h3, .jt-notes-preview .jt-md-h3 { font-weight: 700; font-size: 16px; line-height: 24px; }
+.jt-preview-content .jt-md-h4, .jt-notes-preview .jt-md-h4 { font-weight: 700; }
 
 /* Text colors */
-.jt-preview-content .jt-md-red    { color: var(--jt-md-red); }
-.jt-preview-content .jt-md-blue   { color: var(--jt-md-blue); }
-.jt-preview-content .jt-md-yellow { color: var(--jt-md-yellow); }
-.jt-preview-content .jt-md-green  { color: var(--jt-md-green); }
-.jt-preview-content .jt-md-purple { color: var(--jt-md-purple); }
-.jt-preview-content .jt-md-orange { color: var(--jt-md-orange); }
+.jt-preview-content .jt-md-red,    .jt-notes-preview .jt-md-red    { color: var(--jt-md-red); }
+.jt-preview-content .jt-md-blue,   .jt-notes-preview .jt-md-blue   { color: var(--jt-md-blue); }
+.jt-preview-content .jt-md-yellow, .jt-notes-preview .jt-md-yellow { color: var(--jt-md-yellow); }
+.jt-preview-content .jt-md-green,  .jt-notes-preview .jt-md-green  { color: var(--jt-md-green); }
+.jt-preview-content .jt-md-purple, .jt-notes-preview .jt-md-purple { color: var(--jt-md-purple); }
+.jt-preview-content .jt-md-orange, .jt-notes-preview .jt-md-orange { color: var(--jt-md-orange); }
 
 /* Links — cyan, no underline; hover cyan-600 */
-.jt-preview-content .jt-md-link { color: var(--jt-md-link); text-decoration: none; }
-.jt-preview-content .jt-md-link:hover { color: var(--jt-md-link-hover); }
+.jt-preview-content .jt-md-link, .jt-notes-preview .jt-md-link { color: var(--jt-md-link); text-decoration: none; }
+.jt-preview-content .jt-md-link:hover, .jt-notes-preview .jt-md-link:hover { color: var(--jt-md-link-hover); }
 
 /* Blockquotes / alerts — left border + tinted bg, rounded right corners.
    Container color = first quoted line's [!color:X] (else gray). */
-.jt-preview-content .jt-md-quote {
+.jt-preview-content .jt-md-quote,
+.jt-notes-preview .jt-md-quote {
   border-left-width: 4px;
   border-left-style: solid;
   padding: 8px 16px;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
 }
-.jt-preview-content .jt-md-quote-gray   { border-left-color: var(--jt-md-gray);   background: var(--jt-md-quote-bg-gray); }
-.jt-preview-content .jt-md-quote-red    { border-left-color: var(--jt-md-red);    background: var(--jt-md-quote-bg-red); }
-.jt-preview-content .jt-md-quote-blue   { border-left-color: var(--jt-md-blue);   background: var(--jt-md-quote-bg-blue); }
-.jt-preview-content .jt-md-quote-yellow { border-left-color: var(--jt-md-yellow); background: var(--jt-md-quote-bg-yellow); }
-.jt-preview-content .jt-md-quote-green  { border-left-color: var(--jt-md-green);  background: var(--jt-md-quote-bg-green); }
-.jt-preview-content .jt-md-quote-purple { border-left-color: var(--jt-md-purple); background: var(--jt-md-quote-bg-purple); }
-.jt-preview-content .jt-md-quote-orange { border-left-color: var(--jt-md-orange); background: var(--jt-md-quote-bg-orange); }
+.jt-preview-content .jt-md-quote-gray,   .jt-notes-preview .jt-md-quote-gray   { border-left-color: var(--jt-md-gray);   background: var(--jt-md-quote-bg-gray); }
+.jt-preview-content .jt-md-quote-red,    .jt-notes-preview .jt-md-quote-red    { border-left-color: var(--jt-md-red);    background: var(--jt-md-quote-bg-red); }
+.jt-preview-content .jt-md-quote-blue,   .jt-notes-preview .jt-md-quote-blue   { border-left-color: var(--jt-md-blue);   background: var(--jt-md-quote-bg-blue); }
+.jt-preview-content .jt-md-quote-yellow, .jt-notes-preview .jt-md-quote-yellow { border-left-color: var(--jt-md-yellow); background: var(--jt-md-quote-bg-yellow); }
+.jt-preview-content .jt-md-quote-green,  .jt-notes-preview .jt-md-quote-green  { border-left-color: var(--jt-md-green);  background: var(--jt-md-quote-bg-green); }
+.jt-preview-content .jt-md-quote-purple, .jt-notes-preview .jt-md-quote-purple { border-left-color: var(--jt-md-purple); background: var(--jt-md-quote-bg-purple); }
+.jt-preview-content .jt-md-quote-orange, .jt-notes-preview .jt-md-quote-orange { border-left-color: var(--jt-md-orange); background: var(--jt-md-quote-bg-orange); }
 
 /* Tables — fit-content width, 1px gray-200 border, rounded, white bg;
    vertical dividers between cells + row top borders. No striping, no hover. */
-.jt-preview-content .jt-md-table {
+.jt-preview-content .jt-md-table,
+.jt-notes-preview .jt-md-table {
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--jt-md-table-border);
@@ -220,14 +243,17 @@
   overflow: hidden;
   width: auto;
 }
-.jt-preview-content .jt-md-thead-row { background: var(--jt-md-table-head-bg); font-weight: 700; }
-.jt-preview-content .jt-md-th { padding: 8px; text-align: left; }
-.jt-preview-content .jt-md-td { padding: 8px; border-top: 1px solid var(--jt-md-table-border); }
+.jt-preview-content .jt-md-thead-row, .jt-notes-preview .jt-md-thead-row { background: var(--jt-md-table-head-bg); font-weight: 700; }
+.jt-preview-content .jt-md-th, .jt-notes-preview .jt-md-th { padding: 8px; text-align: left; }
+.jt-preview-content .jt-md-td, .jt-notes-preview .jt-md-td { padding: 8px; border-top: 1px solid var(--jt-md-table-border); }
 .jt-preview-content .jt-md-th + .jt-md-th,
-.jt-preview-content .jt-md-td + .jt-md-td { border-left: 1px solid var(--jt-md-table-border); }
+.jt-preview-content .jt-md-td + .jt-md-td,
+.jt-notes-preview .jt-md-th + .jt-md-th,
+.jt-notes-preview .jt-md-td + .jt-md-td { border-left: 1px solid var(--jt-md-table-border); }
 
 /* Horizontal rule — 1px gray-200 top border, no margin */
-.jt-preview-content .jt-md-hr {
+.jt-preview-content .jt-md-hr,
+.jt-notes-preview .jt-md-hr {
   border: 0;
   border-top: 1px solid var(--jt-md-table-border);
   height: 1px;
@@ -235,13 +261,16 @@
 }
 
 /* Lists — inline-start padding, standard markers, no margins */
-.jt-preview-content .jt-md-ul { padding-inline-start: 24px; margin: 0; list-style-type: disc; }
-.jt-preview-content .jt-md-ol { padding-inline-start: 24px; margin: 0; list-style-type: decimal; }
+.jt-preview-content .jt-md-ul, .jt-notes-preview .jt-md-ul { padding-inline-start: 24px; margin: 0; list-style-type: disc; }
+.jt-preview-content .jt-md-ol, .jt-notes-preview .jt-md-ol { padding-inline-start: 24px; margin: 0; list-style-type: decimal; }
 .jt-preview-content .jt-md-ul li,
-.jt-preview-content .jt-md-ol li { display: list-item; }
+.jt-preview-content .jt-md-ol li,
+.jt-notes-preview .jt-md-ul li,
+.jt-notes-preview .jt-md-ol li { display: list-item; }
 
 /* Inline icons — 1em square, aligned to the text baseline */
-.jt-preview-content .jt-md-icon {
+.jt-preview-content .jt-md-icon,
+.jt-notes-preview .jt-md-icon {
   display: inline-block;
   overflow: visible;
   width: 1em;
@@ -348,10 +377,27 @@
    Overrides ONLY the themeable vars; all structure (sizes, borders, radii)
    is inherited unchanged. Colors adapt: text/link/table to grey-safe values,
    formatting colors to Tailwind v4 400-tier, quote fills to translucent tints.
-   Quote left-border colors stay the 500-tier defaults (they read on dark). */
-.jt-preview-panel.dark-theme .jt-preview-content {
-  --jt-md-text: #e0e0e0;
-  --jt-md-bg: #2c2c2c;
+   Quote left-border colors stay the 500-tier defaults (they read on dark).
+
+   Shared with Quick Notes' dark theme (.jt-quick-notes-panel.dark-theme
+   .jt-notes-preview, quick-notes.css) for the same reason as the light
+   tokens above — one set of dark values, not a second copy. Quick Notes
+   already sets its own plain `color` (not through --jt-md-text) on
+   .jt-notes-preview in quick-notes.css, so --jt-md-text/--jt-md-bg (this
+   panel's own paper background) stay scoped to this panel alone.
+
+   Also reaches the portal's Notes preview (.notes-page-preview, synced
+   into portal/css/vendor/preview-mode.css — see sync-shared-ui.js), which
+   carries the .jt-notes-preview class but toggles dark mode via
+   html[data-theme="dark"] on its own design tokens rather than a
+   .dark-theme ancestor class. Same reasoning as the two selectors above:
+   widen the selector list here rather than hand-editing the vendor copy or
+   duplicating these values into a portal-only stylesheet. Portal also sets
+   its own `color`/background from its own tokens, so --jt-md-text/--jt-md-bg
+   stay out of this selector's reach for the same reason as Quick Notes. */
+.jt-preview-panel.dark-theme .jt-preview-content,
+.jt-quick-notes-panel.dark-theme .jt-notes-preview,
+html[data-theme="dark"] .jt-notes-preview {
   --jt-md-link: oklch(0.789 0.154 211.53);
   --jt-md-link-hover: oklch(0.865 0.127 207.078);
   --jt-md-table-border: #464646;
@@ -371,6 +417,43 @@
   --jt-md-quote-bg-purple: rgba(173, 70, 255, 0.15);
   --jt-md-quote-bg-orange: rgba(255, 86, 0, 0.15);
   --jt-md-quote-bg-gray: rgba(255, 255, 255, 0.06);
+}
+
+/* Portal's own tokens (tokens.css) fall back to system dark preference when
+   the user has never explicitly toggled — html carries no [data-theme]
+   attribute at all in that case, only `@media (prefers-color-scheme: dark)`
+   applies. html[data-theme="dark"] above only covers an explicit toggle, so
+   this mirrors that same fallback for the jt-md-* vars (duplicated values,
+   not a duplicated mechanism — an attribute selector and a media feature
+   can't be OR'd into one rule; tokens.css itself repeats its dark values
+   the same way for the same reason). */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .jt-notes-preview {
+    --jt-md-link: oklch(0.789 0.154 211.53);
+    --jt-md-link-hover: oklch(0.865 0.127 207.078);
+    --jt-md-table-border: #464646;
+    --jt-md-table-head-bg: #353535;
+    --jt-md-table-bg: transparent;
+    --jt-md-red: oklch(0.704 0.191 22.216);
+    --jt-md-blue: oklch(0.707 0.165 254.624);
+    --jt-md-yellow: oklch(0.852 0.199 91.936);
+    --jt-md-green: oklch(0.792 0.209 151.711);
+    --jt-md-purple: oklch(0.714 0.203 305.504);
+    --jt-md-orange: oklch(0.75 0.183 55.934);
+    --jt-md-gray: #9ca3af;
+    --jt-md-quote-bg-red: rgba(251, 44, 54, 0.15);
+    --jt-md-quote-bg-blue: rgba(43, 127, 255, 0.15);
+    --jt-md-quote-bg-yellow: rgba(240, 177, 0, 0.15);
+    --jt-md-quote-bg-green: rgba(0, 201, 81, 0.15);
+    --jt-md-quote-bg-purple: rgba(173, 70, 255, 0.15);
+    --jt-md-quote-bg-orange: rgba(255, 86, 0, 0.15);
+    --jt-md-quote-bg-gray: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content {
+  --jt-md-text: #e0e0e0;
+  --jt-md-bg: #2c2c2c;
 }
 
 /* Custom Theme Support (panel chrome + content follow the RGB theme) */

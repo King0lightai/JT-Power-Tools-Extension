@@ -552,7 +552,7 @@
   background: white;
 }
 
-.jt-notes-format-btn,
+.jt-notes-checklist-btn,
 .jt-notes-preview-btn {
   display: flex;
   align-items: center;
@@ -568,20 +568,20 @@
   color: #6b7280;
 }
 
-.jt-notes-format-btn:hover,
+.jt-notes-checklist-btn:hover,
 .jt-notes-preview-btn:hover {
   background: #f3f4f6;
   color: #374151;
   border-color: #d1d5db;
 }
 
-.jt-notes-format-btn:active,
+.jt-notes-checklist-btn:active,
 .jt-notes-preview-btn:active {
   background: #e5e7eb;
 }
 
-.jt-notes-format-btn.active,
-.jt-notes-format-btn.is-active,
+.jt-notes-checklist-btn.active,
+.jt-notes-checklist-btn.is-active,
 .jt-notes-preview-btn.is-active {
   background: #cffafe;
   color: #0e7490;
@@ -589,7 +589,7 @@
   box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3);
 }
 
-.jt-notes-format-btn svg,
+.jt-notes-checklist-btn svg,
 .jt-notes-preview-btn svg {
   width: 16px;
   height: 16px;
@@ -606,7 +606,7 @@
    rendered view, so they're hidden — but the toolbar itself and the Preview
    toggle button stay visible, since it's the only way back to the textarea
    other than clicking the note body. */
-.jt-notes-toolbar-preview-mode .jt-notes-format-btn,
+.jt-notes-toolbar-preview-mode .jt-notes-checklist-btn,
 .jt-notes-toolbar-preview-mode .jt-notes-toolbar-divider {
   display: none;
 }
@@ -641,7 +641,11 @@
   white-space: pre-wrap;
   word-wrap: break-word;
 }
-.jt-notes-preview input[type="checkbox"] { cursor: pointer; }
+.jt-notes-preview input[type="checkbox"] {
+  cursor: pointer;
+  margin-right: 4px;
+  vertical-align: middle;
+}
 
 .jt-notes-content-input strong,
 .jt-notes-content-input b {
@@ -726,66 +730,12 @@
   text-decoration: underline;
 }
 
-.jt-note-checkbox,
-.jt-note-bullet {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin: 4px 0;
-  line-height: 1.4;
-}
-
-.jt-notes-content-input .jt-note-checkbox,
-.jt-notes-content-input .jt-note-bullet {
-  min-height: 1.6em;
-  margin: 2px 0;
-}
-
-.jt-note-checkbox input[type="checkbox"] {
-  margin-top: 2px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.jt-note-checkbox span[contenteditable="true"] {
-  min-width: 1px;
-  display: inline-block;
-}
-
-.jt-note-checkbox span[contenteditable="true"]:empty:before {
-  content: '\200B'; /* Zero-width space for cursor visibility */
-  color: transparent;
-}
-
-.jt-note-checkbox.checked span {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-
-.jt-note-bullet {
-  padding-left: 0;
-}
-
-/* Bullet indentation levels */
-.jt-note-bullet[data-indent="1"] {
-  padding-left: 20px;
-}
-
-.jt-note-bullet[data-indent="2"] {
-  padding-left: 40px;
-}
-
-.jt-note-bullet[data-indent="3"] {
-  padding-left: 60px;
-}
-
-.jt-note-bullet[data-indent="4"] {
-  padding-left: 80px;
-}
-
-.jt-note-bullet[data-indent="5"] {
-  padding-left: 100px;
-}
+/* .jt-note-checkbox / .jt-note-bullet (the old quick-notes-modules/markdown.js
+   renderer's output classes) and their indentation/contenteditable rules were
+   removed here — the preview pane now renders through window.JTMarkdown,
+   which emits jt-md-* classes (styled in styles/preview-mode.css, widened to
+   also match .jt-notes-preview — see that file) and plain <li>s inside a
+   margin:0 <ul>/<ol>, not these classes. */
 
 /* Editor Footer */
 .jt-notes-editor-footer {
@@ -1095,25 +1045,25 @@
   border-color: #525252;
 }
 
-.jt-quick-notes-panel.dark-theme .jt-notes-format-btn,
+.jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn,
 .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn {
   color: #9ca3af;
 }
 
-.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:hover,
+.jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn:hover,
 .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn:hover {
   background: #353535;
   color: #d1d5db;
   border-color: #464646;
 }
 
-.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:active,
+.jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn:active,
 .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn:active {
   background: #404040;
 }
 
-.jt-quick-notes-panel.dark-theme .jt-notes-format-btn.active,
-.jt-quick-notes-panel.dark-theme .jt-notes-format-btn.is-active,
+.jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn.active,
+.jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn.is-active,
 .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn.is-active {
   background: #164e63;
   color: #22d3ee;

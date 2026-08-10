@@ -4,7 +4,8 @@
  *
  * Dependencies:
  * - features/quick-notes-modules/storage.js (QuickNotesStorage)
- * - features/quick-notes-modules/markdown.js (QuickNotesMarkdown)
+ * - features/preview-mode-modules/jt-markdown.js (JTMarkdown) — the shared
+ *   JobTread-parity renderer; also this feature's own preview markup.
  */
 
 const QuickNotesFeature = (() => {
@@ -27,6 +28,14 @@ const QuickNotesFeature = (() => {
   // the editor (switching notes / tabs / folders) registers a new one; this
   // lets us remove the previous one so listeners don't accumulate.
   let selectionChangeHandler = null;
+  // The shared Text Formatter toolbar (window.FormatterToolbar) embedded
+  // above the note body. Re-rendering the editor replaces the DOM out from
+  // under it via innerHTML, which would otherwise detach the toolbar without
+  // disconnecting its ResizeObserver — see FormatterToolbar.destroyToolbar's
+  // own comment on the memory leak that exact gap caused elsewhere in the
+  // product. Tracked here so every render/cleanup path can tear it down
+  // through that helper first.
+  let embeddedFormatterToolbar = null;
 
   // Folder organization state
   let myNotesCollapsedFolders = new Set(); // Collapsed folders for My Notes
@@ -61,12 +70,40 @@ const QuickNotesFeature = (() => {
 
   // Module references (loaded after DOM ready)
   const getStorage = () => window.QuickNotesStorage || {};
-  const getMarkdown = () => window.QuickNotesMarkdown || {};
+
+  /**
+   * Thin facade over Sanitizer + JTMarkdown for the sidebar note-list
+   * rendering below (renderNoteItem/renderFolderGroup), which only needs
+   * "escape this text" and "render this note to HTML" — it doesn't care
+   * that those now come from two different globals instead of the old
+   * QuickNotesMarkdown module. Defensive the same way getStorage() is:
+   * the lifecycle smoke test imports this file with neither Sanitizer nor
+   * JTMarkdown loaded, and renderNoteItem's own `markdown.escapeHtml ? ... :`
+   * guards already expect a missing method, not a missing object.
+   */
+  const getMarkdown = () => {
+    const sanitizer = window.Sanitizer;
+    const jt = window.JTMarkdown;
+    return {
+      escapeHtml: (sanitizer && sanitizer.escapeHTML) ? sanitizer.escapeHTML : null,
+      parseMarkdown: (jt && jt.render) ? (text) => jt.render(text, { taskLists: true }) : null
+    };
+  };
+
+  // The one definition of "this line is a checkbox" for the tick handler
+  // below (toggleCheckboxLine). Requires a literal single space between the
+  // dash and the bracket — matching window.JTMarkdown's own TASK_MARKER
+  // (preview-mode-modules/jt-markdown.js), which is what actually decides
+  // whether a line rendered an interactive checkbox. Quick Notes is the only
+  // consumer now that quick-notes-modules/markdown.js is gone; dialect-convert.js
+  // keeps its own independent copy (by design — see that file) rather than
+  // importing this one.
+  const CHECKBOX_LINE_RE = /^- \[([ xX])\]/;
 
   // Constants from storage module (with fallbacks)
   const MIN_WIDTH = 320;
   const MAX_WIDTH = 1200;
-  const MIN_EDITOR_WIDTH = 452; // Minimum width for editor (to fit toolbar with undo/redo)
+  const MIN_EDITOR_WIDTH = 452; // Minimum width for editor (to fit the embedded formatter toolbar)
   const COLLAPSED_SIDEBAR_WIDTH = 48;
   const WIDTH_STORAGE_KEY = 'jtToolsQuickNotesWidth';
 
@@ -1351,10 +1388,55 @@ const QuickNotesFeature = (() => {
     return offset;
   }
 
+  /**
+   * Tear down the currently-tracked embedded formatter toolbar, if any.
+   * Called both before renderNoteEditor() replaces the editor DOM (a new
+   * note/tab/folder) and from cleanup() — see embeddedFormatterToolbar's
+   * own comment on why a bare DOM removal isn't enough.
+   */
+  function destroyEmbeddedFormatterToolbar() {
+    if (embeddedFormatterToolbar) {
+      window.FormatterToolbar && window.FormatterToolbar.destroyToolbar(embeddedFormatterToolbar);
+      embeddedFormatterToolbar = null;
+    }
+  }
+
+  /**
+   * Embed the real Text Formatter toolbar — the same one JobTread's own
+   * text fields use — for the given note-body textarea, and keep
+   * FormatterToolbar's module-level "active field" pointed at it. See the
+   * call site in renderNoteEditor() for why the walk-up-out-of-any-
+   * relative/absolute-container heuristic in embedToolbarForField() never
+   * triggers for this field, and why formatter-toolbar.css needs Quick
+   * Notes' own init() to load it (both docs live there instead of here to
+   * stay next to the render call this is meant to explain).
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null} The embedded toolbar, or null if
+   *   window.FormatterToolbar isn't loaded.
+   */
+  function embedFormatterToolbar(field) {
+    if (!window.FormatterToolbar) return null;
+    const toolbar = window.FormatterToolbar.embedToolbarForField(field, { fromFocus: true });
+    // The toolbar's own buttons apply formatting to FormatterToolbar's
+    // module-level "active field", not to whatever element this function
+    // was called with — set it explicitly rather than waiting on a focus
+    // event that may never fire (e.g. a brand-new note focuses the title
+    // input first; see the "Focus handling" block in renderNoteEditor()).
+    window.FormatterToolbar.setActiveField(field);
+    field.addEventListener('focus', () => {
+      window.FormatterToolbar.setActiveField(field);
+    });
+    return toolbar;
+  }
+
   // Render note editor with WYSIWYG contenteditable
   function renderNoteEditor() {
     const editorContainer = notesPanel.querySelector('.jt-notes-editor');
     if (!editorContainer) return;
+
+    // Tear down the previous note's embedded formatter toolbar before this
+    // render replaces the DOM out from under it.
+    destroyEmbeddedFormatterToolbar();
 
     const markdown = getMarkdown();
     const currentNotes = getCurrentNotes();
@@ -1436,86 +1518,10 @@ const QuickNotesFeature = (() => {
             </svg>
           </button>
           <div class="jt-notes-toolbar-divider"></div>
-          <button class="jt-notes-format-btn" data-format="bold" title="Bold (Ctrl+B)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
-              <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-              <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="italic" title="Italic (Ctrl+I)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <line x1="19" y1="4" x2="10" y2="4"></line>
-              <line x1="14" y1="20" x2="5" y2="20"></line>
-              <line x1="15" y1="4" x2="9" y2="20"></line>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="underline" title="Underline (Ctrl+U)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
-              <line x1="4" y1="21" x2="20" y2="21"></line>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="strikethrough" title="Strikethrough">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.6 0 1.5 1.5 2.6 3.5 2.6"></path>
-              <path d="M8.8 19.1c2.3.6 4.8.5 6.6-.4 1.7-.9 2.4-2.3 2.4-3.9 0-1.5-1.5-2.6-3.5-2.6"></path>
-              <line x1="4" y1="12" x2="20" y2="12"></line>
-            </svg>
-          </button>
-          <div class="jt-notes-toolbar-divider"></div>
-          <button class="jt-notes-format-btn" data-format="bullet" title="Bullet List">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <line x1="9" y1="6" x2="20" y2="6"></line>
-              <line x1="9" y1="12" x2="20" y2="12"></line>
-              <line x1="9" y1="18" x2="20" y2="18"></line>
-              <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"></circle>
-              <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
-              <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"></circle>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="numbered" title="Numbered List">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <line x1="10" y1="6" x2="21" y2="6"></line>
-              <line x1="10" y1="12" x2="21" y2="12"></line>
-              <line x1="10" y1="18" x2="21" y2="18"></line>
-              <text x="3" y="8" font-size="7" fill="currentColor" stroke="none" font-weight="bold">1</text>
-              <text x="3" y="14" font-size="7" fill="currentColor" stroke="none" font-weight="bold">2</text>
-              <text x="3" y="20" font-size="7" fill="currentColor" stroke="none" font-weight="bold">3</text>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="checkbox" title="Checkbox">
+          <button class="jt-notes-checklist-btn" title="Insert checklist item">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <polyline points="9 11 12 14 22 4"></polyline>
-            </svg>
-          </button>
-          <div class="jt-notes-toolbar-divider"></div>
-          <button class="jt-notes-format-btn" data-format="link" title="Insert Link (Ctrl+K)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="table" title="Insert Table">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <line x1="3" y1="15" x2="21" y2="15"></line>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-              <line x1="15" y1="3" x2="15" y2="21"></line>
-            </svg>
-          </button>
-          <div class="jt-notes-toolbar-divider"></div>
-          <button class="jt-notes-format-btn" data-format="undo" title="Undo (Ctrl+Z)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <path d="M3 7v6h6"></path>
-              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-            </svg>
-          </button>
-          <button class="jt-notes-format-btn" data-format="redo" title="Redo (Ctrl+Y)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-              <path d="M21 7v6h-6"></path>
-              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
             </svg>
           </button>
         </div>
@@ -1536,9 +1542,12 @@ const QuickNotesFeature = (() => {
     const titleInput = editorContainer.querySelector('.jt-notes-title-input');
     const closeButton = editorContainer.querySelector('.jt-notes-close-button');
     const contentInput = editorContainer.querySelector('.jt-notes-content-input');
-    const toolbar = editorContainer.querySelector('.jt-notes-toolbar');
+    // The slim view-toggle row — Preview and Insert Checklist. NOT the
+    // formatting toolbar; that's the shared FormatterToolbar embedded below.
+    const viewToggleRow = editorContainer.querySelector('.jt-notes-toolbar');
     const preview = editorContainer.querySelector('.jt-notes-preview');
     const previewToggleBtn = editorContainer.querySelector('.jt-notes-preview-btn');
+    const checklistBtn = editorContainer.querySelector('.jt-notes-checklist-btn');
     let saveTimeout;
     // Notes are re-read far more than they are written, so a note with
     // content opens in preview and drops to the textarea on click; an empty
@@ -1550,6 +1559,42 @@ const QuickNotesFeature = (() => {
 
     // Initialize content from markdown
     contentInput.value = currentNote.content || '';
+
+    // Embed the real Text Formatter toolbar (see embedFormatterToolbar()'s
+    // own doc comment above) directly above the note body. Quick Notes used
+    // to ship its own bespoke toolbar wired to a private marker dialect
+    // (formatter-modules/dialects.js' QUICK_NOTES); both are gone now that
+    // the preview renders through the same JTMarkdown grammar the shared
+    // toolbar writes, so there is only one dialect to keep in sync with.
+    //
+    // embedToolbarForField() walks up out of any relative/absolute-positioned
+    // ancestor before choosing where to insert — that heuristic exists for
+    // JobTread's own preview-overlay fields (an absolutely-positioned
+    // textarea over a relatively-positioned wrapper). Quick Notes' textarea
+    // is a plain flow child of .jt-notes-wysiwyg-container (verified: neither
+    // it nor its parent uses absolute/relative positioning in quick-notes.css),
+    // so that walk-up never triggers and the toolbar lands exactly where
+    // inserted — directly before the textarea, inside
+    // .jt-notes-wysiwyg-container — rather than escaping the panel.
+    //
+    // formatter-toolbar.css is normally injected by the Text Formatter
+    // feature's own init(), which may be OFF while Quick Notes is on — so
+    // Quick Notes loads its own copy in init() below (same pattern already
+    // used for preview-mode.css).
+    embeddedFormatterToolbar = embedFormatterToolbar(contentInput);
+
+    /**
+     * Refresh the shared toolbar's active-state highlighting (bold/italic/
+     * .../justify/color) for the caret position in contentInput. Uses
+     * FormatterToolbar's own updater — the exact same one every JobTread
+     * field's toolbar uses — so there is nothing Quick-Notes-specific left
+     * to keep in sync.
+     */
+    function refreshToolbarState() {
+      if (window.FormatterToolbar && embeddedFormatterToolbar && document.body.contains(embeddedFormatterToolbar)) {
+        window.FormatterToolbar.updateToolbarState(contentInput, embeddedFormatterToolbar);
+      }
+    }
 
     // Debounced save function
     const debouncedSave = (field, value) => {
@@ -1568,36 +1613,45 @@ const QuickNotesFeature = (() => {
 
     /**
      * Re-render the preview pane's markup from the textarea's current value.
-     * parseMarkdown() renders checkboxes disabled (it also feeds the
-     * read-only notes-list snippet, where they must not be interactive) —
-     * enable them here, scoped to this one preview element, so clicks in
-     * THIS pane can reach the delegated checkbox handler below.
+     * The same renderer Preview Mode uses for JobTread's own document
+     * fields, with two options opted in that Preview Mode itself never
+     * passes (see jt-markdown.js's own module doc comment — both default
+     * off, so its parity output is unaffected):
+     *   - taskLists: `- [ ]`/`- [x]` is Quick Notes' one documented
+     *     deviation from JobTread's grammar. Unlike the old
+     *     quick-notes-modules/markdown.js renderer, JTMarkdown never emits a
+     *     `disabled` checkbox here, so there is nothing to re-enable.
+     *   - lineAnchors: stamps every rendered top-level block with
+     *     `data-line`, which the click handler below reads to land the
+     *     caret on the line you clicked (see its own comment).
      */
     function renderPreviewMarkup() {
-      const md = window.QuickNotesMarkdown;
-      if (!md || !md.parseMarkdown) return;
-      preview.innerHTML = md.parseMarkdown(contentInput.value || '');
-      preview.querySelectorAll('input[type="checkbox"]').forEach((box) => {
-        box.disabled = false;
-      });
+      const jt = window.JTMarkdown;
+      if (!jt || !jt.render) return;
+      preview.innerHTML = jt.render(contentInput.value || '', { taskLists: true, lineAnchors: true });
     }
 
     /**
      * Swap between the raw textarea and the rendered preview. Never both:
      * the same model JobTread's own fields and the portal's Notes use.
      *
-     * The toolbar itself stays visible in both modes — only its format
-     * buttons (bold, italic, etc., which don't apply to a rendered preview)
-     * are hidden via the preview-mode class below. That leaves the Preview
-     * toggle button reachable from preview mode, which is the only way back
-     * to the textarea once you're there other than clicking the note body.
+     * The view-toggle row (Preview + Insert Checklist) stays visible in both
+     * modes — only Insert Checklist (which doesn't apply to a rendered
+     * preview) hides via the preview-mode class below. That leaves the
+     * Preview toggle button reachable from preview mode, which is the only
+     * way back to the textarea other than clicking the note body. The
+     * embedded formatting toolbar has nothing to act on while the textarea
+     * is hidden, so it's hidden along with it.
      */
     function toggleNotePreview(showPreview) {
       showingPreview = showPreview;
       if (showPreview) renderPreviewMarkup();
       preview.hidden = !showPreview;
       contentInput.hidden = showPreview;
-      toolbar.classList.toggle('jt-notes-toolbar-preview-mode', showPreview);
+      viewToggleRow.classList.toggle('jt-notes-toolbar-preview-mode', showPreview);
+      if (embeddedFormatterToolbar) {
+        embeddedFormatterToolbar.style.display = showPreview ? 'none' : '';
+      }
       if (previewToggleBtn) {
         previewToggleBtn.classList.toggle('is-active', showPreview);
         previewToggleBtn.title = showPreview ? 'Edit note' : 'Preview note';
@@ -1609,21 +1663,19 @@ const QuickNotesFeature = (() => {
      * Tick/untick the source line behind a rendered checkbox. Rewrites exactly
      * that line so the rest of the note is untouched.
      *
-     * Identity, not counting: parseMarkdown() stamps each rendered checkbox
-     * with `data-line`, the line's own index into content.split('\n'). We
-     * read that index straight off the clicked element — no second pass that
-     * re-classifies lines and no assumption that "lines matching
-     * CHECKBOX_LINE_RE" and "lines that rendered a checkbox" are the same
-     * set (they aren't, e.g. a checkbox line containing a markdown link
-     * used to render as a mangled bullet with no <input> at all, which threw
-     * off any scheme that counted rendered boxes against re-matched lines).
-     * If the attribute is missing or not a valid index, do nothing rather
-     * than guess.
+     * Identity, not counting: JTMarkdown's render() stamps each rendered
+     * checkbox `<input>` with `data-line`, the line's own index into
+     * content.split('\n') (opt-in via { taskLists: true }, see
+     * preview-mode-modules/jt-markdown.js). We read that index straight off
+     * the clicked element — no second pass that re-classifies lines and no
+     * assumption that "lines matching CHECKBOX_LINE_RE" and "lines that
+     * rendered a checkbox" are the same set (they aren't, e.g. a checkbox
+     * line containing a markdown link used to render as a mangled bullet
+     * with no <input> at all, which threw off any scheme that counted
+     * rendered boxes against re-matched lines). If the attribute is missing
+     * or not a valid index, do nothing rather than guess.
      */
     function toggleCheckboxLine(box) {
-      const checkboxLineRe = window.QuickNotesMarkdown && window.QuickNotesMarkdown.CHECKBOX_LINE_RE;
-      if (!checkboxLineRe) return;
-
       const lineAttr = box.getAttribute('data-line');
       if (lineAttr === null) return;
       const lineIndex = Number(lineAttr);
@@ -1632,13 +1684,13 @@ const QuickNotesFeature = (() => {
       const lines = contentInput.value.split('\n');
       if (lineIndex >= lines.length) return;
 
-      const match = checkboxLineRe.exec(lines[lineIndex]);
+      const match = CHECKBOX_LINE_RE.exec(lines[lineIndex]);
       if (!match) return; // stale/mismatched index — never guess
 
       const checked = /x/i.test(match[1]);
       lines[lineIndex] = checked
-        ? lines[lineIndex].replace(checkboxLineRe, '- [ ]')
-        : lines[lineIndex].replace(checkboxLineRe, '- [x]');
+        ? lines[lineIndex].replace(CHECKBOX_LINE_RE, '- [ ]')
+        : lines[lineIndex].replace(CHECKBOX_LINE_RE, '- [x]');
 
       contentInput.value = lines.join('\n');
       debouncedSave('content', contentInput.value);
@@ -1649,15 +1701,19 @@ const QuickNotesFeature = (() => {
     // which toggles in place and stays in preview, and except on a link,
     // which should navigate rather than be swallowed into edit mode.
     //
-    // Every rendered block carries a `data-line` stamp (see markdown.js)
-    // naming its source line's index in content.split('\n'). Read it off
-    // whatever block was clicked — via closest(), so it works whether the
-    // click landed on the block itself or on inline markup nested inside it
-    // (a <strong>, an <a>, a table <td>) — and land the caret at that
-    // line's start once the textarea is visible. A click that doesn't land
-    // on any stamped block (e.g. the pane's empty margin) falls back to
-    // whatever the browser does on focus() alone; landing on the right
-    // LINE, not the exact character, is the goal here.
+    // renderPreviewMarkup() renders with `{ lineAnchors: true }`, so
+    // JTMarkdown stamps `data-line` (source line index in
+    // content.split('\n')) on every rendered top-level block — a plain
+    // line, a heading/color/align/icon wrapper, and each bullet/numbered
+    // list item — not just a checkbox's own <input>. Read it off whatever
+    // was clicked via closest(); when the click landed inside a checklist
+    // item's label instead of its box, fall back to that item's own
+    // checkbox input rather than landing nowhere (belt-and-suspenders now
+    // that the <li> itself also carries data-line, but kept in case a click
+    // lands on something between the two with neither). A click that finds
+    // no data-line at all (a table cell, the pane's empty margin) still
+    // drops into edit mode — it just can't land the caret at that exact
+    // line, and falls back to whatever the browser does on focus() alone.
     preview.addEventListener('click', (e) => {
       const box = e.target.closest('input[type="checkbox"]');
       if (box) {
@@ -1667,7 +1723,11 @@ const QuickNotesFeature = (() => {
       }
       if (e.target.closest('a')) return;
 
-      const lineEl = e.target.closest('[data-line]');
+      let lineEl = e.target.closest('[data-line]');
+      if (!lineEl) {
+        const item = e.target.closest('li');
+        lineEl = item ? item.querySelector('input[type="checkbox"][data-line]') : null;
+      }
       const lineIndex = lineEl ? Number(lineEl.dataset.line) : NaN;
 
       toggleNotePreview(false);
@@ -1726,18 +1786,20 @@ const QuickNotesFeature = (() => {
       });
     }
 
-    // Prevent toolbar buttons from stealing focus (preserve selection)
-    toolbar.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.jt-notes-format-btn') || e.target.closest('.jt-notes-preview-btn')) {
+    // Prevent the view-toggle row's own buttons from stealing focus (preserve
+    // selection). The embedded formatter toolbar's buttons handle this
+    // themselves (toolbar.js's own setupFormatButtons).
+    viewToggleRow.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.jt-notes-checklist-btn') || e.target.closest('.jt-notes-preview-btn')) {
         e.preventDefault();
       }
     });
 
     // Preview toggle button — the only way back to the rendered view once
     // the user has dropped into the textarea (other than closing/reopening
-    // the note). Wired separately from the toolbar's format-button click
-    // handler below: it is a view control, not a `data-format` value, and
-    // must never reach FormatterFormats.applyFormat().
+    // the note). It is the panel's own view control, not a formatting
+    // operation, so it lives in the view-toggle row rather than the shared
+    // formatter toolbar and must never reach FormatterFormats.applyFormat().
     if (previewToggleBtn) {
       previewToggleBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1745,68 +1807,40 @@ const QuickNotesFeature = (() => {
       });
     }
 
+    // Insert Checklist — the one button the shared formatter toolbar doesn't
+    // have. `checkbox` is a Quick-Notes-only format (see its case in
+    // formats.js's applyFormat switch, added for exactly this button) that
+    // still runs through the same shared engine, so there is one formatting
+    // engine rather than a second one living in this panel.
+    if (checklistBtn) {
+      checklistBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        runFormat('checkbox');
+      });
+    }
+
     /**
-     * Light the toolbar buttons that apply at the caret. Reads the textarea's
-     * own text — no queryCommandState, which only ever worked on contenteditable.
-     *
-     * Quick Notes' own renderer (quick-notes-modules/markdown.js) speaks a
-     * different markdown dialect than JobTread's fields — bold **x**, italic
-     * _x_, underline __x__, strikethrough ~~x~~ — so detection must be told
-     * that dialect explicitly. Passing nothing here would fall back to
-     * FormatterDetection's JobTread default and light the wrong buttons.
+     * Apply a format via the shared FormatterFormats engine and refresh the
+     * toolbar's active-state highlighting. Used by both the Insert Checklist
+     * button above and the Ctrl+B/I/U/K keyboard shortcuts below, so neither
+     * can drift from what clicking the matching formatter-toolbar button
+     * does. applyFormat() sets the field's value through React's native
+     * setter and dispatches a real `input` event itself, so the existing
+     * `input` listener below (auto-save + preview re-render) fires without
+     * this function calling debouncedSave() directly.
      */
-    function updateToolbarState() {
-      if (!window.FormatterDetection || !window.FormatterDialects) return;
-      const active = window.FormatterDetection.detectActiveFormats(
-        contentInput,
-        window.FormatterDialects.QUICK_NOTES
-      );
-      toolbar.querySelectorAll('.jt-notes-format-btn').forEach((btn) => {
-        const fmt = btn.dataset.format;
-        btn.classList.toggle('is-active', !!active[fmt]);
-      });
-    }
-
-    // Apply a format via the shared FormatterFormats engine, persist, and
-    // refresh the toolbar's active-state highlighting. The single path used
-    // by both toolbar button clicks and the Ctrl+B/I/U/K keyboard shortcuts
-    // below, so a shortcut can never drift from what clicking the matching
-    // button does (dialect included — QUICK_NOTES, not JobTread's default).
-    function applyToolbarFormat(format) {
-      if (!window.FormatterFormats || !window.FormatterDialects) return;
+    function runFormat(format) {
+      if (!window.FormatterFormats) return;
       contentInput.focus();
-      window.FormatterFormats.applyFormat(contentInput, format, {
-        dialect: window.FormatterDialects.QUICK_NOTES
-      });
-      debouncedSave('content', contentInput.value);
-      updateToolbarState();
+      window.FormatterFormats.applyFormat(contentInput, format);
+      refreshToolbarState();
     }
-
-    // Toolbar button clicks — same engine every JobTread text field uses,
-    // parameterized with Quick Notes' own marker dialect (see
-    // updateToolbarState above) so applying and toggling agree with what
-    // QuickNotesMarkdown.parseMarkdown actually renders.
-    toolbar.addEventListener('click', (e) => {
-      const btn = e.target.closest('.jt-notes-format-btn');
-      if (!btn) return;
-
-      e.preventDefault();
-      const format = btn.dataset.format;
-
-      // Undo/redo are the browser's now: a textarea keeps a native, correct
-      // undo stack, so there is no history array to maintain or corrupt.
-      if (format === 'undo' || format === 'redo') {
-        contentInput.focus();
-        document.execCommand(format);
-        debouncedSave('content', contentInput.value);
-        return;
-      }
-
-      applyToolbarFormat(format);
-    });
 
     // Content input changes (auto-save). The textarea's value IS the stored
     // markdown, so there is nothing to serialize and nothing to normalize.
+    // This also catches edits made through the embedded formatter toolbar's
+    // own buttons (toolbar.js -> FormatterFormats.applyFormat -> native
+    // setter + input event), so there is no separate save path for those.
     contentInput.addEventListener('input', () => {
       debouncedSave('content', contentInput.value);
       // Only the visible surface needs re-rendering — while actively typing
@@ -1822,7 +1856,7 @@ const QuickNotesFeature = (() => {
     // Formatter's own global handler (formatter.js handleKeydown): that one
     // only fires on fields that pass Detection().isFormatterField(), which
     // the Quick Notes textarea never matches. Routed through the exact same
-    // applyToolbarFormat() path as clicking the toolbar button — not a
+    // runFormat() path as clicking a formatter-toolbar button — not a
     // second copy of the marker logic — so a shortcut can never drift from
     // what its button does.
     const SHORTCUT_KEY_FORMATS = { b: 'bold', i: 'italic', u: 'underline', k: 'link' };
@@ -1831,7 +1865,7 @@ const QuickNotesFeature = (() => {
         const format = SHORTCUT_KEY_FORMATS[e.key.toLowerCase()];
         if (format) {
           e.preventDefault();
-          applyToolbarFormat(format);
+          runFormat(format);
           return;
         }
       }
@@ -1844,12 +1878,11 @@ const QuickNotesFeature = (() => {
       }
     });
 
-    // Keep toolbar active-state highlighting in sync with the caret.
-    contentInput.addEventListener('keyup', updateToolbarState);
-    contentInput.addEventListener('click', updateToolbarState);
+    // Keep the formatter toolbar's active-state highlighting in sync with the caret.
+    contentInput.addEventListener('keyup', refreshToolbarState);
+    contentInput.addEventListener('click', refreshToolbarState);
 
     // Update formatting button states on selection change.
-    // Pass toolbar to scope button queries (prevents affecting Text Formatter buttons).
     // Re-rendering the editor registers a new handler — remove the previous
     // one first so listeners don't accumulate across note/folder/tab switches.
     if (selectionChangeHandler) {
@@ -1857,7 +1890,7 @@ const QuickNotesFeature = (() => {
     }
     selectionChangeHandler = () => {
       if (document.activeElement === contentInput) {
-        updateToolbarState();
+        refreshToolbarState();
       }
     };
     document.addEventListener('selectionchange', selectionChangeHandler);
@@ -1866,10 +1899,9 @@ const QuickNotesFeature = (() => {
     // clipboard's text/plain flavour and nothing else, straight into the native
     // undo stack — which is the whole point of this editor. The contenteditable
     // era intercepted paste to sanitize a text/html flavour into DOM nodes; a
-    // textarea holds text, and the preview renderer escapes every character it
-    // renders (quick-notes-modules/markdown.js), so there is nothing left to
-    // sanitize. Don't re-add one: preventDefault + insertText only forfeits
-    // undo.
+    // textarea holds text, and the preview renderer (JTMarkdown) escapes every
+    // character it renders, so there is nothing left to sanitize. Don't re-add
+    // one: preventDefault + insertText only forfeits undo.
     //
     // No checkbox/Ctrl+click-link/table-context-menu handlers here either:
     // a <textarea> is a replaced form control with no light-DOM children, so
@@ -1890,8 +1922,8 @@ const QuickNotesFeature = (() => {
   }
 
   // ============================================================
-  // NOTE: Markdown rendering (processInlineFormatting, parseMarkdown,
-  // escapeHtml) lives in quick-notes-modules/markdown.js.
+  // NOTE: Markdown rendering lives in preview-mode-modules/jt-markdown.js
+  // (window.JTMarkdown) — see getMarkdown()/renderPreviewMarkup() above.
   // ============================================================
 
   // Detect and apply theme
@@ -2578,6 +2610,30 @@ const QuickNotesFeature = (() => {
     link.id = 'jt-quick-notes-styles';
     document.head.appendChild(link);
 
+    // The preview pane renders through window.JTMarkdown and needs the
+    // jt-md-* rules in preview-mode.css (widened there to also match
+    // .jt-notes-preview — see that file). That stylesheet is normally
+    // injected by the Preview Mode feature itself, which may not be
+    // enabled, so Quick Notes loads its own copy of the same file rather
+    // than duplicating those rules.
+    const previewStylesLink = document.createElement('link');
+    previewStylesLink.rel = 'stylesheet';
+    previewStylesLink.href = chrome.runtime.getURL('styles/preview-mode.css');
+    previewStylesLink.id = 'jt-quick-notes-preview-mode-styles';
+    document.head.appendChild(previewStylesLink);
+
+    // The note body embeds the shared Text Formatter toolbar
+    // (window.FormatterToolbar — see renderNoteEditor()), styled by
+    // formatter-toolbar.css. That stylesheet is normally injected by the
+    // Text Formatter feature's own init(), which may be OFF while Quick
+    // Notes is on, so Quick Notes loads its own copy — same pattern as
+    // preview-mode.css above.
+    const formatterToolbarStylesLink = document.createElement('link');
+    formatterToolbarStylesLink.rel = 'stylesheet';
+    formatterToolbarStylesLink.href = chrome.runtime.getURL('styles/formatter-toolbar.css');
+    formatterToolbarStylesLink.id = 'jt-quick-notes-formatter-toolbar-styles';
+    document.head.appendChild(formatterToolbarStylesLink);
+
     // Load notes from storage
     await loadNotes();
 
@@ -2739,6 +2795,12 @@ const QuickNotesFeature = (() => {
       buttonObserver = null;
     }
 
+    // Tear down any embedded formatter toolbar left over from an open note.
+    // notesPanel.remove() below detaches it from the document either way,
+    // but a bare detach without disconnecting its ResizeObserver leaks it —
+    // see embeddedFormatterToolbar's own comment.
+    destroyEmbeddedFormatterToolbar();
+
     // Remove UI elements
     if (notesButton) {
       notesButton.remove();
@@ -2752,6 +2814,10 @@ const QuickNotesFeature = (() => {
     // Remove CSS
     const styles = document.getElementById('jt-quick-notes-styles');
     if (styles) styles.remove();
+    const previewStyles = document.getElementById('jt-quick-notes-preview-mode-styles');
+    if (previewStyles) previewStyles.remove();
+    const formatterToolbarStyles = document.getElementById('jt-quick-notes-formatter-toolbar-styles');
+    if (formatterToolbarStyles) formatterToolbarStyles.remove();
 
     // Remove keyboard listener
     document.removeEventListener('keydown', handleKeyboard);

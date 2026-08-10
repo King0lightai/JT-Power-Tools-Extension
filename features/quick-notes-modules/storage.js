@@ -111,10 +111,12 @@ const QuickNotesStorage = (() => {
   }
 
   /**
-   * Load notes from Chrome storage
+   * Load notes from Chrome storage, exactly as stored — no dialect
+   * conversion. Internal; loadNotes() is the public entry point and
+   * migrates the result before returning it.
    * @returns {Promise<Array>} Array of note objects
    */
-  async function loadNotes() {
+  async function loadRawNotes() {
     // Orphaned content script — fail fast (returns empty so callers
     // don't blow up on undefined; the orphan banner already told the user).
     if (isOrphaned || !contextLooksValid()) {
@@ -157,6 +159,88 @@ const QuickNotesStorage = (() => {
         resolve([]);
       }
     });
+  }
+
+  // ─── Local dialect migration ─────────────────────────────────
+  //
+  // Notes belonging to users who never signed in live only in
+  // chrome.storage — the server-side migration (server/mcp-server/src/
+  // notes-dialect-migration.js) only ever sees rows in D1, so it can never
+  // reach them. This mirrors that migration's shape (a `contentFormat`
+  // marker + retained `contentOriginal`) using the SAME converter
+  // (window.QuickNotesDialect.toJobTread), so the two passes are provably
+  // the same design rather than two hand-copied rule sets that can drift.
+  //
+  // The converter is deliberately NOT self-idempotent (see
+  // dialect-convert.js's header) — __underline__ becomes _underline_,
+  // which a second pass misreads as italic. Correctness rests entirely on
+  // the marker: a note is converted only when contentFormat is absent or
+  // 'qn1', and content + contentOriginal + contentFormat='jt1' are written
+  // together in the object returned from this function, so a caller can
+  // never observe a converted-but-unmarked note.
+
+  /**
+   * Convert a single note to JobTread dialect if it hasn't been already.
+   * Returns the SAME object reference when no conversion is needed, so
+   * callers can detect "anything changed" with a cheap reference check.
+   * @param {Object} note
+   * @returns {Object} The note, converted + stamped if it wasn't already.
+   */
+  function migrateNoteDialect(note) {
+    if (!note || typeof note !== 'object') return note;
+    if (note.contentFormat === 'jt1') return note;
+
+    const dialect = (typeof window !== 'undefined') && window.QuickNotesDialect;
+    const original = note.content;
+    const converted = dialect ? dialect.toJobTread(original) : original;
+
+    return {
+      ...note,
+      content: converted,
+      // Never clobber a retained original from an earlier partial run.
+      contentOriginal: Object.prototype.hasOwnProperty.call(note, 'contentOriginal')
+        ? note.contentOriginal
+        : original,
+      contentFormat: 'jt1'
+    };
+  }
+
+  /**
+   * Convert every not-yet-converted note in an array.
+   * @param {Array} notes
+   * @returns {{ notes: Array, changed: boolean }} Migrated array, and
+   *   whether anything actually changed (so the caller knows whether a
+   *   write-back is needed).
+   */
+  function migrateNotesDialect(notes) {
+    if (!Array.isArray(notes)) return { notes, changed: false };
+
+    let changed = false;
+    const migrated = notes.map((note) => {
+      const result = migrateNoteDialect(note);
+      if (result !== note) changed = true;
+      return result;
+    });
+
+    return { notes: migrated, changed };
+  }
+
+  /**
+   * Load notes from storage, converting any note still in Quick Notes'
+   * own markdown dialect to JobTread's dialect and stamping it `jt1`
+   * before returning. Converted notes are written straight back to
+   * storage so a second load is a no-op (nothing left to convert).
+   * @returns {Promise<Array>} Array of note objects, dialect-migrated.
+   */
+  async function loadNotes() {
+    const rawNotes = await loadRawNotes();
+    const { notes: migratedNotes, changed } = migrateNotesDialect(rawNotes);
+
+    if (changed) {
+      await saveNotes(migratedNotes);
+    }
+
+    return migratedNotes;
   }
 
   /**
@@ -746,6 +830,11 @@ const QuickNotesStorage = (() => {
     saveWidth,
     loadWidth,
     generateId,
+
+    // Local dialect migration — exposed for direct testing of the pure
+    // conversion step, separate from the storage read/write plumbing.
+    migrateNoteDialect,
+    migrateNotesDialect,
 
     // Sync-aware methods
     loadNotesWithSync,

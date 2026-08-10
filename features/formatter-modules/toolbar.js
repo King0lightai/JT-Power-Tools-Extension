@@ -1043,12 +1043,31 @@ const FormatterToolbar = (() => {
     if (!toolbar || !toolbar.classList.contains('jt-responsive-toolbar')) return;
 
     const overflowMenu = toolbar.querySelector('.jt-overflow-menu');
-    const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
+    // setupResponsiveToolbar reparents the dropdown onto document.body (see its
+    // comment), so it's no longer a descendant of toolbar — querySelector would
+    // return null. Use the reference it stashed; fall back to the old lookup
+    // for any toolbar that somehow reaches here without going through setup.
+    const overflowDropdown = toolbar._overflowDropdown || toolbar.querySelector('.jt-overflow-dropdown');
 
     if (!overflowMenu || !overflowDropdown) return;
 
+    // A recalculation invalidates whatever was showing (items may move in or
+    // out of the dropdown below, and the anchor button may shift) — close it
+    // rather than leave a stale or now-empty dropdown floating on screen.
+    overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+
     // Get all toolbar items (buttons with data-priority)
-    const allItems = Array.from(toolbar.querySelectorAll('.jt-toolbar-item'));
+    // Items live in one of two places: still in the toolbar, or already moved
+    // into the dropdown. The dropdown is reparented onto document.body (see
+    // setupResponsiveToolbar), so it is NOT a descendant of toolbar — querying
+    // only the toolbar would miss every overflowed item, and the reset below
+    // could never bring them back. They would stay stuck in the overflow menu
+    // for good once the toolbar had been narrowed even once.
+    // Sorted by priority up front so the reset restores a deterministic order.
+    const allItems = [
+      ...toolbar.querySelectorAll('.jt-toolbar-item'),
+      ...overflowDropdown.querySelectorAll('.jt-toolbar-item')
+    ].sort((a, b) => parseInt(a.dataset.priority || '999') - parseInt(b.dataset.priority || '999'));
 
     // Reset - move all items back to toolbar (before overflow menu)
     allItems.forEach(item => {
@@ -1105,6 +1124,28 @@ const FormatterToolbar = (() => {
 
     if (!overflowMenu || !overflowDropdown || !overflowBtn) return;
 
+    // The dropdown positions itself with `position: fixed` using coordinates
+    // from getBoundingClientRect() (viewport space). That's only correct when
+    // the dropdown's containing block IS the viewport — but per the CSS spec,
+    // any ancestor with a non-`none` transform (as the Quick Notes panel uses
+    // for its slide-in animation) becomes the containing block for `position:
+    // fixed` descendants instead. Left nested inside such an ancestor, the
+    // dropdown's "viewport" coordinates were actually being resolved against
+    // that ancestor, landing it off-screen — the menu opened, just nowhere
+    // visible. Reparenting it straight onto document.body sidesteps this for
+    // this ancestor and any other transformed ancestor anywhere else it's
+    // used: body is never itself a transformed containing block, so fixed
+    // coordinates on a body child always mean the real viewport.
+    //
+    // This moves the dropdown out from under `toolbar` in the DOM, so every
+    // other lookup of it (updateToolbarOverflow, hideAllEmbeddedToolbars,
+    // hideToolbar, destroyToolbar) must use toolbar._overflowDropdown instead
+    // of toolbar.querySelector('.jt-overflow-dropdown') — that query returns
+    // null once the dropdown lives on body, and the overflow system silently
+    // stops working everywhere, not just here.
+    document.body.appendChild(overflowDropdown);
+    toolbar._overflowDropdown = overflowDropdown;
+
     // Position dropdown using fixed positioning to escape stacking contexts
     function positionDropdown() {
       const btnRect = overflowBtn.getBoundingClientRect();
@@ -1140,14 +1181,19 @@ const FormatterToolbar = (() => {
       }
     });
 
-    // Close dropdown when clicking outside (self-removing once the toolbar is
-    // detached, so we don't leak a document listener per toolbar created).
+    // Close dropdown when clicking outside. The dropdown no longer lives inside
+    // `.jt-overflow-menu` (see above), so a click landing inside it must be
+    // checked directly — otherwise closest('.jt-overflow-menu') would miss it
+    // and this would close the dropdown out from under its own buttons.
+    // Self-removing once the toolbar is detached (belt-and-braces for a path
+    // that bypasses destroyToolbar — see the ResizeObserver comment below);
+    // destroyToolbar removes it deterministically on the normal path.
     const onDocClick = (e) => {
       if (!toolbar.isConnected) {
         document.removeEventListener('click', onDocClick);
         return;
       }
-      if (!e.target.closest('.jt-overflow-menu')) {
+      if (!e.target.closest('.jt-overflow-menu') && !overflowDropdown.contains(e.target)) {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
     };
@@ -1161,6 +1207,35 @@ const FormatterToolbar = (() => {
         }, 50);
       }
     });
+
+    // The dropdown is now genuinely viewport-fixed, so scrolling any ancestor
+    // (the Quick Notes panel's own scroll region included — capture:true
+    // catches scrolls on nested containers, not just window) or resizing the
+    // window can move the button out from under it. Close rather than chase it.
+    const onScrollOrResize = () => {
+      if (!toolbar.isConnected) {
+        window.removeEventListener('scroll', onScrollOrResize, true);
+        window.removeEventListener('resize', onScrollOrResize);
+        return;
+      }
+      overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+    };
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+
+    // destroyToolbar's job on the normal teardown path: drop the reparented
+    // dropdown and the window/document-level listeners it owns. Without this,
+    // toolbar.remove() no longer takes the dropdown with it (it isn't a
+    // descendant anymore), and document/window are permanent listener targets
+    // that never get garbage-collected on their own.
+    toolbar._overflowCleanup = () => {
+      document.removeEventListener('click', onDocClick);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+      overflowDropdown.remove();
+      toolbar._overflowDropdown = null;
+      toolbar._overflowCleanup = null;
+    };
 
     // Initial overflow calculation (after render)
     requestAnimationFrame(() => {
@@ -1502,8 +1577,10 @@ const FormatterToolbar = (() => {
     const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     embeddedToolbars.forEach(toolbar => {
       if (toolbar !== exceptToolbar) {
-        // Close any open overflow dropdowns
-        const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
+        // Close any open overflow dropdowns. Reparented onto document.body by
+        // setupResponsiveToolbar (see its comment) — toolbar.querySelector()
+        // would no longer find it, so use the stashed reference.
+        const overflowDropdown = toolbar._overflowDropdown;
         if (overflowDropdown) {
           overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
         }
@@ -1588,8 +1665,10 @@ const FormatterToolbar = (() => {
     hideAllEmbeddedToolbars(null);
 
     if (activeToolbar) {
-      // Close any open overflow dropdown in the active toolbar
-      const overflowDropdown = activeToolbar.querySelector('.jt-overflow-dropdown');
+      // Close any open overflow dropdown in the active toolbar. Reparented
+      // onto document.body by setupResponsiveToolbar — use the stashed
+      // reference, not a querySelector that can no longer find it.
+      const overflowDropdown = activeToolbar._overflowDropdown;
       if (overflowDropdown) {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
@@ -1887,7 +1966,8 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Tear down a toolbar: disconnect its ResizeObserver, then detach it.
+   * Tear down a toolbar: disconnect its ResizeObserver, drop its reparented
+   * overflow dropdown and the window/document listeners it owns, then detach it.
    *
    * ALWAYS use this instead of a bare `toolbar.remove()`. A ResizeObserver
    * keeps a strong reference to what it observes, so detaching a toolbar
@@ -1900,14 +1980,24 @@ const FormatterToolbar = (() => {
    * runs inside its own callback, and a detached element never resizes, so
    * that callback never fires again.
    *
-   * Safe to call with null, with a toolbar that has no observer, and twice on
-   * the same toolbar.
+   * The overflow dropdown has the same shape of problem: setupResponsiveToolbar
+   * reparents it onto document.body to escape transformed ancestors (see its
+   * comment), so `toolbar.remove()` no longer takes it with it — and its
+   * click listener plus the module's own scroll/resize/click listeners are
+   * registered on the dropdown/window/document, which never get garbage
+   * collected on their own the way a detached subtree does.
+   *
+   * Safe to call with null, with a toolbar that has no observer or overflow
+   * dropdown, and twice on the same toolbar.
    */
   function destroyToolbar(toolbar) {
     if (!toolbar) return;
     if (toolbar._resizeObserver) {
       toolbar._resizeObserver.disconnect();
       toolbar._resizeObserver = null;
+    }
+    if (toolbar._overflowCleanup) {
+      toolbar._overflowCleanup();
     }
     toolbar.remove();
   }

@@ -6,7 +6,7 @@
  * stack. None of that needs this module; all it exposes now is a word-count
  * utility.
  *
- * Dependencies: quick-notes-modules/markdown.js (QuickNotesMarkdown)
+ * Dependencies: none.
  */
 
 const QuickNotesEditor = (() => {

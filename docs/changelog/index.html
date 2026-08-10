@@ -55,11 +55,181 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.10.5 — Worksheets rename, role mirroring, free-tier gating fix, Text Formatter freeze, Preview Mode bullets, MCP pagination + document fixes -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.5</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">August 5, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📓</span> Forms is now Worksheets</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">A clearer name, and nothing else changed</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread shipped its own <strong>Forms</strong> feature, and two unrelated systems sharing one name left people &mdash; and their AI &mdash; unable to tell which was which. Power Tools' per-job Forms are now <strong>Worksheets</strong> everywhere: the action bar, the drawer, PDF exports, print titles, the portal, and the guide.</li>
+                            <li class="sub-item">The new name is also just more honest about what it is. These are structured worksheets several people fill in together over the life of a job &mdash; the PM starts one, the designer adds to it next week, the super finishes it on site &mdash; not a form somebody submits once and is done with.</li>
+                            <li class="sub-item"><strong>Nothing moved.</strong> Your templates, their names, and every answer already filled in are untouched. This is a label change. Saved links to the guide still work, and AI setups keep working &mdash; the tool name is unchanged.</li>
+                            <li class="sub-item">The guide's <strong>Turn it on</strong> step was also fixed. It told you to flip a popup toggle that hasn't existed for two releases; the real flow is an owner or admin enabling Worksheets once for the company in the Portal, after which each Power User just signs in on the extension's Account tab.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📝</span> Quick Notes now speaks JobTread's own markdown</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">One grammar everywhere &mdash; the extension, the Portal, and JobTread itself</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Quick Notes' note body now embeds the same toolbar JobTread's own text fields use, and every place a note is shown &mdash; the note preview, the sidebar list, and the Portal's Notes page &mdash; renders through that same markdown renderer. A note looks the same wherever you open it.</li>
+                            <li class="sub-item"><strong>Every existing note was converted once, automatically.</strong> You don't need to do anything. The original text of every note is kept, and support can restore it if a conversion ever looks wrong on a note of yours.</li>
+                            <li class="sub-item">What you'll actually notice: inline code wrapped in backticks stops being special &mdash; JobTread's grammar has no inline code &mdash; and <code>_underscores_</code> around a word now mean underline instead of italic, matching what they've always meant in every other JobTread text field.</li>
+                            <li class="sub-item">Checklist markers (<code>- [ ]</code>) are unchanged and still work &mdash; the one deliberate difference from JobTread's own grammar, since JobTread's text fields have no checkbox markup of their own. Text inside a checklist item converts like anywhere else, though: <code>**bold**</code>/<code>_underscores_</code>/<code>~~strike~~</code> in a checklist item get the same conversion described above; only the marker itself is left untouched.</li>
+                            <li class="sub-item">The toolbar's own Undo/Redo buttons are gone. Ctrl+Z (and Ctrl+Y) still undo and redo normally while you're typing, the same as any other text box.</li>
+                            <li class="sub-item">Bullets, tables, links, and headings all render correctly again &mdash; several of these didn't reliably render under Quick Notes' old private markdown, especially in the Portal, which had a renderer of its own.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔐</span> Hold your AI to each person's JobTread role (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Mirror JobTread roles &mdash; new, and off by default</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">An AI key carries one JobTread identity for your whole company. Without this, a field supervisor asking the AI about a job could be shown the financial summary, subcontractor bills, and time entries their own JobTread login is specifically set up to hide &mdash; because the AI was reading as whoever created the key, not as them.</li>
+                            <li class="sub-item">Turn on <strong>Mirror JobTread roles</strong> in the Portal and each person's AI sees what they'd see signed into JobTread. A blocked section says so and names the permission it needed, rather than coming back empty &mdash; an AI told "no invoices" will cheerfully tell you there are none. Roles are re-checked on every request, so a permission edit applies to the next question with no cache to clear.</li>
+                            <li class="sub-item"><strong>Worth reading before you switch it on.</strong> Six tools switch off entirely for everyone below admin while it's on, because they let the caller choose their own fields or read a company-wide knowledge base and can't be checked against a role. Unattended automations aren't filtered &mdash; they run as the company, so there's no person's role to mirror. And it filters reads only: what the AI can <em>change</em> is governed by the key's permission level, as before.</li>
+                            <li class="sub-item"><strong>Claude Code and Cursor users must reconnect through the Portal</strong> before you enable it &mdash; key-pair connections carry no signed-in person to check, so they fail closed. The Assistant panel inside JobTread is unaffected.</li>
+                            <li class="sub-item">Nothing changes for a company that leaves it off, and a JobTread role holding <em>all</em> reads everything either way &mdash; so this only bites where your JobTread roles already restrict something. Worth tightening those first.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🧊</span> Text Formatter could freeze the browser tab</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: converting a selection to a change order locked the page up</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">With the <strong>Text Formatter</strong> on, turning an approved selection into a customer order change order could lock the tab solid. The new change order has a line per selection and JobTread renders them as it navigates, so the formatter was building a toolbar, throwing it away, and building another &mdash; hundreds of times in a few seconds.</li>
+                            <li class="sub-item">Each discarded toolbar was being held in memory by the watcher attached to it, which never let go. Nothing appeared in the console and CPU looked normal, which is exactly why it was hard to catch. Toolbars are now torn down properly, and turning the Formatter off releases them instead of leaving them until you reload.</li>
+                            <li class="sub-item">The Formatter also now does its page scan once per frame rather than on every single change. That scan is what fought JobTread's rendering and turned a slow leak into a hard freeze.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">👁️</span> Preview Mode &mdash; colored bullets render again (Pro)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: a colored list item lost both its color and its bullet</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A line like <code>[!color:red] - EDITS</code> came out as plain text with the dash still showing, instead of a red bullet. Preview Mode decided whether a line was a list <em>before</em> it stripped the color tag, so any list item carrying a color, centering, right-align, or heading prefix fell through to plain text. Prefixes are read first now, and the list is drawn inside them.</li>
+                            <li class="sub-item">Consecutive items only merge into one list when their prefixes match, so a red item followed by an uncolored one stays two lists rather than one of them quietly losing its color.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🛡️</span> Free accounts could reach paid sections</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: Tweaks, Skills, Email-to-Job and Notes were reachable without a plan</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A free account could open Tweaks, Skills, Email-to-Job and Notes in the Portal &mdash; and this wasn't only a matter of visible links. The server was checking that you were an admin but never checking your plan, so those surfaces could be driven directly. Each now enforces the tier that owns it: Notes at Essential, Tweaks at Pro, Skills and Email-to-Job at Power User. A free account sees Account, Team, and API Keys.</li>
+                            <li class="sub-item">It arrived by an honest route. "Admin on any tier" was a deliberate let-admins-set-things-up-before-they-upgrade convenience, and it was perfectly safe while making an account required a paid license. Opening free registration made it reachable at no plan at all.</li>
+                            <li class="sub-item"><strong>If you're on Essential or Pro, you may notice one thing.</strong> Setting these up ahead of your upgrade is no longer possible &mdash; Skills and Email-to-Job now wait for Power User, and Tweaks setup for Pro. Nothing you've already configured is deleted or switched off; only reaching the section changes.</li>
+                            <li class="sub-item">API Keys stays available on every plan, deliberately: Auto Sequence is free and needs a grant key, so there has to be somewhere to put one.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">💳</span> Bought a plan? Attach it yourself</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Upgrade a free account without losing anything</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Paste your Gumroad license key into the Portal's Org &amp; Plan card, or the <strong>Bought a plan?</strong> card on the extension popup's Account tab, and your free account becomes a paid one on the spot.</li>
+                            <li class="sub-item"><strong>Nothing moves.</strong> Your grant keys, notes, tweaks, worksheets, webhooks, and team members all stay exactly where they are &mdash; the upgrade re-plans the license you already have rather than making you a new one. Every tier-gated toggle unlocks the moment it lands, with no reopening or signing out.</li>
+                            <li class="sub-item">Owner-only, free-accounts-only, and a key already in use somewhere else is refused rather than moved &mdash; so nobody ends up in an organization they weren't invited to.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> AI &amp; MCP fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Your AI was reading the first 10 of everything</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed <strong>41 places</strong> that asked JobTread for a list without saying how many rows they wanted. JobTread returns 10 in that case and nothing in the reply admits more exist &mdash; so an AI answering from that data was confidently working off the first 10 and no more. Measured against real data: a job with 22 custom field values reported 10; an organization with 97 saved report views reported 10. Task dependencies, file tags, and assignees were all capped the same way.</li>
+                            <li class="sub-item"><strong>The most serious one was in sign-in.</strong> Validating an AI key reads the organizations that key can reach. Capped at 10, anyone belonging to more than ten JobTread organizations would have been refused the eleventh onward as an "organization mismatch," with nothing pointing at the real cause.</li>
+                            <li class="sub-item">A build check now fails if any query forgets its page size again, so this can't quietly come back.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">JobTread Forms with more than 10 fields could lose data</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Same root cause, worse consequences. An 11-field form read back as a 10-field form &mdash; and because updating a form replaces its whole field list, the documented read-then-write-back round-trip would have <strong>permanently deleted the 11th field and beyond, along with every answer already submitted into it</strong>. Every list the tool reads now states its size.</li>
+                            <li class="sub-item">Adding a field to an existing form works now, too. Every field used to require an id, which a new one doesn't have yet &mdash; so the only way to add a question was to delete the form and rebuild it, destroying every submission.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Documents came out addressed to the wrong people</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Documents created by AI were addressed company-to-company, with no email address on either side to actually send to. Checked field by field against a live capture of JobTread's own document creation: the sender is the acting user, and the recipient is the job location's contact. Your AI also stops <strong>inventing names</strong> for those fields, which was the symptom people actually noticed.</li>
+                            <li class="sub-item">Documents built from a template no longer arrive with a blank email message &mdash; the template's saved message, cover page title, and subtitle were being dropped on the way through. Tax-exempt customers are also no longer billed tax by the resolver.</li>
+                            <li class="sub-item">Document templates are readable at last. There was no way to list them, yet creating a document from one requires its id &mdash; so the only route was hand-writing a raw query. They now appear in the organization context, with their saved email message.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Team message templates and team notes were invisible</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Everyone connected through Claude.ai or ChatGPT saw <strong>zero</strong> team message templates and zero team notes, reported as "license not linked" against a perfectly healthy license. Creating or editing a note that way failed outright. Both work now.</li>
+                            <li class="sub-item">Deleting a daily log through AI also never worked &mdash; the confirmation preview asked JobTread for a field that doesn't exist, so it failed before it could even ask you to approve.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Approve destructive actions in your AI client, properly</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The MCP server now speaks the <strong>2026-07-28 protocol</strong> alongside the old one, on the same address. Every client connected today keeps using the path it already uses, unchanged.</li>
+                            <li class="sub-item">On a client that supports it, deleting a job or cancelling a workflow now shows you a real preview and an Approve control in the client itself, instead of the AI having to relay the question. Decline and it reports back cancelled, having never run. The safety rules are unchanged: approval is bound to the exact arguments you saw, scoped to your license, and expires in five minutes.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚙️</span> Popup polish</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Sign in and your features unlock right away</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The popup only worked out your plan when it first opened, so signing in, registering, attaching a license, or signing out left every feature showing the <em>previous</em> plan's locks until you closed and reopened it. Attaching a license was the worst of these: you'd pay, watch your plan update, and everything you'd just bought would still look locked.</li>
+                            <li class="sub-item">A locked feature could also show an <strong>on</strong> toggle. Locking dims the row but deliberately keeps your setting, so it comes back if your plan lapses and returns &mdash; the switch was just still drawing itself in the on position. Locked rows now read as off; your saved preference underneath is untouched.</li>
+                            <li class="sub-item">Auto Sequence's "you need a grant key" message now has a <strong>button that takes you straight to where the key goes</strong>, and says up front that an account is free, instead of leaving you to retype a web address.</li>
+                            <li class="sub-item">Removed a small orange bar under the gear logo in the popup header that read as a stray underline.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.10.4 — Auto Sequence (free), JobTread native Forms via MCP, PT Forms renamed -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.10.4</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">July 30, 2026</span>
             </div>
 

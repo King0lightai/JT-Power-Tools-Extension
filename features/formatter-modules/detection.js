@@ -414,9 +414,9 @@ const FormatterDetection = (() => {
   /**
    * Detect active formats at current cursor position or selection
    * @param {HTMLTextAreaElement} field - The textarea field
-   * @param {Object} [dialect] - Marker set to detect against (default: JobTread's).
-   *   See features/formatter-modules/dialects.js — the same dialect passed to
-   *   applyFormat() must be passed here, or toggle state (and toggle-off) desyncs.
+   * @param {Object} [dialect] - Marker set to detect against (default, and the
+   *   only one anything passes today: JobTread's). Must match whatever dialect
+   *   applyFormat() was called with, or toggle state (and toggle-off) desyncs.
    * @returns {Object} Object with active format flags
    */
   function detectActiveFormats(field, dialect) {
@@ -457,9 +457,9 @@ const FormatterDetection = (() => {
 
     // For inline formats (bold, italic, underline, strikethrough),
     // we need to check if the cursor/selection is inside format markers.
-    // Markers are looked up per-dialect so Quick Notes' doubled markers
-    // (__underline__, ~~strike~~) don't get detected against JobTread's
-    // single-character set, or vice versa.
+    // Markers are looked up per-dialect (see the optional `dialect` param
+    // above) so a caller with a non-default marker set — none exists
+    // today — wouldn't get detected against JobTread's single-character set.
     const markerMap = {
       [activeDialect.bold]: 'bold',
       [activeDialect.italic]: 'italic',
@@ -527,9 +527,8 @@ const FormatterDetection = (() => {
    * Find all paired markers on a line
    * @param {string} line - Line text
    * @param {string} marker - Marker string (one or more characters; JobTread's
-   *   dialect uses single characters, Quick Notes' uses doubled ones for
-   *   bold/underline/strikethrough). Pairing looks for the exact marker
-   *   substring, so a doubled marker like `__` is never mistaken for two
+   *   dialect uses single characters). Pairing looks for the exact marker
+   *   substring, so a multi-character marker is never mistaken for two
    *   occurrences of a different single-character marker.
    * @returns {Array} Array of {open, close} positions (index of the first
    *   character of each marker occurrence)

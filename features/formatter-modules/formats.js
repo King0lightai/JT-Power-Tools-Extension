@@ -103,8 +103,10 @@ const FormatterFormats = (() => {
   }
 
   /**
-   * Get the dialect's marker set, defaulting to JobTread's — the marker set
-   * every caller used before dialects existed. See formatter-modules/dialects.js.
+   * Get the dialect's marker set, defaulting to JobTread's — the only
+   * marker set any caller uses today. `options.dialect` remains a
+   * theoretical override point (formerly used by Quick Notes' now-deleted
+   * formatter-modules/dialects.js), but nothing in the product passes one.
    * @param {Object} options - Options passed to applyFormat/removeFormat
    * @returns {Object} Marker set with bold/italic/underline/strikethrough
    */
@@ -334,10 +336,8 @@ const FormatterFormats = (() => {
    * @param {HTMLTextAreaElement} field - The textarea field
    * @param {string} format - The format to apply
    * @param {Object} options - Additional options (e.g., color). `options.dialect`
-   *   selects the marker set for bold/italic/underline/strikethrough (default:
-   *   JobTread's — see formatter-modules/dialects.js). Quick Notes passes its
-   *   own dialect here and to detectActiveFormats() so the toolbar emits and
-   *   toggles markers its own renderer actually understands.
+   *   would select the marker set for bold/italic/underline/strikethrough
+   *   (default, and the only one anything passes today: JobTread's).
    */
   function applyFormat(field, format, options = {}) {
     const dialect = resolveDialect(options);
