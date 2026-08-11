@@ -1285,7 +1285,13 @@ const FormatterToolbar = (() => {
 
         if (format === 'color') {
           window.FormatterFormats.applyFormat(targetField, format, { color });
-          toolbar.querySelector('.jt-color-dropdown').classList.remove('jt-color-dropdown-visible');
+          // Vestigial: colours are flat toolbar buttons now (see
+          // buildToolbarHTML), so nothing creates a `.jt-color-dropdown` —
+          // only its CSS survives. This queried null and threw on EVERY
+          // colour click, skipping the focus/activeField restore right below
+          // and leaving the caret out of the field. Optional-chained rather
+          // than deleted in case a future variant reinstates the dropdown.
+          toolbar.querySelector('.jt-color-dropdown')?.classList.remove('jt-color-dropdown-visible');
         } else if (format && format !== 'color-picker') {
           window.FormatterFormats.applyFormat(targetField, format);
           toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
@@ -1712,7 +1718,18 @@ const FormatterToolbar = (() => {
       const newFocus = document.activeElement;
       // Keep toolbar open if focus is on toolbar, a formatter-enabled textarea,
       // or the preview panel (which is tied to the toolbar)
+      //
+      // The overflow dropdown counts as part of the toolbar even though it is
+      // NOT a descendant of it: setupResponsiveToolbar reparents it onto
+      // document.body so a transformed ancestor can't hijack its `position:
+      // fixed` containing block. Without this clause, clicking any overflowed
+      // button — the colours are the first to overflow — reads as "focus left
+      // the toolbar", and hideToolbar() nulls activeField mid-click, so
+      // applyFormat receives null and inserts nothing. On a budget Description
+      // field it is worse: that branch of hideToolbar calls destroyToolbar,
+      // which removes this very dropdown out from under the click.
       if (!newFocus?.closest('.jt-formatter-toolbar') &&
+          !newFocus?.closest('.jt-overflow-dropdown') &&
           !newFocus?.closest('.jt-preview-panel') &&
           !newFocus?.dataset?.formatterReady) {
         hideToolbar();

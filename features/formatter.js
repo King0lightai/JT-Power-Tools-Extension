@@ -727,8 +727,19 @@ const FormatterFeature = (() => {
 
     // Don't hide if clicking on a formatter-ready field or the toolbar
     // Use data-formatter-ready attribute for more reliable detection
+    //
+    // .jt-overflow-dropdown is part of the toolbar despite not being a
+    // descendant of it — setupResponsiveToolbar reparents it onto
+    // document.body so a transformed ancestor cannot capture its `position:
+    // fixed` containing block. This listener is registered on the CAPTURE
+    // phase, so it runs before the clicked button's own handler and the
+    // stopPropagation() there cannot hold it back: without this clause,
+    // clicking any overflowed button (the colours overflow first) hid the
+    // toolbar before the insert ran — nulling activeField, and on a budget
+    // Description field destroying the dropdown mid-click.
     if (clickedElement.closest('[data-formatter-ready="true"]') ||
         clickedElement.closest('.jt-formatter-toolbar') ||
+        clickedElement.closest('.jt-overflow-dropdown') ||
         clickedElement.closest('.jt-formatter-toolbar-embedded')) {
       return;
     }
