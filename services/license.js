@@ -121,7 +121,8 @@ const LicenseService = (() => {
     'aiKnowledge',       // AI-powered assistance
     'forms',             // Per-job Forms drawer (template-driven submissions)
     'paveCapture',       // Record real Pave queries for the MCP (jt_captured_queries)
-    'invoiceForecast'    // Org-wide invoice release forecast in /reports (API-powered)
+    'invoiceForecast',   // Org-wide invoice release forecast in /reports (API-powered)
+    'editableTables'     // Inline custom field editing in Data Browser views (Pave writes)
   ];
 
   // INTERNAL features - always enabled, not user-toggleable, bypass tier check

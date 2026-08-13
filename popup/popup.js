@@ -22,7 +22,7 @@ const FEATURE_TOGGLE_IDS = [
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
-  'budgetChangelog', 'invoiceForecast', 'autoSequence', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
+  'budgetChangelog', 'invoiceForecast', 'editableTables', 'autoSequence', 'contrastFix', 'budgetHierarchy', 'budgetRowHighlight', 'darkMode', 'rgbTheme',
   'jobAccessCollapse', 'orgLogo'
 ];
 
@@ -31,6 +31,7 @@ const FEATURE_TOGGLE_IDS = [
 // them through the register/setup flow (see maybeShowRegisterNudge).
 const GRANT_KEY_REQUIRED_FEATURES = new Set([
   'customFieldFilter',
+  'editableTables',
   'budgetChangelog',
   'taskTypeFilter',
   'availabilityFilter',
@@ -320,7 +321,7 @@ async function checkApiStatus() {
       // autoSequence is deliberately absent: it is a free feature, so silently
       // switching it off would just make it vanish. It stays on and explains in
       // the panel that a grant key is needed (see NO_KEY_RE in the feature).
-      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast']);
+      await syncDisabledFeaturesToStorage(['customFieldFilter', 'budgetChangelog', 'taskTypeFilter', 'invoiceForecast', 'editableTables']);
     }
   }
 }
@@ -456,6 +457,8 @@ async function checkLicenseStatus() {
   const budgetRowHighlightCheckbox = document.getElementById('budgetRowHighlight');
   const invoiceForecastFeature = document.getElementById('invoiceForecastFeature');
   const invoiceForecastCheckbox = document.getElementById('invoiceForecast');
+  const editableTablesFeature = document.getElementById('editableTablesFeature');
+  const editableTablesCheckbox = document.getElementById('editableTables');
 
   // POWER USER tier features and UI elements
   const apiCategory = document.getElementById('apiCategory');
@@ -525,6 +528,8 @@ async function checkLicenseStatus() {
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = false;
       invoiceForecastFeature?.classList.remove('locked');
       if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = false;
+      editableTablesFeature?.classList.remove('locked');
+      if (editableTablesCheckbox) editableTablesCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
@@ -539,6 +544,8 @@ async function checkLicenseStatus() {
       if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
       invoiceForecastFeature?.classList.add('locked');
       if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
+      editableTablesFeature?.classList.add('locked');
+      if (editableTablesCheckbox) editableTablesCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -734,6 +741,7 @@ async function loadSettings() {
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
     setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
     setCheckbox('invoiceForecast', settings.invoiceForecast !== undefined ? settings.invoiceForecast : false);
+    setCheckbox('editableTables', settings.editableTables !== undefined ? settings.editableTables : false);
     setCheckbox('paveCapture', hasPowerUser && (settings.paveCapture !== undefined ? settings.paveCapture : false));
 
     // AI Assistant toggle removed — admin-managed in the portal. The popup
@@ -775,6 +783,7 @@ async function loadSettings() {
       if (settings.budgetChangelog) featuresToDisable.push('budgetChangelog');
       if (settings.taskTypeFilter) featuresToDisable.push('taskTypeFilter');
       if (settings.invoiceForecast) featuresToDisable.push('invoiceForecast');
+      if (settings.editableTables) featuresToDisable.push('editableTables');
       // Capture only pays off with MCP access to read it back; both need a
       // portal session, so disable recording when signed out.
       if (settings.paveCapture) featuresToDisable.push('paveCapture');
@@ -987,6 +996,7 @@ async function getCurrentSettings() {
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     taskTypeFilter: getCheckboxValue('taskTypeFilter', defaultSettings.taskTypeFilter),
     invoiceForecast: getCheckboxValue('invoiceForecast', defaultSettings.invoiceForecast),
+    editableTables: getCheckboxValue('editableTables', defaultSettings.editableTables),
     // assistantPanel: removed from popup — admin-controlled in the portal.
     // We pass `true` so the content script still loads features/assistant-panel.js;
     // the feature self-gates on login + the Assistant company tier.

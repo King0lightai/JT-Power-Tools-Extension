@@ -23,7 +23,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
     pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
     assistantPanel: true,
     availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
-    taskTypeFilter: false,
+    taskTypeFilter: false, editableTables: false,
     autoSequence: false,
     jobAccessCollapse: false,
     orgLogo: false,

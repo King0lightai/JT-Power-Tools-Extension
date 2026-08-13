@@ -168,6 +168,11 @@ const featureModules = {
     feature: () => window.InvoiceForecastFeature,
     instance: null
   },
+  editableTables: {
+    name: 'Editable Tables',
+    feature: () => window.EditableTablesFeature,
+    instance: null
+  },
   jobAccessCollapse: {
     name: 'Job Access Collapse',
     feature: () => window.JobAccessCollapseFeature,
@@ -226,6 +231,7 @@ let currentSettings = window.JTDefaults
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, printScope: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
     budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false, invoiceForecast: false,
+    editableTables: false,
     autoSequence: false,
     jobAccessCollapse: false, orgLogo: false,
     inspectForAi: false, paveCapture: false, tweakEngine: true, forms: true, assistantPanel: true,

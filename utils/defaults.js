@@ -56,6 +56,7 @@ const JTDefaults = (() => {
     budgetChangelog: false,
     taskTypeFilter: false,
     invoiceForecast: false,
+    editableTables: false,
     jobAccessCollapse: false,
     orgLogo: false,
     // Forms toggle moved from popup to portal (Migration 029). Default
@@ -119,7 +120,7 @@ const JTDefaults = (() => {
       id: 'general',
       title: 'General',
       icon: 'ph-wrench',
-      features: ['jobAccessCollapse', 'freezeHeader', 'quickNotes', 'smartJobSwitcher', 'customFieldFilter']
+      features: ['jobAccessCollapse', 'freezeHeader', 'quickNotes', 'smartJobSwitcher', 'customFieldFilter', 'editableTables']
     }
   ];
 

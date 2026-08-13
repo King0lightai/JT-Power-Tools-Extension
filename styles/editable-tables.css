@@ -1,0 +1,165 @@
+/* Editable Tables - inline custom field editing in Data Browser views */
+
+/* Editable cell — the pencil only appears on hover/focus so the table reads
+   exactly as JobTread renders it until you reach for it. */
+td.jt-et-cell:not(.sticky) {
+  position: relative;
+}
+
+td.jt-et-cell {
+  /* Layout */
+  padding-right: 22px;
+}
+
+td.jt-et-cell:hover {
+  /* Colors */
+  box-shadow: inset 0 0 0 1px rgba(254, 76, 13, 0.35);
+}
+
+.jt-et-edit {
+  /* Layout */
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  display: none;
+  /* Spacing */
+  padding: 0 4px;
+  /* Colors */
+  background: transparent;
+  border: none;
+  color: #fe4c0d;
+  /* Typography */
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+td.jt-et-cell.sticky .jt-et-edit {
+  /* Sticky (frozen) columns already own their positioning — don't fight it. */
+  position: static;
+  transform: none;
+  margin-left: 4px;
+}
+
+td.jt-et-cell:hover .jt-et-edit,
+.jt-et-edit:focus {
+  display: inline-block;
+}
+
+.jt-et-edit:hover {
+  color: #d93d00;
+}
+
+/* Save feedback */
+@keyframes jt-et-flash-in {
+  from { background-color: rgba(159, 225, 203, 0.55); }
+  to { background-color: transparent; }
+}
+
+@keyframes jt-et-flash-fail {
+  from { background-color: rgba(248, 113, 113, 0.55); }
+  to { background-color: transparent; }
+}
+
+td.jt-et-flash-saved {
+  animation: jt-et-flash-in 1.2s ease-out;
+}
+
+td.jt-et-flash-failed {
+  animation: jt-et-flash-fail 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  td.jt-et-flash-saved,
+  td.jt-et-flash-failed {
+    animation: none;
+  }
+}
+
+/* Floating editor */
+.jt-et-editor {
+  /* Layout */
+  position: fixed;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Spacing */
+  padding: 6px;
+  /* Colors */
+  background: #2c2c2c;
+  border: 1px solid #fe4c0d;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.jt-et-editor.jt-et-saving {
+  opacity: 0.7;
+}
+
+.jt-et-input {
+  /* Spacing */
+  padding: 6px 8px;
+  /* Colors */
+  background: #1f1f1f;
+  border: 1px solid #505050;
+  border-radius: 4px;
+  color: #e0e0e0;
+  /* Typography */
+  font: 13px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.jt-et-input:focus {
+  outline: none;
+  border-color: #fe4c0d;
+}
+
+.jt-et-hint {
+  /* Colors */
+  color: #b0b0b0;
+  /* Typography */
+  font: 10px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+}
+
+/* Toast */
+.jt-et-toast {
+  /* Layout */
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2147483001;
+  max-width: 360px;
+  /* Spacing */
+  padding: 10px 14px;
+  /* Colors */
+  background: #252525;
+  border: 1px solid #404040;
+  border-left-width: 4px;
+  border-radius: 6px;
+  color: #e0e0e0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  /* Typography */
+  font: 12px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Motion */
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.jt-et-toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.jt-et-toast-success {
+  border-left-color: #9fe1cb;
+}
+
+.jt-et-toast-error {
+  border-left-color: #f87171;
+}
