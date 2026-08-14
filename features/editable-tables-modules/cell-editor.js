@@ -41,14 +41,21 @@ const EditableTablesEditor = (() => {
     close();
     if (!cell || !field) return;
 
-    const original = readCellText(cell);
-    session = { cell, field, recordId, type, original, onNavigate };
+    session = { cell, field, recordId, type, original: '', onNavigate };
 
     overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
-    overlay.className = 'jt-et-editor jt-tools-surface';
+    // Deliberately NOT .jt-tools-surface: those tokens are dark-only (they
+    // mirror the popup's dark theme) and would force near-white text onto this
+    // surface, which follows the page instead. See editable-tables.css.
+    overlay.className = 'jt-et-editor';
 
-    control = buildControl(field, original);
+    control = buildControl(field, readCellText(cell));
+    // Compare against what the control actually accepted, not what the cell
+    // displayed. A number input silently rejects "150,000" and a date input
+    // rejects "Fri, Sep 11", leaving the control empty - and an empty commit
+    // would erase the value the user only meant to look at.
+    session.original = control.value;
     overlay.appendChild(control);
 
     const hint = document.createElement('div');
@@ -148,8 +155,23 @@ const EditableTablesEditor = (() => {
     const input = document.createElement('input');
     input.className = 'jt-et-input';
     input.type = inputTypeFor(field.type);
-    input.value = value || '';
+    input.value = normalizeForInput(input.type, value);
     return input;
+  }
+
+  /**
+   * Coerce a rendered cell value into something the control will accept.
+   * JobTread renders numbers with thousands separators and currency symbols
+   * ("150,000", "$3,750.00"), all of which a number input discards.
+   * @param {string} inputType
+   * @param {string} value
+   * @returns {string}
+   */
+  function normalizeForInput(inputType, value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    if (inputType === 'number') return text.replace(/[^\d.-]/g, '');
+    return text;
   }
 
   /**
@@ -279,6 +301,12 @@ const EditableTablesEditor = (() => {
    * @returns {string}
    */
   function readCellText(cell) {
+    // A date renders as <time datetime="2026-09-11">Fri, Sep 11</time>. The ISO
+    // attribute is both what a date input needs and what JobTread stores; the
+    // visible text is a display format only.
+    const time = cell.querySelector('time[datetime]');
+    if (time) return time.getAttribute('datetime');
+
     const clone = cell.cloneNode(true);
     clone.querySelectorAll('.jt-et-edit').forEach((el) => el.remove());
     return clone.textContent.replace(/\s+/g, ' ').trim();
@@ -323,7 +351,7 @@ const EditableTablesEditor = (() => {
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.id = TOAST_ID;
-      toastEl.className = 'jt-et-toast jt-tools-surface';
+      toastEl.className = 'jt-et-toast';
       document.body.appendChild(toastEl);
     }
     toastEl.textContent = message;

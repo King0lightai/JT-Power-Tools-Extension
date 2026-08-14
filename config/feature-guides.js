@@ -158,9 +158,6 @@ const FeatureGuides = (() => {
       summary: 'Puts a completion checkbox on task cards so you can mark work done ' +
         'from the board without opening each task.',
       where: 'Schedule → task cards.',
-      note: 'The settings key behind this is still the legacy `dragDrop` — it was ' +
-        'kept to avoid a storage migration. This feature is checkboxes, not drag ' +
-        'and drop; JobTread ships schedule drag and drop natively.',
       apiAccess: API_ACCESS.NONE,
       media: null,
       docs: 'drag-drop'
@@ -330,20 +327,13 @@ const FeatureGuides = (() => {
     smartJobSwitcher: {
       title: 'Smart Resize',
       tier: 'essential',
-      summary: 'Two things in one. Drag any sidebar wider or narrower and it stays ' +
-        'that way — each sidebar remembers its own width. It also adds a keyboard ' +
-        'job search: press J then S, or Alt+J, to jump to any job without reaching ' +
-        'for the mouse.',
-      where: 'Any sidebar in JobTread. The job search opens from anywhere.',
+      summary: 'Lets you resize JobTread\'s side panels. Drag a sidebar wider or ' +
+        'narrower and it stays that way — each sidebar remembers its own width.',
+      where: 'Any sidebar in JobTread.',
       steps: [
-        'Drag the edge of a sidebar to resize it. The width is remembered per ' +
-          'sidebar, so the Job Switcher and the job panel keep separate sizes.',
-        'Press J then S — or Alt+J — to open the job search, then type to filter ' +
-          'and use the arrow keys to pick one.'
+        'Drag the edge of a sidebar to resize it.',
+        'The width is remembered per sidebar, so each panel keeps its own size.'
       ],
-      note: 'The settings key behind this is the older `smartJobSwitcher`. The ' +
-        'feature began as a job switcher and gained the resizing later, which is ' +
-        'why the name and the key do not match.',
       apiAccess: API_ACCESS.NONE,
       media: null,
       docs: 'job-switcher'
@@ -356,9 +346,9 @@ const FeatureGuides = (() => {
         'N. Jot something down without losing the page you are on.',
       where: 'Anywhere in JobTread — press Q+N.',
       apiAccess: API_ACCESS.OPTIONAL,
-      accessNote: 'Notes work with no setup, stored on this device. Signing in to a ' +
-        'free JT Power Tools account syncs them across your devices and unlocks ' +
-        'shared team notes. No JobTread grant key needed either way.',
+      accessNote: 'No JobTread grant key needed. Notes are stored on this device ' +
+        'until you sign in to your JT Power Tools account, which syncs them across ' +
+        'your devices and unlocks shared team notes.',
       media: null,
       docs: 'quick-notes'
     },
@@ -390,17 +380,14 @@ const FeatureGuides = (() => {
     editableTables: {
       title: 'Editable Tables',
       tier: 'power-user',
-      summary: 'Makes custom field cells editable in place in a saved Data Browser ' +
-        'view. Hover a cell and click the pencil, or double-click it, type, and press ' +
-        'Enter. Tab commits and jumps to the next editable cell, so you can fill a ' +
-        'whole column without leaving the table.',
-      where: 'Data Browser saved views (for example /jobs?view=…).',
-      note: 'Only columns the saved view proves are custom fields become editable. ' +
-        'Native columns — name, number, status, dates — are deliberately left alone.',
+      summary: 'Edit custom field cells without opening each job. Click the pencil ' +
+        'on a cell, or Alt+click it, then type and press Enter. Tab saves and moves ' +
+        'to the next one.',
+      where: 'The Jobs list, in whichever saved view you have open.',
+      note: 'A plain click still opens the job. Only custom field columns become ' +
+        'editable — name, address and dates are left alone.',
       apiAccess: API_ACCESS.REQUIRED,
-      accessNote: WRITES_KEY + ' Without a key the cells simply stay read-only ' +
-        'and only the console says why — which is what the API chip on the ' +
-        'feature row is there to tell you first.',
+      accessNote: WRITES_KEY,
       media: null,
       docs: null
     },

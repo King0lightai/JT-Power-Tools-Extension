@@ -1,11 +1,14 @@
 // JobTread Smart Resize Feature
-// Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
-// Features: Quick job search, keyboard navigation, resizable sidebars with per-sidebar width memory
+// Features: resizable sidebars with per-sidebar width memory, plus Alt+J to
+// open the job switcher.
+//
+// NOT J+S — that is JobTread's own native shortcut. We used to bind it too,
+// which ran both handlers for one keypress and required latching a bare `j`
+// across keystrokes on every page.
 
 const SmartJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearchOpen = false;
-  let jKeyPressed = false;
   let sidebarObserver = null;
   let migrationDone = false;
   const resizeState = {
@@ -585,7 +588,6 @@ const SmartJobSwitcherFeature = (() => {
 
     // Listen for keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown, true);
-    document.addEventListener('keyup', handleKeyUp, true);
 
     // Start observing for sidebars to add resize handles
     startSidebarObserver();
@@ -602,10 +604,8 @@ const SmartJobSwitcherFeature = (() => {
     }
 
     isActive = false;
-    jKeyPressed = false;
 
     document.removeEventListener('keydown', handleKeyDown, true);
-    document.removeEventListener('keyup', handleKeyUp, true);
     document.removeEventListener('mousemove', handleResizeMove);
     document.removeEventListener('mouseup', handleResizeEnd);
 
@@ -628,16 +628,18 @@ const SmartJobSwitcherFeature = (() => {
   function handleKeyDown(e) {
     const key = e.key.toLowerCase();
 
-    // Don't track J key if sidebar is already open (prevents interference with typing)
-    if (!isSearchOpen && !e.ctrlKey && !e.altKey && !e.metaKey && key === 'j') {
-      jKeyPressed = true;
-    }
-
-    // Open sidebar: J+S (both keys pressed together) or ALT+J
-    const isJSShortcut = jKeyPressed && !e.ctrlKey && !e.altKey && !e.metaKey && key === 's';
+    // Open the sidebar on Alt+J.
+    //
+    // We deliberately do NOT bind J-then-S: that is JobTread's own native
+    // shortcut. Binding it meant both handlers ran for one keypress, and our
+    // preventDefault/stopPropagation raced theirs — the same mistake as the
+    // `dragDrop` key outliving the drag feature JobTread now ships itself.
+    // Watching for a bare `j` also meant holding a latch across keystrokes on
+    // every page, which is exactly the kind of listener that interferes with
+    // typing.
     const isAltJShortcut = e.altKey && !e.ctrlKey && !e.metaKey && key === 'j';
 
-    if (isJSShortcut || isAltJShortcut) {
+    if (isAltJShortcut) {
       // Check if sidebar actually exists (user may have manually closed it)
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
 
@@ -649,8 +651,6 @@ const SmartJobSwitcherFeature = (() => {
       if (!isSearchOpen) {
         e.preventDefault();
         e.stopPropagation();
-        // Reset J key state immediately after opening
-        jKeyPressed = false;
         openSidebar();
       }
       return;
@@ -688,18 +688,6 @@ const SmartJobSwitcherFeature = (() => {
       e.stopPropagation();
       closeSidebar();
       return;
-    }
-  }
-
-  /**
-   * Handle keyup events
-   */
-  function handleKeyUp(e) {
-    const key = e.key.toLowerCase();
-
-    // Reset J key state when released
-    if (key === 'j') {
-      jKeyPressed = false;
     }
   }
 

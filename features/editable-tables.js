@@ -2,18 +2,33 @@
  * JT Power Tools - Editable Tables (Power User)
  *
  * Makes custom field columns editable in place in JobTread's Data Browser
- * saved views (e.g. /jobs?view=22PRZaTnZTu2). Hover a custom field cell, click
- * the pencil (or double-click the cell), type, press Enter — the value is
- * written straight to JobTread with a Pave `updateJob` mutation. Tab commits
- * and steps to the next editable cell, so a whole column can be filled in
- * without leaving the table.
+ * grids (/jobs and friends). Hover a custom field cell and click the pencil, or
+ * Alt+click the cell, then type and press Enter - the value is written straight
+ * to JobTread with a Pave `updateJob` mutation. Tab commits and steps to the
+ * next editable cell, so a whole column can be filled without leaving the grid.
  *
- * Only columns the saved view proves are custom fields are touched — see
+ * The Data Browser is NOT an HTML table. It is a Tailwind flex grid:
+ *
+ *   div                                  <- grid root
+ *     div.sticky                         <- header block (its own scroller)
+ *       div.flex.min-w-max                 <- header row, one div per column,
+ *                                             label in title="" on an inner div
+ *     div.overflow-auto                  <- body scroller
+ *       a[href="/jobs/ID"]                 <- THE ROW IS THE LINK
+ *         div                               <- cells, one per column
+ *     div.sticky                         <- totals row
+ *
+ * Two consequences drive this file. First, the header lives in a different
+ * scroll container than the rows, so it is found by matching the inline pixel
+ * widths that header, body and footer rows all share - which doubles as proof
+ * that column N of the header really is column N of the row. Second, because
+ * the row is an anchor, any plain click opens the job; that is why editing is
+ * on the pencil and Alt+click, and why double-click can't be used at all (the
+ * first click of the pair navigates before the second arrives).
+ *
+ * Only columns a saved view proves are custom fields are touched - see
  * editable-tables-modules/schema.js for why that proof matters. Native columns
- * (name, number, status, dates) are left alone.
- *
- * Scope today: `job` data views. Widening to tasks or cost items is a matter
- * of adding the entity type to SUPPORTED_TYPES in the schema module.
+ * (name, address, dates, totals) are left alone.
  *
  * @module EditableTablesFeature
  * @requires EditableTablesSchema, EditableTablesEditor, JobTreadAPI
@@ -25,18 +40,20 @@ const EditableTablesFeature = (() => {
   let styleElement = null;
   let eventListeners = [];
 
-  let schema = null;          // resolved editable-column schema for the current view
-  let currentViewId = null;
   let currentUrl = '';
   let decorateTimer = null;
-  let schemaLoadFailed = false;
+  let noGrantKey = false;
 
-  // Tables whose header/body column counts don't line up. Decorating those by
-  // index could write to the wrong field, so they're skipped — once, loudly.
-  const warnedTables = new WeakSet();
+  // Grids whose header can't be matched to the rows. Decorating those by index
+  // could write to the wrong field, so they're skipped - once, loudly.
+  const warnedGrids = new WeakSet();
 
   const DECORATE_DEBOUNCE_MS = 250;
   const URL_POLL_MS = 1000;
+
+  // Scope today is job views. Widening to tasks or cost items means adding the
+  // entity type to SUPPORTED_TYPES in the schema module and generalising this.
+  const ROW_SELECTOR = 'a[href^="/jobs/"]';
 
   // ─── LIFECYCLE ───────────────────────────────────────────────
 
@@ -47,14 +64,18 @@ const EditableTablesFeature = (() => {
 
     injectStyles();
     addListener(document, 'click', onDocumentClick, true);
-    addListener(document, 'dblclick', onDocumentDoubleClick, true);
     addListener(window, 'jt-org-changed', onOrgChanged);
 
     currentUrl = window.location.href;
     urlCheckInterval = setInterval(checkUrlChange, URL_POLL_MS);
     setupObserver();
 
-    await refreshSchema();
+    if (!window.JobTreadAPI || !(await JobTreadAPI.isConfigured())) {
+      noGrantKey = true;
+      console.warn('EditableTables: No JobTread grant key configured - inline editing is off');
+    }
+
+    scheduleDecorate();
     console.log('EditableTables: Initialized');
   }
 
@@ -77,9 +98,7 @@ const EditableTablesFeature = (() => {
     removeStyles();
 
     if (window.EditableTablesSchema) window.EditableTablesSchema.clearCache();
-    schema = null;
-    currentViewId = null;
-    schemaLoadFailed = false;
+    noGrantKey = false;
     isActiveState = false;
     console.log('EditableTables: Cleaned up');
   }
@@ -105,78 +124,35 @@ const EditableTablesFeature = (() => {
     styleElement = null;
   }
 
-  // ─── VIEW / SCHEMA RESOLUTION ────────────────────────────────
+  // ─── NAVIGATION / ORG ────────────────────────────────────────
 
   function checkUrlChange() {
     if (window.location.href === currentUrl) return;
     currentUrl = window.location.href;
-    refreshSchema();
+    // Leaving a grid strips the decorations rather than leaving stale pencils
+    // on cells the next page may reuse.
+    undecorateAll();
+    scheduleDecorate();
   }
 
   function onOrgChanged() {
     if (window.EditableTablesSchema) window.EditableTablesSchema.clearCache();
-    currentViewId = null;
-    refreshSchema();
-  }
-
-  /**
-   * Resolve the editable columns for whatever view is on screen now.
-   * Leaving a saved view strips the decorations rather than leaving stale
-   * pencils pointing at fields that aren't in this table.
-   */
-  async function refreshSchema() {
-    const viewId = window.EditableTablesSchema
-      ? window.EditableTablesSchema.getViewIdFromUrl()
-      : null;
-
-    if (viewId === currentViewId && schema) {
-      scheduleDecorate();
-      return;
-    }
-
-    currentViewId = viewId;
-    schema = null;
-    schemaLoadFailed = false;
     undecorateAll();
-
-    if (!viewId) return;
-
-    if (!window.JobTreadAPI || !(await JobTreadAPI.isConfigured())) {
-      console.warn('EditableTables: No JobTread grant key configured — inline editing is off');
-      schemaLoadFailed = true;
-      return;
-    }
-
-    try {
-      const resolved = await window.EditableTablesSchema.load(viewId);
-      if (!resolved) return;
-      if (!resolved.supported) {
-        console.log(`EditableTables: ${resolved.type} views aren't editable yet — skipping`);
-        return;
-      }
-      if (resolved.byLabel.size === 0) {
-        console.log('EditableTables: This view has no editable custom field columns');
-        return;
-      }
-      schema = resolved;
-      scheduleDecorate();
-    } catch (error) {
-      schemaLoadFailed = true;
-      console.error('EditableTables: Failed to resolve view schema:', error);
-    }
+    scheduleDecorate();
   }
 
   // ─── DOM OBSERVATION ─────────────────────────────────────────
 
   function setupObserver() {
     observer = new MutationObserver(() => {
-      if (!schema || schemaLoadFailed) return;
+      if (noGrantKey) return;
       scheduleDecorate();
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
   function scheduleDecorate() {
+    if (noGrantKey) return;
     if (decorateTimer) clearTimeout(decorateTimer);
     decorateTimer = setTimeout(() => {
       decorateTimer = null;
@@ -184,32 +160,153 @@ const EditableTablesFeature = (() => {
     }, DECORATE_DEBOUNCE_MS);
   }
 
-  // ─── DECORATION ──────────────────────────────────────────────
+  // ─── GRID DISCOVERY ──────────────────────────────────────────
 
-  function decorate() {
-    if (!schema || !isActiveState) return;
-    document.querySelectorAll('table').forEach(decorateTable);
+  /**
+   * The inline pixel widths of an element's children, or null when they aren't
+   * all set. JobTread sizes every header, body and footer cell with an inline
+   * `width`, and that sequence is what ties the three rows together.
+   * @param {HTMLElement} element
+   * @returns {Array<string>|null}
+   */
+  function columnWidths(element) {
+    if (!element || !element.children.length) return null;
+    const widths = Array.from(element.children).map((cell) => (cell.style && cell.style.width) || '');
+    return widths.every(Boolean) ? widths : null;
   }
 
   /**
-   * Mark the editable cells of one table and give each an edit affordance.
-   * @param {HTMLTableElement} table
+   * @param {Array<string>|null} a
+   * @param {Array<string>|null} b
+   * @returns {boolean}
    */
-  function decorateTable(table) {
-    const columns = buildColumnMap(table, schema);
-    if (!columns || columns.size === 0) return;
+  function sameWidths(a, b) {
+    return !!a && !!b && a.length === b.length && a.every((width, i) => width === b[i]);
+  }
 
-    table.querySelectorAll('tbody tr').forEach((row) => {
-      const recordId = window.EditableTablesSchema.getRecordId(row, schema.hrefPrefix);
-      if (!recordId) return;
+  /**
+   * Column labels for a header row. JobTread puts the real label in `title` on
+   * an inner div; the visible text is truncated with an ellipsis, so reading
+   * textContent would mangle long headers.
+   * @param {HTMLElement} headerRow
+   * @returns {Array<string>}
+   */
+  function labelsOf(headerRow) {
+    return Array.from(headerRow.children).map((cell) => {
+      const titled = cell.querySelector('[title]');
+      return titled ? titled.getAttribute('title') : cell.textContent;
+    });
+  }
 
-      // The class and button are a hover affordance only — which record and
+  /**
+   * Does this row label its columns the way JobTread's header does - a `title`
+   * on most cells? The totals row shares the header's column widths exactly, so
+   * widths alone would happily match "Count" and "Sum" as column labels.
+   * @param {HTMLElement} element
+   * @returns {boolean}
+   */
+  function hasColumnTitles(element) {
+    const titled = Array.from(element.children).filter((cell) => cell.querySelector('[title]'));
+    return titled.length >= Math.ceil(element.children.length / 2);
+  }
+
+  /**
+   * The header row belonging to a body scroller: the nearby row that shares the
+   * rows' column widths and labels its columns.
+   * @param {HTMLElement} scroller - the body scroll container
+   * @param {Array<string>} widths - a body row's column widths
+   * @returns {HTMLElement|null}
+   */
+  function findHeaderRow(scroller, widths) {
+    let root = scroller.parentElement;
+    for (let depth = 0; root && depth < 3; depth++, root = root.parentElement) {
+      const match = Array.from(root.querySelectorAll('div')).find((element) => {
+        if (element.contains(scroller) || scroller.contains(element)) return false;
+        if (element.children.length !== widths.length) return false;
+        if (!sameWidths(columnWidths(element), widths)) return false;
+        return hasColumnTitles(element);
+      });
+      if (match) return match;
+    }
+    return null;
+  }
+
+  /**
+   * Every Data Browser grid on the page, as { rows, headerRow }.
+   * @returns {Array<Object>}
+   */
+  function findGrids() {
+    const rowsByScroller = new Map();
+    document.querySelectorAll(ROW_SELECTOR).forEach((row) => {
+      // A row has one child per column; a plain link to a job does not.
+      if (row.children.length < 2) return;
+      const scroller = row.parentElement;
+      if (!scroller) return;
+      if (!rowsByScroller.has(scroller)) rowsByScroller.set(scroller, []);
+      rowsByScroller.get(scroller).push(row);
+    });
+
+    const grids = [];
+    rowsByScroller.forEach((rows, scroller) => {
+      const widths = columnWidths(rows[0]);
+      if (!widths) return;
+
+      const headerRow = findHeaderRow(scroller, widths);
+      if (!headerRow) {
+        if (!warnedGrids.has(scroller)) {
+          warnedGrids.add(scroller);
+          console.warn(
+            'EditableTables: Could not match a header row to these rows ' +
+            '(expected widths', widths.join(','),
+            ') - skipping this grid to avoid writing the wrong field'
+          );
+        }
+        return;
+      }
+      grids.push({ rows, headerRow, widths });
+    });
+    return grids;
+  }
+
+  // ─── DECORATION ──────────────────────────────────────────────
+
+  async function decorate() {
+    if (!isActiveState || noGrantKey) return;
+
+    for (const grid of findGrids()) {
+      let schema;
+      try {
+        schema = await window.EditableTablesSchema.resolve(labelsOf(grid.headerRow));
+      } catch (error) {
+        console.error('EditableTables: Failed to resolve view schema:', error);
+        return;
+      }
+      // A re-render (or a cleanup) may have landed while the schema was in
+      // flight; the next observer tick will decorate the fresh nodes.
+      if (!isActiveState) return;
+      if (schema) decorateGrid(grid, schema);
+    }
+  }
+
+  /**
+   * Mark the editable cells of one grid and give each an edit affordance.
+   * @param {Object} grid - { rows, headerRow, widths }
+   * @param {Object} schema - resolved schema (byIndex map)
+   */
+  function decorateGrid(grid, schema) {
+    grid.rows.forEach((row) => {
+      // Row widths are re-checked per row: a grouped grid can put a spanning
+      // subtotal row in among the record rows.
+      if (!sameWidths(columnWidths(row), grid.widths)) return;
+      if (!window.EditableTablesSchema.getRecordId(row, schema.hrefPrefix)) return;
+
+      // The class and button are a hover affordance only - which record and
       // field an edit targets is re-resolved at click time (see openEditor),
-      // because React can recycle a <td> into a different row between this
+      // because React can recycle a cell into a different row between this
       // pass and the click.
-      columns.forEach((field, index) => {
+      schema.byIndex.forEach((field, index) => {
         const cell = row.children[index];
-        if (!cell || cell.tagName !== 'TD') return;
+        if (!cell) return;
 
         cell.classList.add('jt-et-cell');
         if (!cell.querySelector('.jt-et-edit')) {
@@ -220,59 +317,6 @@ const EditableTablesFeature = (() => {
   }
 
   /**
-   * Map column index → custom field for one table.
-   * Returns null when the table's header and body disagree on column count,
-   * because index-based mapping would then target the wrong field.
-   * @param {HTMLTableElement} table
-   * @param {Object} viewSchema - resolved schema (byLabel map)
-   * @returns {Map<number, Object>|null}
-   */
-  function buildColumnMap(table, viewSchema) {
-    const headerCells = findHeaderCells(table);
-    if (!headerCells.length) return null;
-
-    const firstBodyRow = table.querySelector('tbody tr');
-    if (!firstBodyRow) return null;
-
-    if (firstBodyRow.children.length !== headerCells.length) {
-      if (!warnedTables.has(table)) {
-        warnedTables.add(table);
-        console.warn(
-          'EditableTables: Column count mismatch (header',
-          headerCells.length, 'vs row', firstBodyRow.children.length,
-          ') — skipping this table to avoid writing the wrong field'
-        );
-      }
-      return null;
-    }
-
-    // A label that appears twice can't be resolved to one field safely.
-    const labels = headerCells.map((th) => window.EditableTablesSchema.normalizeLabel(th.textContent));
-    const duplicates = new Set(labels.filter((label, i) => labels.indexOf(label) !== i));
-
-    const columns = new Map();
-    labels.forEach((label, index) => {
-      if (!label || duplicates.has(label)) return;
-      const field = viewSchema.byLabel.get(label);
-      if (field) columns.set(index, field);
-    });
-    return columns;
-  }
-
-  /**
-   * The header row that actually labels the columns — the one with the most
-   * cells, since grouped views stack a spanning row above it.
-   * @param {HTMLTableElement} table
-   * @returns {Array<HTMLElement>}
-   */
-  function findHeaderCells(table) {
-    const headerRows = Array.from(table.querySelectorAll('thead tr'));
-    if (!headerRows.length) return [];
-    const best = headerRows.reduce((a, b) => (b.children.length > a.children.length ? b : a));
-    return Array.from(best.children).filter((cell) => cell.tagName === 'TH');
-  }
-
-  /**
    * @param {Object} field
    * @returns {HTMLButtonElement}
    */
@@ -280,7 +324,7 @@ const EditableTablesFeature = (() => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'jt-et-edit';
-    button.title = `Edit ${field.name}`;
+    button.title = `Edit ${field.name} (or Alt+click the cell)`;
     button.setAttribute('aria-label', `Edit ${field.name}`);
     button.textContent = '✎';
     return button;
@@ -295,44 +339,51 @@ const EditableTablesFeature = (() => {
 
   // ─── INTERACTION ─────────────────────────────────────────────
 
+  /**
+   * Every row is a link to its job, so a plain click must keep doing what
+   * JobTread does - open the job. Editing is claimed only by the pencil or by
+   * Alt+click, and both have to cancel the navigation before it starts.
+   * @param {MouseEvent} event
+   */
   function onDocumentClick(event) {
-    const button = event.target.closest ? event.target.closest('.jt-et-edit') : null;
-    if (!button) return;
-    // The cell usually sits inside a row-wide link — don't let the click
-    // navigate to the job.
-    event.preventDefault();
-    event.stopPropagation();
-    openEditor(button.closest('td'));
-  }
+    if (!event.target.closest) return;
 
-  function onDocumentDoubleClick(event) {
-    const cell = event.target.closest ? event.target.closest('td.jt-et-cell') : null;
+    const button = event.target.closest('.jt-et-edit');
+    const cell = button ? button.closest('.jt-et-cell') : event.target.closest('.jt-et-cell');
     if (!cell) return;
+    if (!button && !event.altKey) return;
+
     event.preventDefault();
     event.stopPropagation();
-    openEditor(cell);
+    void openEditor(cell);
   }
 
   /**
-   * Open the editor on a cell, resolving the record and field from the live
-   * DOM rather than from anything stamped on at decoration time. A sort,
-   * filter, or page change can move a row under a recycled <td>, and a stale
-   * record id would write the right value to the wrong job.
+   * Open the editor on a cell, resolving the record and field from the live DOM
+   * rather than from anything stamped on at decoration time. A sort, filter or
+   * page change can move a row under a recycled cell, and a stale record id
+   * would write the right value to the wrong job.
    * @param {HTMLElement} cell
+   * @returns {Promise<void>}
    */
-  function openEditor(cell) {
-    if (!cell || !schema) return;
-    const row = cell.closest('tr');
-    const table = cell.closest('table');
-    if (!row || !table) return;
+  async function openEditor(cell) {
+    if (!cell || !isActiveState) return;
+
+    const row = cell.parentElement;
+    if (!row || !row.matches(ROW_SELECTOR)) return;
+
+    const widths = columnWidths(row);
+    const headerRow = widths ? findHeaderRow(row.parentElement, widths) : null;
+    if (!headerRow) return;
+
+    const schema = await window.EditableTablesSchema.resolve(labelsOf(headerRow));
+    if (!schema || !isActiveState) return;
+
+    const field = schema.byIndex.get(Array.prototype.indexOf.call(row.children, cell));
+    if (!field) return;
 
     const recordId = window.EditableTablesSchema.getRecordId(row, schema.hrefPrefix);
     if (!recordId) return;
-
-    const columns = buildColumnMap(table, schema);
-    if (!columns) return;
-    const field = columns.get(Array.prototype.indexOf.call(row.children, cell));
-    if (!field) return;
 
     window.EditableTablesEditor.open({
       cell,
@@ -349,19 +400,21 @@ const EditableTablesFeature = (() => {
    * @param {number} direction - 1 forward, -1 backward
    */
   function moveToAdjacentCell(fromCell, direction) {
-    const cells = Array.from(document.querySelectorAll('td.jt-et-cell'));
+    const cells = Array.from(document.querySelectorAll('.jt-et-cell'));
     const index = cells.indexOf(fromCell);
     if (index === -1) return;
     const next = cells[index + direction];
-    if (next) openEditor(next);
+    if (next) void openEditor(next);
   }
 
   return {
     init,
     cleanup,
     isActive: () => isActiveState,
-    // Exposed for unit tests — column mapping is where a bug writes the wrong field.
-    _buildColumnMap: buildColumnMap
+    // Exposed for unit tests - grid discovery is where a bug writes the wrong
+    // field, and it is pure DOM reasoning with no network in the way.
+    _findGrids: findGrids,
+    _labelsOf: labelsOf
   };
 })();
 

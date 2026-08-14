@@ -426,6 +426,76 @@ async function testApiKey() {
 
 // Check and update license status on load
 // Now uses tier-based feature gating with FREE features for all users
+/**
+ * Show the theme presets, palette and WCAG panel only while Custom Theme is on.
+ * Left visible they read as live settings, so people pick a preset, see nothing
+ * change, and conclude the theme is broken — the toggle above them is the part
+ * that is off.
+ * @param {boolean} enabled
+ */
+function syncThemeControlsVisibility(enabled) {
+  const controls = document.querySelector('.theme-rebuild');
+  if (controls) controls.classList.toggle('hidden', !enabled);
+}
+
+/**
+ * Lock or unlock one feature row by id.
+ *
+ * checkLicenseStatus() otherwise enumerates every paid feature by hand, twice
+ * — once to unlock for a licence holder, once to lock in Free Mode — which is
+ * how Editable Tables reached the unlock list but not the lock list, and how
+ * Tweak Engine and Inspect for AI ended up in neither. A row that stays
+ * enabled promises something the content script's tier gate then refuses.
+ *
+ * @param {string} featureId - the `data-feature` id, e.g. 'tweakEngine'
+ * @param {boolean} locked
+ */
+function setFeatureRowLocked(featureId, locked) {
+  document.getElementById(`${featureId}Feature`)?.classList.toggle('locked', locked);
+  const checkbox = document.getElementById(featureId);
+  if (checkbox) checkbox.disabled = locked;
+}
+
+/** Paid rows the hand-maintained lists above don't cover. */
+const EXTRA_PRO_ROWS = ['tweakEngine', 'inspectForAi'];
+
+const TIER_PLAN_NAMES = {
+  essential: 'Essential',
+  pro: 'Pro',
+  'power-user': 'Power User'
+};
+
+/**
+ * Put a padlock on every locked row and take it off the rest.
+ *
+ * The tier is carried by the icon chip's colour, which says which plan a
+ * feature belongs to but not that you cannot use it yet. A dimmed toggle reads
+ * as "off" just as easily as "unavailable", so the padlock is the part that
+ * says upgrade — and it names the plan on hover, which colour alone can never
+ * do (and which anyone who can't distinguish the tints needs).
+ */
+function syncLockIcons() {
+  document.querySelectorAll('.feature-item').forEach((row) => {
+    const locked = row.classList.contains('locked');
+    let icon = row.querySelector('.feature-lock');
+
+    if (!locked) {
+      if (icon) icon.remove();
+      return;
+    }
+
+    if (!icon) {
+      icon = document.createElement('i');
+      icon.className = 'ph ph-lock-simple feature-lock';
+      row.insertBefore(icon, row.querySelector('.toggle'));
+    }
+    const plan = TIER_PLAN_NAMES[row.dataset.tier];
+    const label = plan ? `Requires the ${plan} plan` : 'Requires an upgrade';
+    icon.title = label;
+    icon.setAttribute('aria-label', label);
+  });
+}
+
 async function checkLicenseStatus() {
   const licenseData = await LicenseService.getLicenseData();
   const tier = await LicenseService.getTier();
@@ -496,8 +566,10 @@ async function checkLicenseStatus() {
       if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = false;
       reverseThreadOrderFeature?.classList.remove('locked');
       if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = false;
+      EXTRA_PRO_ROWS.forEach((id) => setFeatureRowLocked(id, false));
     } else {
       // Essential tier - lock PRO features
+      EXTRA_PRO_ROWS.forEach((id) => setFeatureRowLocked(id, true));
       dragDropFeature?.classList.add('locked');
       if (dragDropCheckbox) dragDropCheckbox.disabled = true;
       rgbThemeFeature?.classList.add('locked');
@@ -560,6 +632,7 @@ async function checkLicenseStatus() {
     budgetRowHighlightFeature?.classList.remove('locked');
     if (budgetRowHighlightCheckbox) budgetRowHighlightCheckbox.disabled = false;
 
+    syncLockIcons();
     return { hasLicense: true, tier: tier };
   } else {
     // No license or invalid - FREE features still work!
@@ -603,11 +676,15 @@ async function checkLicenseStatus() {
     if (paveCaptureCheckbox) paveCaptureCheckbox.disabled = true;
     invoiceForecastFeature?.classList.add('locked');
     if (invoiceForecastCheckbox) invoiceForecastCheckbox.disabled = true;
+    editableTablesFeature?.classList.add('locked');
+    if (editableTablesCheckbox) editableTablesCheckbox.disabled = true;
+    EXTRA_PRO_ROWS.forEach((id) => setFeatureRowLocked(id, true));
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
     // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups,
     // autoSequence)
 
+    syncLockIcons();
     return { hasLicense: false, tier: null };
   }
 }
@@ -828,6 +905,8 @@ async function loadSettings() {
       customizeBtn.style.display = (hasProFeatures && settings.rgbTheme) ? 'inline-flex' : 'none';
     }
 
+    syncThemeControlsVisibility(hasProFeatures && settings.rgbTheme);
+
     // Hide the customization panel initially (if it exists in the HTML)
     const themeCustomization = document.getElementById('themeCustomization');
     if (themeCustomization) {
@@ -933,6 +1012,8 @@ async function saveSettings(settings) {
     if (customizeBtn) {
       customizeBtn.style.display = shouldShowButton ? 'inline-flex' : 'none';
     }
+
+    syncThemeControlsVisibility(shouldShowButton);
 
     // Hide panel when toggle is turned off
     if (!shouldShowButton && themeCustomization) {
@@ -1695,15 +1776,15 @@ function renderFeatureCategories() {
     if (input) itemsById[input.dataset.feature] = item;
   });
 
-  const buildSection = (id, title, iconClass, ids) => {
+  const buildSection = (id, title, ids) => {
     const wrap = document.createElement('div');
     wrap.className = 'feature-category';
 
     const header = document.createElement('div');
     header.className = 'category-header collapsed';
     header.dataset.category = id;
-    const icon = document.createElement('i');
-    icon.className = `ph ${iconClass} category-icon`;
+    // No icon on group headers — each row carries its own now, and a second
+    // icon on the header just competed with them.
     const titleEl = document.createElement('span');
     titleEl.className = 'category-title';
     titleEl.textContent = title;
@@ -1712,7 +1793,7 @@ function renderFeatureCategories() {
     const toggle = document.createElement('span');
     toggle.className = 'category-toggle';
     toggle.textContent = '▼';
-    header.append(icon, titleEl, countEl, toggle);
+    header.append(titleEl, countEl, toggle);
 
     const body = document.createElement('div');
     body.className = 'category-features collapsed';
@@ -1732,7 +1813,7 @@ function renderFeatureCategories() {
   const frag = document.createDocumentFragment();
   cats.forEach(cat => {
     if (cat && cat.id && Array.isArray(cat.features)) {
-      frag.appendChild(buildSection(cat.id, cat.title || cat.id, cat.icon || 'ph-squares-four', cat.features));
+      frag.appendChild(buildSection(cat.id, cat.title || cat.id, cat.features));
     }
   });
 
@@ -1740,7 +1821,7 @@ function renderFeatureCategories() {
   const orphanIds = Object.keys(itemsById);
   if (orphanIds.length) {
     console.warn('renderFeatureCategories: uncategorized feature toggles:', orphanIds);
-    frag.appendChild(buildSection('more', 'More', 'ph-dots-three', orphanIds));
+    frag.appendChild(buildSection('more', 'More', orphanIds));
   }
 
   // Replace the old static category sections with the rebuilt ones, mounted

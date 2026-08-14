@@ -156,11 +156,17 @@ body.dark-theme {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { overflow: hidden; }
 
+/* Rounded popup frame. The browser paints the popup window behind the
+   document, so the corners only read as round if <html> stops painting over
+   them — hence transparent here and the fill moved onto <body>. */
+html { background: transparent; }
+
 body {
   font-family: var(--ff-body);
   width: 380px;
   height: 600px;
   background: var(--bg);
+  border-radius: 12px;
   color: var(--fg);
   font-size: 13px;
   line-height: 1.5;
@@ -168,11 +174,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Sidepanel context: let Chrome's panel size the document. */
+/* Sidepanel context: let Chrome's panel size the document. The side panel is
+   a docked surface with square edges of its own, so the radius comes off. */
 body.in-sidepanel {
   width: 100%;
   height: 100vh;
   min-width: 320px;
+  border-radius: 0;
 }
 
 .hidden { display: none !important; }
@@ -424,21 +432,37 @@ i.tab-icon { display: block; }
    ═══════════════════════════════════════════════════════════ */
 .features-section { background: var(--bg); }
 
+/* Inset, rounded cards rather than edge-to-edge bands — matches the Theme
+   tab's rows, so the two tabs read as the same product. The master toggle
+   above them stays full width: it governs everything, so it reads as the
+   surface the cards sit on rather than as one more card. */
 .feature-category {
-  border-bottom: 1px solid var(--rule);
+  margin: 0 10px 10px;
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  overflow: hidden;
 }
+/* Space between the full-width master toggle and the first card. Not
+   `.feature-category:first-of-type` — the master bar is a div too, so it owns
+   :first-of-type and no category can ever match it. */
+.features-section .master-toggle-bar { margin-bottom: 12px; }
 
+/* One step above an off row (which uses --bg), so the group header stays
+   distinguishable from the rows beneath it now that both are shaded. */
 .category-header {
   display: flex;
   align-items: center;
-  padding: 11px 16px;
+  padding: 11px 14px;
   cursor: pointer;
-  background: var(--bg);
+  background: var(--bg-raised);
   transition: background var(--duration) var(--ease);
   user-select: none;
 }
 
-.category-header:hover { background: var(--bg-raised); }
+/* Hover has to move further than the resting state now that resting IS
+   --bg-raised: darker on paper, lighter on coal. */
+.category-header:hover { background: var(--bg-sunken); }
+body.dark-theme .category-header:hover { background: #3a3a3a; }
 
 .category-icon {
   width: 26px;
@@ -506,13 +530,70 @@ i.category-icon { flex-shrink: 0; }
 .feature-item {
   display: flex;
   align-items: center;
+  gap: 10px;
   justify-content: space-between;
-  padding: 11px 16px;
+  padding: 10px 14px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule-soft);
   transition: background var(--duration) var(--ease);
 }
+.feature-item .feature-info { flex: 1; min-width: 0; }
+
+/* An off feature sits one step back from the surface — enough to scan which
+   are on at a glance, well short of the dimming a locked row gets. :has() is
+   the only way to style a row from its own checkbox; where it isn't supported
+   the row simply stays level, which is what it did before. */
+.feature-item:has(input[data-feature]:not(:checked)) {
+  background: var(--bg);
+}
+
+/* Feature icon chip.
+   The tier used to be a text badge on every paid row; it is now carried by the
+   chip's colour, which frees the row to be one readable line. The icon itself
+   says what the feature touches, so a row still reads as something before you
+   open its guide. */
+.feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-lg);
+  font-size: 15px;
+  /* Free tier — neutral. Paid tiers override below. */
+  background: var(--bg-raised);
+  color: var(--fg-muted);
+}
+/* Light mode leans on saturation rather than a pale wash — a 5% tint behind a
+   near-black glyph reads as grey at 28px. Dark mode gets its colour from a
+   bright glyph on a translucent fill instead, so it needs no such help. */
+.feature-item[data-tier="essential"] .feature-icon { background: #B8EEDA; color: #00694F; }
+.feature-item[data-tier="pro"]       .feature-icon { background: #FFD3BF; color: #B33A00; }
+.feature-item[data-tier="power-user"] .feature-icon { background: #E3D2FC; color: #6A1FB8; }
+
+/* Free features are the majority of the list, so their chip stays quiet — but
+   quiet, not colourless: a warm slate reads as deliberate next to the tiers. */
+.feature-item:not([data-tier]) .feature-icon { background: #E8E9F0; color: #4E5266; }
+
+body.dark-theme .feature-item[data-tier="essential"] .feature-icon { background: rgba(0, 200, 150, 0.16); color: #5DCAA5; }
+body.dark-theme .feature-item[data-tier="pro"]       .feature-icon { background: rgba(254, 76, 13, 0.18); color: #FF7A45; }
+body.dark-theme .feature-item[data-tier="power-user"] .feature-icon { background: rgba(168, 85, 247, 0.18); color: #C89BFA; }
+/* Dark mode keeps the neutral grey chip for free features — the warm slate
+   above is a light-mode device and would read as a light chip on coal. */
+body.dark-theme .feature-item:not([data-tier]) .feature-icon { background: var(--bg-raised); color: var(--fg-muted); }
+
 .category-features .feature-item:last-child { border-bottom: none; }
+
+/* Theme tab rows reuse .feature-item, so they need the rounded, bordered
+   container the Features tab gets from its category wrapper. */
+.theme-feature-list {
+  margin-bottom: 14px;
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.theme-feature-list .feature-item:last-child { border-bottom: none; }
 
 .feature-item:hover { background: var(--bg-raised); }
 
@@ -561,22 +642,26 @@ i.category-icon { flex-shrink: 0; }
 }
 
 /* Help / device icons */
+/* The guide icon is now the only explanation a feature row carries — the
+   one-line descriptions moved into the guides — so it has to be findable at a
+   glance rather than a faint mark beside the title. */
 .feature-help {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
-  font-size: 10px;
-  color: var(--fg-subtle);
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  color: var(--accent-ink);
+  background: var(--accent-wash);
   cursor: pointer;
   border-radius: 50%;
   transition: color var(--duration) var(--ease), background var(--duration) var(--ease);
   flex-shrink: 0;
 }
 .feature-help:hover {
-  color: var(--accent-ink);
-  background: var(--accent-wash);
+  color: var(--accent-fg);
+  background: var(--accent-ink);
 }
 
 .feature-mobile,
@@ -699,8 +784,30 @@ body.dark-theme .slider { background: var(--jt-coal-300); }
 body.dark-theme input:checked + .slider { background: var(--jt-orange); }
 
 /* Locked / disabled */
-.feature-item.locked { opacity: 0.45; }
+/* Dim the row's contents rather than the row itself, so the tier chip can stay
+   at full strength — it is the only thing left saying which plan unlocks this,
+   and a child cannot be more opaque than its parent. */
+.feature-item.locked { opacity: 1; }
+.feature-item.locked .feature-info,
+.feature-item.locked .toggle { opacity: 0.45; }
 .feature-item.locked .toggle { pointer-events: none; }
+
+/* The padlock says "upgrade", the dimmed toggle only says "off". Tinted to the
+   row's tier so the chip and the lock tell the same story, and full strength
+   like the chip — it is the reason the row is dimmed, not part of the dimming. */
+.feature-lock {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--fg-subtle);
+  cursor: help;
+}
+.feature-item[data-tier="essential"] .feature-lock { color: #00745A; }
+.feature-item[data-tier="pro"] .feature-lock { color: #B23100; }
+.feature-item[data-tier="power-user"] .feature-lock { color: #6B21A8; }
+
+body.dark-theme .feature-item[data-tier="essential"] .feature-lock { color: #5DCAA5; }
+body.dark-theme .feature-item[data-tier="pro"] .feature-lock { color: #FF7A45; }
+body.dark-theme .feature-item[data-tier="power-user"] .feature-lock { color: #C89BFA; }
 
 /* v4.8.2 — same .locked treatment for the Theme tab master-toggle card.
    popup.js's premium-gating adds .locked to #rgbThemeFeature, which is
@@ -2566,7 +2673,11 @@ body.dark-theme .badge.api {
   inset: auto 0 0 0;
   max-width: 100%;
   max-height: 88vh;
-  padding: 0;
+  /* The sheet is inset from the popup frame so all four of its corners can
+     round — flush against the edge, only the top two ever show. */
+  padding: 0 8px 8px;
+  /* The sheet's own body is the only thing that should ever scroll. */
+  overflow: hidden;
   /* Colors */
   background: transparent;
   border: none;
@@ -2575,20 +2686,45 @@ body.dark-theme .badge.api {
   color: var(--fg-strong);
 }
 .jt-feature-guide-dialog::backdrop {
-  background: rgba(15, 15, 15, 0.55);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 15, 15, 0.62);
+  backdrop-filter: blur(6px);
 }
 
 .fg-sheet {
+  /* A floating card, not a panel welded to the frame: full border, real
+     radius, and a two-layer shadow (contact + diffused). --fg-edge is the
+     top highlight that keeps a dark surface from reading as flat; on a light
+     surface there is nothing to catch the light, so it stays transparent and
+     the shadow does the lifting. */
+  --fg-edge: transparent;
+  --fg-lift: 0 -2px 10px rgba(20, 20, 20, 0.10), 0 -18px 44px rgba(20, 20, 20, 0.16);
   /* Layout */
   display: flex;
   flex-direction: column;
-  max-height: 88vh;
+  /* Fill the dialog rather than repeating its 88vh: the dialog's padding is
+     inside that height, so a sheet also capped at 88vh overflows it by the
+     padding and the dialog grows a second scrollbar beside the body's. */
+  max-height: 100%;
   /* Colors */
   background: var(--bg-surface);
-  border-top: 1px solid var(--rule);
-  border-radius: var(--r-md) var(--r-md) 0 0;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: var(--fg-lift), inset 0 1px 0 var(--fg-edge);
+}
+body.dark-theme .fg-sheet {
+  --fg-edge: rgba(255, 255, 255, 0.07);
+  --fg-lift: 0 -2px 10px rgba(0, 0, 0, 0.40), 0 -18px 44px rgba(0, 0, 0, 0.50);
+  border-color: var(--rule-strong);
+}
+
+/* Grab handle — says "this dismisses" without a word of copy. */
+.fg-grabber {
+  flex-shrink: 0;
+  width: 32px;
+  height: 3px;
+  margin: 8px auto 0;
+  border-radius: var(--r-pill);
+  background: var(--rule-strong);
 }
 
 /* ── Header ───────────────────────────────────────────────── */
@@ -2669,11 +2805,17 @@ body.dark-theme .badge.api {
   color: var(--fg-strong);
 }
 
+/* Raised chip rather than a bare line — a third plane above the sheet body,
+   which is most of what stops the sheet reading as one flat rectangle. */
 .fg-where {
-  display: flex;
+  display: inline-flex;
   gap: 6px;
   align-items: baseline;
-  margin-top: 10px;
+  margin-top: 12px;
+  padding: 7px 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--fg-muted);
@@ -2758,10 +2900,12 @@ body.dark-theme .fg-access--required {
 /* ── Footer ───────────────────────────────────────────────── */
 .fg-footer {
   flex-shrink: 0;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-top: 1px solid var(--rule);
   background: var(--bg);
-  border-radius: 0 0 var(--r-md) var(--r-md);
+  /* 1px inside the sheet's 14px radius, so the fill doesn't square off the
+     corner it sits in. */
+  border-radius: 0 0 13px 13px;
 }
 .fg-docs-link {
   display: inline-flex;
@@ -2777,3 +2921,51 @@ body.dark-theme .fg-access--required {
   cursor: pointer;
 }
 .fg-docs-link:hover { text-decoration: underline; }
+
+/* ── First-run tip ────────────────────────────────────────────
+   The guides are only discoverable by noticing a small icon, so say it once.
+   Shows the real glyph inline rather than describing it — "look for this
+   shape" beats "click the help icon". Dismissed for good on the X, or the
+   moment the user opens any guide (the tip has done its job). */
+.fg-tip {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 0 0 10px;
+  padding: 10px 11px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.fg-tip-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--fg);
+}
+.fg-tip-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin: 0 1px;
+  vertical-align: -3px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+  color: var(--accent-fg);
+  font-size: 10px;
+}
+.fg-tip-close {
+  flex-shrink: 0;
+  padding: 0 2px;
+  background: none;
+  border: none;
+  color: var(--fg-subtle);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.fg-tip-close:hover { color: var(--fg-strong); }

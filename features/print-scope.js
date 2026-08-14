@@ -159,6 +159,12 @@ const PrintScopeFeature = (() => {
         margin: 0;
         padding: 0;
         background: #fff;
+        /* A printed scope is a client-facing document, so it always renders in
+           JobTread's default light look — never the reader's Dark Mode or
+           Custom Theme. Our stylesheets are skipped when copying (see
+           isExtensionSheet); this pins the frame light regardless, including any
+           form control that would otherwise follow the OS. */
+        color-scheme: light;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -178,10 +184,19 @@ const PrintScopeFeature = (() => {
       /* Don't clip/scroll the table wrappers — but leave photo thumbnails
          (.aspect-square uses overflow-hidden to crop bg-cover) alone. */
       #jt-print-wrap .overflow-auto { overflow: visible !important; }
-      /* Font-size picker — scope body text is .text-xs; headers inherit root. */
-      #jt-print-wrap[data-size="large"] { font-size: 17px; }
+      /* Font-size picker.
+         "Normal" has to be stated, not inherited: the print frame is a bare
+         document, so anything without an explicit size class fell back to the
+         browser's 16px default and printed larger than the same document on
+         screen. 12px is the document's own size — the scope's text is .text-xs
+         (0.75rem), and because rem is root-relative it was already printing at
+         12 while the unclassed headings and labels around it sat at 16.
+         Matching the base to it makes the page uniform.
+         Large and Larger scale both together, so each step stays even. */
+      #jt-print-wrap { font-size: 12px; }
+      #jt-print-wrap[data-size="large"] { font-size: 14px; }
       #jt-print-wrap[data-size="large"] .text-xs { font-size: 14px !important; }
-      #jt-print-wrap[data-size="larger"] { font-size: 19px; }
+      #jt-print-wrap[data-size="larger"] { font-size: 16px; }
       #jt-print-wrap[data-size="larger"] .text-xs { font-size: 16px !important; }
     `;
   }
@@ -204,15 +219,58 @@ const PrintScopeFeature = (() => {
     return css;
   }
 
+  // Any stylesheet the extension itself injected, by URL or by the `jt-` id
+  // convention every feature's <style>/<link> follows.
+  const EXTENSION_URL = /^(chrome|moz|safari-web|ms-browser)-extension:\/\//;
+
+  /**
+   * Is this one of our stylesheets rather than JobTread's?
+   *
+   * A printed scope goes to a client, so it has to look like JobTread's own
+   * document — not like the reader's chosen theme. Dark Mode and Custom Theme
+   * were both bleeding into the print: Custom Theme declares `--jt-theme-*` on
+   * `:root`, which applies inside the iframe as readily as on the page, and any
+   * unscoped rule in our feature CSS came along too. None of our styling
+   * belongs in the output, so the whole set is skipped.
+   *
+   * @param {CSSStyleSheet} sheet
+   * @returns {boolean}
+   */
+  function isExtensionSheet(sheet) {
+    if (sheet.href && EXTENSION_URL.test(sheet.href)) return true;
+    const node = sheet.ownerNode;
+    return !!(node && node.id && node.id.startsWith('jt-'));
+  }
+
+  /**
+   * Drop dark-mode hooks the clone carries with it.
+   *
+   * Tailwind's `dark:` variants and our own dark rules both key off an ancestor
+   * class, and the iframe has none — but the cloned card can carry one on itself
+   * or a descendant, which would survive the move. Removing them keeps the
+   * printed document light whichever dark mode is switched on.
+   *
+   * @param {HTMLElement} root
+   */
+  function stripThemeClasses(root) {
+    const CLASSES = ['dark', 'jt-dark-mode'];
+    [root, ...root.querySelectorAll('.dark, .jt-dark-mode')].forEach((el) => {
+      CLASSES.forEach((cls) => el.classList.remove(cls));
+    });
+  }
+
   /**
    * Rebuild the page's styles into the iframe: inline every reachable
    * stylesheet (same-origin sheets + constructed adoptedStyleSheets) with
    * print-only blocks stripped, and <link> the ones we can't read (cross-origin).
+   * Our own stylesheets are deliberately left out — see isExtensionSheet.
    */
   function copyStyles(doc) {
     const parts = [];
 
     for (const sheet of [...document.styleSheets]) {
+      if (isExtensionSheet(sheet)) continue;
+
       let rules = null;
       try { rules = sheet.cssRules; } catch (_) { rules = null; }
       if (rules) {
@@ -282,6 +340,7 @@ const PrintScopeFeature = (() => {
         child.remove();
       }
     });
+    stripThemeClasses(clone);
 
     // Remove any stale frame from a previous run.
     const stale = document.getElementById(IFRAME_ID);
@@ -382,7 +441,12 @@ const PrintScopeFeature = (() => {
   return {
     init,
     cleanup,
-    isActive: () => isActiveState
+    isActive: () => isActiveState,
+    // Exposed for unit tests — these two decide whether the reader's theme
+    // reaches a client-facing document, which is not something to leave
+    // uncovered.
+    _isExtensionSheet: isExtensionSheet,
+    _stripThemeClasses: stripThemeClasses
   };
 })();
 

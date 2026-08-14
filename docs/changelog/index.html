@@ -55,11 +55,194 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.10.7 — Editable Tables, in-popup feature guides, feature list redesign, custom field paging fix, org switch cache fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.7</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">August 13, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✏️</span> Editable Tables &mdash; edit a job list in place (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fill in a whole column without opening a single job</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">In the Jobs list, hover a custom field cell and click the pencil &mdash; or <strong>Alt+click</strong> the cell &mdash; then type and press Enter. <strong>Tab</strong> saves and jumps to the next editable cell, so a column can be filled end to end without leaving the grid. Fields with set options get a dropdown; dates get a date picker.</li>
+                            <li class="sub-item"><strong>A plain click still opens the job, exactly as before.</strong> Every row in the Data Browser is a link, so editing deliberately claims only two gestures JobTread doesn't already use.</li>
+                            <li class="sub-item"><strong>Only your custom field columns become editable.</strong> A column headed "Status" can be JobTread's own job status or a custom field you named the same thing, and writing to the wrong one would corrupt data silently. A column is only editable when the saved view proves that position holds a custom field <em>and</em> its name matches the header shown there. Native columns &mdash; name, address, the schedule dates &mdash; are left alone.</li>
+                            <li class="sub-item">A green flash and a toast confirm each save. A failed save flashes red, keeps JobTread's own reason on screen, and leaves the cell as it was.</li>
+                            <li class="sub-item">Off by default, and needs a grant key since it writes to JobTread.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">❓</span> Every feature now explains itself, in the popup</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Tap the ? beside any feature for a quick guide</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Each guide says what the feature does, where in JobTread it shows up, and whether it needs API access &mdash; without throwing you out to the website. The <strong>?</strong> used to open a new tab and close the popup you were configuring; now it answers in place.</li>
+                            <li class="sub-item"><strong>Ten features had no ? at all</strong>, including several of the least self-explanatory in the product. All of them have one now.</li>
+                            <li class="sub-item">An <strong>API</strong> chip marks the features that read or write JobTread data, so the requirement is visible before you switch one on and wonder why nothing happened.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎨</span> A cleaner feature list</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">One line per feature, and your plan shown in colour</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Every row carried a one-line description that repeated its guide at length. Those are gone &mdash; the guides carry them now &mdash; so the list is about half as long and easier to scan.</li>
+                            <li class="sub-item">Each feature gets an icon for what it touches, tinted to the plan it belongs to: teal for Essential, orange for Pro, purple for Power User. The PRO / ESSENTIAL / POWER USER words are gone.</li>
+                            <li class="sub-item"><strong>Locked features now carry a padlock</strong> that names the plan unlocking them, instead of just looking greyed out.</li>
+                            <li class="sub-item">A feature that's switched off sits one shade back from one that's on, so a glance shows what's running. Groups are rounded cards now, and <strong>Dark Mode moved to the Theme tab</strong>, above Custom Theme.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Only the first 10 custom fields were ever loaded</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">JobTread returns 10 records per page by default and we never asked for more, so every custom field after the tenth was invisible to the extension &mdash; at one company, 14 of their 24 job fields. <strong>Custom Field Filter</strong> was missing those entries from its dropdown with nothing to suggest the list was incomplete, and Editable Tables correctly refused to edit a column it couldn't verify. Fixed everywhere.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Switching organizations kept the previous one's data</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Custom fields, jobs and locations are cached for an hour and weren't cleared when you switched company, so features could answer with the old organization's data. They're cleared on a real switch now.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Paid features looked available on a free account</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Editable Tables, User Tweaks Engine and Inspect for AI all rendered as though you could switch them on. They never actually ran &mdash; but the popup shouldn't have offered them. All three now lock like every other paid feature.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.10.6 — billing propagation, Text Formatter overflow menu + checkboxes, Quick Notes typing, popup gating, daily log deletion, MCP document templates.
+             Backfilled: 4.10.6 shipped without a public entry. Items already
+             published under 4.10.5 (Worksheets, Quick Notes markdown, role
+             mirroring, MCP pagination) are deliberately not repeated here. -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.6</span>
+                <span class="version-date">August 11, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">💳</span> Plan changes now apply in seconds, not days</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Upgrades reached customers who never signed out</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Your plan was only re-checked on a fresh sign-in, and sessions last up to 90 days &mdash; so an upgrade could sit unapplied while you used the portal daily. One customer's Power User upgrade went unnoticed for a week, and nothing they could have done would have fixed it. Your plan is now re-checked as your session refreshes, and a purchase notifies us directly so it lands within seconds.</li>
+                            <li class="sub-item"><strong>A mid-cycle upgrade could also be silently reverted.</strong> Our billing provider keeps reporting the original purchase price after an upgrade, and in one case that read as the old plan and quietly downgraded a paying customer. A price reading can no longer lower a plan you already hold.</li>
+                            <li class="sub-item"><strong>"Re-check my plan"</strong> is now a button on the portal's Org &amp; Plan card, for the times something still hasn't landed.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Cancelling now actually ends access</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A cancelled or refunded subscription kept working, because our checks treated a dead subscription as valid and nothing ever wrote the change down. Cancellations and refunds now end access as they should, and the extension picks the change up without waiting a day.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🅰️</span> Text Formatter</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: the "More options" menu inserted nothing &mdash; colors most of all</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Anything that overflowed into the toolbar's <strong>More options</strong> menu did nothing when clicked, most visibly the colors, and most visibly in the budget: clicking a color left the field untouched. Every overflowed button works now.</li>
+                            <li class="sub-item">Colors were affected first because they're the first thing pushed into the overflow menu, and the budget is where it bit hardest.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: pressing Enter in a checklist dropped the checkbox</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Starting a new line inside a checklist lost the <code>- [ ]</code> marker, so you had to retype it every time. New lines now continue the checklist.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📝</span> Quick Notes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: typing is reliable again</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Characters could be dropped or reordered while typing quickly in a note. Fixed &mdash; along with the formatter's <strong>More options</strong> menu, which did nothing inside Quick Notes for the same reason it did nothing elsewhere.</li>
+                            <li class="sub-item">The right-click table menu inside a note works again, so you can add and remove rows and columns without leaving the keyboard.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Popup and free-tier fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: a locked feature could show an ON toggle</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A feature above your plan could appear switched on while doing nothing, which read as the feature being broken rather than unavailable. A locked row now always reads as off.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: Auto Sequence is free, but free users couldn't switch it on</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Auto Sequence writes the new order back to JobTread, so it needs a grant key even though the feature itself is free &mdash; and it used to fail with no way forward. It now explains what it needs and links straight to the portal page where you add a key.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> AI &amp; MCP</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Fixed: deleting a daily log was impossible</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The confirmation step your AI shows before a deletion always failed, so a daily log could never actually be deleted through it.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Document templates are readable at last</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Your AI had no way to list your document templates, so it couldn't tell you what was available or build from one by name. It can now.</li>
+                            <li class="sub-item"><strong>Documents built from a template went out with a blank email message</strong>, dropping the template's own wording. The template's message now carries through.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Assistant fixes (pre-launch)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The Assistant gave up on JT Task Trigger jobs instead of doing them, and couldn't read your company's Skills. Both fixed.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.10.5 — Worksheets rename, role mirroring, free-tier gating fix, Text Formatter freeze, Preview Mode bullets, MCP pagination + document fixes -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.10.5</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">August 5, 2026</span>
             </div>
 

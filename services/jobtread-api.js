@@ -81,14 +81,23 @@ const JobTreadAPI = (() => {
     };
   }
 
-  // Storage keys
+  // Storage keys.
+  //
+  // The custom field cache keys carry a `V2` suffix deliberately. Every cache
+  // written before the paginated fetch holds at most the first 10 fields (Pave's
+  // default page), and it lives for an hour - so on upgrade the stale entry
+  // would keep hiding fields even though the query is now correct. A new key
+  // retires those entries instantly instead of waiting them out.
   const STORAGE_KEYS = {
     API_KEY: 'jtToolsApiKey',
     ORG_ID: 'jtToolsOrgId',
     JOBS_CACHE: 'jtToolsJobsCache',
-    CUSTOM_FIELDS_CACHE: 'jtToolsCustomFieldsCache',
-    CUSTOM_FIELDS_TIMESTAMP: 'jtToolsCustomFieldsTimestamp',
-    JOBS_TIMESTAMP: 'jtToolsJobsTimestamp'
+    CUSTOM_FIELDS_CACHE: 'jtToolsCustomFieldsCacheV2',
+    CUSTOM_FIELDS_TIMESTAMP: 'jtToolsCustomFieldsTimestampV2',
+    JOBS_TIMESTAMP: 'jtToolsJobsTimestamp',
+    // Retired keys, removed on clearCache so they don't linger in storage.
+    LEGACY_CUSTOM_FIELDS_CACHE: 'jtToolsCustomFieldsCache',
+    LEGACY_CUSTOM_FIELDS_TIMESTAMP: 'jtToolsCustomFieldsTimestamp'
   };
 
   // Cache duration (1 hour for custom field definitions)
@@ -406,18 +415,28 @@ const JobTreadAPI = (() => {
     }
   }
 
+  // Pave's default page size is 10. An org with more custom fields than this
+  // silently loses the rest, so every page is asked for explicitly and the
+  // cursor is followed to the end (see fetchAllCustomFields).
+  const CUSTOM_FIELDS_PAGE_SIZE = 100;
+
   /**
    * Build the customFields sub-query for a given targetType.
    * Shared by the job and location custom-field fetchers.
    * @param {string} targetType - Pave targetType filter (e.g. 'job', 'location')
+   * @param {string} [page] - Pave page cursor from a previous `nextPage`
    * @returns {Object} Pave customFields sub-query object
    */
-  function buildCustomFieldsSubQuery(targetType) {
+  function buildCustomFieldsSubQuery(targetType, page) {
+    const args = {
+      where: ['targetType', '=', targetType],
+      sortBy: [{ field: 'position' }],
+      size: CUSTOM_FIELDS_PAGE_SIZE
+    };
+    if (page) args.page = page;
     return {
-      $: {
-        where: ['targetType', '=', targetType],
-        sortBy: [{ field: 'position' }]
-      },
+      $: args,
+      nextPage: {},
       nodes: {
         id: {},
         name: {},
@@ -426,6 +445,42 @@ const JobTreadAPI = (() => {
         options: {}
       }
     };
+  }
+
+  /**
+   * Every custom field of a targetType, following Pave's page cursor.
+   *
+   * Without this the caller sees only the first page. Titus has 24 job custom
+   * fields and the default page is 10, so two thirds of them - every field
+   * positioned after the tenth - were invisible to the extension: missing from
+   * the Custom Field Filter's dropdown, and unverifiable (so not editable) in
+   * Editable Tables.
+   *
+   * @param {string} orgId
+   * @param {string} targetType
+   * @returns {Promise<Array>} all custom field definitions, in position order
+   */
+  async function fetchAllCustomFields(orgId, targetType) {
+    const all = [];
+    let page;
+
+    // Bounded so a server that always returns a cursor can't spin forever.
+    for (let request = 0; request < 20; request++) {
+      const result = await paveQuery({
+        organization: {
+          $: { id: orgId },
+          id: {},
+          customFields: buildCustomFieldsSubQuery(targetType, page)
+        }
+      });
+
+      const connection = result.organization?.customFields;
+      all.push(...(connection?.nodes || []));
+
+      page = connection?.nextPage;
+      if (!page) break;
+    }
+    return all;
   }
 
   /**
@@ -459,20 +514,8 @@ const JobTreadAPI = (() => {
       }
     }
 
-    // Pave query for custom fields - filter for job targetType
-    // Using the correct format from JT docs with where clause
-    const query = {
-      organization: {
-        $: { id: orgId },
-        id: {},
-        customFields: buildCustomFieldsSubQuery('job')
-      }
-    };
-
     try {
-      const result = await paveQuery(query);
-      // Response comes back WITHOUT the "query" wrapper
-      const jobDefinitions = result.organization?.customFields?.nodes || [];
+      const jobDefinitions = await fetchAllCustomFields(orgId, 'job');
 
       console.log('JobTreadAPI: Fetched job custom fields:', jobDefinitions.length);
       console.log('JobTreadAPI: Job custom fields:', jobDefinitions);
@@ -499,13 +542,13 @@ const JobTreadAPI = (() => {
     // Check cache
     try {
       const cached = await chrome.storage.local.get([
-        'jtToolsLocationFieldsCache',
-        'jtToolsLocationFieldsTimestamp'
+        'jtToolsLocationFieldsCacheV2',
+        'jtToolsLocationFieldsTimestampV2'
       ]);
-      const cacheAge = Date.now() - (cached.jtToolsLocationFieldsTimestamp || 0);
-      if (cached.jtToolsLocationFieldsCache && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
+      const cacheAge = Date.now() - (cached.jtToolsLocationFieldsTimestampV2 || 0);
+      if (cached.jtToolsLocationFieldsCacheV2 && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
         console.log('JobTreadAPI: Using cached location custom fields');
-        return cached.jtToolsLocationFieldsCache;
+        return cached.jtToolsLocationFieldsCacheV2;
       }
     } catch (e) { /* cache read failed */ }
 
@@ -514,21 +557,13 @@ const JobTreadAPI = (() => {
       if (!orgId) throw new Error('Organization ID not configured');
     }
 
-    const query = {
-      organization: {
-        $: { id: orgId },
-        customFields: buildCustomFieldsSubQuery('location')
-      }
-    };
-
     try {
-      const result = await paveQuery(query);
-      const fields = result.organization?.customFields?.nodes || [];
+      const fields = await fetchAllCustomFields(orgId, 'location');
       console.log('JobTreadAPI: Fetched location custom fields:', fields.length);
 
       await chrome.storage.local.set({
-        jtToolsLocationFieldsCache: fields,
-        jtToolsLocationFieldsTimestamp: Date.now()
+        jtToolsLocationFieldsCacheV2: fields,
+        jtToolsLocationFieldsTimestampV2: Date.now()
       });
 
       return fields;
@@ -840,7 +875,11 @@ const JobTreadAPI = (() => {
         STORAGE_KEYS.JOBS_CACHE,
         STORAGE_KEYS.CUSTOM_FIELDS_CACHE,
         STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP,
-        STORAGE_KEYS.JOBS_TIMESTAMP
+        STORAGE_KEYS.JOBS_TIMESTAMP,
+        STORAGE_KEYS.LEGACY_CUSTOM_FIELDS_CACHE,
+        STORAGE_KEYS.LEGACY_CUSTOM_FIELDS_TIMESTAMP,
+        'jtToolsLocationFieldsCache',
+        'jtToolsLocationFieldsTimestamp'
       ]);
       discoveredOrgId = null; // Clear discovered org ID on cache clear
       console.log('JobTreadAPI: Cache cleared');
@@ -851,8 +890,22 @@ const JobTreadAPI = (() => {
 
   // Clear discovered org ID when org changes
   if (typeof window !== 'undefined') {
-    window.addEventListener('jt-org-changed', () => {
+    window.addEventListener('jt-org-changed', (event) => {
       discoveredOrgId = null;
+
+      // The cached custom fields, jobs and locations are all org-scoped, but
+      // they share one global storage key - so a switch leaves the previous
+      // org's data in place for up to an hour. Editable Tables then can't find
+      // a definition for any of the new org's columns and quietly makes the
+      // whole grid read-only; the Custom Field Filter shows the wrong fields.
+      //
+      // Only on a real switch: this event also fires on FIRST detection
+      // (previousOrg === null) on every page load, and clearing there would
+      // throw away the cache each time the page loaded.
+      const previous = event?.detail?.previousOrg;
+      if (previous && previous !== event?.detail?.orgName) {
+        void clearCache();
+      }
     });
   }
 

@@ -1,19 +1,44 @@
-/* Editable Tables - inline custom field editing in Data Browser views */
+/* Editable Tables - inline custom field editing in Data Browser grids
+ *
+ * Theming works the same way as invoice-forecast: every colour resolves through
+ * a local var whose fallback is the light palette, so
+ *   - plain JobTread            -> light (the default)
+ *   - Custom Theme (rgb-theme)  -> picks up --jt-theme-* automatically
+ *   - Dark Mode                 -> one override block at the bottom
+ *
+ * These surfaces deliberately do NOT use .jt-tools-surface, whose tokens are
+ * dark-only (they mirror the popup) and would force pale text onto a white
+ * background depending on stylesheet order.
+ */
 
-/* Editable cell — the pencil only appears on hover/focus so the table reads
+/* Brand orange, unless a custom theme says otherwise.
+   Declared on each surface rather than once on :root, because a var resolved at
+   :root is computed there - a theme scoped to a subtree could never override it.
+   Declaring it here lets each surface pick up whichever --jt-theme-primary is in
+   scope, while still defaulting to brand orange. */
+.jt-et-cell,
+.jt-et-edit,
+.jt-et-editor,
+.jt-et-toast {
+  --jt-et-accent: var(--jt-theme-primary, #fe4c0d);
+  --jt-et-accent-hover: var(--jt-theme-primary-hover, #d93d00);
+}
+
+/* Editable cell - the pencil only appears on hover/focus so the grid reads
    exactly as JobTread renders it until you reach for it. */
-td.jt-et-cell:not(.sticky) {
+.jt-et-cell:not(.sticky) {
   position: relative;
 }
 
-td.jt-et-cell {
+.jt-et-cell {
   /* Layout */
   padding-right: 22px;
 }
 
-td.jt-et-cell:hover {
-  /* Colors */
+.jt-et-cell:hover {
+  /* Colors — the second declaration wins wherever color-mix() is supported. */
   box-shadow: inset 0 0 0 1px rgba(254, 76, 13, 0.35);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--jt-et-accent) 35%, transparent);
 }
 
 .jt-et-edit {
@@ -28,56 +53,73 @@ td.jt-et-cell:hover {
   /* Colors */
   background: transparent;
   border: none;
-  color: #fe4c0d;
+  color: var(--jt-et-accent);
   /* Typography */
   font-size: 12px;
   line-height: 1;
   cursor: pointer;
 }
 
-td.jt-et-cell.sticky .jt-et-edit {
-  /* Sticky (frozen) columns already own their positioning — don't fight it. */
+.jt-et-cell.sticky .jt-et-edit {
+  /* Sticky (frozen) columns already own their positioning - don't fight it. */
   position: static;
   transform: none;
   margin-left: 4px;
 }
 
-td.jt-et-cell:hover .jt-et-edit,
+.jt-et-cell:hover .jt-et-edit,
 .jt-et-edit:focus {
   display: inline-block;
 }
 
 .jt-et-edit:hover {
-  color: #d93d00;
+  color: var(--jt-et-accent-hover);
 }
 
 /* Save feedback */
 @keyframes jt-et-flash-in {
-  from { background-color: rgba(159, 225, 203, 0.55); }
+  from { background-color: rgba(52, 168, 122, 0.28); }
   to { background-color: transparent; }
 }
 
 @keyframes jt-et-flash-fail {
-  from { background-color: rgba(248, 113, 113, 0.55); }
+  from { background-color: rgba(220, 38, 38, 0.24); }
   to { background-color: transparent; }
 }
 
-td.jt-et-flash-saved {
+.jt-et-flash-saved {
   animation: jt-et-flash-in 1.2s ease-out;
 }
 
-td.jt-et-flash-failed {
+.jt-et-flash-failed {
   animation: jt-et-flash-fail 1.2s ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  td.jt-et-flash-saved,
-  td.jt-et-flash-failed {
+  .jt-et-flash-saved,
+  .jt-et-flash-failed {
     animation: none;
   }
 }
 
-/* Floating editor */
+/* ── Floating surfaces (editor + toast) ─────────────────────────────── */
+
+.jt-et-editor,
+.jt-et-toast {
+  /* Theme tokens → local vars (fallbacks = the light palette) */
+  --jt-et-bg: var(--jt-theme-background-elevated, #ffffff);
+  --jt-et-field-bg: var(--jt-theme-background, #ffffff);
+  --jt-et-text: var(--jt-theme-text, #1f2937);
+  --jt-et-text-muted: var(--jt-theme-text-muted, #6b7280);
+  --jt-et-border: var(--jt-theme-border, #e5e7eb);
+  --jt-et-border-strong: var(--jt-theme-border-strong, #d1d5db);
+  --jt-et-shadow: rgba(0, 0, 0, 0.18);
+  --jt-et-safe: #34a87a;
+  --jt-et-danger: #dc2626;
+  /* Native selects, date pickers and spinners follow the surface, not the OS. */
+  color-scheme: light;
+}
+
 .jt-et-editor {
   /* Layout */
   position: fixed;
@@ -88,10 +130,11 @@ td.jt-et-flash-failed {
   /* Spacing */
   padding: 6px;
   /* Colors */
-  background: #2c2c2c;
-  border: 1px solid #fe4c0d;
+  background: var(--jt-et-bg);
+  border: 1px solid var(--jt-et-accent);
   border-radius: 6px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 6px 20px var(--jt-et-shadow);
+  color: var(--jt-et-text);
 }
 
 .jt-et-editor.jt-et-saving {
@@ -102,10 +145,10 @@ td.jt-et-flash-failed {
   /* Spacing */
   padding: 6px 8px;
   /* Colors */
-  background: #1f1f1f;
-  border: 1px solid #505050;
+  background: var(--jt-et-field-bg);
+  border: 1px solid var(--jt-et-border-strong);
   border-radius: 4px;
-  color: #e0e0e0;
+  color: var(--jt-et-text);
   /* Typography */
   font: 13px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   box-sizing: border-box;
@@ -114,12 +157,12 @@ td.jt-et-flash-failed {
 
 .jt-et-input:focus {
   outline: none;
-  border-color: #fe4c0d;
+  border-color: var(--jt-et-accent);
 }
 
 .jt-et-hint {
   /* Colors */
-  color: #b0b0b0;
+  color: var(--jt-et-text-muted);
   /* Typography */
   font: 10px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   white-space: nowrap;
@@ -136,12 +179,12 @@ td.jt-et-flash-failed {
   /* Spacing */
   padding: 10px 14px;
   /* Colors */
-  background: #252525;
-  border: 1px solid #404040;
+  background: var(--jt-et-bg);
+  border: 1px solid var(--jt-et-border);
   border-left-width: 4px;
   border-radius: 6px;
-  color: #e0e0e0;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  color: var(--jt-et-text);
+  box-shadow: 0 6px 20px var(--jt-et-shadow);
   /* Typography */
   font: 12px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Motion */
@@ -157,9 +200,48 @@ td.jt-et-flash-failed {
 }
 
 .jt-et-toast-success {
-  border-left-color: #9fe1cb;
+  border-left-color: var(--jt-et-safe);
 }
 
 .jt-et-toast-error {
-  border-left-color: #f87171;
+  border-left-color: var(--jt-et-danger);
+}
+
+/* ── Dark Mode — override the local vars in one place (neutral greys) ── */
+body.jt-dark-mode .jt-et-editor,
+.dark .jt-et-editor,
+body.jt-dark-mode .jt-et-toast,
+.dark .jt-et-toast {
+  --jt-et-bg: #2c2c2c;
+  --jt-et-field-bg: #1f1f1f;
+  --jt-et-text: #e0e0e0;
+  --jt-et-text-muted: #b0b0b0;
+  --jt-et-border: #404040;
+  --jt-et-border-strong: #505050;
+  --jt-et-shadow: rgba(0, 0, 0, 0.45);
+  --jt-et-safe: #9fe1cb;
+  --jt-et-danger: #f87171;
+  color-scheme: dark;
+}
+
+/* The saved/failed flash sits on JobTread's own cell, so it needs a fill that
+   reads against a dark row rather than a white one. */
+@keyframes jt-et-flash-in-dark {
+  from { background-color: rgba(159, 225, 203, 0.32); }
+  to { background-color: transparent; }
+}
+
+@keyframes jt-et-flash-fail-dark {
+  from { background-color: rgba(248, 113, 113, 0.32); }
+  to { background-color: transparent; }
+}
+
+body.jt-dark-mode .jt-et-flash-saved,
+.dark .jt-et-flash-saved {
+  animation-name: jt-et-flash-in-dark;
+}
+
+body.jt-dark-mode .jt-et-flash-failed,
+.dark .jt-et-flash-failed {
+  animation-name: jt-et-flash-fail-dark;
 }

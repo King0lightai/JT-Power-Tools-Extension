@@ -223,6 +223,7 @@ const FeatureGuide = (() => {
     while (dialog.firstChild) dialog.removeChild(dialog.firstChild);
 
     const sheet = el('div', 'fg-sheet');
+    sheet.appendChild(el('div', 'fg-grabber'));
     sheet.appendChild(buildHeader(guide));
     sheet.appendChild(buildBody(guide));
 
@@ -248,6 +249,71 @@ const FeatureGuide = (() => {
 
     render(guide);
     dialog.showModal();
+    // They found it — the tip has nothing left to teach.
+    dismissTip();
+  }
+
+  // ─── FIRST-RUN TIP ───────────────────────────────────────────
+
+  const TIP_KEY = 'jtToolsGuideTipDismissed';
+
+  /**
+   * Persist the dismissal and take the tip off screen. Storage first would
+   * leave the tip up if it threw, so the DOM removal is unconditional.
+   */
+  function dismissTip() {
+    const tip = document.querySelector('.fg-tip');
+    if (tip && tip.parentNode) tip.parentNode.removeChild(tip);
+    try {
+      chrome.storage.local.set({ [TIP_KEY]: true });
+    } catch (error) {
+      console.warn('FeatureGuide: could not persist tip dismissal:', error);
+    }
+  }
+
+  /**
+   * Show the one-time "the ? icons are guides" tip above the feature list.
+   * Silent when already dismissed, or when there is no help icon to point at.
+   */
+  async function maybeShowTip() {
+    const anchor = document.querySelector('#tab-features .features-section');
+    if (!anchor) return;
+    if (!document.querySelector('.feature-help[data-guide-for]')) return;
+
+    let dismissed = false;
+    try {
+      const stored = await chrome.storage.local.get([TIP_KEY]);
+      dismissed = !!stored[TIP_KEY];
+    } catch (error) {
+      // Storage unavailable — better to show it than to nag never.
+      console.warn('FeatureGuide: could not read tip state:', error);
+    }
+    if (dismissed || document.querySelector('.fg-tip')) return;
+
+    const tip = el('div', 'fg-tip');
+
+    const text = el('div', 'fg-tip-text');
+    text.appendChild(document.createTextNode('New: tap the '));
+    const glyph = el('span', 'fg-tip-glyph');
+    glyph.appendChild(el('i', 'ph ph-question'));
+    text.appendChild(glyph);
+    text.appendChild(document.createTextNode(' beside any feature for a quick guide — what it does, where it shows up, and whether it needs API access.'));
+    tip.appendChild(text);
+
+    const close = el('button', 'fg-tip-close');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss tip');
+    close.appendChild(el('i', 'ph ph-x'));
+    close.addEventListener('click', dismissTip);
+    tip.appendChild(close);
+
+    // Under the master toggle so it never pushes the primary control down.
+    const master = anchor.querySelector('.master-toggle-bar');
+    if (master && master.nextSibling) {
+      anchor.insertBefore(tip, master.nextSibling);
+    } else {
+      anchor.insertBefore(tip, anchor.firstChild);
+    }
   }
 
   function hide() {
@@ -285,12 +351,13 @@ const FeatureGuide = (() => {
     });
 
     renderAccessChips();
+    maybeShowTip();
 
     isInitialised = true;
     console.log('FeatureGuide: Initialized');
   }
 
-  return { init, show, hide };
+  return { init, show, hide, dismissTip };
 })();
 
 if (typeof window !== 'undefined') {

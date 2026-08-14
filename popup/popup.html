@@ -25,7 +25,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>POWER TOOLS</h1>
-        <span class="version">v4.10.6</span>
+        <span class="version">v4.10.7</span>
         <button class="header-action-btn" id="refreshBtn" title="Refresh current tab">
           <i class="ph ph-arrows-clockwise"></i>
         </button>
@@ -87,17 +87,16 @@
           <!-- Schedule & Calendar Category -->
           <div class="feature-category">
             <div class="category-header collapsed" data-category="schedule">
-              <i class="ph ph-calendar-blank category-icon"></i>
               <span class="category-title">Schedule & Calendar</span>
-              <span class="category-count">9</span>
+              <span class="category-count">10</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="schedule">
               <!-- No Badge (Free) -->
               <div class="feature-item">
+                <i class="ph ph-kanban feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Kanban Type Filter <i class="ph ph-question feature-help" data-guide-for="kanbanTypeFilter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Hide empty type columns in Kanban view when filtering</p>
+                  <h3>Kanban Type Filter <i class="ph ph-question feature-help" data-guide-for="kanbanTypeFilter" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="kanbanTypeFilter" data-feature="kanbanTypeFilter">
@@ -106,9 +105,9 @@
               </div>
 
               <div class="feature-item">
+                <i class="ph ph-arrows-in-line-vertical feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Auto Collapse Completed Groups <i class="ph ph-question feature-help" data-guide-for="autoCollapseGroups" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Collapse 100% complete groups on page load, and add an Expand/Collapse All Groups button to the Schedule</p>
+                  <h3>Auto Collapse Groups <i class="ph ph-question feature-help" data-guide-for="autoCollapseGroups" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
@@ -117,9 +116,9 @@
               </div>
 
               <div class="feature-item">
+                <i class="ph ph-sort-ascending feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
                   <h3>Document Sort <i class="ph ph-question feature-help" data-guide-for="documentSort" title="Learn more"></i> <span class="badge new">New</span></h3>
-                  <p>Click column headers on any Documents tab &mdash; Job, Customer, or Vendor &mdash; to sort by name, job/account, subject, status, or amount. Force-loads all rows on first click so the sort is complete, not just visible.</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="documentSort" data-feature="documentSort">
@@ -128,9 +127,9 @@
               </div>
 
               <div class="feature-item">
+                <i class="ph ph-lock-key-open feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
                   <h3>Job Access Collapse <i class="ph ph-question feature-help" data-guide-for="jobAccessCollapse" title="Learn more"></i></h3>
-                  <p>Collapse/expand sections in the Job Access panel</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="jobAccessCollapse" data-feature="jobAccessCollapse">
@@ -139,9 +138,9 @@
               </div>
 
               <div class="feature-item">
+                <i class="ph ph-chart-bar-horizontal feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Fat Gantt <i class="ph ph-question feature-help" data-guide-for="ganttLines" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Thicker dependency lines for easier clicking</p>
+                  <h3>Fat Gantt <i class="ph ph-question feature-help" data-guide-for="ganttLines" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="ganttLines" data-feature="ganttLines">
@@ -150,9 +149,9 @@
               </div>
 
               <div class="feature-item" id="autoSequenceFeature">
+                <i class="ph ph-list-numbers feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
                   <h3>Auto Sequence <i class="ph ph-question feature-help" data-guide-for="autoSequence" title="Learn more"></i> <span class="badge new">New</span></h3>
-                  <p>A button in the schedule's mass-actions panel that re-orders each group's items to match their start dates</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="autoSequence" data-feature="autoSequence">
@@ -161,10 +160,10 @@
               </div>
 
               <!-- Pro -->
-              <div class="feature-item premium" id="dragDropFeature">
+              <div class="feature-item premium" id="dragDropFeature" data-tier="pro">
+                <i class="ph ph-check-square feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Schedule Task Checkboxes <i class="ph ph-question feature-help" data-guide-for="dragDrop" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
-                  <p>Mark task cards complete</p>
+                  <h3>Schedule Task Checkboxes <i class="ph ph-question feature-help" data-guide-for="dragDrop" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="dragDrop" data-feature="dragDrop">
@@ -172,10 +171,10 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="availabilityFilterFeature">
+              <div class="feature-item premium" id="availabilityFilterFeature" data-tier="pro">
+                <i class="ph ph-users-three feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Availability Filter <i class="ph ph-question feature-help" data-guide-for="availabilityFilter" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge pro">Pro</span></h3>
-                  <p>Filter assignees by role or category in availability view</p>
+                  <h3>Availability Filter <i class="ph ph-question feature-help" data-guide-for="availabilityFilter" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="availabilityFilter" data-feature="availabilityFilter">
@@ -183,10 +182,10 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="taskTypeFilterFeature">
+              <div class="feature-item premium" id="taskTypeFilterFeature" data-tier="power-user">
+                <i class="ph ph-funnel feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Unassigned Availability <i class="ph ph-question feature-help" data-guide-for="taskTypeFilter" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
-                  <p>See unassigned tasks in schedule availability, filtered by type</p>
+                  <h3>Unassigned Availability <i class="ph ph-question feature-help" data-guide-for="taskTypeFilter" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="taskTypeFilter" data-feature="taskTypeFilter">
@@ -195,23 +194,32 @@
               </div>
 
 
+                          <div class="feature-item">
+                            <i class="ph ph-circle-half feature-icon" aria-hidden="true"></i>
+                <div class="feature-info">
+                  <h3>Contrast Fix <i class="ph ph-question feature-help" data-guide-for="contrastFix" title="Learn more"></i></h3>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+                  <span class="slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
           <!-- Productivity Tools Category -->
           <div class="feature-category">
             <div class="category-header collapsed" data-category="productivity">
-              <i class="ph ph-lightning category-icon"></i>
               <span class="category-title">Productivity Tools</span>
-              <span class="category-count">15</span>
+              <span class="category-count">16</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="productivity">
               <!-- No Badge (Free) -->
               <div class="feature-item">
+                <i class="ph ph-calculator feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Auto Sum <i class="ph ph-question feature-help" data-guide-for="budgetTools" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Select budget line items to see live cost, price &amp; profit totals</p>
+                  <h3>Auto Sum <i class="ph ph-question feature-help" data-guide-for="budgetTools" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="budgetTools" data-feature="budgetTools">
@@ -220,9 +228,9 @@
               </div>
 
               <div class="feature-item">
+                <i class="ph ph-text-b feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Text Formatter <i class="ph ph-question feature-help" data-guide-for="formatter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Rich text toolbar for budgets, logs & tasks</p>
+                  <h3>Text Formatter <i class="ph ph-question feature-help" data-guide-for="formatter" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="formatter" data-feature="formatter">
@@ -231,9 +239,9 @@
               </div>
 
               <div class="feature-item">
+                <i class="ph ph-text-aa feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Message Counter & Templates <i class="ph ph-question feature-help" data-guide-for="characterCounter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Create, save and paste signatures and messages</p>
+                  <h3>Message Counter & Templates <i class="ph ph-question feature-help" data-guide-for="characterCounter" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="characterCounter" data-feature="characterCounter">
@@ -241,28 +249,22 @@
                 </label>
               </div>
 
-              <!-- Print Scope — pocketed for a later release; hidden from the
-                   polished build. Code stays wired (manifest, content.js,
-                   print-scope.js, license FREE list) and it's default-off, so
-                   re-enabling is just restoring this toggle. -->
-              <!--
               <div class="feature-item">
+                <i class="ph ph-printer feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
                   <h3>Print Scope <i class="ph ph-question feature-help" data-guide-for="printScope" title="Learn more"></i> <span class="badge new">New</span></h3>
-                  <p>Adds a Print button to the document preview (from a budget line-item selection) so you can print or save the scope without creating a document</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="printScope" data-feature="printScope">
                   <span class="slider"></span>
                 </label>
               </div>
-              -->
 
               <!-- Essential -->
-              <div class="feature-item" id="smartJobSwitcherFeature">
+              <div class="feature-item" id="smartJobSwitcherFeature" data-tier="essential">
+                <i class="ph ph-arrows-left-right feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Smart Resize <i class="ph ph-question feature-help" data-guide-for="smartJobSwitcher" title="Learn more"></i> <span class="badge essential">Essential</span></h3>
-                  <p>Resize any sidebar</p>
+                  <h3>Smart Resize <i class="ph ph-question feature-help" data-guide-for="smartJobSwitcher" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="smartJobSwitcher" data-feature="smartJobSwitcher">
@@ -270,10 +272,10 @@
                 </label>
               </div>
 
-              <div class="feature-item" id="quickNotesFeature">
+              <div class="feature-item" id="quickNotesFeature" data-tier="essential">
+                <i class="ph ph-note-pencil feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Quick Notes <i class="ph ph-question feature-help" data-guide-for="quickNotes" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge essential">Essential</span></h3>
-                  <p>Persistent notepad accessible from any page (Q+N)</p>
+                  <h3>Quick Notes <i class="ph ph-question feature-help" data-guide-for="quickNotes" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="quickNotes" data-feature="quickNotes">
@@ -281,10 +283,10 @@
                 </label>
               </div>
 
-              <div class="feature-item" id="freezeHeaderFeature">
+              <div class="feature-item" id="freezeHeaderFeature" data-tier="essential">
+                <i class="ph ph-push-pin feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Freeze Header <i class="ph ph-question feature-help" data-guide-for="freezeHeader" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge essential">Essential</span></h3>
-                  <p>Keep job tabs visible while scrolling</p>
+                  <h3>Freeze Header <i class="ph ph-question feature-help" data-guide-for="freezeHeader" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="freezeHeader" data-feature="freezeHeader">
@@ -292,10 +294,10 @@
                 </label>
               </div>
 
-              <div class="feature-item" id="pdfMarkupToolsFeature">
+              <div class="feature-item" id="pdfMarkupToolsFeature" data-tier="essential">
+                <i class="ph ph-pen-nib feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>PDF Markup Tools <i class="ph ph-question feature-help" data-guide-for="pdfMarkupTools" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge essential">Essential</span></h3>
-                  <p>Stamps and eraser tools for PDFs</p>
+                  <h3>PDF Markup Tools <i class="ph ph-question feature-help" data-guide-for="pdfMarkupTools" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="pdfMarkupTools" data-feature="pdfMarkupTools">
@@ -303,10 +305,10 @@
                 </label>
               </div>
 
-              <div class="feature-item" id="reverseThreadOrderFeature">
+              <div class="feature-item" id="reverseThreadOrderFeature" data-tier="pro">
+                <i class="ph ph-arrows-down-up feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Reverse Thread Order <i class="ph ph-question feature-help" data-guide-for="reverseThreadOrder" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
-                  <p>Newest messages and reply form at the top</p>
+                  <h3>Reverse Thread Order <i class="ph ph-question feature-help" data-guide-for="reverseThreadOrder" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="reverseThreadOrder" data-feature="reverseThreadOrder">
@@ -315,10 +317,10 @@
               </div>
 
               <!-- Pro -->
-              <div class="feature-item premium" id="previewModeFeature">
+              <div class="feature-item premium" id="previewModeFeature" data-tier="pro">
+                <i class="ph ph-eye feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Preview Mode <i class="ph ph-question feature-help" data-guide-for="previewMode" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge pro">Pro</span></h3>
-                  <p>See your formatted text rendered instantly</p>
+                  <h3>Preview Mode <i class="ph ph-question feature-help" data-guide-for="previewMode" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="previewMode" data-feature="previewMode">
@@ -326,10 +328,10 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="customFieldFilterFeature">
+              <div class="feature-item premium" id="customFieldFilterFeature" data-tier="power-user">
+                <i class="ph ph-funnel-simple feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Job Switcher Filter <i class="ph ph-question feature-help" data-guide-for="customFieldFilter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
-                  <p>Filter jobs by custom fields in Job Switcher</p>
+                  <h3>Job Switcher Filter <i class="ph ph-question feature-help" data-guide-for="customFieldFilter" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="customFieldFilter" data-feature="customFieldFilter">
@@ -337,10 +339,10 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="budgetChangelogFeature">
+              <div class="feature-item premium" id="budgetChangelogFeature" data-tier="power-user">
+                <i class="ph ph-clock-counter-clockwise feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Budget Changelog <i class="ph ph-question feature-help" data-guide-for="budgetChangelog" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
-                  <p>Compare budget backups and see what changed</p>
+                  <h3>Budget Changelog <i class="ph ph-question feature-help" data-guide-for="budgetChangelog" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
@@ -348,10 +350,10 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="editableTablesFeature">
+              <div class="feature-item premium" id="editableTablesFeature" data-tier="power-user">
+                <i class="ph ph-table feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Editable Tables <i class="ph ph-question feature-help" data-guide-for="editableTables" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
-                  <p>Edit custom field cells right in a saved Data Browser view</p>
+                  <h3>Editable Tables <i class="ph ph-question feature-help" data-guide-for="editableTables" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="editableTables" data-feature="editableTables">
@@ -359,10 +361,10 @@
                 </label>
               </div>
 
-              <div class="feature-item premium" id="invoiceForecastFeature">
+              <div class="feature-item premium" id="invoiceForecastFeature" data-tier="power-user">
+                <i class="ph ph-chart-line-up feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Invoice Forecast <i class="ph ph-question feature-help" data-guide-for="invoiceForecast" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
-                  <p>A Reports tab charting upcoming invoices by month, split by sold vs. projected jobs</p>
+                  <h3>Invoice Forecast <i class="ph ph-question feature-help" data-guide-for="invoiceForecast" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="invoiceForecast" data-feature="invoiceForecast">
@@ -385,76 +387,31 @@
                    see features/forms.js init() for the new gate. -->
 
               <!-- Saved for a later version
-              <div class="feature-item premium" id="fileDragToFolderFeature">
-                <div class="feature-info">
-                  <h3>Files Drag to Folder <i class="ph ph-question feature-help" data-guide="file-drag-to-folder" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge pro">Pro</span></h3>
-                  <p>Drag files onto folders to organize them</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="fileDragToFolder" data-feature="fileDragToFolder">
-                  <span class="slider"></span>
-                </label>
-              </div>
+
               -->
-            </div>
-          </div>
-
-          <!-- Appearance Category (just toggles, no customization) -->
-          <div class="feature-category">
-            <div class="category-header collapsed" data-category="appearance-features">
-              <i class="ph ph-palette category-icon"></i>
-              <span class="category-title">Appearance</span>
-              <span class="category-count">4</span>
-              <span class="category-toggle">▼</span>
-            </div>
-            <div class="category-features collapsed" data-category-content="appearance-features">
-              <!-- No Badge (Free) -->
-              <div class="feature-item">
+                          <div class="feature-item">
+                            <i class="ph ph-tree-structure feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Contrast Fix <i class="ph ph-question feature-help" data-guide-for="contrastFix" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Better text readability in schedule view</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="contrastFix" data-feature="contrastFix">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="feature-item">
-                <div class="feature-info">
-                  <h3>Budget Hierarchy Shading <i class="ph ph-question feature-help" data-guide-for="budgetHierarchy" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Visual shading for nested budget groups</p>
+                  <h3>Budget Hierarchy Shading <i class="ph ph-question feature-help" data-guide-for="budgetHierarchy" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
                   <span class="slider"></span>
                 </label>
               </div>
-
-              <div class="feature-item" id="budgetRowHighlightFeature">
+              <div class="feature-item" id="budgetRowHighlightFeature" data-tier="essential">
+                <i class="ph ph-paint-bucket feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Budget Row Highlight <i class="ph ph-question feature-help" data-guide-for="budgetRowHighlight" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge essential">Essential</span></h3>
-                  <p>Put a circle emoji (🔴🟢🔵…) in any budget field to tint that row</p>
+                  <h3>Budget Row Highlight <i class="ph ph-question feature-help" data-guide-for="budgetRowHighlight" title="Learn more"></i></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="budgetRowHighlight" data-feature="budgetRowHighlight">
                   <span class="slider"></span>
                 </label>
               </div>
-
-              <div class="feature-item">
-                <div class="feature-info">
-                  <h3>Dark Mode <i class="ph ph-question feature-help" data-guide-for="darkMode" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i></h3>
-                  <p>Dark theme for JobTread interface</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="darkMode" data-feature="darkMode">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
             </div>
           </div>
+
 
         </div>
 
@@ -473,21 +430,34 @@
             </div>
           </div>
 
-          <!-- v4.8.2 — master toggle moved here from Features tab.
-               Preserves id="rgbThemeFeature" so popup.js's premium-gating
-               (getElementById('rgbThemeFeature')?.classList.add/remove('locked'))
-               continues binding correctly. -->
-          <div class="master-toggle-bar theme-master-toggle" id="rgbThemeFeature">
-            <div class="master-toggle-info">
-              <i class="ph ph-palette category-icon"></i>
-              <span class="master-toggle-label">Custom Theme</span>
-              <i class="ph ph-question feature-help" data-guide-for="rgbTheme" title="Learn more"></i>
-              <span class="badge pro">Pro</span>
+          <!-- Dark Mode lives here rather than in the Features list: it is a
+               theme choice, and the one most people reach for before they ever
+               touch a custom palette. Both rows use the same .feature-item
+               markup as the Features tab so the two tabs read as one product.
+               v4.8.2 — Custom Theme moved here from the Features tab; it keeps
+               id="rgbThemeFeature" so popup.js's premium gating still binds. -->
+          <div class="theme-feature-list">
+            <div class="feature-item">
+              <i class="ph ph-moon feature-icon" aria-hidden="true"></i>
+              <div class="feature-info">
+                <h3>Dark Mode <i class="ph ph-question feature-help" data-guide-for="darkMode" title="Learn more"></i></h3>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="darkMode" data-feature="darkMode">
+                <span class="slider"></span>
+              </label>
             </div>
-            <label class="toggle">
-              <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
-              <span class="slider"></span>
-            </label>
+
+            <div class="feature-item" id="rgbThemeFeature" data-tier="pro">
+              <i class="ph ph-palette feature-icon" aria-hidden="true"></i>
+              <div class="feature-info">
+                <h3>Custom Theme <i class="ph ph-question feature-help" data-guide-for="rgbTheme" title="Learn more"></i></h3>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
           <div class="theme-rebuild">
@@ -728,9 +698,10 @@
 
           <!-- Tweaks toggles — engine + inspector -->
           <div class="tweaks-toggles" id="tweaksToggles">
-            <div class="feature-item premium" id="tweakEngineFeature">
+            <div class="feature-item premium" id="tweakEngineFeature" data-tier="pro">
+              <i class="ph ph-magic-wand feature-icon" aria-hidden="true"></i>
               <div class="feature-info">
-                <h3>User Tweaks Engine <i class="ph ph-question feature-help" data-guide-for="tweakEngine" title="Learn more"></i> <span class="badge pro">Pro</span></h3>
+                <h3>User Tweaks Engine <i class="ph ph-question feature-help" data-guide-for="tweakEngine" title="Learn more"></i></h3>
                 <p>Apply your installed tweaks to JobTread pages. Off disables all tweaks for this device.</p>
               </div>
               <label class="toggle">
@@ -738,9 +709,10 @@
                 <span class="slider"></span>
               </label>
             </div>
-            <div class="feature-item premium" id="inspectForAiFeature">
+            <div class="feature-item premium" id="inspectForAiFeature" data-tier="pro">
+              <i class="ph ph-crosshair feature-icon" aria-hidden="true"></i>
               <div class="feature-info">
-                <h3>Inspect for AI <i class="ph ph-question feature-help" data-guide-for="inspectForAi" title="Learn more"></i> <span class="badge pro">Pro</span></h3>
+                <h3>Inspect for AI <i class="ph ph-question feature-help" data-guide-for="inspectForAi" title="Learn more"></i></h3>
                 <p>Highlights a JobTread element so you can pick the exact thing to send to your AI.</p>
               </div>
               <label class="toggle">
