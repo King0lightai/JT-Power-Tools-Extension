@@ -1877,7 +1877,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize collapsible categories
   initializeCategories();
 
-  // Initialize feature help icons - open guide on click
+  // Feature help icons. Two handlers, deliberately:
+  //   FeatureGuide.init()      — [data-guide-for] icons open the in-popup
+  //                              guide sheet and stamp the API chips.
+  //   initFeatureHelpLinks()   — the older [data-guide] icons, which still
+  //                              open the docs site in a new tab. Only the
+  //                              on-hold Files Drag to Folder row uses this
+  //                              path now; it is left untouched on purpose.
+  if (window.FeatureGuide) window.FeatureGuide.init();
   initFeatureHelpLinks();
 
   // Initialize Job Email card — Power User + active tab on /jobs/<id>.

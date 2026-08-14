@@ -2527,3 +2527,253 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
 .attach-license-card .account-error {
   margin-top: 10px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   FEATURE GUIDE SHEET
+   In-popup help, opened by the ? icon on a feature row. Built
+   by popup/feature-guide.js from config/feature-guides.js.
+   Every color below is a theme-aware token, so dark mode comes
+   free from the :root override rather than a second ruleset.
+   ═══════════════════════════════════════════════════════════ */
+
+/* The feature rows say "free" by showing no badge at all, so no
+   .badge.free ever existed. The guide sheet states the tier
+   outright — a reader asking "what is this?" also wants to know
+   whether it costs anything — so the variant is defined here.
+   Neutral grey keeps it from competing with the paid tiers. */
+.badge.free {
+  background: var(--bg-raised);
+  color: var(--fg-muted);
+}
+
+/* API chip — stamped onto rows whose feature needs a grant key.
+   Amber rather than a tier color: it means "setup required",
+   not "paid tier", and those must not read as the same thing. */
+.badge.api {
+  background: oklch(95% 0.08 80);
+  color: #8a5500;
+}
+body.dark-theme .badge.api {
+  background: oklch(32% 0.10 80 / 0.4);
+  color: #fbbf24;
+}
+
+/* The sheet rises from the bottom — at 380×600 a centered modal
+   leaves dead margin on every side, a bottom sheet does not. */
+.jt-feature-guide-dialog {
+  /* Layout */
+  position: fixed;
+  inset: auto 0 0 0;
+  max-width: 100%;
+  max-height: 88vh;
+  padding: 0;
+  /* Colors */
+  background: transparent;
+  border: none;
+  /* Typography */
+  font-family: var(--ff-body);
+  color: var(--fg-strong);
+}
+.jt-feature-guide-dialog::backdrop {
+  background: rgba(15, 15, 15, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.fg-sheet {
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  /* Colors */
+  background: var(--bg-surface);
+  border-top: 1px solid var(--rule);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.fg-header {
+  /* Layout */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'title close' 'badges close';
+  align-items: start;
+  gap: 2px 8px;
+  flex-shrink: 0;
+  /* Spacing */
+  padding: 14px 14px 10px;
+  /* Colors */
+  border-bottom: 1px solid var(--rule);
+}
+.fg-title {
+  grid-area: title;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg-strong);
+}
+.fg-badges {
+  grid-area: badges;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.fg-badges:empty { display: none; }
+
+.fg-close {
+  /* Layout */
+  grid-area: close;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  /* Colors */
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease), color var(--duration) var(--ease);
+}
+.fg-close:hover {
+  background: var(--bg-raised);
+  color: var(--fg-strong);
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+.fg-body {
+  /* The only scrolling region — the header and footer stay put
+     so the close button is always reachable. */
+  overflow-y: auto;
+  padding: 12px 14px 14px;
+}
+
+.fg-media {
+  margin: 0 0 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--bg);
+}
+.fg-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fg-summary {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fg-strong);
+}
+
+.fg-where {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+.fg-where i { color: var(--accent-ink); flex-shrink: 0; }
+
+.fg-steps {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--fg-strong);
+}
+.fg-steps li { margin-bottom: 5px; }
+.fg-steps li:last-child { margin-bottom: 0; }
+
+/* ── Access callout ───────────────────────────────────────── */
+.fg-access {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border-radius: var(--r-sm);
+  border-left: 3px solid;
+}
+.fg-access--required {
+  background: oklch(97% 0.03 80);
+  border-left-color: #d19a00;
+}
+.fg-access--optional {
+  background: var(--bg-raised);
+  border-left-color: var(--rule-strong);
+}
+body.dark-theme .fg-access--required {
+  background: oklch(30% 0.06 80 / 0.35);
+  border-left-color: #fbbf24;
+}
+
+.fg-access-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-strong);
+}
+.fg-access-note {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+.fg-access-link {
+  margin-top: 8px;
+  padding: 5px 10px;
+  font-family: var(--ff-body);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  color: var(--fg-strong);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+.fg-access-link:hover { background: var(--bg-raised); }
+
+/* ── Note ─────────────────────────────────────────────────── */
+.fg-note {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--fg-subtle);
+}
+.fg-note i { flex-shrink: 0; }
+
+/* ── Footer ───────────────────────────────────────────────── */
+.fg-footer {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--rule);
+  background: var(--bg);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+}
+.fg-docs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  font-family: var(--ff-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.fg-docs-link:hover { text-decoration: underline; }
