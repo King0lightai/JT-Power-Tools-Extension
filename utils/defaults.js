@@ -98,7 +98,7 @@ const JTDefaults = (() => {
       icon: 'ph-calendar-blank',
       // Free features first, then paid — a free user reads the usable ones
       // without scrolling past locked rows to reach them.
-      features: ['autoCollapseGroups', 'autoSequence', 'ganttLines', 'kanbanTypeFilter', 'contrastFix', 'availabilityFilter', 'dragDrop', 'taskTypeFilter']
+      features: ['autoCollapseGroups', 'autoSequence', 'ganttLines', 'kanbanTypeFilter', 'availabilityFilter', 'dragDrop', 'taskTypeFilter']
     },
     {
       id: 'budget',
@@ -112,9 +112,9 @@ const JTDefaults = (() => {
       icon: 'ph-file-text',
       features: ['characterCounter', 'documentSort', 'formatter', 'printScope', 'pdfMarkupTools', 'reverseThreadOrder', 'previewMode']
     },
-    // The Appearance category is retired: Contrast Fix moved to Schedule &
-    // Calendar (the timeline is where it shows), and Dark Mode and Custom
-    // Theme both live on the Theme tab, where the palette work already was.
+    // The Appearance category is retired: Contrast Fix, Dark Mode and Custom
+    // Theme all live on the Theme tab now, where the palette work already was.
+    // They are mutually exclusive, so keeping them in one place is the point.
     {
       id: 'general',
       title: 'General',

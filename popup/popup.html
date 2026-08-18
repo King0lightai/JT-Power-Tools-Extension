@@ -88,7 +88,7 @@
           <div class="feature-category">
             <div class="category-header collapsed" data-category="schedule">
               <span class="category-title">Schedule & Calendar</span>
-              <span class="category-count">10</span>
+              <span class="category-count">9</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features collapsed" data-category-content="schedule">
@@ -189,18 +189,6 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="taskTypeFilter" data-feature="taskTypeFilter">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-
-                          <div class="feature-item">
-                            <i class="ph ph-circle-half feature-icon" aria-hidden="true"></i>
-                <div class="feature-info">
-                  <h3>Contrast Fix <i class="ph ph-question feature-help" data-guide-for="contrastFix" title="Learn more"></i></h3>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="contrastFix" data-feature="contrastFix">
                   <span class="slider"></span>
                 </label>
               </div>
@@ -353,7 +341,7 @@
               <div class="feature-item premium" id="editableTablesFeature" data-tier="power-user">
                 <i class="ph ph-table feature-icon" aria-hidden="true"></i>
                 <div class="feature-info">
-                  <h3>Editable Tables <i class="ph ph-question feature-help" data-guide-for="editableTables" title="Learn more"></i></h3>
+                  <h3>Editable Tables <i class="ph ph-question feature-help" data-guide-for="editableTables" title="Learn more"></i> <span class="badge new">New</span></h3>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="editableTables" data-feature="editableTables">
@@ -432,10 +420,14 @@
 
           <!-- Dark Mode lives here rather than in the Features list: it is a
                theme choice, and the one most people reach for before they ever
-               touch a custom palette. Both rows use the same .feature-item
+               touch a custom palette. All three rows use the same .feature-item
                markup as the Features tab so the two tabs read as one product.
                v4.8.2 — Custom Theme moved here from the Features tab; it keeps
-               id="rgbThemeFeature" so popup.js's premium gating still binds. -->
+               id="rgbThemeFeature" so popup.js's premium gating still binds.
+               Contrast Fix joined them for the same reason, and one more: the
+               three are mutually exclusive (see the change handler in
+               popup.js), so turning one on silently turns the others off.
+               Sitting them together makes that visible instead of surprising. -->
           <div class="theme-feature-list">
             <div class="feature-item">
               <i class="ph ph-moon feature-icon" aria-hidden="true"></i>
@@ -444,6 +436,17 @@
               </div>
               <label class="toggle">
                 <input type="checkbox" id="darkMode" data-feature="darkMode">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="feature-item">
+              <i class="ph ph-circle-half feature-icon" aria-hidden="true"></i>
+              <div class="feature-info">
+                <h3>Contrast Fix <i class="ph ph-question feature-help" data-guide-for="contrastFix" title="Learn more"></i></h3>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="contrastFix" data-feature="contrastFix">
                 <span class="slider"></span>
               </label>
             </div>

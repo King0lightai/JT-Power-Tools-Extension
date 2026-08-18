@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pave Explorer — JT Power Tools</title>
-  <meta name="description" content="Watch the JobTread API calls behind every page in real time. Read the request, response, and a key-stripped shareable query — then copy it. All local, nothing uploaded. Pro.">
+  <title>Print Scope — JT Power Tools</title>
+  <meta name="description" content="Print or save a rendered scope document straight from JobTread's Preview Document modal — with a font-size picker — without creating a real document first. Free.">
   <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-  <link rel="canonical" href="https://jtpowertools.com/guides/pave-explorer.html">
+  <link rel="canonical" href="https://jtpowertools.com/guides/print-scope.html">
   <link rel="icon" type="image/png" href="/favicon.png">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://jtpowertools.com/guides/pave-explorer.html">
-  <meta property="og:title" content="Pave Explorer — JT Power Tools">
-  <meta property="og:description" content="See the JobTread Pave API calls behind any page, live — read and copy them. Nothing leaves your browser.">
+  <meta property="og:url" content="https://jtpowertools.com/guides/print-scope.html">
+  <meta property="og:title" content="Print Scope — JT Power Tools">
+  <meta property="og:description" content="Print the scope you are already looking at, without creating a document to do it.">
   <meta property="og:image" content="https://jtpowertools.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,11 +72,11 @@
       <div class="container">
         <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
         <div class="g-hero-row">
-          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-binoculars"></i></span>
-          <span class="tier pro">Pro</span>
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-printer"></i></span>
+          <span class="tier free">Free</span>
         </div>
-        <h1 class="g-title"><span>Pave</span> <span class="serif">Explorer.</span></h1>
-        <p class="g-lede">See the JobTread API calls behind any page, live — read each request and response, then copy a clean, shareable version. Nothing ever leaves your browser.</p>
+        <h1 class="g-title"><span>Print</span> <span class="serif">Scope.</span></h1>
+        <p class="g-lede">Print the scope you're already looking at. No saving a document you didn't want just to get it on paper.</p>
       </div>
     </section>
 
@@ -95,45 +95,44 @@
       <div class="container">
         <div class="g-section">
           <h2>What it does</h2>
-          <p>Every page in JobTread runs on its Pave API. Pave Explorer is a live, read-only window into those calls: open the tab, click around JobTread, and the queries stream in as they fire. Click any one to read its <strong>Request</strong>, its <strong>Response</strong>, and a <strong>Shareable</strong> version with your keys stripped out — then copy whichever you need.</p>
-          <p>It's built for power users, developers, and anyone learning JobTread's API — to understand how a page loads, debug a workflow, or grab a real query as a starting point for automation or an MCP tool. Everything stays local in your browser. Nothing is uploaded.</p>
+          <p>Select line items in a budget and JobTread renders them as a scope document in a <em>Preview Document</em> modal. It looks right, it reads right — and there is no way to print it. To get a printed scope you have to create a real document first, which leaves a record nobody asked for on the job.</p>
+          <p>Print Scope adds a <strong>Print</strong> button to that modal, plus a font-size picker. Click it and you get the scope as it appears on screen, printed or saved as a PDF, with nothing written back to the job.</p>
         </div>
 
         <div class="g-section">
           <h2>Turn it on</h2>
           <ol class="g-steps">
-            <li>Click the JT Power Tools icon and open the <strong>Pave</strong> tab (Pro).</li>
-            <li>For the best experience, run it as the <strong>side panel</strong> so it stays open while you work — set <em>“Always open in side panel”</em> on the Account tab.</li>
-            <li>The tab streams live captures as soon as it's open. No reload needed.</li>
+            <li>Click the JT Power Tools icon in your browser toolbar.</li>
+            <li>Find <strong>Print Scope</strong> under <em>Documents &amp; Text</em>.</li>
+            <li>Flip the toggle on. No reload needed.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>How to use it</h2>
           <ol class="g-steps">
-            <li>Open Pave Explorer side-by-side with JobTread.</li>
-            <li>Do something in JobTread — open a job, save a budget, load the schedule. The calls appear in the list, labeled as reads or mutations.</li>
-            <li>Click a call to expand it, then copy the Request, Response, or the key-stripped Shareable query.</li>
+            <li>Open a job's budget and select the line items you want in the scope.</li>
+            <li>Choose <em>Preview Document</em> and pick a template, the same as always.</li>
+            <li>Click <strong>Print</strong> in the modal. Set the size first if you want bigger type.</li>
+            <li>Your browser's print dialog opens — print it, or save it as a PDF.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>Good to know</h2>
           <ul class="g-tips">
-            <li>Run it as the side panel — the popup closes the moment you click into JobTread, but the panel stays put while you act.</li>
-            <li>One JobTread action fires many calls (reads, polls, permission checks). The list labels mutations vs. reads so you can find the one that matters.</li>
-            <li>The Shareable view strips your license and grant keys, so a copied query is safe to paste into notes, a ticket, or an AI chat.</li>
-            <li>Refresh the JobTread tab with the panel open and it reconnects on its own — no need to close and reopen.</li>
-            <li>Want your AI to read these queries back later? That's the separate <strong>“Record for AI”</strong> toggle on this tab (Power User), which feeds stripped queries to your AI through the MCP.</li>
+            <li>Three type sizes — normal, large, and larger. The picker scales the <em>printed</em> copy only; the modal on screen never changes. Your choice is remembered on that browser.</li>
+            <li>The printed copy is built in an isolated frame using JobTread's own stylesheets, so it matches what you saw on screen instead of arriving clipped by the modal or shaded by the grey backdrop.</li>
+            <li>Nothing is created, saved, or sent. If you weren't going to keep the document, you still don't have to.</li>
           </ul>
         </div>
 
         <div class="g-section g-related">
           <h2>Related guides</h2>
           <ul>
-            <li><a href="/guides/tweaks.html">Tweaks</a> — change a page once you understand it</li>
-            <li><a href="/mcp/other.html">MCP Setup</a> — connect your AI to JobTread data</li>
-            <li><a href="/mcp/claude-code.html">Claude Code</a> — build with JobTread from your terminal</li>
+            <li><a href="/guides/preview-mode.html">Preview Mode</a> — see rendered markdown as you type</li>
+            <li><a href="/guides/document-sort.html">Document Sort</a> — sort any Documents tab by column</li>
+            <li><a href="/guides/text-formatter.html">Text Formatter</a> — rich text in any field</li>
           </ul>
         </div>
       </div>

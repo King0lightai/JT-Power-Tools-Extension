@@ -178,9 +178,6 @@ ul { list-style: none; padding: 0; margin: 0; }
   border: 1px solid var(--orange);
   color: var(--orange);
 }
-.pill--tier-pro { border-color: var(--orange); color: var(--orange); }
-.pill--tier-essential { border-color: var(--teal); color: var(--teal); background: color-mix(in srgb, var(--teal) 10%, transparent); }
-.pill--tier-power { border-color: var(--purple); color: var(--purple); background: color-mix(in srgb, var(--purple) 10%, transparent); }
 
 .chip {
   display: inline-flex;
@@ -394,7 +391,7 @@ html[data-theme="dark"] .nav-brand-mark .nav-brand-mark--dark { display: block; 
 @media (max-width: 560px) {
   .footer-grid { grid-template-columns: 1fr; }
 }
-.footer h4 {
+.footer h3 {
   font-family: var(--font-sub);
   font-weight: 600;
   font-size: 12px;
@@ -651,6 +648,67 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   color: var(--ink-muted);
   line-height: 1.5;
 }
+/* Feature bands ------------------------------------------------------------
+   32 cards in one run read as a wall, and the 13 free ones carried no marker
+   at all. Grouping by tier turns the catalogue into four scannable bands and
+   lets the per-card pill go: the band states the tier once.
+   The tier hue rides a 3px marker, never text - --teal (2.0:1) and --purple
+   (3.5:1) both fail AA as type on --surface. */
+.s-features-bands {
+  display: grid;
+  gap: 56px;
+}
+.s-features-band-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.s-features-band-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  font-family: var(--font-sub);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.s-features-band-label::before {
+  content: '';
+  width: 3px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--band-accent);
+}
+.s-features-band--free { --band-accent: var(--ink-subtle); }
+.s-features-band--essential { --band-accent: var(--teal); }
+.s-features-band--pro { --band-accent: var(--orange); }
+.s-features-band--power { --band-accent: var(--purple); }
+.s-features-band-note {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.s-features-band-count {
+  flex: none;
+  font-family: var(--font-sub);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .s-features-bands { gap: 40px; }
+  .s-features-band-head { flex-wrap: wrap; gap: 6px 12px; }
+  .s-features-band-note { flex-basis: 100%; order: 3; }
+}
+
 /* =========================================================
    Section: Install row
    ========================================================= */
@@ -982,7 +1040,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   color: #fff;
   font-family: var(--font-sub);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 6px 14px;
@@ -1044,7 +1102,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 .s-pricing-trial {
   font-family: var(--font-sub);
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-align: center;
@@ -1094,7 +1152,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   color: var(--purple);
   font-family: var(--font-sub);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 6px 12px;
@@ -1694,7 +1752,11 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 .s-tweaks-headline {
   font-family: var(--font-display);
   font-size: clamp(64px, 9.5vw, 124px);
-  line-height: 0.86;
+  /* 0.86 assumes every line is authored with <br>. The moment one wraps, the
+     next line lands inside the previous one's glyph box, so keep the display
+     tightness but leave the wrapped case legible; balance evens the rag. */
+  line-height: 0.9;
+  text-wrap: balance;
   letter-spacing: -0.005em;
   color: var(--ink);
   margin: 0 0 28px;
@@ -2053,7 +2115,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   margin-bottom: 12px;
 }
 .s-tweaks-mini-icon i { font-size: 18px; }
-.s-tweaks-mini-card h5 {
+.s-tweaks-mini-card h3 {
   font-family: var(--font-sub);
   font-size: 14px;
   font-weight: 700;
@@ -2548,7 +2610,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 }
 .s-pave-upsell-tier {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2575,21 +2637,24 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Just Shipped — tabbed announcement rail (.s-ship)
+   Just Shipped — newest-release spotlight (.s-ship)
    ═══════════════════════════════════════════════════════════
-   Collapses the stacked flagship announcements into one section.
-   The rail lists each release as a tab (version · name · tier);
-   only the active panel renders, so adding future drops doesn't
-   stretch the page. Markup contract: .s-ship-tab[aria-controls]
-   ↔ .s-ship-panel[id], wired up by initShipTabs() in site.js. */
+   One panel, one release. This was a four-tab rail until Pave
+   Explorer, Email to Job and Tweaks each earned a feature card,
+   at which point the page was making every one of those points
+   twice. initShipTabs() in site.js still drives a rail if one is
+   ever re-added; it no-ops without [data-ship-tabs]. */
 .s-ship { padding: 0 0 110px; scroll-margin-top: 72px; }
 
+/* Was a full-width rail carrying the label plus four release tabs. The tabs
+   are gone (each of those features has a card now), so it reads as an eyebrow
+   over the spotlight rather than a row with 600px of dead space in it. */
 .s-ship-bar {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 22px 0;
-  margin-bottom: 48px;
+  padding: 0 0 18px;
+  margin-bottom: 32px;
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
@@ -2607,70 +2672,6 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 }
 .s-ship-bar-label i { font-size: 13px; }
 
-.s-ship-tabs {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  max-width: 100%;
-}
-.s-ship-tabs::-webkit-scrollbar { display: none; }
-
-.s-ship-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 10px 18px 11px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  text-align: left;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
-}
-.s-ship-tab:hover {
-  border-color: var(--ink-subtle);
-  transform: translateY(-1px);
-}
-.s-ship-tab-ver {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-subtle);
-}
-.s-ship-tab-name {
-  font-family: var(--font-sub);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-.s-ship-tab-tier {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--ink-subtle);
-}
-.s-ship-tab-tier::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--teal);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 25%, transparent);
-}
-.s-ship-tab.is-active {
-  background: var(--surface);
-  border-color: var(--orange);
-  box-shadow: inset 0 0 0 1px var(--orange), 0 6px 18px color-mix(in srgb, var(--orange) 14%, transparent);
-}
-.s-ship-tab.is-active .s-ship-tab-ver { color: var(--orange); }
 
 /* Panels — only the active one renders; switching re-runs the entrance */
 .s-ship-panel[hidden] { display: none; }
@@ -2693,7 +2694,6 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 @media (max-width: 560px) {
   .s-ship-bar { gap: 12px; padding: 16px 0; }
   .s-ship-bar-label { width: 100%; }
-  .s-ship-tab-name { font-size: 14px; }
 }
 
 /* Pro card — orange border + "New in v4.7.0" pill badge + highlighted
@@ -2712,7 +2712,7 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   color: #fff;
   font-family: var(--font-sub);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 6px 14px;

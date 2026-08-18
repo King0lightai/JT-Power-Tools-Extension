@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JT Power Tools — JobTread, Supercharged.</title>
-  <meta name="description" content="The all-in-one Chrome extension toolkit that transforms JobTread into a powerhouse. Dark mode, rich text formatting, job switcher filtering, and 20+ more productivity features.">
+  <meta name="description" content="The all-in-one Chrome extension toolkit that transforms JobTread into a powerhouse. Dark mode, rich text formatting, job switcher filtering, and 30+ more productivity features.">
   <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <link rel="canonical" href="https://jtpowertools.com/">
   <link rel="icon" type="image/png" href="favicon.png">
@@ -107,959 +107,10 @@
           <div class="s-hero-trust">
             <span><i class="ph-fill ph-star" aria-hidden="true"></i> 5.0 on Chrome Web Store</span>
             <span>·</span>
-            <span>700+ installs</span>
+            <span>800+ installs</span>
             <span>·</span>
-            <span>20+ features</span>
+            <span>30+ features</span>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══ Just Shipped — tabbed feature announcements ══
-         Each release is a tab in the rail + a matching panel below. Only the
-         active panel renders, so new drops don't stretch the page.
-         To add one: copy a .s-ship-tab button and a .s-ship-panel, wire the
-         ids (tab-<slug> ↔ <slug>), and place the newest tab first with
-         is-active / aria-selected="true" (move `hidden` to the old panel). -->
-    <section id="shipped" class="s-tweaks s-ship" aria-label="Latest feature announcements">
-      <div class="s-tweaks-tape" aria-hidden="true"></div>
-
-      <div class="container">
-        <div class="s-ship-bar">
-          <span class="s-ship-bar-label">
-            <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
-            Just Shipped
-          </span>
-          <div class="s-ship-tabs" role="tablist" aria-label="Feature announcements" data-ship-tabs>
-            <button class="s-ship-tab is-active" id="tab-invoice-forecast" role="tab" aria-selected="true" aria-controls="invoice-forecast" type="button">
-              <span class="s-ship-tab-ver">v4.9.12</span>
-              <span class="s-ship-tab-name">Invoice Forecast</span>
-              <span class="s-ship-tab-tier">Live in Power User</span>
-            </button>
-            <button class="s-ship-tab" id="tab-pave-explorer" role="tab" aria-selected="false" aria-controls="pave-explorer" tabindex="-1" type="button">
-              <span class="s-ship-tab-ver">v4.9.10</span>
-              <span class="s-ship-tab-name">Pave Explorer</span>
-              <span class="s-ship-tab-tier">Live in Pro</span>
-            </button>
-            <button class="s-ship-tab" id="tab-email-to-job" role="tab" aria-selected="false" aria-controls="email-to-job" tabindex="-1" type="button">
-              <span class="s-ship-tab-ver">v4.9.3</span>
-              <span class="s-ship-tab-name">Email to Job</span>
-              <span class="s-ship-tab-tier">Live in Power User</span>
-            </button>
-            <button class="s-ship-tab" id="tab-tweaks" role="tab" aria-selected="false" aria-controls="tweaks" tabindex="-1" type="button">
-              <span class="s-ship-tab-ver">v4.7.0</span>
-              <span class="s-ship-tab-name">The Tweaks Engine</span>
-              <span class="s-ship-tab-tier">Live in Pro</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="container s-tweaks-inner">
-        <!-- ── Panel: Pave Explorer (v4.9.10) ── -->
-        <div class="s-ship-panel" id="pave-explorer" role="tabpanel" aria-labelledby="tab-pave-explorer" hidden>
-
-        <!-- Headline + demo grid -->
-        <div class="s-tweaks-grid">
-          <div>
-            <h2 id="pave-headline" class="s-tweaks-headline">
-              SEE EVERY<br>
-              <span class="accent">API CALL.</span>
-            </h2>
-            <p class="s-tweaks-lede">
-              Every page in JobTread runs on its Pave API. Pave Explorer is a
-              live, read-only window into those calls &mdash; click around and
-              the queries stream in as they fire.
-            </p>
-            <p class="s-tweaks-sublede">
-              Open any call to read its Request, Response, and a key-stripped
-              Shareable version, then copy whichever you need. Everything stays
-              local in your browser &mdash; nothing is uploaded.
-            </p>
-
-            <div class="s-tweaks-ctas">
-              <a href="#pricing" class="btn btn--primary">
-                <i class="ph ph-binoculars" aria-hidden="true"></i>
-                Get Pro
-              </a>
-              <a href="/guides/pave-explorer.html" class="btn btn--ghost">Read the guide</a>
-            </div>
-
-            <div class="s-tweaks-shortcuts">
-              <span><i class="ph ph-shield-check" aria-hidden="true"></i> 100% local — nothing uploaded</span>
-              <span><i class="ph ph-copy" aria-hidden="true"></i> Copy request, response, or shareable</span>
-              <span><i class="ph ph-broadcast" aria-hidden="true"></i> Streams live as you click</span>
-            </div>
-          </div>
-
-          <!-- Demo mockup: live Pave inspector — call list + expanded call -->
-          <div class="s-pave-demo" aria-hidden="true">
-            <div class="s-tweaks-demo-chrome">
-              <div class="s-tweaks-demo-traffic">
-                <span style="background:#FF5F57"></span>
-                <span style="background:#FEBC2E"></span>
-                <span style="background:#28C840"></span>
-              </div>
-              <div class="s-tweaks-demo-url">JT Power Tools — Pave</div>
-            </div>
-
-            <div class="s-pave-body">
-              <!-- Filter + search bar -->
-              <div class="s-pave-bar">
-                <span class="s-pave-filter is-active">Mutations</span>
-                <span class="s-pave-filter">Actions + Queries</span>
-                <span class="s-pave-filter">All</span>
-                <span class="s-pave-search"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> Search</span>
-              </div>
-
-              <!-- Live call list -->
-              <div class="s-pave-list">
-                <div class="s-pave-call s-pave-call--active">
-                  <span class="s-pave-badge s-pave-badge--mut">MUT</span>
-                  <span class="s-pave-call-name">updateJob</span>
-                  <span class="s-pave-call-status">200</span>
-                </div>
-                <div class="s-pave-call">
-                  <span class="s-pave-badge s-pave-badge--qry">QRY</span>
-                  <span class="s-pave-call-name">job → costItems</span>
-                  <span class="s-pave-call-status">200</span>
-                </div>
-                <div class="s-pave-call">
-                  <span class="s-pave-badge s-pave-badge--qry">QRY</span>
-                  <span class="s-pave-call-name">organization → members</span>
-                  <span class="s-pave-call-status">200</span>
-                </div>
-                <div class="s-pave-call">
-                  <span class="s-pave-badge s-pave-badge--evt">EVT</span>
-                  <span class="s-pave-call-name">scheduleViewed</span>
-                  <span class="s-pave-call-status muted">—</span>
-                </div>
-              </div>
-
-              <!-- Detail: Request / Shareable / Response -->
-              <div class="s-pave-detail">
-                <div class="s-pave-tabs">
-                  <span class="s-pave-tab">Request</span>
-                  <span class="s-pave-tab is-active">Shareable</span>
-                  <span class="s-pave-tab">Response</span>
-                  <span class="s-pave-copy"><i class="ph ph-copy" aria-hidden="true"></i> Copy</span>
-                </div>
-                <pre class="s-pave-code"><span class="s-pave-key">"updateJob"</span>: {
-  <span class="s-pave-key">"$"</span>: {
-    <span class="s-pave-key">"id"</span>: <span class="s-pave-ph">"&lt;ID_1&gt;"</span>,
-    <span class="s-pave-key">"lineItems"</span>: [
-      { <span class="s-pave-key">"_type"</span>: <span class="s-pave-str">"costGroup"</span>, <span class="s-pave-key">"id"</span>: <span class="s-pave-ph">"&lt;ID_2&gt;"</span> }
-    ]
-  }
-}</pre>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mini value cards -->
-        <div class="s-tweaks-mini">
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-broadcast" aria-hidden="true"></i></div>
-            <h5>LIVE CAPTURE</h5>
-            <p>Calls stream in as they fire — no reload, no setup. One JobTread action shows up as the reads, polls, and mutations behind it.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-funnel" aria-hidden="true"></i></div>
-            <h5>FILTER THE NOISE</h5>
-            <p>MUT / QRY / EVT badges plus a Mutations-only filter and search, so you find the one call that matters in a sea of traffic.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-copy" aria-hidden="true"></i></div>
-            <h5>COPY ANYTHING</h5>
-            <p>Read the Request, Response, or a key-stripped Shareable form, then copy it — or export the whole session to JSON.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-shield-check" aria-hidden="true"></i></div>
-            <h5>STAYS LOCAL</h5>
-            <p>Browsing is inspection-only and uploads nothing. The Shareable view strips your license and grant keys before you copy.</p>
-          </div>
-        </div>
-
-        <!-- Record for AI — the Power User step up from read-only browsing -->
-        <div class="s-pave-upsell">
-          <span class="s-pave-upsell-icon"><i class="ph ph-robot" aria-hidden="true"></i></span>
-          <div>
-            <h5 class="s-pave-upsell-title">Record for AI <span class="s-pave-upsell-tier">Power User</span></h5>
-            <p>
-              Browsing Pave Explorer is read-only and 100% local on Pro. Want
-              your AI to read these queries back? <strong>Record for AI</strong>
-              lives right on the Pave tab &mdash; Pro users see it locked with an
-              upgrade hint, and it switches on at Power User, streaming the same
-              key-stripped queries to your assistant through the MCP.
-            </p>
-          </div>
-        </div>
-
-        <!-- Pull quote -->
-        <div class="s-tweaks-pull">
-          <div class="s-tweaks-pull-label">Why it matters</div>
-          <p class="s-tweaks-pull-quote">
-            Understand how a page really loads &mdash; then grab a real query as
-            the starting point for an automation, a tweak, or an MCP tool.
-          </p>
-        </div>
-        </div><!-- /panel: pave-explorer -->
-
-        <!-- ── Panel: Invoice Forecast (v4.9.12) ── -->
-        <div class="s-ship-panel" id="invoice-forecast" role="tabpanel" aria-labelledby="tab-invoice-forecast">
-
-        <!-- Headline + demo grid -->
-        <div class="s-tweaks-grid">
-          <div>
-            <h2 id="forecast-headline" class="s-tweaks-headline">
-              SEE THE CASH<br>
-              <span class="accent">BEFORE IT LANDS.</span>
-            </h2>
-            <p class="s-tweaks-lede">
-              JobTread ties invoices to schedule tasks but never charts them.
-              Invoice Forecast turns that hidden schedule into a month-by-month
-              cash-flow picture across every active job &mdash; right inside Reports.
-            </p>
-            <p class="s-tweaks-sublede">
-              Each month stacks what you've already <strong>collected</strong>,
-              what's <strong>committed</strong> on sold jobs, and what's still
-              <strong>projected</strong> on jobs you haven't closed yet. Hover any
-              bar for the per-job breakdown, then export the whole view to CSV.
-            </p>
-
-            <div class="s-tweaks-ctas">
-              <a href="#pricing" class="btn btn--primary">
-                <i class="ph ph-chart-line-up" aria-hidden="true"></i>
-                Get Power User
-              </a>
-              <a href="/guides/invoice-forecast.html" class="btn btn--ghost">Read the guide</a>
-            </div>
-
-            <div class="s-tweaks-shortcuts">
-              <span><i class="ph ph-stack" aria-hidden="true"></i> Paid · committed · projected</span>
-              <span><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Set it up per company</span>
-              <span><i class="ph ph-file-csv" aria-hidden="true"></i> Export to CSV</span>
-            </div>
-          </div>
-
-          <!-- Demo mockup: monthly stacked-bar cash-flow forecast -->
-          <div class="s-forecast-demo" aria-hidden="true">
-            <div class="s-tweaks-demo-chrome">
-              <div class="s-tweaks-demo-traffic">
-                <span style="background:#FF5F57"></span>
-                <span style="background:#FEBC2E"></span>
-                <span style="background:#28C840"></span>
-              </div>
-              <div class="s-tweaks-demo-url">JT Power Tools — Invoice Forecast</div>
-            </div>
-
-            <div style="background:var(--surface);border:1px solid var(--border);border-top:0;border-radius:0 0 12px 12px;padding:18px 16px 16px;">
-              <!-- Legend -->
-              <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-subtle);margin-bottom:14px;">
-                <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#10b981;"></span>Paid</span>
-                <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#0d9488;"></span>Committed</span>
-                <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);"></span>Projected</span>
-              </div>
-
-              <!-- Bars -->
-              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;height:170px;border-bottom:1px solid var(--border);padding-bottom:0;">
-                <!-- Jun -->
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
-                  <div style="height:34px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
-                  <div style="height:40px;background:#0d9488;"></div>
-                  <div style="height:62px;background:#10b981;border-radius:0 0 3px 3px;"></div>
-                </div>
-                <!-- Jul -->
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
-                  <div style="height:48px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
-                  <div style="height:54px;background:#0d9488;"></div>
-                  <div style="height:30px;background:#10b981;border-radius:0 0 3px 3px;"></div>
-                </div>
-                <!-- Aug -->
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
-                  <div style="height:70px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
-                  <div style="height:46px;background:#0d9488;border-radius:0 0 3px 3px;"></div>
-                </div>
-                <!-- Sep -->
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
-                  <div style="height:58px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
-                  <div style="height:30px;background:#0d9488;border-radius:0 0 3px 3px;"></div>
-                </div>
-                <!-- Oct -->
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;">
-                  <div style="height:44px;background:repeating-linear-gradient(45deg,#f59e0b,#f59e0b 3px,#fcd34d 3px,#fcd34d 6px);border-radius:3px 3px 0 0;"></div>
-                  <div style="height:22px;background:#0d9488;border-radius:0 0 3px 3px;"></div>
-                </div>
-              </div>
-
-              <!-- Month labels -->
-              <div style="display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:11px;font-weight:600;color:var(--ink-subtle);text-align:center;">
-                <span style="flex:1;">Jun</span>
-                <span style="flex:1;">Jul</span>
-                <span style="flex:1;">Aug</span>
-                <span style="flex:1;">Sep</span>
-                <span style="flex:1;">Oct</span>
-              </div>
-
-              <!-- Collected tile -->
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:10px 12px;background:var(--surface-inset);border:1px solid var(--border);border-radius:8px;">
-                <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-subtle);">Collected YTD</span>
-                <span style="font-size:18px;font-weight:700;color:var(--ink);">$184,250</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mini value cards -->
-        <div class="s-tweaks-mini">
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-chart-bar" aria-hidden="true"></i></div>
-            <h5>CASH FLOW AT A GLANCE</h5>
-            <p>A monthly bar chart of upcoming invoices, dated by each invoice's scheduled task — so you see when money is set to come in across every active job.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-stack" aria-hidden="true"></i></div>
-            <h5>PAID · COMMITTED · PROJECTED</h5>
-            <p>Every bar stacks money already collected, what's committed on sold jobs, and what's still projected on jobs you haven't closed — a forecast and a schedule in one.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-sliders-horizontal" aria-hidden="true"></i></div>
-            <h5>SET UP FOR YOUR COMPANY</h5>
-            <p>Nothing's hardcoded — pick which task type(s) mark an invoice and which signed contract means a job is "sold." Your choices are remembered per company.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-file-csv" aria-hidden="true"></i></div>
-            <h5>FILTER &amp; EXPORT</h5>
-            <p>Frame any stretch with a From/To period filter, widen it to include closed jobs, and export the whole view — month, date, job, amount, status — to CSV.</p>
-          </div>
-        </div>
-
-        <!-- Pull quote -->
-        <div class="s-tweaks-pull">
-          <div class="s-tweaks-pull-label">Why it matters</div>
-          <p class="s-tweaks-pull-quote">
-            The invoices are already on your schedule. Invoice Forecast just shows
-            you the money before it lands &mdash; so you can plan the next month,
-            not react to it.
-          </p>
-        </div>
-        </div><!-- /panel: invoice-forecast -->
-
-        <!-- ── Panel: Email to Job (v4.9.3) ── -->
-        <div class="s-ship-panel" id="email-to-job" role="tabpanel" aria-labelledby="tab-email-to-job" hidden>
-
-        <!-- Headline + demo grid -->
-        <div class="s-tweaks-grid">
-          <div>
-            <h2 id="email-headline" class="s-tweaks-headline">
-              LAND EMAIL<br>
-              <span class="accent">ON THE JOB.</span>
-            </h2>
-            <p class="s-tweaks-lede">
-              Give every job its own email address. BCC anyone &mdash; customer,
-              sub, inspector, supplier &mdash; and the message lands on that
-              job's activity feed.
-            </p>
-            <p class="s-tweaks-sublede">
-              Auto-posted as an internal team comment, signature stripped,
-              attachments included. Reply threads stay grouped. Forwarded
-              chains explode into one comment per message. No copy-paste,
-              no &ldquo;forgot to log it,&rdquo; no lost context.
-            </p>
-
-            <div class="s-tweaks-ctas">
-              <a href="#pricing" class="btn btn--primary">
-                <i class="ph ph-envelope-simple" aria-hidden="true"></i>
-                Get Power User
-              </a>
-              <a href="#how-it-works" class="btn btn--ghost">See how it works</a>
-            </div>
-
-            <div class="s-tweaks-shortcuts">
-              <span><i class="ph ph-shield-check" aria-hidden="true"></i> Admin opt-in toggle</span>
-              <span><i class="ph ph-paperclip" aria-hidden="true"></i> Attachments land too</span>
-              <span><i class="ph ph-chats-teardrop" aria-hidden="true"></i> Threads stay grouped</span>
-            </div>
-          </div>
-
-          <!-- Demo mockup: address card + resulting JT comment -->
-          <div class="s-emailtojob-demo" aria-hidden="true">
-            <!-- The address card -->
-            <div class="s-emailtojob-card">
-              <div class="s-emailtojob-card-head">
-                <span class="s-emailtojob-card-label">This Job's Email</span>
-                <span class="s-emailtojob-card-chip">Auto-post on</span>
-              </div>
-              <div class="s-emailtojob-card-address">
-                <i class="ph ph-envelope-simple" aria-hidden="true"></i>
-                <span class="s-emailtojob-card-value">pat-12345@jtptbills.com</span>
-                <span class="s-emailtojob-card-copy"><i class="ph ph-copy" aria-hidden="true"></i></span>
-              </div>
-            </div>
-
-            <!-- Arrow -->
-            <div class="s-emailtojob-arrow" aria-hidden="true">
-              <i class="ph ph-arrow-down"></i>
-              <span>BCC'd on any email</span>
-            </div>
-
-            <!-- The resulting JT comment -->
-            <div class="s-emailtojob-comment">
-              <div class="s-emailtojob-comment-meta">
-                <span class="s-emailtojob-comment-avatar">JS</span>
-                <div>
-                  <div class="s-emailtojob-comment-author">Jamie Sub (via email)</div>
-                  <div class="s-emailtojob-comment-time">Today · 9:42 AM · Team only</div>
-                </div>
-              </div>
-              <div class="s-emailtojob-comment-title">Re: Patterson kitchen — cabinet schedule slipping a week</div>
-              <p class="s-emailtojob-comment-body">
-                Hey Pat — millwork shop pushed delivery to next Friday. Won't
-                affect install window if rough plumbing wraps Monday like we…
-              </p>
-              <div class="s-emailtojob-comment-attach">
-                <i class="ph ph-paperclip" aria-hidden="true"></i>
-                <span>cabinet-shop-update.pdf</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mini value cards -->
-        <div class="s-tweaks-mini">
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-envelope-open" aria-hidden="true"></i></div>
-            <h5>UNIQUE PER JOB</h5>
-            <p>Each job gets a clean, vanity-aliasable address. Provision once, paste into a JT custom field, the whole team uses it forever.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-scissors" aria-hidden="true"></i></div>
-            <h5>SIGNATURE STRIPPED</h5>
-            <p>The parser cuts boilerplate sign-offs and quoted reply chains so the comment shows only what matters: who said what, just now.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-chats-circle" aria-hidden="true"></i></div>
-            <h5>THREADS STAY GROUPED</h5>
-            <p>Replies nest under the original comment instead of becoming new parallel threads. Forwarded chains explode into one comment per historical message.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-lock-key" aria-hidden="true"></i></div>
-            <h5>ADMIN OPT-IN</h5>
-            <p>Owner / admin flips one company-wide toggle in the portal. Disable anytime — existing parked email + history stay intact. Soft kill, not destructive.</p>
-          </div>
-        </div>
-
-        <!-- Pull quote -->
-        <div class="s-tweaks-pull">
-          <div class="s-tweaks-pull-label">Why it matters</div>
-          <p class="s-tweaks-pull-quote">
-            The job site moves on email. The activity feed should too &mdash;
-            without anyone copy-pasting threads at the end of the day.
-          </p>
-        </div>
-        </div><!-- /panel: email-to-job -->
-
-        <!-- ── Panel: The Tweaks Engine (v4.7.0) ── -->
-        <div class="s-ship-panel" id="tweaks" role="tabpanel" aria-labelledby="tab-tweaks" hidden>
-
-        <!-- Headline + demo grid -->
-        <div class="s-tweaks-grid">
-          <div>
-            <h2 id="tweaks-headline" class="s-tweaks-headline">
-              JOBTREAD,<br>
-              <span class="accent">YOUR WAY.</span>
-            </h2>
-            <p class="s-tweaks-lede">
-              Tweaks is a CSS &amp; DOM feature builder. Pick an element, hand it
-              to your AI, paste back the code &mdash; instant custom feature.
-            </p>
-            <p class="s-tweaks-sublede">
-              Then push it across your whole company so everyone gets the same view of the world.
-              No browser-extension dev experience required.
-            </p>
-
-            <div class="s-tweaks-ctas">
-              <a href="#pricing" class="btn btn--primary">
-                <i class="ph ph-magic-wand" aria-hidden="true"></i>
-                Try the Tweaks Engine
-              </a>
-            </div>
-
-            <div class="s-tweaks-shortcuts">
-              <span><kbd class="s-tweaks-kbd">Alt</kbd> + click an element</span>
-              <span><kbd class="s-tweaks-kbd">Alt</kbd> + <kbd class="s-tweaks-kbd">Shift</kbd> + <kbd class="s-tweaks-kbd">P</kbd> picker</span>
-              <span><kbd class="s-tweaks-kbd">Alt</kbd> + <kbd class="s-tweaks-kbd">Shift</kbd> + <kbd class="s-tweaks-kbd">M</kbd> multi-view</span>
-            </div>
-          </div>
-
-          <!-- Demo mockup -->
-          <div class="s-tweaks-demo" aria-hidden="true">
-            <div class="s-tweaks-demo-chrome">
-              <div class="s-tweaks-demo-traffic">
-                <span style="background:#FF5F57"></span>
-                <span style="background:#FEBC2E"></span>
-                <span style="background:#28C840"></span>
-              </div>
-              <div class="s-tweaks-demo-url">app.jobtread.com / Home</div>
-            </div>
-
-            <div class="s-tweaks-demo-page">
-              <div class="s-tweaks-demo-eyebrow">HOME</div>
-              <div class="s-tweaks-demo-title">JT POWER TOOLS</div>
-
-              <div class="s-tweaks-demo-cards">
-                <!-- Picked card -->
-                <div class="s-tweaks-demo-card s-tweaks-demo-card--picked">
-                  <div class="s-tweaks-demo-tag">
-                    <span class="s-tweaks-demo-tag-tag">&lt;div</span>
-                    <span class="s-tweaks-demo-tag-classes">.stat-card.flex</span>
-                    <span class="s-tweaks-demo-tag-meta">· 2 ancestors</span>
-                  </div>
-                  <div class="s-tweaks-demo-card-label">Incomplete tasks</div>
-                  <div class="s-tweaks-demo-card-num">80</div>
-                  <i class="ph ph-crosshair s-tweaks-demo-crosshair" aria-hidden="true"></i>
-                </div>
-
-                <!-- Faded card -->
-                <div class="s-tweaks-demo-card s-tweaks-demo-card--faded">
-                  <div class="s-tweaks-demo-card-label">Overdue tasks</div>
-                  <div class="s-tweaks-demo-card-num">53</div>
-                </div>
-              </div>
-
-              <!-- Faint table -->
-              <div class="s-tweaks-demo-table">
-                <div class="s-tweaks-demo-table-head">
-                  <span>Task</span><span>Start</span><span>End</span><span>Job</span>
-                </div>
-                <div class="s-tweaks-demo-table-row">
-                  <span>Project Planning</span><span class="muted">Mar 15</span><span class="muted">Mar 17</span><span class="muted">Thompson Remodel</span>
-                </div>
-                <div class="s-tweaks-demo-table-row">
-                  <span>Needs Assessment</span><span class="muted">Mar 15</span><span class="muted">Mar 17</span><span class="muted">Thompson Remodel</span>
-                </div>
-                <div class="s-tweaks-demo-table-row">
-                  <span>Site Visit</span><span class="muted">Mar 15</span><span class="muted">Mar 17</span><span class="muted">Thompson Remodel</span>
-                </div>
-              </div>
-
-              <!-- AI prompt floating panel -->
-              <div class="s-tweaks-demo-ai">
-                <div class="s-tweaks-demo-ai-head">
-                  <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
-                  <span>Ask AI to tweak</span>
-                  <span class="s-tweaks-demo-ai-count">1 element</span>
-                </div>
-                <div class="s-tweaks-demo-ai-body">
-                  &ldquo;Make incomplete tasks turn red when count is over 50, and pulse gently.&rdquo;
-                </div>
-                <div class="s-tweaks-demo-ai-foot">
-                  <span class="s-tweaks-demo-ai-pill">CLAUDE</span>
-                  <span>·</span>
-                  <span>14 lines CSS</span>
-                  <span class="s-tweaks-demo-ai-ready">
-                    <span class="s-tweaks-demo-ai-ready-dot"></span>
-                    Ready
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Three-step flow -->
-        <div class="s-tweaks-flow">
-          <div class="s-tweaks-flow-step">
-            <div class="s-tweaks-flow-head">
-              <span class="s-tweaks-flow-icon"><i class="ph ph-crosshair" aria-hidden="true"></i></span>
-              <span class="s-tweaks-flow-num">01</span>
-            </div>
-            <h4 class="s-tweaks-flow-title">PICK</h4>
-            <p>Alt+click any element on JobTread. The picker captures the exact selector, ancestry, and what it does.</p>
-            <i class="ph ph-arrow-right s-tweaks-flow-arrow" aria-hidden="true"></i>
-          </div>
-          <div class="s-tweaks-flow-step">
-            <div class="s-tweaks-flow-head">
-              <span class="s-tweaks-flow-icon"><i class="ph ph-sparkle" aria-hidden="true"></i></span>
-              <span class="s-tweaks-flow-num">02</span>
-            </div>
-            <h4 class="s-tweaks-flow-title">ASK YOUR AI</h4>
-            <p>One click sends the element + your prompt to ChatGPT, Claude, or your own model. You get back CSS or JS that just works.</p>
-            <i class="ph ph-arrow-right s-tweaks-flow-arrow" aria-hidden="true"></i>
-          </div>
-          <div class="s-tweaks-flow-step s-tweaks-flow-step--last">
-            <div class="s-tweaks-flow-head">
-              <span class="s-tweaks-flow-icon"><i class="ph ph-broadcast" aria-hidden="true"></i></span>
-              <span class="s-tweaks-flow-num">03</span>
-            </div>
-            <h4 class="s-tweaks-flow-title">SHIP IT</h4>
-            <p>Save the tweak personally, or push it org-wide so every estimator and PM in your company runs the same version of JobTread.</p>
-          </div>
-        </div>
-
-        <!-- Mini feature row -->
-        <div class="s-tweaks-mini">
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-target" aria-hidden="true"></i></div>
-            <h5>ELEMENT PICKER</h5>
-            <p>Highlights the exact node. Shows tag, classes, and how many ancestors / descendants you'll capture.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-stack" aria-hidden="true"></i></div>
-            <h5>MULTI-VIEW CAPTURE</h5>
-            <p>Pick across multiple JobTread views at once and bundle them into a single tweak request.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-buildings" aria-hidden="true"></i></div>
-            <h5>ORG-WIDE PUSH</h5>
-            <p>Roll out an approved tweak to every device on your account. One install, everyone benefits.</p>
-          </div>
-          <div class="s-tweaks-mini-card">
-            <div class="s-tweaks-mini-icon"><i class="ph ph-arrows-counter-clockwise" aria-hidden="true"></i></div>
-            <h5>TOGGLE ANYWHERE</h5>
-            <p>One master switch disables every tweak on this device. Perfect for screen-sharing with support.</p>
-          </div>
-        </div>
-
-        <!-- Pull quote -->
-        <div class="s-tweaks-pull">
-          <div class="s-tweaks-pull-label">Why it matters</div>
-          <p class="s-tweaks-pull-quote">
-            Every contractor runs JobTread differently. Now the software actually
-            bends to match &mdash; without waiting for the next release.
-          </p>
-        </div>
-        </div><!-- /panel: tweaks -->
-      </div>
-    </section>
-
-    <section class="s-showcase" aria-label="JT Power Tools — the missing piece of your JobTread workflow">
-      <img src="hero-marquee.png" alt="JT Power Tools — the missing piece of your JobTread workflow. Adds Schedule &amp; Task Checkboxes, Budget Changelog, Job Switcher Filter, Budget Hierarchy Shading, Dark Mode, Freeze Header, Text Formatter, and more — shown running inside a JobTread budget view on a desktop monitor." loading="lazy" width="1900" height="750">
-    </section>
-
-    <section class="s-diff">
-      <div class="container">
-        <div class="s-diff-head reveal">
-          <span class="t-label">The Difference</span>
-          <h2 class="s-diff-title">
-            JobTread, <span class="serif">now with Power Tools.</span>
-          </h2>
-        </div>
-        <div class="s-diff-grid reveal">
-          <article class="s-diff-card s-diff-card--standard">
-            <h3>Standard JobTread</h3>
-            <ul class="s-diff-list">
-              <li><i class="ph ph-x" aria-hidden="true"></i>Blinding white screen, even at midnight</li>
-              <li><i class="ph ph-x" aria-hidden="true"></i>Job switcher is one long list of every job — open, closed, archived — scroll or type to find it</li>
-              <li><i class="ph ph-x" aria-hidden="true"></i>Assignee picker shows every member and every vendor with no way to filter</li>
-              <li><i class="ph ph-x" aria-hidden="true"></i>Open task cards individually to check them off</li>
-              <li><i class="ph ph-x" aria-hidden="true"></i>Plain text fields for notes and budget descriptions</li>
-              <li><i class="ph ph-x" aria-hidden="true"></i>Type the same signature and canned replies every time</li>
-              <li><i class="ph ph-x" aria-hidden="true"></i>Re-type messages to count characters</li>
-            </ul>
-          </article>
-          <article class="s-diff-card s-diff-card--power">
-            <h3>With Power Tools</h3>
-            <ul class="s-diff-list">
-              <li><i class="ph ph-check" aria-hidden="true"></i>True dark mode for late nights and early mornings</li>
-              <li><i class="ph ph-check" aria-hidden="true"></i>Job switcher with filters — status, stage, recently opened</li>
-              <li><i class="ph ph-check" aria-hidden="true"></i>Availability filter hides off-duty members and inactive vendors</li>
-              <li><i class="ph ph-check" aria-hidden="true"></i>Checkboxes on schedule cards — one click, no modal</li>
-              <li><i class="ph ph-check" aria-hidden="true"></i>Rich text with lists, colors, tables, headings</li>
-              <li><i class="ph ph-check" aria-hidden="true"></i>Saved templates paste in one click</li>
-              <li><i class="ph ph-check" aria-hidden="true"></i>Live character counter on every message field</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="s-features" id="features">
-      <div class="container">
-        <div class="s-features-head reveal">
-          <div>
-            <span class="t-label">What's in the Kit</span>
-            <h2 class="s-features-title">
-              <span>One Extension.</span>
-              <span class="accent">Every Fix.</span>
-            </h2>
-          </div>
-          <p class="t-lede">20+ features across scheduling, formatting, theming, and AI. Each toggle-able. All one install.</p>
-        </div>
-        <div class="grid grid-4 reveal">
-          <!-- FREE -->
-          <a class="s-features-card" href="guides/dark-mode.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-moon" aria-hidden="true"></i></span>
-            </div>
-            <h3>Dark Mode</h3>
-            <p>A true dark theme for JobTread. Late nights, early mornings, and tired eyes — all covered.</p>
-          </a>
-          <a class="s-features-card" href="guides/text-formatter.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-text-aa" aria-hidden="true"></i></span>
-            </div>
-            <h3>Text Formatter</h3>
-            <p>Rich text toolbar with bold, italic, headings, tables, links, and alert blocks. Keyboard shortcuts included.</p>
-          </a>
-          <a class="s-features-card" href="guides/contrast-fix.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-eye" aria-hidden="true"></i></span>
-            </div>
-            <h3>Contrast Fix</h3>
-            <p>Automatic text color adjustment for WCAG-compliant readability across every JobTread screen.</p>
-          </a>
-          <a class="s-features-card" href="guides/character-counter.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-chat-text" aria-hidden="true"></i></span>
-            </div>
-            <h3>Message Counter &amp; Templates</h3>
-            <p>Live character count on every message field, plus saved templates you can paste in one click.</p>
-          </a>
-          <a class="s-features-card" href="guides/budget-hierarchy.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-stack" aria-hidden="true"></i></span>
-            </div>
-            <h3>Budget Hierarchy Shading</h3>
-            <p>Progressive visual shading for nested budget groups — up to 5 levels deep, instantly scannable.</p>
-          </a>
-          <a class="s-features-card" href="guides/auto-sum.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-sigma" aria-hidden="true"></i></span>
-            </div>
-            <h3>Auto Sum</h3>
-            <p>Totals helper that sums selected budget cells instantly. No formulas, no exports.</p>
-          </a>
-          <a class="s-features-card" href="guides/kanban-filter.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-funnel" aria-hidden="true"></i></span>
-            </div>
-            <h3>Kanban Type Filter</h3>
-            <p>Auto-hide empty Kanban columns so your board shows only what's in play today.</p>
-          </a>
-          <a class="s-features-card" href="guides/auto-collapse.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-caret-up-down" aria-hidden="true"></i></span>
-            </div>
-            <h3>Auto Collapse Groups</h3>
-            <p>Collapses 100% complete budget groups on load so you focus on what still needs work.</p>
-          </a>
-          <!-- ESSENTIAL -->
-          <a class="s-features-card" href="guides/quick-notes.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-note-pencil" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-essential">Essential</span>
-            </div>
-            <h3>Quick Notes</h3>
-            <p>Persistent notepad with markdown support, WYSIWYG editor, and cross-device sync.</p>
-          </a>
-          <a class="s-features-card" href="guides/job-switcher.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-arrows-out-simple" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-essential">Essential</span>
-            </div>
-            <h3>Smart Resize</h3>
-            <p>Drag any sidebar or panel edge to resize it. Tune your JobTread layout to your workflow.</p>
-          </a>
-          <a class="s-features-card" href="guides/freeze-header.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-push-pin" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-essential">Essential</span>
-            </div>
-            <h3>Freeze Header</h3>
-            <p>Sticky column and row headers on long tables so you never lose your bearings while scrolling.</p>
-          </a>
-          <a class="s-features-card" href="guides/pdf-markup-tools.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-file-pdf" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-essential">Essential</span>
-            </div>
-            <h3>PDF Markup Tools</h3>
-            <p>Professional stamps, improved eraser, and redlining tools for construction plans and change orders.</p>
-          </a>
-          <!-- PRO -->
-          <a class="s-features-card" href="guides/drag-drop.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-check-square" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-pro">Pro</span>
-            </div>
-            <h3>Schedule Task Checkboxes</h3>
-            <p>Check off tasks directly from schedule cards. One click, no modals, no context loss.</p>
-          </a>
-          <a class="s-features-card" href="guides/custom-theme.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-palette" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-pro">Pro</span>
-            </div>
-            <h3>Custom Theme</h3>
-            <p>Personalize JobTread with your own color palette. Save up to 3 themes for quick switching.</p>
-          </a>
-          <a class="s-features-card" href="guides/preview-mode.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-eye-closed" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-pro">Pro</span>
-            </div>
-            <h3>Preview Mode</h3>
-            <p>Live markdown preview with a floating panel. See rendered budget descriptions and daily logs as you type.</p>
-          </a>
-          <a class="s-features-card" href="guides/availability-filter.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-users-three" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-pro">Pro</span>
-            </div>
-            <h3>Availability Filter</h3>
-            <p>Hide off-duty members and inactive vendors from assignee pickers. Only see who can actually take the job.</p>
-          </a>
-          <a class="s-features-card" href="guides/reverse-thread-order.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-arrows-down-up" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-pro">Pro</span>
-            </div>
-            <h3>Reverse Thread Order</h3>
-            <p>Flip message threads so the newest posts stay on top — no more scrolling to the bottom.</p>
-          </a>
-          <!-- POWER USER -->
-          <a class="s-features-card" href="guides/custom-field-filter.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-power">Power User</span>
-            </div>
-            <h3>Job Switcher Filter</h3>
-            <p>API-powered job filtering by status, stage, custom fields, and recency. Find any job in seconds.</p>
-          </a>
-          <a class="s-features-card" href="guides/budget-changelog.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-power">Power User</span>
-            </div>
-            <h3>Budget Changelog</h3>
-            <p>Compare any two budget backups side-by-side. See exactly what changed, when, and by how much.</p>
-          </a>
-          <a class="s-features-card" href="guides/unassigned-availability.html">
-            <div class="s-features-card-top">
-              <span class="s-features-icon"><i class="ph ph-user-check" aria-hidden="true"></i></span>
-              <span class="pill pill--tier-power">Power User</span>
-            </div>
-            <h3>Unassigned Availability</h3>
-            <p>Spot unassigned tasks and open availability across the schedule without clicking through each day.</p>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <section class="s-install" id="install">
-      <div class="container">
-        <span class="t-label">Install</span>
-        <h2 class="s-install-title">
-          Everywhere <span class="accent">You Work.</span>
-        </h2>
-        <div class="s-install-buttons">
-          <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--ink" target="_blank" rel="noopener">
-            <img src="chrome-color-svgrepo-com.svg" alt="" width="18" height="18"> Chrome
-          </a>
-          <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" class="btn btn--ink" target="_blank" rel="noopener">
-            <img src="Firefox_logo,_2017.png" alt="" width="18" height="18"> Firefox
-          </a>
-        </div>
-        <p class="s-install-note">Use <strong>Edge, Brave, Arc, or Opera</strong>? Choose Chrome — same store.</p>
-      </div>
-    </section>
-
-    <section class="s-mcp" id="mcp">
-      <div class="s-mcp-hazard" aria-hidden="true"></div>
-      <div class="container s-mcp-inner">
-        <span class="s-mcp-eyebrow reveal">AI Toolkit · Included with Power User</span>
-        <h2 class="s-mcp-title reveal">
-          <span>Your AI Needs A</span>
-          <span class="accent">Toolbelt.</span>
-        </h2>
-        <p class="s-mcp-lede reveal">
-          Connect Claude, ChatGPT, Gemini, Cursor, or any MCP-aware client directly to JobTread — across every org you manage. Your AI gets real job data, schedules, and budgets, not stale copy-paste.
-        </p>
-        <div class="s-mcp-grid reveal">
-          <a class="s-mcp-card" href="/mcp/chatgpt.html">
-            <span class="s-mcp-card-logo"><img src="ChatGPT-Logo.svg.png" alt=""></span>
-            <h3>ChatGPT</h3>
-            <p>Custom GPT + browser-side MCP.</p>
-            <span class="s-mcp-card-cta">Setup Guide →</span>
-          </a>
-          <a class="s-mcp-card" href="/mcp/other.html">
-            <span class="s-mcp-card-logo"><img src="Claude_AI_symbol.svg" alt=""></span>
-            <h3>Claude</h3>
-            <p>Claude.ai web + desktop.</p>
-            <span class="s-mcp-card-cta">Setup Guide →</span>
-          </a>
-          <a class="s-mcp-card" href="/mcp/gemini.html">
-            <span class="s-mcp-card-logo"><img src="gemini-color.png" alt=""></span>
-            <h3>Gemini</h3>
-            <p>Google's AI with MCP support.</p>
-            <span class="s-mcp-card-cta">Setup Guide →</span>
-          </a>
-          <a class="s-mcp-card" href="/mcp/grok.html">
-            <span class="s-mcp-card-logo"><img src="grok--v2.png" alt=""></span>
-            <h3>Grok</h3>
-            <p>X's AI assistant.</p>
-            <span class="s-mcp-card-cta">Setup Guide →</span>
-          </a>
-          <a class="s-mcp-card" href="/mcp/claude-code.html">
-            <span class="s-mcp-card-logo"><i class="ph ph-terminal" style="color:#1A1A1A;"></i></span>
-            <h3>Claude Code</h3>
-            <p>Anthropic's official CLI.</p>
-            <span class="s-mcp-card-cta">Setup Guide →</span>
-          </a>
-          <a class="s-mcp-card" href="/mcp/cursor.html">
-            <span class="s-mcp-card-logo"><i class="ph ph-code" style="color:#1A1A1A;"></i></span>
-            <h3>Cursor</h3>
-            <p>AI-native code editor.</p>
-            <span class="s-mcp-card-cta">Setup Guide →</span>
-          </a>
-        </div>
-        <div class="reveal">
-          <div class="s-mcp-prompts-label">Example Prompts</div>
-          <div class="s-mcp-prompts">
-            <span class="s-mcp-prompt">"Compare this bid request against the project scope"</span>
-            <span class="s-mcp-prompt">"Pull key metrics for my production meeting"</span>
-            <span class="s-mcp-prompt">"Forecast labor needs for the next 2 weeks"</span>
-            <span class="s-mcp-prompt">"Pull historical budget data to develop costs for a new project"</span>
-          </div>
-        </div>
-        <p class="s-mcp-footer reveal">MCP server access included with Power User tier. 7-day free trial.</p>
-      </div>
-    </section>
-
-    <section class="s-how" id="how-it-works">
-      <div class="container">
-        <div class="section-head reveal">
-          <span class="t-label">How It Works</span>
-          <h2 class="s-features-title">
-            <span>Three Steps.</span>
-            <span class="accent">Zero Fuss.</span>
-          </h2>
-          <p class="t-lede" style="margin: 24px auto 0;">Install in seconds, no account required to start.</p>
-        </div>
-        <div class="grid grid-3 reveal">
-          <article class="s-how-card">
-            <div class="s-how-num">01</div>
-            <h3>Install the Extension</h3>
-            <p>One click from your browser's store. Works on Chrome, Edge, Firefox — no signup, no setup.</p>
-            <i class="ph ph-download-simple s-how-icon" aria-hidden="true"></i>
-          </article>
-          <article class="s-how-card">
-            <div class="s-how-num">02</div>
-            <h3>Open JobTread</h3>
-            <p>Everything activates automatically on <code>app.jobtread.com</code>. All free features turn on out of the box.</p>
-            <i class="ph ph-lightning s-how-icon" aria-hidden="true"></i>
-          </article>
-          <article class="s-how-card">
-            <div class="s-how-num">03</div>
-            <h3>Turn On What You Need</h3>
-            <p>Click the extension icon to toggle features. Upgrade in-app when you want Essential, Pro, or Power User tools.</p>
-            <i class="ph ph-toggle-right s-how-icon" aria-hidden="true"></i>
-          </article>
-        </div>
-        <div class="s-how-footer reveal">
-          <a href="/documentation/">Read the full guide →</a>
         </div>
       </div>
     </section>
@@ -1146,10 +197,560 @@
         </div>
         <div class="s-reviews-cta reveal">
           <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--ghost" target="_blank" rel="noopener">See all reviews on Chrome Web Store →</a>
-          <p class="s-reviews-trust">Join <strong>700+</strong> installs already using JT Power Tools</p>
+          <p class="s-reviews-trust">Join <strong>800+</strong> installs already using JT Power Tools</p>
         </div>
       </div>
     </section>
+
+<!-- Just Shipped: a single spotlight on the newest release. It used to
+         carry four tabbed panels, but Pave Explorer, Email to Job and Tweaks
+         all have feature cards now, so the page was making each point twice. -->
+    <section id="shipped" class="s-tweaks s-ship" aria-label="Latest release">
+      <div class="s-tweaks-tape" aria-hidden="true"></div>
+
+      <div class="container">
+        <div class="s-ship-bar">
+          <span class="s-ship-bar-label">
+            <i class="ph-fill ph-sparkle" aria-hidden="true"></i>
+            Just Shipped
+          </span>
+        </div>
+      </div>
+
+      <div class="container s-tweaks-inner">
+        <!-- ── Panel: AI Task Trigger (v4.10.3) ── -->
+        <div class="s-ship-panel" id="ai-task-trigger">
+
+        <!-- Headline + demo grid -->
+        <div class="s-tweaks-grid">
+          <div>
+            <h2 id="trigger-headline" class="s-tweaks-headline">
+              ASSIGN IT.<br>
+              <span class="accent">IT&rsquo;S DONE.</span>
+            </h2>
+            <p class="s-tweaks-lede">
+              Pick one task type in the portal and every JobTread task carrying it
+              becomes a work order for your AI teammate. A sweep every 15 minutes
+              picks it up, works from the task&rsquo;s own description, comments what
+              it did, and checks it off.
+            </p>
+            <p class="s-tweaks-sublede">
+              Which means your <strong>recurring tasks and job templates are already
+              automation schedules</strong> &mdash; you write the instructions once, in the
+              place you were going to write them anyway. The agent&rsquo;s edits land like
+              a teammate&rsquo;s; documents it creates stay <strong>drafts for you to send</strong>,
+              and sends, status changes, payments and deletes wait for approval.
+            </p>
+
+            <div class="s-tweaks-ctas">
+              <a href="#pricing" class="btn btn--primary">
+                <i class="ph ph-robot" aria-hidden="true"></i>
+                Get Assistant
+              </a>
+              <a href="#assistant" class="btn btn--ghost">See the tier</a>
+            </div>
+
+            <div class="s-tweaks-shortcuts">
+              <span><i class="ph ph-clock-countdown" aria-hidden="true"></i> Sweeps every 15 minutes</span>
+              <span><i class="ph ph-repeat" aria-hidden="true"></i> Recurring tasks become schedules</span>
+              <span><i class="ph ph-shield-check" aria-hidden="true"></i> Risky moves need approval</span>
+            </div>
+          </div>
+
+          <!-- Demo mockup: a JobTread task, then what the assistant left on it -->
+          <div class="s-trigger-demo" aria-hidden="true">
+            <div class="s-tweaks-demo-chrome">
+              <div class="s-tweaks-demo-traffic">
+                <span style="background:#FF5F57"></span>
+                <span style="background:#FEBC2E"></span>
+                <span style="background:#28C840"></span>
+              </div>
+              <div class="s-tweaks-demo-url">JobTread — 1247 Oak St · Tasks</div>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);border-top:0;border-radius:0 0 12px 12px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+
+              <!-- What arms it, set once in the portal -->
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 11px;border:1px dashed var(--border);border-radius:9px;">
+                <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-muted);">Portal &middot; Automations</span>
+                <span style="font-size:11.5px;color:var(--ink);">Task type <strong>AI Assistant</strong></span>
+                <span style="width:1px;height:12px;background:var(--border);flex:none;" aria-hidden="true"></span>
+                <span style="font-size:11.5px;color:var(--ink);">Write handling <strong>Execute</strong></span>
+              </div>
+
+              <!-- The task you write -->
+              <div style="border:1px solid var(--border);border-radius:10px;padding:13px 14px;background:var(--bg);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap;">
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink);background:var(--peach);border-radius:999px;padding:3px 9px;">
+                    <i class="ph-fill ph-sparkle" style="font-size:11px;"></i>AI Assistant
+                  </span>
+                  <span style="font-size:11px;color:var(--ink-muted);">Repeats weekly · Fri 7:00am</span>
+                </div>
+                <div style="font-family:var(--font-sub);font-weight:600;font-size:14px;letter-spacing:0.02em;color:var(--ink);margin-bottom:7px;">Weekly client update</div>
+                <div style="font-size:12px;line-height:1.5;color:var(--ink-muted);border-left:2px solid var(--border);padding-left:10px;">
+                  Summarize this week&rsquo;s daily logs and completed tasks, flag anything
+                  that slipped, and post it as a client-visible comment on the job.
+                </div>
+              </div>
+
+              <!-- The sweep -->
+              <div style="display:flex;align-items:center;gap:9px;padding-left:2px;">
+                <span style="width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--peach);color:var(--ink);flex:none;">
+                  <i class="ph ph-arrow-down" style="font-size:12px;"></i>
+                </span>
+                <span style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-muted);">Picked up 4 minutes later</span>
+              </div>
+
+              <!-- What it left behind -->
+              <div style="border:1px solid var(--border);border-radius:10px;padding:13px 14px;background:var(--bg);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">
+                  <span style="width:20px;height:20px;border-radius:6px;background:var(--orange);display:inline-flex;align-items:center;justify-content:center;flex:none;">
+                    <i class="ph-fill ph-robot" style="font-size:12px;color:#fff;"></i>
+                  </span>
+                  <span style="font-family:var(--font-sub);font-weight:600;font-size:12.5px;color:var(--ink);">JT Assistant</span>
+                  <span style="font-size:11px;color:var(--ink-muted);margin-left:auto;">just now</span>
+                </div>
+                <div style="font-size:12px;line-height:1.55;color:var(--ink-muted);">
+                  Framing and rough-in inspection both closed this week. Drywall moved to
+                  Monday &mdash; the electrician&rsquo;s reschedule pushed it two days.
+                  <span style="color:var(--ink);font-weight:600;">Posted to the job.</span>
+                </div>
+              </div>
+
+              <!-- ...and checked it off -->
+              <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-muted);padding-left:2px;">
+                <i class="ph-fill ph-check-circle" style="font-size:15px;color:#10b981;"></i>
+                Task marked complete
+              </div>
+
+              <!-- Next up: anything else carrying the type -->
+              <div style="border-top:1px solid var(--border);padding-top:11px;display:flex;align-items:center;gap:9px;">
+                <i class="ph ph-clock-countdown" style="font-size:15px;color:var(--ink-muted);flex:none;"></i>
+                <span style="font-size:11.5px;color:var(--ink-muted);">Next sweep in 11 min &mdash;</span>
+                <span style="font-size:11.5px;color:var(--ink);">2 tasks waiting</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="s-showcase" aria-label="JT Power Tools — the missing piece of your JobTread workflow">
+      <img src="hero-marquee.png" alt="JT Power Tools — the missing piece of your JobTread workflow. Adds Schedule &amp; Task Checkboxes, Budget Changelog, Job Switcher Filter, Budget Hierarchy Shading, Dark Mode, Freeze Header, Text Formatter, and more — shown running inside a JobTread budget view on a desktop monitor." loading="lazy" width="1900" height="750">
+    </section>
+
+
+    <section class="s-features" id="features">
+      <div class="container">
+        <div class="s-features-head reveal">
+          <div>
+            <span class="t-label">What's in the Kit</span>
+            <h2 class="s-features-title">
+              <span>One Extension.</span>
+              <span class="accent">Every Fix.</span>
+            </h2>
+          </div>
+          <p class="t-lede">30+ features across scheduling, formatting, theming, and AI. Each toggle-able. All one install.</p>
+        </div>
+        <div class="s-features-bands reveal">
+        <div class="s-features-band s-features-band--free" role="group" aria-label="Free features">
+          <div class="s-features-band-head">
+            <span class="s-features-band-label">Free</span>
+            <span class="s-features-band-note">Free to install and free to keep. Auto Sequence is the one that needs an account, itself free.</span>
+            <span class="s-features-band-count">13</span>
+          </div>
+          <div class="grid grid-4">
+          <a class="s-features-card" href="guides/dark-mode.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-moon" aria-hidden="true"></i></span>
+            </div>
+            <h3>Dark Mode</h3>
+            <p>A true dark theme for JobTread. Late nights, early mornings, and tired eyes — all covered.</p>
+          </a>
+          <a class="s-features-card" href="guides/text-formatter.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-text-aa" aria-hidden="true"></i></span>
+            </div>
+            <h3>Text Formatter</h3>
+            <p>Rich text toolbar with bold, italic, headings, tables, links, and alert blocks. Keyboard shortcuts included.</p>
+          </a>
+          <a class="s-features-card" href="guides/contrast-fix.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-eye" aria-hidden="true"></i></span>
+            </div>
+            <h3>Contrast Fix</h3>
+            <p>Automatic text color adjustment for WCAG-compliant readability across every JobTread screen.</p>
+          </a>
+          <a class="s-features-card" href="guides/character-counter.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-chat-text" aria-hidden="true"></i></span>
+            </div>
+            <h3>Message Counter &amp; Templates</h3>
+            <p>Live character count on every message field, plus saved templates you can paste in one click.</p>
+          </a>
+          <a class="s-features-card" href="guides/budget-hierarchy.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-stack" aria-hidden="true"></i></span>
+            </div>
+            <h3>Budget Hierarchy Shading</h3>
+            <p>Progressive visual shading for nested budget groups — up to 5 levels deep, instantly scannable.</p>
+          </a>
+          <a class="s-features-card" href="guides/auto-sum.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-sigma" aria-hidden="true"></i></span>
+            </div>
+            <h3>Auto Sum</h3>
+            <p>Totals helper that sums selected budget cells instantly. No formulas, no exports.</p>
+          </a>
+          <a class="s-features-card" href="guides/kanban-filter.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-funnel" aria-hidden="true"></i></span>
+            </div>
+            <h3>Kanban Type Filter</h3>
+            <p>Auto-hide empty Kanban columns so your board shows only what's in play today.</p>
+          </a>
+          <a class="s-features-card" href="guides/auto-collapse.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-caret-up-down" aria-hidden="true"></i></span>
+            </div>
+            <h3>Auto Collapse Groups</h3>
+            <p>Collapses 100% complete budget groups on load so you focus on what still needs work.</p>
+          </a>
+          <a class="s-features-card" href="guides/fat-gantt.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-chart-bar-horizontal" aria-hidden="true"></i></span>
+            </div>
+            <h3>Fat Gantt</h3>
+            <p>Thicker Gantt dependency lines. Stop squinting to grab the one you actually meant.</p>
+          </a>
+          <a class="s-features-card" href="guides/document-sort.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-sort-ascending" aria-hidden="true"></i></span>
+            </div>
+            <h3>Document Sort</h3>
+            <p>Sort any Documents tab by column — and it sorts the whole list, not just the rows on screen.</p>
+          </a>
+          <a class="s-features-card" href="guides/auto-sequence.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-list-numbers" aria-hidden="true"></i></span>
+            </div>
+            <h3>Auto Sequence</h3>
+            <p>Re-order each schedule group to match its start dates in one click. Dates never move. Needs a free account.</p>
+          </a>
+          <a class="s-features-card" href="guides/print-scope.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-printer" aria-hidden="true"></i></span>
+            </div>
+            <h3>Print Scope</h3>
+            <p>Print the scope straight from the preview modal, without creating a document to do it.</p>
+          </a>
+          <a class="s-features-card" href="guides/job-access-collapse.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-lock-key-open" aria-hidden="true"></i></span>
+            </div>
+            <h3>Job Access Collapse</h3>
+            <p>Fold up the Job Access sections you never read. They stay folded across page loads.</p>
+          </a>
+          </div>
+        </div>
+        <div class="s-features-band s-features-band--essential" role="group" aria-label="Essential features">
+          <div class="s-features-band-head">
+            <span class="s-features-band-label">Essential</span>
+            <span class="s-features-band-note">$10/mo — the daily-driver upgrades.</span>
+            <span class="s-features-band-count">5</span>
+          </div>
+          <div class="grid grid-4">
+          <a class="s-features-card" href="guides/quick-notes.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-note-pencil" aria-hidden="true"></i></span>
+            </div>
+            <h3>Quick Notes</h3>
+            <p>Persistent notepad with markdown support, WYSIWYG editor, and cross-device sync.</p>
+          </a>
+          <a class="s-features-card" href="guides/job-switcher.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-arrows-out-simple" aria-hidden="true"></i></span>
+            </div>
+            <h3>Smart Resize</h3>
+            <p>Drag any sidebar or panel edge to resize it. Tune your JobTread layout to your workflow.</p>
+          </a>
+          <a class="s-features-card" href="guides/freeze-header.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-push-pin" aria-hidden="true"></i></span>
+            </div>
+            <h3>Freeze Header</h3>
+            <p>Sticky column and row headers on long tables so you never lose your bearings while scrolling.</p>
+          </a>
+          <a class="s-features-card" href="guides/pdf-markup-tools.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-file-pdf" aria-hidden="true"></i></span>
+            </div>
+            <h3>PDF Markup Tools</h3>
+            <p>Professional stamps, improved eraser, and redlining tools for construction plans and change orders.</p>
+          </a>
+          <a class="s-features-card" href="guides/budget-row-highlight.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-paint-bucket" aria-hidden="true"></i></span>
+            </div>
+            <h3>Budget Row Highlight</h3>
+            <p>Drop a colored circle in a budget row and the whole row lights up. A real highlighter, at last.</p>
+          </a>
+          </div>
+        </div>
+        <div class="s-features-band s-features-band--pro" role="group" aria-label="Pro features">
+          <div class="s-features-band-head">
+            <span class="s-features-band-label">Pro</span>
+            <span class="s-features-band-note">$20/mo — shape JobTread to your process.</span>
+            <span class="s-features-band-count">8</span>
+          </div>
+          <div class="grid grid-4">
+          <a class="s-features-card" href="guides/drag-drop.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-check-square" aria-hidden="true"></i></span>
+            </div>
+            <h3>Schedule Task Checkboxes</h3>
+            <p>Check off tasks directly from schedule cards. One click, no modals, no context loss.</p>
+          </a>
+          <a class="s-features-card" href="guides/custom-theme.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-palette" aria-hidden="true"></i></span>
+            </div>
+            <h3>Custom Theme</h3>
+            <p>Personalize JobTread with your own color palette. Save up to 3 themes for quick switching.</p>
+          </a>
+          <a class="s-features-card" href="guides/preview-mode.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-eye-closed" aria-hidden="true"></i></span>
+            </div>
+            <h3>Preview Mode</h3>
+            <p>Live markdown preview with a floating panel. See rendered budget descriptions and daily logs as you type.</p>
+          </a>
+          <a class="s-features-card" href="guides/availability-filter.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-users-three" aria-hidden="true"></i></span>
+            </div>
+            <h3>Availability Filter</h3>
+            <p>Hide off-duty members and inactive vendors from assignee pickers. Only see who can actually take the job.</p>
+          </a>
+          <a class="s-features-card" href="guides/reverse-thread-order.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-arrows-down-up" aria-hidden="true"></i></span>
+            </div>
+            <h3>Reverse Thread Order</h3>
+            <p>Flip message threads so the newest posts stay on top — no more scrolling to the bottom.</p>
+          </a>
+          <a class="s-features-card" href="guides/tweaks.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-magic-wand" aria-hidden="true"></i></span>
+            </div>
+            <h3>Tweaks</h3>
+            <p>Rename labels, hide clutter, restyle, reorder, or warn before a risky click, all without code.</p>
+          </a>
+          <a class="s-features-card" href="guides/inspect-for-ai.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-crosshair" aria-hidden="true"></i></span>
+            </div>
+            <h3>Inspect for AI</h3>
+            <p>Alt-click any element and paste it into Claude or ChatGPT. Get back a tweak that actually targets it.</p>
+          </a>
+          <a class="s-features-card" href="guides/pave-explorer.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-binoculars" aria-hidden="true"></i></span>
+            </div>
+            <h3>Pave Explorer</h3>
+            <p>Watch the JobTread API calls behind any page, then copy a clean, shareable version. Nothing leaves your browser.</p>
+          </a>
+          </div>
+        </div>
+        <div class="s-features-band s-features-band--power" role="group" aria-label="Power User features">
+          <div class="s-features-band-head">
+            <span class="s-features-band-label">Power User</span>
+            <span class="s-features-band-note">$30/mo — the API-backed heavy lifting.</span>
+            <span class="s-features-band-count">8</span>
+          </div>
+          <div class="grid grid-4">
+          <a class="s-features-card" href="guides/custom-field-filter.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></span>
+            </div>
+            <h3>Job Switcher Filter</h3>
+            <p>API-powered job filtering by status, stage, custom fields, and recency. Find any job in seconds.</p>
+          </a>
+          <a class="s-features-card" href="guides/budget-changelog.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i></span>
+            </div>
+            <h3>Budget Changelog</h3>
+            <p>Compare any two budget backups side-by-side. See exactly what changed, when, and by how much.</p>
+          </a>
+          <a class="s-features-card" href="guides/unassigned-availability.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-user-focus" aria-hidden="true"></i></span>
+            </div>
+            <h3>Unassigned Availability</h3>
+            <p>Spot unassigned tasks and open availability across the schedule without clicking through each day.</p>
+          </a>
+          <a class="s-features-card" href="guides/invoice-forecast.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-chart-line-up" aria-hidden="true"></i></span>
+            </div>
+            <h3>Invoice Forecast</h3>
+            <p>Month-by-month cash flow from your invoice schedule — paid, committed, and projected.</p>
+          </a>
+          <a class="s-features-card" href="guides/editable-tables.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-table" aria-hidden="true"></i></span>
+            </div>
+            <h3>Editable Tables</h3>
+            <p>Edit custom fields in place in the job grid. Tab down a column and fill the whole thing.</p>
+          </a>
+          <a class="s-features-card" href="guides/forms.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-clipboard-text" aria-hidden="true"></i></span>
+            </div>
+            <h3>Worksheets</h3>
+            <p>Checklists, inspections, and sign-offs in a drawer on the job. Auto-save and PDF export.</p>
+          </a>
+          <a class="s-features-card" href="guides/email-to-job.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-at" aria-hidden="true"></i></span>
+            </div>
+            <h3>Email to Job</h3>
+            <p>Every job gets its own address. BCC it and the message posts to that job&#x27;s feed, signature stripped.</p>
+          </a>
+          <a class="s-features-card" href="guides/vendor-bills.html">
+            <div class="s-features-card-top">
+              <span class="s-features-icon"><i class="ph ph-receipt" aria-hidden="true"></i></span>
+            </div>
+            <h3>Vendor Bills</h3>
+            <p>Forward an invoice to your private bills address. It comes back matched to a job and cost code.</p>
+          </a>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="s-install" id="install">
+      <div class="container">
+        <span class="t-label">Install</span>
+        <h2 class="s-install-title">
+          Everywhere <span class="accent">You Work.</span>
+        </h2>
+        <div class="s-install-buttons">
+          <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="btn btn--ink" target="_blank" rel="noopener">
+            <img src="chrome-color-svgrepo-com.svg" alt="" width="18" height="18"> Chrome
+          </a>
+          <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" class="btn btn--ink" target="_blank" rel="noopener">
+            <img src="Firefox_logo,_2017.png" alt="" width="18" height="18"> Firefox
+          </a>
+        </div>
+        <p class="s-install-note">Use <strong>Edge, Brave, Arc, or Opera</strong>? Choose Chrome — same store.</p>
+      </div>
+    </section>
+
+    <section class="s-mcp" id="mcp">
+      <div class="s-mcp-hazard" aria-hidden="true"></div>
+      <div class="container s-mcp-inner">
+        <span class="s-mcp-eyebrow reveal">AI Toolkit</span>
+        <h2 class="s-mcp-title reveal">
+          <span>Your AI Needs A</span>
+          <span class="accent">Toolbelt.</span>
+        </h2>
+        <p class="s-mcp-lede reveal">
+          Connect Claude, ChatGPT, Gemini, Cursor, or any MCP-aware client directly to JobTread, across every org you manage. Your AI gets real job data, schedules, and budgets, not stale copy-paste &mdash; and it reaches your Power Tools work too: Quick Notes and team templates, your org's tweaks, the Worksheets your crews fill in, and the Pave Explorer queries your team recorded.
+        </p>
+        <div class="s-mcp-grid reveal">
+          <a class="s-mcp-card" href="/mcp/chatgpt.html">
+            <span class="s-mcp-card-logo"><img src="ChatGPT-Logo.svg.png" alt=""></span>
+            <h3>ChatGPT</h3>
+            <p>Custom GPT + browser-side MCP.</p>
+            <span class="s-mcp-card-cta">Setup Guide →</span>
+          </a>
+          <a class="s-mcp-card" href="/mcp/other.html">
+            <span class="s-mcp-card-logo"><img src="Claude_AI_symbol.svg" alt=""></span>
+            <h3>Claude</h3>
+            <p>Claude.ai web + desktop.</p>
+            <span class="s-mcp-card-cta">Setup Guide →</span>
+          </a>
+          <a class="s-mcp-card" href="/mcp/gemini.html">
+            <span class="s-mcp-card-logo"><img src="gemini-color.png" alt=""></span>
+            <h3>Gemini</h3>
+            <p>Google's AI with MCP support.</p>
+            <span class="s-mcp-card-cta">Setup Guide →</span>
+          </a>
+          <a class="s-mcp-card" href="/mcp/grok.html">
+            <span class="s-mcp-card-logo"><img src="grok--v2.png" alt=""></span>
+            <h3>Grok</h3>
+            <p>X's AI assistant.</p>
+            <span class="s-mcp-card-cta">Setup Guide →</span>
+          </a>
+          <a class="s-mcp-card" href="/mcp/claude-code.html">
+            <span class="s-mcp-card-logo"><i class="ph ph-terminal" style="color:#1A1A1A;"></i></span>
+            <h3>Claude Code</h3>
+            <p>Anthropic's official CLI.</p>
+            <span class="s-mcp-card-cta">Setup Guide →</span>
+          </a>
+          <a class="s-mcp-card" href="/mcp/cursor.html">
+            <span class="s-mcp-card-logo"><i class="ph ph-code" style="color:#1A1A1A;"></i></span>
+            <h3>Cursor</h3>
+            <p>AI-native code editor.</p>
+            <span class="s-mcp-card-cta">Setup Guide →</span>
+          </a>
+        </div>
+        <div class="reveal">
+          <div class="s-mcp-prompts-label">Example Prompts</div>
+          <div class="s-mcp-prompts">
+            <span class="s-mcp-prompt">"Compare this bid request against the project scope"</span>
+            <span class="s-mcp-prompt">"Pull key metrics for my production meeting"</span>
+            <span class="s-mcp-prompt">"Forecast labor needs for the next 2 weeks"</span>
+            <span class="s-mcp-prompt">"Pull historical budget data to develop costs for a new project"</span>
+            <span class="s-mcp-prompt">&quot;Write a tweak that renames Vendor to Subcontractor across our org&quot;</span>
+          </div>
+        </div>
+        <p class="s-mcp-footer reveal">MCP server access included with Power User tier. 7-day free trial.</p>
+      </div>
+    </section>
+
+    <section class="s-how" id="how-it-works">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="t-label">How It Works</span>
+          <h2 class="s-features-title">
+            <span>Three Steps.</span>
+            <span class="accent">Zero Fuss.</span>
+          </h2>
+          <p class="t-lede" style="margin: 24px auto 0;">Install in seconds, no account required to start.</p>
+        </div>
+        <div class="grid grid-3 reveal">
+          <article class="s-how-card">
+            <div class="s-how-num">01</div>
+            <h3>Install the Extension</h3>
+            <p>One click from your browser's store. Works on Chrome, Edge, Firefox — no signup, no setup.</p>
+            <i class="ph ph-download-simple s-how-icon" aria-hidden="true"></i>
+          </article>
+          <article class="s-how-card">
+            <div class="s-how-num">02</div>
+            <h3>Open JobTread</h3>
+            <p>Everything activates automatically on <code>app.jobtread.com</code>. All free features turn on out of the box.</p>
+            <i class="ph ph-lightning s-how-icon" aria-hidden="true"></i>
+          </article>
+          <article class="s-how-card">
+            <div class="s-how-num">03</div>
+            <h3>Turn On What You Need</h3>
+            <p>Click the extension icon to toggle features. Upgrade in-app when you want Essential, Pro, or Power User tools.</p>
+            <i class="ph ph-toggle-right s-how-icon" aria-hidden="true"></i>
+          </article>
+        </div>
+        <div class="s-how-footer reveal">
+          <a href="/documentation/">Read the full guide →</a>
+        </div>
+      </div>
+    </section>
+
 
     <section class="s-pricing" id="pricing">
       <div class="container">
@@ -1326,7 +927,7 @@
           <p style="font-size: 13px; color: var(--ink-subtle);">Made by a contractor, for contractors.</p>
         </div>
         <div>
-          <h4>Product</h4>
+          <h3>Product</h3>
           <ul>
             <li><a href="#features">Features</a></li>
             <li><a href="#install">Install</a></li>
@@ -1337,7 +938,7 @@
           </ul>
         </div>
         <div>
-          <h4>Resources</h4>
+          <h3>Resources</h3>
           <ul>
             <li><a href="/documentation/">Documentation</a></li>
             <li><a href="#mcp">MCP Setup</a></li>
@@ -1347,7 +948,7 @@
           </ul>
         </div>
         <div>
-          <h4>Legal</h4>
+          <h3>Legal</h3>
           <ul>
             <li><a href="/privacy/">Privacy</a></li>
             <li><a href="/security/">Security</a></li>

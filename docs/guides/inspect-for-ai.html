@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pave Explorer — JT Power Tools</title>
-  <meta name="description" content="Watch the JobTread API calls behind every page in real time. Read the request, response, and a key-stripped shareable query — then copy it. All local, nothing uploaded. Pro.">
+  <title>Inspect for AI — JT Power Tools</title>
+  <meta name="description" content="Alt-click any element in JobTread and get a clean, stable description of it on your clipboard — paste into Claude or ChatGPT and ask for a tweak. Pro.">
   <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-  <link rel="canonical" href="https://jtpowertools.com/guides/pave-explorer.html">
+  <link rel="canonical" href="https://jtpowertools.com/guides/inspect-for-ai.html">
   <link rel="icon" type="image/png" href="/favicon.png">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://jtpowertools.com/guides/pave-explorer.html">
-  <meta property="og:title" content="Pave Explorer — JT Power Tools">
-  <meta property="og:description" content="See the JobTread Pave API calls behind any page, live — read and copy them. Nothing leaves your browser.">
+  <meta property="og:url" content="https://jtpowertools.com/guides/inspect-for-ai.html">
+  <meta property="og:title" content="Inspect for AI — JT Power Tools">
+  <meta property="og:description" content="Alt-click an element, paste into an AI chat, get a tweak that actually works.">
   <meta property="og:image" content="https://jtpowertools.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,11 +72,11 @@
       <div class="container">
         <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
         <div class="g-hero-row">
-          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-binoculars"></i></span>
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-crosshair"></i></span>
           <span class="tier pro">Pro</span>
         </div>
-        <h1 class="g-title"><span>Pave</span> <span class="serif">Explorer.</span></h1>
-        <p class="g-lede">See the JobTread API calls behind any page, live — read each request and response, then copy a clean, shareable version. Nothing ever leaves your browser.</p>
+        <h1 class="g-title"><span>Inspect</span> <span class="serif">for AI.</span></h1>
+        <p class="g-lede">Alt-click anything in JobTread. Paste into Claude or ChatGPT. Get back a tweak that actually targets the thing you clicked.</p>
       </div>
     </section>
 
@@ -95,45 +95,44 @@
       <div class="container">
         <div class="g-section">
           <h2>What it does</h2>
-          <p>Every page in JobTread runs on its Pave API. Pave Explorer is a live, read-only window into those calls: open the tab, click around JobTread, and the queries stream in as they fire. Click any one to read its <strong>Request</strong>, its <strong>Response</strong>, and a <strong>Shareable</strong> version with your keys stripped out — then copy whichever you need.</p>
-          <p>It's built for power users, developers, and anyone learning JobTread's API — to understand how a page loads, debug a workflow, or grab a real query as a starting point for automation or an MCP tool. Everything stays local in your browser. Nothing is uploaded.</p>
+          <p>Tweaks let you rewrite JobTread's interface — rename a label, hide a column, restyle a button. The hard part was never the tweak. It was telling an AI <em>which element</em> you meant, precisely enough that what it writes works on the real page.</p>
+          <p>Inspect for AI does that part for you. Alt-click an element and it copies a description to your clipboard: a stable selector for the thing you clicked, the containers around it, what sits inside it, and which page and org you were on. Paste that into any AI chat and ask for the change you want.</p>
         </div>
 
         <div class="g-section">
           <h2>Turn it on</h2>
           <ol class="g-steps">
-            <li>Click the JT Power Tools icon and open the <strong>Pave</strong> tab (Pro).</li>
-            <li>For the best experience, run it as the <strong>side panel</strong> so it stays open while you work — set <em>“Always open in side panel”</em> on the Account tab.</li>
-            <li>The tab streams live captures as soon as it's open. No reload needed.</li>
+            <li>Click the JT Power Tools icon in your browser toolbar.</li>
+            <li>Open the <strong>Tweaks</strong> tab and switch <strong>Inspect for AI</strong> on.</li>
+            <li>Head to app.jobtread.com — no reload needed.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>How to use it</h2>
           <ol class="g-steps">
-            <li>Open Pave Explorer side-by-side with JobTread.</li>
-            <li>Do something in JobTread — open a job, save a budget, load the schedule. The calls appear in the list, labeled as reads or mutations.</li>
-            <li>Click a call to expand it, then copy the Request, Response, or the key-stripped Shareable query.</li>
+            <li>Find the element you want changed and <strong>Alt-click</strong> it.</li>
+            <li>Paste into Claude, ChatGPT, Cursor — whatever you use — and say what you want: "hide this column", "rename this to Subcontractor", "make this red when it’s overdue".</li>
+            <li>Take the tweak it writes back and add it in the Tweaks tab.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>Good to know</h2>
           <ul class="g-tips">
-            <li>Run it as the side panel — the popup closes the moment you click into JobTread, but the panel stays put while you act.</li>
-            <li>One JobTread action fires many calls (reads, polls, permission checks). The list labels mutations vs. reads so you can find the one that matters.</li>
-            <li>The Shareable view strips your license and grant keys, so a copied query is safe to paste into notes, a ticket, or an AI chat.</li>
-            <li>Refresh the JobTread tab with the panel open and it reconnects on its own — no need to close and reopen.</li>
-            <li>Want your AI to read these queries back later? That's the separate <strong>“Record for AI”</strong> toggle on this tab (Power User), which feeds stripped queries to your AI through the MCP.</li>
+            <li><strong>The selectors are built to survive.</strong> JobTread's styling classes change with every release, so they're deliberately ignored in favour of structural selectors. You get something that still matches next month, not a chain of utility classes that breaks on the next deploy.</li>
+            <li>The capture includes the surrounding context on purpose — two panels on a page often look identical from the element alone, and the containers are what tell them apart.</li>
+            <li>It copies to your clipboard and stops there. Nothing is uploaded, and you choose what to paste and where.</li>
+            <li>Pair it with the visual tweak builder when you'd rather point and click than describe.</li>
           </ul>
         </div>
 
         <div class="g-section g-related">
           <h2>Related guides</h2>
           <ul>
-            <li><a href="/guides/tweaks.html">Tweaks</a> — change a page once you understand it</li>
-            <li><a href="/mcp/other.html">MCP Setup</a> — connect your AI to JobTread data</li>
-            <li><a href="/mcp/claude-code.html">Claude Code</a> — build with JobTread from your terminal</li>
+            <li><a href="/guides/tweaks.html">Tweaks</a> — make JobTread work the way your team works</li>
+            <li><a href="/guides/pave-explorer.html">Pave Explorer</a> — see the API calls behind any page</li>
+            <li><a href="/guides/custom-theme.html">Custom Theme</a> — your own palette across JobTread</li>
           </ul>
         </div>
       </div>

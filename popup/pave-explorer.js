@@ -388,7 +388,7 @@
     const ls = window.LicenseService;
     if (!ls || !ls.tierHasFeature) return false;
     // Match Inspect for AI (Pro) — a manual, local inspector, no MCP needed.
-    return ls.tierHasFeature(tier, 'inspectForAi');
+    return ls.tierHasFeature(tier, 'paveExplorer');
   }
 
   async function initGate() {

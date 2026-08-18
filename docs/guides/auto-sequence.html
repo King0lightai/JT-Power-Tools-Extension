@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pave Explorer — JT Power Tools</title>
-  <meta name="description" content="Watch the JobTread API calls behind every page in real time. Read the request, response, and a key-stripped shareable query — then copy it. All local, nothing uploaded. Pro.">
+  <title>Auto Sequence — JT Power Tools</title>
+  <meta name="description" content="Re-order every schedule group to match its start dates in one click. Positions only — dates are never touched, so nothing ripples. Free.">
   <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-  <link rel="canonical" href="https://jtpowertools.com/guides/pave-explorer.html">
+  <link rel="canonical" href="https://jtpowertools.com/guides/auto-sequence.html">
   <link rel="icon" type="image/png" href="/favicon.png">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://jtpowertools.com/guides/pave-explorer.html">
-  <meta property="og:title" content="Pave Explorer — JT Power Tools">
-  <meta property="og:description" content="See the JobTread Pave API calls behind any page, live — read and copy them. Nothing leaves your browser.">
+  <meta property="og:url" content="https://jtpowertools.com/guides/auto-sequence.html">
+  <meta property="og:title" content="Auto Sequence — JT Power Tools">
+  <meta property="og:description" content="Your Gantt bars march backwards because dragging changes dates, not sequence. This fixes the sequence.">
   <meta property="og:image" content="https://jtpowertools.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,11 +72,11 @@
       <div class="container">
         <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
         <div class="g-hero-row">
-          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-binoculars"></i></span>
-          <span class="tier pro">Pro</span>
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-list-numbers"></i></span>
+          <span class="tier free">Free</span>
         </div>
-        <h1 class="g-title"><span>Pave</span> <span class="serif">Explorer.</span></h1>
-        <p class="g-lede">See the JobTread API calls behind any page, live — read each request and response, then copy a clean, shareable version. Nothing ever leaves your browser.</p>
+        <h1 class="g-title"><span>Auto</span> <span class="serif">Sequence.</span></h1>
+        <p class="g-lede">Dragging a schedule item changes its dates. It does not change its place in the list — which is why your Gantt bars end up marching backwards.</p>
       </div>
     </section>
 
@@ -95,45 +95,44 @@
       <div class="container">
         <div class="g-section">
           <h2>What it does</h2>
-          <p>Every page in JobTread runs on its Pave API. Pave Explorer is a live, read-only window into those calls: open the tab, click around JobTread, and the queries stream in as they fire. Click any one to read its <strong>Request</strong>, its <strong>Response</strong>, and a <strong>Shareable</strong> version with your keys stripped out — then copy whichever you need.</p>
-          <p>It's built for power users, developers, and anyone learning JobTread's API — to understand how a page loads, debug a workflow, or grab a real query as a starting point for automation or an MCP tool. Everything stays local in your browser. Nothing is uploaded.</p>
+          <p>JobTread tracks a schedule item's dates and its manual sequence as two separate things. Drag an item to a new week and the dates move; the sequence stays exactly where it was. Do that a few dozen times over a live job and the Gantt reads like a staircase going the wrong way, with someone eventually hand-dragging thirty rows back into order.</p>
+          <p>Auto Sequence adds a button to the schedule's mass-actions panel. One click re-orders the items inside each group so the list runs in the same order as the work — earliest start first.</p>
         </div>
 
         <div class="g-section">
           <h2>Turn it on</h2>
           <ol class="g-steps">
-            <li>Click the JT Power Tools icon and open the <strong>Pave</strong> tab (Pro).</li>
-            <li>For the best experience, run it as the <strong>side panel</strong> so it stays open while you work — set <em>“Always open in side panel”</em> on the Account tab.</li>
-            <li>The tab streams live captures as soon as it's open. No reload needed.</li>
+            <li>Click the JT Power Tools icon in your browser toolbar.</li>
+            <li>Find <strong>Auto Sequence</strong> under <em>Schedule &amp; Calendar</em>.</li>
+            <li>Flip the toggle on. No reload needed.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>How to use it</h2>
           <ol class="g-steps">
-            <li>Open Pave Explorer side-by-side with JobTread.</li>
-            <li>Do something in JobTread — open a job, save a budget, load the schedule. The calls appear in the list, labeled as reads or mutations.</li>
-            <li>Click a call to expand it, then copy the Request, Response, or the key-stripped Shareable query.</li>
+            <li>Open the job's <em>Schedule</em>.</li>
+            <li>Open the mass-actions panel — the same one you use for bulk edits.</li>
+            <li>Click <strong>Auto Sequence</strong>. It reads the tasks, works out what needs to move, and commits the new order.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>Good to know</h2>
           <ul class="g-tips">
-            <li>Run it as the side panel — the popup closes the moment you click into JobTread, but the panel stays put while you act.</li>
-            <li>One JobTread action fires many calls (reads, polls, permission checks). The list labels mutations vs. reads so you can find the one that matters.</li>
-            <li>The Shareable view strips your license and grant keys, so a copied query is safe to paste into notes, a ticket, or an AI chat.</li>
-            <li>Refresh the JobTread tab with the panel open and it reconnects on its own — no need to close and reopen.</li>
-            <li>Want your AI to read these queries back later? That's the separate <strong>“Record for AI”</strong> toggle on this tab (Power User), which feeds stripped queries to your AI through the MCP.</li>
+            <li><strong>Dates are never written.</strong> The only thing that changes is each item’s position in its group, so a resequence cannot shift a date, push a deadline, or set off a dependency cascade.</li>
+            <li><strong>Your phases stay put.</strong> Top-level groups are never re-ordered — that order is your process, not a function of dates. Only the items inside each group move.</li>
+            <li>Items cannot jump between groups. Sequence is scoped to an item's parent, so re-ordering inside a group physically can't move something out of it.</li>
+            <li><strong>You set the connection up once.</strong> Auto Sequence works through JobTread&#x27;s API rather than the page, so it needs a grant key, and a grant key lives in a JT Power Tools account. Both are free: sign up without a licence key and you get a free-tier account that can hold one. It is the same connection the rest of the API-backed features run on — Budget Changelog, Invoice Forecast, Editable Tables, Unassigned Availability, Worksheets — so this is the only time you do it. Without a key Auto Sequence tells you so and links you straight to where it goes, instead of failing quietly.</li>
           </ul>
         </div>
 
         <div class="g-section g-related">
           <h2>Related guides</h2>
           <ul>
-            <li><a href="/guides/tweaks.html">Tweaks</a> — change a page once you understand it</li>
-            <li><a href="/mcp/other.html">MCP Setup</a> — connect your AI to JobTread data</li>
-            <li><a href="/mcp/claude-code.html">Claude Code</a> — build with JobTread from your terminal</li>
+            <li><a href="/guides/fat-gantt.html">Fat Gantt</a> — dependency lines you can actually grab</li>
+            <li><a href="/guides/drag-drop.html">Schedule Task Checkboxes</a> — complete tasks from the card</li>
+            <li><a href="/guides/unassigned-availability.html">Unassigned Availability</a> — find the gaps in your schedule</li>
           </ul>
         </div>
       </div>

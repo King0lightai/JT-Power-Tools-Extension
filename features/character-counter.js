@@ -61,7 +61,7 @@ const CharacterCounterFeature = (() => {
     try {
       if (window.LicenseService) {
         const tier = await window.LicenseService.getTier();
-        isEssentialPlus = tier && window.LicenseService.tierHasFeature(tier, 'quickNotes');
+        isEssentialPlus = tier && window.LicenseService.tierHasFeature(tier, 'teamTemplates');
       } else {
         isEssentialPlus = false;
       }

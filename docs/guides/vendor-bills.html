@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pave Explorer — JT Power Tools</title>
-  <meta name="description" content="Watch the JobTread API calls behind every page in real time. Read the request, response, and a key-stripped shareable query — then copy it. All local, nothing uploaded. Pro.">
+  <title>Vendor Bills — JT Power Tools</title>
+  <meta name="description" content="Forward your AP inbox to a private bills address and every invoice lands in a queue, attachment and all, ready for your AI to read, match to a job and cost code, and hand back for approval. Power User.">
   <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-  <link rel="canonical" href="https://jtpowertools.com/guides/pave-explorer.html">
+  <link rel="canonical" href="https://jtpowertools.com/guides/vendor-bills.html">
   <link rel="icon" type="image/png" href="/favicon.png">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://jtpowertools.com/guides/pave-explorer.html">
-  <meta property="og:title" content="Pave Explorer — JT Power Tools">
-  <meta property="og:description" content="See the JobTread Pave API calls behind any page, live — read and copy them. Nothing leaves your browser.">
+  <meta property="og:url" content="https://jtpowertools.com/guides/vendor-bills.html">
+  <meta property="og:title" content="Vendor Bills — JT Power Tools">
+  <meta property="og:description" content="Forward the invoice. It arrives on the right job with the right cost code, waiting for your yes.">
   <meta property="og:image" content="https://jtpowertools.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,11 +72,11 @@
       <div class="container">
         <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
         <div class="g-hero-row">
-          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-binoculars"></i></span>
-          <span class="tier pro">Pro</span>
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-receipt"></i></span>
+          <span class="tier power">Power User</span>
         </div>
-        <h1 class="g-title"><span>Pave</span> <span class="serif">Explorer.</span></h1>
-        <p class="g-lede">See the JobTread API calls behind any page, live — read each request and response, then copy a clean, shareable version. Nothing ever leaves your browser.</p>
+        <h1 class="g-title"><span>Vendor</span> <span class="serif">Bills.</span></h1>
+        <p class="g-lede">Forward an invoice to one address and it comes back matched to a job and a cost code, waiting for someone to say yes.</p>
       </div>
     </section>
 
@@ -95,45 +95,45 @@
       <div class="container">
         <div class="g-section">
           <h2>What it does</h2>
-          <p>Every page in JobTread runs on its Pave API. Pave Explorer is a live, read-only window into those calls: open the tab, click around JobTread, and the queries stream in as they fire. Click any one to read its <strong>Request</strong>, its <strong>Response</strong>, and a <strong>Shareable</strong> version with your keys stripped out — then copy whichever you need.</p>
-          <p>It's built for power users, developers, and anyone learning JobTread's API — to understand how a page loads, debug a workflow, or grab a real query as a starting point for automation or an MCP tool. Everything stays local in your browser. Nothing is uploaded.</p>
+          <p>Vendor invoices arrive as email attachments and turn into typing. Somebody opens the PDF, finds the job, picks the cost code, keys the amounts, and files the original somewhere it can be found again at tax time.</p>
+          <p>Your company gets its own private bills address. Forward your AP inbox to it, or have subcontractors send there directly, and each message lands in a Pending Bills queue with its attachments intact. Your AI reads the PDF, matches it to the job and cost code, and proposes the bill — your team confirms it in JobTread.</p>
         </div>
 
         <div class="g-section">
-          <h2>Turn it on</h2>
+          <h2>Set it up</h2>
           <ol class="g-steps">
-            <li>Click the JT Power Tools icon and open the <strong>Pave</strong> tab (Pro).</li>
-            <li>For the best experience, run it as the <strong>side panel</strong> so it stays open while you work — set <em>“Always open in side panel”</em> on the Account tab.</li>
-            <li>The tab streams live captures as soon as it's open. No reload needed.</li>
+            <li>Open the <a href="https://app.jtpowertools.com">portal</a> and go to <em>Bills Settings</em>.</li>
+            <li>Set a <strong>default cost code</strong>. Without one, bills still post but their line items arrive empty.</li>
+            <li>Add the senders you trust to the approved list — your own AP address, your bookkeeper, the subcontractors who invoice you.</li>
+            <li>Forward that AP mailbox to the bills address shown on the card.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>How to use it</h2>
           <ol class="g-steps">
-            <li>Open Pave Explorer side-by-side with JobTread.</li>
-            <li>Do something in JobTread — open a job, save a budget, load the schedule. The calls appear in the list, labeled as reads or mutations.</li>
-            <li>Click a call to expand it, then copy the Request, Response, or the key-stripped Shareable query.</li>
+            <li>A subcontractor emails an invoice. It lands in the queue with its PDF.</li>
+            <li>Ask your AI to work the queue — it reads each bill, matches the vendor, job, and cost code, and reports what it found.</li>
+            <li>Approve the ones that look right. The bill posts to JobTread with its line items and the original attached.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>Good to know</h2>
           <ul class="g-tips">
-            <li>Run it as the side panel — the popup closes the moment you click into JobTread, but the panel stays put while you act.</li>
-            <li>One JobTread action fires many calls (reads, polls, permission checks). The list labels mutations vs. reads so you can find the one that matters.</li>
-            <li>The Shareable view strips your license and grant keys, so a copied query is safe to paste into notes, a ticket, or an AI chat.</li>
-            <li>Refresh the JobTread tab with the panel open and it reconnects on its own — no need to close and reopen.</li>
-            <li>Want your AI to read these queries back later? That's the separate <strong>“Record for AI”</strong> toggle on this tab (Power User), which feeds stripped queries to your AI through the MCP.</li>
+            <li><strong>Only senders you approve are accepted.</strong> The allowlist is per company, so a stray invoice from an address you have never dealt with does not create a bill.</li>
+            <li><strong>The original is kept, not just the numbers.</strong> Every message and attachment is stored intact, so the source document is still there when a bill is questioned months later.</li>
+            <li>Nothing posts on its own. The AI proposes; a person approves. A bill you never confirm never reaches your books.</li>
+            <li>The defaults are per company and set once. They are what the AI applies when it maps an invoice onto cost codes.</li>
           </ul>
         </div>
 
         <div class="g-section g-related">
           <h2>Related guides</h2>
           <ul>
-            <li><a href="/guides/tweaks.html">Tweaks</a> — change a page once you understand it</li>
-            <li><a href="/mcp/other.html">MCP Setup</a> — connect your AI to JobTread data</li>
-            <li><a href="/mcp/claude-code.html">Claude Code</a> — build with JobTread from your terminal</li>
+            <li><a href="/guides/email-to-job.html">Email to Job</a> — land any email on the right job</li>
+            <li><a href="/guides/invoice-forecast.html">Invoice Forecast</a> — month-by-month cash-flow picture</li>
+            <li><a href="/guides/budget-changelog.html">Budget Changelog</a> — see exactly what changed in a budget</li>
           </ul>
         </div>
       </div>

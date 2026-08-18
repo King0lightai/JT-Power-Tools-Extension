@@ -550,7 +550,7 @@ async function checkLicenseStatus() {
     if (statusText) statusText.textContent = `✓ ${tierDisplayName} Active`;
 
     // Check tier access for PRO features (Pro and Power User only)
-    const hasProFeatures = LicenseService.tierHasFeature(tier, 'dragDrop');
+    const hasProFeatures = LicenseService.tierAtLeast(tier, LicenseService.TIERS.PRO);
     // Check for Power User tier (for API/MCP features)
     const hasPowerUserFeatures = LicenseService.tierHasFeature(tier, 'customFieldFilter');
 
@@ -747,8 +747,8 @@ async function loadSettings() {
     // Check user's tier for feature access
     const tier = await LicenseService.getTier();
     const hasLicense = tier !== null;
-    const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
-    const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
+    const hasProFeatures = LicenseService.tierAtLeast(tier, LicenseService.TIERS.PRO);
+    const hasEssentialFeatures = LicenseService.tierAtLeast(tier, LicenseService.TIERS.ESSENTIAL);
     const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
 
     // Helper to safely set checkbox value
@@ -926,8 +926,8 @@ async function saveSettings(settings) {
   try {
     // Use tier-based feature checking
     const tier = await LicenseService.getTier();
-    const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
-    const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
+    const hasProFeatures = LicenseService.tierAtLeast(tier, LicenseService.TIERS.PRO);
+    const hasEssentialFeatures = LicenseService.tierAtLeast(tier, LicenseService.TIERS.ESSENTIAL);
 
     // PRO tier feature checks
     // Check if user is trying to enable Schedule & Task Checkboxes without Pro tier
@@ -1973,8 +1973,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initJobEmailCard(tier).catch((err) => console.error('JobEmail card init failed:', err));
 
   // Determine if user has access to different tiers
-  const hasProFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'dragDrop');
-  const hasEssentialFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'quickNotes');
+  const hasProFeatures = hasLicense && LicenseService.tierAtLeast(tier, LicenseService.TIERS.PRO);
+  const hasEssentialFeatures = hasLicense && LicenseService.tierAtLeast(tier, LicenseService.TIERS.ESSENTIAL);
 
   // If no license, ensure licensed features stay disabled
   // Merge with defaults first so FREE features (formatter, darkMode, etc.)

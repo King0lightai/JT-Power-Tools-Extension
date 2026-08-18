@@ -95,7 +95,12 @@ const LicenseService = (() => {
     'freezeHeader',     // Sticky headers for tables
     'pdfMarkupTools',   // PDF annotations
     'budgetRowHighlight', // Emoji-driven row tinting in budgets
-    'orgLogo'           // Admin-managed via portal; requires account (Essential+)
+    'orgLogo',          // Admin-managed via portal; requires account (Essential+)
+    // Shared company templates in the message-template manager (Character
+    // Counter is itself free; the team tab is not). Keyed in its own right so
+    // the gate names what it protects - it previously borrowed 'quickNotes'
+    // purely because that was the recognisable Essential feature.
+    'teamTemplates'
   ];
 
   // PRO tier features ($20) - "I want premium"
@@ -109,7 +114,14 @@ const LicenseService = (() => {
     'availabilityFilter', // Team availability filtering
     'tweakEngine',      // User Tweaks engine (CSS + DOM verbs)
     'tweakBuilder',     // Visual tweak builder panel (companion to tweakEngine)
-    'inspectForAi'      // Alt-click DOM inspector for AI-authored tweaks
+    'inspectForAi',     // Alt-click DOM inspector for AI-authored tweaks
+    // The Pave Explorer VIEWER (watch/read/copy calls), gated in
+    // popup/pave-explorer.js. Distinct from 'paveCapture' below, which is the
+    // Power User "Record for AI" toggle that feeds the MCP. Listed here because
+    // a tier audit that reads only these arrays otherwise concludes every Pave
+    // feature is Power User - which is exactly how the marketing page got
+    // mis-tiered once.
+    'paveExplorer'
   ];
 
   // POWER USER tier features ($30) - "I want everything + AI"
@@ -749,6 +761,7 @@ const LicenseService = (() => {
 
     // Tier management
     getTier,
+    tierAtLeast,
     tierHasFeature,
     isFeatureFree,
     isInternalFeature,

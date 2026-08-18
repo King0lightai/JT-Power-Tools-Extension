@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pave Explorer — JT Power Tools</title>
-  <meta name="description" content="Watch the JobTread API calls behind every page in real time. Read the request, response, and a key-stripped shareable query — then copy it. All local, nothing uploaded. Pro.">
+  <title>Editable Tables — JT Power Tools</title>
+  <meta name="description" content="Edit custom field values in place in JobTread's job Data Browser grids. Alt+click or the pencil, type, Enter — Tab fills a whole column without leaving the grid. Power User.">
   <script>(function(){try{var t=localStorage.getItem('jt4-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-  <link rel="canonical" href="https://jtpowertools.com/guides/pave-explorer.html">
+  <link rel="canonical" href="https://jtpowertools.com/guides/editable-tables.html">
   <link rel="icon" type="image/png" href="/favicon.png">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://jtpowertools.com/guides/pave-explorer.html">
-  <meta property="og:title" content="Pave Explorer — JT Power Tools">
-  <meta property="og:description" content="See the JobTread Pave API calls behind any page, live — read and copy them. Nothing leaves your browser.">
+  <meta property="og:url" content="https://jtpowertools.com/guides/editable-tables.html">
+  <meta property="og:title" content="Editable Tables — JT Power Tools">
+  <meta property="og:description" content="Fill in a whole column of custom fields without opening a single job.">
   <meta property="og:image" content="https://jtpowertools.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,11 +72,11 @@
       <div class="container">
         <a href="/documentation/" class="g-back"><i class="ph ph-arrow-left"></i> All guides</a>
         <div class="g-hero-row">
-          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-binoculars"></i></span>
-          <span class="tier pro">Pro</span>
+          <span class="g-hero-icon" aria-hidden="true"><i class="ph ph-table"></i></span>
+          <span class="tier power">Power User</span>
         </div>
-        <h1 class="g-title"><span>Pave</span> <span class="serif">Explorer.</span></h1>
-        <p class="g-lede">See the JobTread API calls behind any page, live — read each request and response, then copy a clean, shareable version. Nothing ever leaves your browser.</p>
+        <h1 class="g-title"><span>Editable</span> <span class="serif">Tables.</span></h1>
+        <p class="g-lede">Fill in a whole column of custom fields from the grid — without opening a single job.</p>
       </div>
     </section>
 
@@ -95,45 +95,44 @@
       <div class="container">
         <div class="g-section">
           <h2>What it does</h2>
-          <p>Every page in JobTread runs on its Pave API. Pave Explorer is a live, read-only window into those calls: open the tab, click around JobTread, and the queries stream in as they fire. Click any one to read its <strong>Request</strong>, its <strong>Response</strong>, and a <strong>Shareable</strong> version with your keys stripped out — then copy whichever you need.</p>
-          <p>It's built for power users, developers, and anyone learning JobTread's API — to understand how a page loads, debug a workflow, or grab a real query as a starting point for automation or an MCP tool. Everything stays local in your browser. Nothing is uploaded.</p>
+          <p>You build a job view with the custom fields you care about — Project Manager, Designer, PDA Average — and then you can only read them. Updating twelve jobs means twelve jobs opened, twelve fields found, twelve tabs closed.</p>
+          <p>Editable Tables makes those custom field columns editable where they already are. Click the pencil on a cell or Alt+click the cell, type, and press Enter — the value goes straight to JobTread. Press Tab instead and it saves and moves to the next editable cell, so you can walk down a column and fill the whole thing in one pass.</p>
         </div>
 
         <div class="g-section">
           <h2>Turn it on</h2>
           <ol class="g-steps">
-            <li>Click the JT Power Tools icon and open the <strong>Pave</strong> tab (Pro).</li>
-            <li>For the best experience, run it as the <strong>side panel</strong> so it stays open while you work — set <em>“Always open in side panel”</em> on the Account tab.</li>
-            <li>The tab streams live captures as soon as it's open. No reload needed.</li>
+            <li>Click the JT Power Tools icon in your browser toolbar.</li>
+            <li>Find <strong>Editable Tables</strong> under <em>General</em>.</li>
+            <li>Flip the toggle on. No reload needed.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>How to use it</h2>
           <ol class="g-steps">
-            <li>Open Pave Explorer side-by-side with JobTread.</li>
-            <li>Do something in JobTread — open a job, save a budget, load the schedule. The calls appear in the list, labeled as reads or mutations.</li>
-            <li>Click a call to expand it, then copy the Request, Response, or the key-stripped Shareable query.</li>
+            <li>Open a job view in the Data Browser — <em>/jobs</em> or any saved view built on it.</li>
+            <li>Hover a custom field cell. A pencil appears; click it, or <strong>Alt+click</strong> the cell itself.</li>
+            <li>Type the new value. <strong>Enter</strong> saves it. <strong>Tab</strong> saves it and jumps to the next editable cell down the column. <strong>Esc</strong> backs out without saving.</li>
           </ol>
         </div>
 
         <div class="g-section">
           <h2>Good to know</h2>
           <ul class="g-tips">
-            <li>Run it as the side panel — the popup closes the moment you click into JobTread, but the panel stays put while you act.</li>
-            <li>One JobTread action fires many calls (reads, polls, permission checks). The list labels mutations vs. reads so you can find the one that matters.</li>
-            <li>The Shareable view strips your license and grant keys, so a copied query is safe to paste into notes, a ticket, or an AI chat.</li>
-            <li>Refresh the JobTread tab with the panel open and it reconnects on its own — no need to close and reopen.</li>
-            <li>Want your AI to read these queries back later? That's the separate <strong>“Record for AI”</strong> toggle on this tab (Power User), which feeds stripped queries to your AI through the MCP.</li>
+            <li><strong>Why Alt+click and not double-click:</strong> in the Data Browser the whole row is a link, so an ordinary click opens the job. Alt+click and the pencil are the two ways to edit a cell without navigating away.</li>
+            <li><strong>Only custom fields, and only ones it can verify.</strong> A column becomes editable when the view proves it maps to a real custom field. Native columns — name, address, dates, totals — are left alone, and any column it can't line up with confidence is skipped rather than risked.</li>
+            <li>Job views today. Task and cost-item grids aren't in scope yet.</li>
+            <li>Writes go through JobTread's API, so your org needs a grant key configured.</li>
           </ul>
         </div>
 
         <div class="g-section g-related">
           <h2>Related guides</h2>
           <ul>
-            <li><a href="/guides/tweaks.html">Tweaks</a> — change a page once you understand it</li>
-            <li><a href="/mcp/other.html">MCP Setup</a> — connect your AI to JobTread data</li>
-            <li><a href="/mcp/claude-code.html">Claude Code</a> — build with JobTread from your terminal</li>
+            <li><a href="/guides/custom-field-filter.html">Job Switcher Filter</a> — find jobs by custom field</li>
+            <li><a href="/guides/forms.html">Worksheets</a> — checklists and sign-offs on the job</li>
+            <li><a href="/guides/invoice-forecast.html">Invoice Forecast</a> — month-by-month cash-flow picture</li>
           </ul>
         </div>
       </div>
