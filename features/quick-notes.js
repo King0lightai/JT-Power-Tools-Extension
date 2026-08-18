@@ -398,6 +398,32 @@ const QuickNotesFeature = (() => {
     }
   }
 
+  // Debounced personal-note save. Module scope, not per-render: the timer
+  // used to be a local of renderNoteEditor(), so nothing outside that closure
+  // could cancel it. Two ways that bit — a save could land after cleanup()
+  // had torn the panel down and reset state, and every re-render abandoned
+  // the previous pass's timer still armed.
+  let noteSaveTimeout = null;
+  let pendingNoteSave = null;
+
+  // Run a queued save now instead of waiting out the debounce.
+  function flushPendingNoteSave() {
+    if (!pendingNoteSave) return;
+    clearTimeout(noteSaveTimeout);
+    noteSaveTimeout = null;
+    const run = pendingNoteSave;
+    pendingNoteSave = null;
+    run();
+  }
+
+  // Drop a queued save without running it. For teardown, where the note the
+  // save targets is about to stop existing.
+  function cancelPendingNoteSave() {
+    clearTimeout(noteSaveTimeout);
+    noteSaveTimeout = null;
+    pendingNoteSave = null;
+  }
+
   // Debounced team note save
   let teamNoteSaveTimeout = null;
   const TEAM_NOTE_SAVE_DEBOUNCE = 1000; // 1 second
@@ -1434,6 +1460,11 @@ const QuickNotesFeature = (() => {
     const editorContainer = notesPanel.querySelector('.jt-notes-editor');
     if (!editorContainer) return;
 
+    // Commit the outgoing note's queued edit before this pass replaces the
+    // DOM. Dropping it would silently lose the last half-second of typing
+    // whenever someone switches notes mid-keystroke.
+    flushPendingNoteSave();
+
     // Tear down the previous note's embedded formatter toolbar before this
     // render replaces the DOM out from under it.
     destroyEmbeddedFormatterToolbar();
@@ -1548,7 +1579,6 @@ const QuickNotesFeature = (() => {
     const preview = editorContainer.querySelector('.jt-notes-preview');
     const previewToggleBtn = editorContainer.querySelector('.jt-notes-preview-btn');
     const checklistBtn = editorContainer.querySelector('.jt-notes-checklist-btn');
-    let saveTimeout;
     // Notes are re-read far more than they are written, so a note with
     // content opens in preview and drops to the textarea on click; an empty
     // note opens straight into edit (see the toggleNotePreview(hasContent)
@@ -1598,9 +1628,13 @@ const QuickNotesFeature = (() => {
 
     // Debounced save function
     const debouncedSave = (field, value) => {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(() => {
-        updateNote(currentNoteId, { [field]: value });
+      // Pin the note being edited at schedule time. currentNoteId is read at
+      // fire time otherwise, so switching notes inside the debounce window
+      // wrote this note's text into whichever note was open when it landed.
+      const noteId = currentNoteId;
+      cancelPendingNoteSave();
+      pendingNoteSave = () => {
+        updateNote(noteId, { [field]: value });
         if (field === 'content') {
           const wordCountEl = editorContainer.querySelector('.jt-notes-word-count');
           if (wordCountEl) {
@@ -1608,7 +1642,8 @@ const QuickNotesFeature = (() => {
             wordCountEl.textContent = `${count} words`;
           }
         }
-      }, 500);
+      };
+      noteSaveTimeout = setTimeout(flushPendingNoteSave, 500);
     };
 
     /**
@@ -2775,6 +2810,15 @@ const QuickNotesFeature = (() => {
 
     // Stop team notes polling
     stopTeamNotesPolling();
+
+    // Drop any queued note save. Neither timer was cleared here before, so a
+    // write could fire up to 500ms (1s for team notes) after the panel was
+    // gone and `notes` had been reset to [].
+    cancelPendingNoteSave();
+    if (teamNoteSaveTimeout) {
+      clearTimeout(teamNoteSaveTimeout);
+      teamNoteSaveTimeout = null;
+    }
 
     // Clear periodic check interval (fix memory leak)
     if (periodicCheckInterval) {

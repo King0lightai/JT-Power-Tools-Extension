@@ -11,6 +11,7 @@
   --jt-orange:        #FE4C0D;
   --jt-orange-hot:    #FF6B35;
   --jt-orange-deep:   #D93D00;
+  --jt-orange-ink:    #B83600;
   --jt-orange-wash:   oklch(95% 0.05 38);
   --jt-orange-dim:    oklch(32% 0.12 38 / 0.45);
 
@@ -26,7 +27,7 @@
   --jt-paper-150:     #ece9e1;
   --jt-paper-200:     #ddd8cd;
   --jt-paper-300:     #b5afa1;
-  --jt-paper-400:     #7a7565;
+  --jt-paper-400:     #6d6859;
   --jt-paper-500:     #4a453a;
   --jt-paper-600:     #2a2620;
   --jt-paper-700:     #1a1713;
@@ -73,9 +74,10 @@
   --rule-strong:var(--jt-paper-300);
 
   --accent:     var(--jt-orange);
-  --accent-ink: var(--jt-orange-deep);
+  --accent-ink: var(--jt-orange-ink);
   --accent-wash:var(--jt-orange-wash);
-  --accent-fg:  var(--jt-paper-000);
+  --accent-fg:  var(--jt-coal-100);
+  --accent-ink-fg: var(--jt-paper-000);
 
   --shadow-sm:  0 1px 2px rgba(20,20,20,.06), 0 1px 3px rgba(20,20,20,.04);
   --shadow-md:  0 4px 12px rgba(20,20,20,.08), 0 2px 4px rgba(20,20,20,.04);
@@ -128,6 +130,7 @@ body.dark-theme {
   --accent-ink: var(--jt-orange-hot);
   --accent-wash:var(--jt-orange-dim);
   --accent-fg:  #0a0a0a;
+  --accent-ink-fg: #0a0a0a;
 
   --shadow-sm:  0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.25);
   --shadow-md:  0 4px 12px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
@@ -660,7 +663,7 @@ body.dark-theme .feature-item:not([data-tier]) .feature-icon { background: var(-
   flex-shrink: 0;
 }
 .feature-help:hover {
-  color: var(--accent-fg);
+  color: var(--accent-ink-fg);
   background: var(--accent-ink);
 }
 
@@ -1137,7 +1140,7 @@ body.dark-theme .migration-banner {
 }
 .migration-content > i {
   font-size: 22px;
-  color: var(--accent);
+  color: var(--accent-ink);
   flex-shrink: 0;
 }
 .migration-text { flex: 1; min-width: 0; }
@@ -1484,7 +1487,7 @@ body.dark-theme .portal-link-item:hover {
 }
 .cta-content p {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--accent-fg);
   line-height: 1.4;
   margin: 0;
 }
@@ -2023,7 +2026,7 @@ body.dark-theme .badge-fail { background: oklch(32% 0.10 25 / 0.4);  color: #fca
 }
 .jt-tweaks-action-primary {
   background: var(--brand-orange);
-  color: #fff;
+  color: var(--accent-fg);
   border-color: var(--brand-orange);
   box-shadow: 0 1px 2px var(--brand-orange-glow);
 }
@@ -2273,7 +2276,7 @@ body.dark-theme .tweak-card-actions .icon-btn.danger:hover {
 .jt-tools-register-nudge-actions button.primary {
   background: var(--accent, #f97316);
   border-color: transparent;
-  color: #fff;
+  color: var(--accent-fg);
   font-weight: 600;
 }
 .jt-tools-register-nudge-actions button:hover { filter: brightness(1.1); }
@@ -2361,7 +2364,7 @@ body.dark-theme .jt-tweaks-import-preview .err { color: #f87171; }
 }
 .jt-tweaks-import-actions button[data-action="install"] {
   background: var(--brand-orange);
-  color: #fff;
+  color: var(--accent-fg);
   border-color: var(--brand-orange);
   box-shadow: 0 1px 2px var(--brand-orange-glow);
 }
@@ -2955,7 +2958,7 @@ body.dark-theme .fg-access--required {
   vertical-align: -3px;
   border-radius: 50%;
   background: var(--accent-ink);
-  color: var(--accent-fg);
+  color: var(--accent-ink-fg);
   font-size: 10px;
 }
 .fg-tip-close {
