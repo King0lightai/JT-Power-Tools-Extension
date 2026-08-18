@@ -616,7 +616,12 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
   text-decoration: none;
   transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-.s-features-card:hover { transform: translateY(-2px); border-color: var(--ink); }
+/* Falls back to --ink for any card rendered outside a tier band. */
+.s-features-card:hover { transform: translateY(-2px); border-color: var(--band-accent, var(--ink)); }
+/* Free’s marker is deliberately quiet (--ink-subtle) so it does not shout
+   beside its own label, but as a hover it is too faint to register — and it
+   should match what the Free pricing card does on hover. */
+.s-features-band--free .s-features-card:hover { border-color: var(--ink); }
 .s-features-card-top {
   display: flex;
   align-items: flex-start;
@@ -1030,6 +1035,32 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 .s-pricing-card--featured {
   border: 2px solid var(--purple);
   outline: 0;
+}
+
+/* Each card carries its tier's accent and wears it on hover. The border slot
+   is already 2px transparent over a 1px outline, so the hover swaps colour
+   rather than size and nothing shifts. */
+.s-pricing-card--free { --tier-accent: var(--ink); }
+.s-pricing-card--essential { --tier-accent: var(--teal); }
+.s-pricing-card--pro { --tier-accent: var(--orange); }
+.s-pricing-card--power { --tier-accent: var(--purple); }
+
+.s-pricing-card {
+  transition: border-color var(--dur) var(--ease), outline-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.s-pricing-card:hover {
+  border-color: var(--tier-accent);
+  outline-color: transparent;
+  transform: translateY(-2px);
+}
+.s-assist {
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.s-assist:hover { transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .s-pricing-card, .s-assist { transition: border-color var(--dur) var(--ease); }
+  .s-pricing-card:hover, .s-assist:hover { transform: none; }
 }
 .s-pricing-featured-badge {
   position: absolute;
@@ -2699,32 +2730,6 @@ html[data-theme="dark"] .s-hero-watermark--dark { display: block; }
 /* Pro card — orange border + "New in v4.7.0" pill badge + highlighted
    Tweaks bullet. Mirrors the Power User featured-badge anatomy so the
    two cards have parallel visual treatment, just in brand orange. */
-.s-pricing-card--new {
-  border: 2px solid var(--orange);
-  outline: 0;
-}
-.s-pricing-new-badge {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--orange);
-  color: #fff;
-  font-family: var(--font-sub);
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--orange) 35%, transparent);
-  z-index: 2;
-}
-.s-pricing-new-badge i { font-size: 12px; }
 
 /* Highlighted Tweaks row in the bullet list — wand icon replaces the
    standard checkmark and the text is bolder. */
