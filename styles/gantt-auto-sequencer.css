@@ -83,7 +83,7 @@
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 150ms ease;
+  transition: opacity var(--jtt-duration-fast) ease;
 }
 
 .jt-autoseq-btn:hover {

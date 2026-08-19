@@ -15,7 +15,7 @@
   z-index: 2147482999; /* under the panel (…3001) */
   pointer-events: none;
   opacity: 0;
-  transition: opacity 300ms ease;
+  transition: opacity var(--jtt-duration-slow) ease;
   box-shadow:
     inset 0 0 0 3px rgba(254, 76, 13, 0.55),
     inset 0 0 48px rgba(254, 76, 13, 0.18);
@@ -23,7 +23,7 @@
 
 .jt-assistant-glow-active {
   opacity: 1;
-  animation: jt-assistant-glow-breathe 2.2s ease-in-out infinite;
+  animation: jt-assistant-glow-breathe 2.2s var(--jtt-ease-in-out) infinite;
 }
 
 @keyframes jt-assistant-glow-breathe {
@@ -132,7 +132,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   border-left: 1px solid var(--jta-border);
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.18);
   /* Smooth docking + resize (suppressed inline during an active drag) */
-  transition: width 0.2s ease;
+  transition: width var(--jtt-duration-base) ease;
 }
 
 .jt-assistant-panel.jt-assistant-open {
@@ -150,7 +150,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   cursor: col-resize;
   z-index: 3;
   background: transparent;
-  transition: background 150ms ease;
+  transition: background var(--jtt-duration-fast) ease;
   touch-action: none;
 }
 
@@ -468,7 +468,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   padding: 5px 11px;
   font: 12px 'Inter', system-ui, sans-serif;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition: background var(--jtt-duration-fast) ease, border-color var(--jtt-duration-fast) ease;
 }
 
 .jt-assistant-chip:hover {
@@ -701,7 +701,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   color: var(--jta-text-2);
   font: 11px 'Inter', system-ui, sans-serif;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background var(--jtt-duration-fast) ease, border-color var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease;
 }
 
 .jt-assistant-autoapply-toggle:hover {
@@ -776,7 +776,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   padding: 5px 6px;
   font: 11px 'Inter', system-ui, sans-serif;
   cursor: pointer;
-  transition: background 150ms ease, color 150ms ease;
+  transition: background var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease;
 }
 
 .jt-assistant-mode-seg:hover {
@@ -832,7 +832,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   /* Spacing */
   padding: 8px 10px;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition: background var(--jtt-duration-fast) ease, border-color var(--jtt-duration-fast) ease;
 }
 
 .jt-assistant-history-row:hover {

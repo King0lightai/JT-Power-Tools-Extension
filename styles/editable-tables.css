@@ -88,11 +88,11 @@
 }
 
 .jt-et-flash-saved {
-  animation: jt-et-flash-in 1.2s ease-out;
+  animation: jt-et-flash-in 1.2s var(--jtt-ease-out);
 }
 
 .jt-et-flash-failed {
-  animation: jt-et-flash-fail 1.2s ease-out;
+  animation: jt-et-flash-fail 1.2s var(--jtt-ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -191,7 +191,7 @@
   opacity: 0;
   transform: translateY(6px);
   pointer-events: none;
-  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  transition: opacity var(--jtt-duration-fast) var(--jtt-ease-out), transform var(--jtt-duration-fast) var(--jtt-ease-out);
 }
 
 .jt-et-toast-visible {

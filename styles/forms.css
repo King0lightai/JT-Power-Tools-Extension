@@ -43,7 +43,7 @@
   color: var(--jt-theme-text, #24292e);
   /* Animation: slide in from right */
   transform: translateX(100%);
-  transition: transform 200ms ease-out;
+  transition: transform var(--jtt-duration-base) var(--jtt-ease-out);
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.08);
   /* Z-index: same level as tab */
   z-index: 99998;
@@ -69,7 +69,7 @@
   width: 4px;
   cursor: ew-resize;
   background: transparent;
-  transition: background 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease;
   z-index: 1;
 }
 
@@ -100,7 +100,7 @@
   color: var(--jt-theme-text-secondary, #6a737d);
   cursor: pointer;
   border-radius: 3px;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease;
   flex-shrink: 0;
 }
 
@@ -140,7 +140,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease;
 }
 
 .jt-forms-close:hover {
@@ -177,7 +177,7 @@
 .jt-forms-status-pill.is-saving {
   background: var(--jt-theme-background-muted, #f1f3f5);
   color: var(--jt-theme-text-secondary, #6a737d);
-  animation: jt-forms-pulse 1.4s ease-in-out infinite;
+  animation: jt-forms-pulse 1.4s var(--jtt-ease-in-out) infinite;
 }
 
 .jt-forms-status-pill.is-unsaved {
@@ -270,7 +270,7 @@
   border-radius: 4px;
   /* Affordance */
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, border-color var(--jtt-duration-fast) ease;
 }
 
 .jt-forms-list-card:hover {
@@ -361,7 +361,7 @@
   border: 1px solid var(--jt-theme-border, #e1e4e8);
   border-radius: 4px;
   /* Animation */
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--jtt-duration-fast) ease, box-shadow var(--jtt-duration-fast) ease;
 }
 
 .jt-forms-field-card:hover,
@@ -405,7 +405,7 @@
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--jtt-duration-fast) ease, box-shadow var(--jtt-duration-fast) ease;
   box-sizing: border-box;
 }
 
@@ -432,7 +432,7 @@
   line-height: 1.5;
   resize: vertical;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--jtt-duration-fast) ease, box-shadow var(--jtt-duration-fast) ease;
   box-sizing: border-box;
 }
 
@@ -466,7 +466,7 @@
   color: var(--jt-theme-text, #24292e);
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, border-color var(--jtt-duration-fast) ease;
 }
 
 .jt-forms-field-checkboxes label:hover,
@@ -501,7 +501,7 @@
   font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--jtt-duration-fast) ease, box-shadow var(--jtt-duration-fast) ease;
   box-sizing: border-box;
 }
 
@@ -527,7 +527,7 @@
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--jtt-duration-fast) ease, box-shadow var(--jtt-duration-fast) ease;
   box-sizing: border-box;
 }
 
@@ -589,7 +589,7 @@
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease;
 }
 
 .jt-forms-signature-clear:hover {
@@ -641,7 +641,7 @@
   /* Hidden by default — slide-in animation */
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  transition: opacity var(--jtt-duration-base) var(--jtt-ease-out), transform var(--jtt-duration-base) var(--jtt-ease-out);
   pointer-events: none;
   /* Above drawer + tab */
   z-index: 99999;
@@ -961,7 +961,7 @@ body.jt-dark-mode .jt-forms-toast-message {
   /* Typography */
   cursor: pointer;
   /* Animation */
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease;
   border-radius: 4px;
 }
 
@@ -998,7 +998,7 @@ body.jt-dark-mode .jt-forms-print:hover {
   border: 0;
   color: var(--jt-theme-primary, #ea580c);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  transition: background var(--jtt-duration-fast) ease, color var(--jtt-duration-fast) ease, opacity var(--jtt-duration-fast) ease;
   border-radius: 4px;
 }
 

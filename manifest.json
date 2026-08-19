@@ -38,6 +38,7 @@
   "content_scripts": [
     {
       "matches": ["https://app.jobtread.com/*"],
+      "css": ["styles/jt-tools-motion.css"],
       "js": [
         "utils/browser-polyfill.js",
         "utils/defaults.js",
@@ -57,6 +58,7 @@
         "utils/org-detector.js",
         "utils/sidebar-detector.js",
         "utils/url-utils.js",
+        "utils/icons.js",
         "config/worker-config.js",
         "services/obfuscation.js",
         "services/license.js",

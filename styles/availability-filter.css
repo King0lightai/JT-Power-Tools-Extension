@@ -104,7 +104,7 @@
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
   user-select: none;
   line-height: 1.3;
   white-space: nowrap;
@@ -167,7 +167,7 @@
 .jt-avail-filter-expand-arrow {
   font-size: 9px;
   line-height: 1;
-  transition: transform 0.2s ease;
+  transition: transform var(--jtt-duration-base) ease;
   display: inline-block;
   cursor: pointer;
 }
@@ -216,7 +216,7 @@
   font-weight: 500;
   padding: 1px 5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
   line-height: 1.4;
 }
 
@@ -237,7 +237,7 @@
   font-size: 13px;
   cursor: pointer;
   padding: 0 2px;
-  transition: transform 0.2s ease;
+  transition: transform var(--jtt-duration-base) ease;
   line-height: 1;
 }
 
@@ -254,7 +254,7 @@
    ======================================== */
 
 .jt-avail-bar-drawer {
-  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+  transition: max-height 0.25s ease, opacity var(--jtt-duration-base) ease, padding 0.25s ease;
   max-height: 400px;
   overflow: hidden;
 }
@@ -272,7 +272,7 @@
   gap: 5px;
   padding: 4px 10px 6px;
   align-items: center;
-  transition: max-height 0.2s ease, opacity 0.15s ease, padding 0.2s ease;
+  transition: max-height var(--jtt-duration-base) ease, opacity var(--jtt-duration-fast) ease, padding var(--jtt-duration-base) ease;
   max-height: 300px;
   overflow: hidden;
 }
@@ -294,7 +294,7 @@
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 3px;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
 }
 
 .jt-avail-drawer-label:hover {
@@ -322,7 +322,7 @@
   font-weight: 500;
   padding: 1px 5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
   line-height: 1.4;
 }
 
@@ -346,7 +346,7 @@
 
 .jt-avail-saved-views-dropdown.open {
   display: block;
-  animation: jt-avail-dropdown-fade-in 0.15s ease;
+  animation: jt-avail-dropdown-fade-in var(--jtt-duration-fast) ease;
 }
 
 @keyframes jt-avail-dropdown-fade-in {
@@ -392,7 +392,7 @@
   padding: 8px 12px;
   border-bottom: 1px solid #F1F5F9;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: background var(--jtt-duration-instant) ease;
 }
 
 .jt-avail-saved-view-item:last-child {
@@ -423,7 +423,7 @@
   color: #94A3B8;
   cursor: pointer;
   border-radius: 4px;
-  transition: all 0.1s ease;
+  transition: all var(--jtt-duration-instant) ease;
   flex-shrink: 0;
   margin-left: 8px;
 }
@@ -454,7 +454,7 @@
   border: 1px dashed #93C5FD;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
 }
 
 .jt-avail-save-view-btn:hover {
@@ -473,7 +473,7 @@ tr.jt-avail-collapsed {
   overflow: hidden !important;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease-out;
+  transition: all var(--jtt-duration-base) var(--jtt-ease-out);
 }
 
 tr.jt-avail-collapsed > td {
@@ -499,7 +499,7 @@ tr.jt-avail-collapsed > td > * {
 tr.jt-avail-visible {
   opacity: 1;
   visibility: visible;
-  transition: all 0.2s ease-out;
+  transition: all var(--jtt-duration-base) var(--jtt-ease-out);
 }
 
 tr.jt-avail-visible > td:first-child {
@@ -923,7 +923,7 @@ body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
 
 .jt-avail-assignee-dropdown.open {
   display: block;
-  animation: jt-avail-dropdown-fade-in 0.15s ease;
+  animation: jt-avail-dropdown-fade-in var(--jtt-duration-fast) ease;
 }
 
 .jt-avail-add-header {
@@ -1002,7 +1002,7 @@ body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
   cursor: pointer;
   font-size: 12px;
   color: #333333;
-  transition: background 0.1s ease;
+  transition: background var(--jtt-duration-instant) ease;
 }
 
 .jt-avail-add-option.hidden {
@@ -1034,7 +1034,7 @@ body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
 
 .jt-avail-add-check svg {
   opacity: 0;
-  transition: opacity 0.1s ease;
+  transition: opacity var(--jtt-duration-instant) ease;
 }
 
 .jt-avail-add-option.active .jt-avail-add-check svg {

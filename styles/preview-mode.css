@@ -1,3 +1,9 @@
+/* Motion note: this file is vendored byte-identical into the portal
+   (portal/css/vendor/preview-mode.css — see scripts/sync-shared-ui.js), and
+   the portal does not load jt-tools-motion.css. So motion tokens here always
+   carry a literal fallback: the extension resolves the token, the portal
+   falls back to the value it shipped with. Other extension stylesheets do
+   not need fallbacks — they are only ever loaded alongside the token file. */
 /* Premium Formatter - Preview Mode Styles */
 
 /* Preview Button */
@@ -13,7 +19,7 @@
   font-size: 13px;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast, 0.15s) ease;
   z-index: 100;
   width: 24px;
   height: 24px;
@@ -58,7 +64,7 @@
   z-index: 999999;
   opacity: 0;
   transform: scale(0.95);
-  transition: all 0.2s ease;
+  transition: all var(--jtt-duration-base, 0.2s) ease;
 }
 
 .jt-preview-panel.show {
@@ -562,7 +568,7 @@ html[data-theme="dark"] .jt-notes-preview {
   border-radius: 4px;
   color: #9ca3af;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast, 0.15s) ease;
   flex-shrink: 0;
 }
 
@@ -656,7 +662,7 @@ html[data-theme="dark"] .jt-notes-preview {
   border-right: 2px solid #d1d5db;
   border-bottom: 2px solid #d1d5db;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--jtt-duration-base, 0.2s);
 }
 
 .jt-preview-resize-corner:hover::after {

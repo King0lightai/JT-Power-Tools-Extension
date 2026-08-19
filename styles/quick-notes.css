@@ -36,7 +36,7 @@
   flex-direction: row-reverse;
   transform: translateX(100%);
   opacity: 0;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--jtt-duration-slow) var(--jtt-ease-standard), width var(--jtt-duration-slow) var(--jtt-ease-standard), opacity var(--jtt-duration-slow) var(--jtt-ease-standard);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   pointer-events: none;
 }
@@ -65,7 +65,7 @@
   cursor: ew-resize;
   z-index: 10;
   background: transparent;
-  transition: background 0.2s;
+  transition: background var(--jtt-duration-base);
   /* Hide resize handle when editor is not open (sidebar-only view) */
   display: none;
 }
@@ -90,7 +90,7 @@
   background: #d1d5db;
   border-radius: 1px;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--jtt-duration-base);
 }
 
 .jt-notes-resize-handle:hover::before {
@@ -154,7 +154,7 @@
   padding: 4px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--jtt-duration-base);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -182,7 +182,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--jtt-duration-base);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,7 +229,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
 }
 
 .jt-notes-action-button:hover {
@@ -254,7 +254,7 @@
   border-radius: 4px;
   font-size: 14px;
   outline: none;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   background: white;
 }
 
@@ -309,7 +309,7 @@
   padding: 8px 10px;
   margin-bottom: 6px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
 }
 
 .jt-note-item:hover {
@@ -355,7 +355,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
 }
 
 .jt-note-delete:hover {
@@ -376,7 +376,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   padding: 0;
 }
 
@@ -486,7 +486,7 @@
   padding: 4px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--jtt-duration-base);
   align-items: center;
   justify-content: center;
   width: 32px;
@@ -519,7 +519,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   line-height: 1;
 }
 
@@ -564,7 +564,7 @@
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   color: #6b7280;
 }
 
@@ -682,7 +682,7 @@
   color: #2563eb;
   text-decoration: underline;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color var(--jtt-duration-base);
 }
 
 .jt-notes-content-input a:hover {
@@ -776,7 +776,7 @@
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1466,7 +1466,7 @@
   cursor: pointer;
   user-select: none;
   gap: 6px;
-  transition: background 0.15s;
+  transition: background var(--jtt-duration-fast);
 }
 
 .jt-notes-folder-header:hover {
@@ -1477,7 +1477,7 @@
 .jt-notes-folder-chevron {
   font-size: 10px;
   color: #6b7280;
-  transition: transform 0.2s;
+  transition: transform var(--jtt-duration-base);
   width: 12px;
   text-align: center;
 }
@@ -1514,7 +1514,7 @@
   display: flex;
   gap: 4px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--jtt-duration-fast);
 }
 
 .jt-notes-folder-header:hover .jt-notes-folder-actions {
@@ -1534,7 +1534,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   line-height: 1;
 }
 
@@ -1554,7 +1554,7 @@
   line-height: 1;
   border-radius: 4px;
   opacity: 0;
-  transition: opacity 0.2s, color 0.2s, background 0.2s;
+  transition: opacity var(--jtt-duration-base), color var(--jtt-duration-base), background var(--jtt-duration-base);
 }
 
 .jt-notes-folder-header:hover .jt-notes-folder-delete {
@@ -1579,7 +1579,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   color: #9ca3af;
 }
 
@@ -1607,7 +1607,7 @@
   padding: 0 2px;
   letter-spacing: -1px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--jtt-duration-fast);
 }
 
 .jt-notes-folder-header:hover .jt-notes-folder-drag-handle {
@@ -1695,7 +1695,7 @@
   font-size: 12px;
   color: white;
   font-weight: 600;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
@@ -1729,7 +1729,7 @@
 .jt-notes-folder-content {
   padding: 4px 0 4px 0;
   overflow: hidden;
-  transition: max-height 0.2s ease-out, padding 0.2s;
+  transition: max-height var(--jtt-duration-base) var(--jtt-ease-out), padding var(--jtt-duration-base);
 }
 
 .jt-notes-folder-group.collapsed .jt-notes-folder-content {
@@ -1758,7 +1758,7 @@
   max-width: 140px;
   outline: none;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--jtt-duration-fast);
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -2014,7 +2014,7 @@ body.jt-dark-mode .jt-color-swatch.jt-color-none.selected,
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s, background 0.2s, transform 0.2s;
+  transition: color var(--jtt-duration-base), background var(--jtt-duration-base), transform var(--jtt-duration-base);
 }
 
 .jt-notes-collapse-btn:hover {
@@ -2073,7 +2073,7 @@ body.jt-dark-mode .jt-color-swatch.jt-color-none.selected,
 
 /* Smooth transition for sidebar collapse */
 .jt-notes-sidebar {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: width var(--jtt-duration-slow) var(--jtt-ease-standard),
               opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

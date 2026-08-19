@@ -62,7 +62,7 @@
   margin-bottom: 3px;
   border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--jtt-duration-fast) ease;
   overflow: hidden;
 }
 
@@ -198,7 +198,7 @@
   font-weight: 500;
   padding: 1px 5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
   line-height: 1.4;
 }
 
@@ -215,7 +215,7 @@
   font-size: 13px;
   cursor: pointer;
   padding: 0 2px;
-  transition: transform 0.2s ease;
+  transition: transform var(--jtt-duration-base) ease;
   line-height: 1;
 }
 
@@ -236,7 +236,7 @@
   flex-wrap: wrap;
   gap: 5px;
   padding: 4px 10px 6px;
-  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+  transition: max-height 0.25s ease, opacity var(--jtt-duration-base) ease, padding 0.25s ease;
   max-height: 200px;
   overflow: hidden;
 }
@@ -263,7 +263,7 @@
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--jtt-duration-fast) ease;
   user-select: none;
   line-height: 1.3;
 }
@@ -363,7 +363,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 10000;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity var(--jtt-duration-slow) ease, transform var(--jtt-duration-slow) ease;
   pointer-events: none;
   max-width: 500px;
   text-align: center;

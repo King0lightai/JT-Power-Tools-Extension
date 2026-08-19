@@ -1,0 +1,70 @@
+/* JT Power Tools — motion tokens + motion-sensitivity guard.
+   Loaded globally via content_scripts so every feature stylesheet can key off
+   the same scale, and so the reduced-motion guard below applies extension-wide
+   rather than being re-declared per feature.
+
+   Declaring custom properties costs nothing on its own: nothing here paints or
+   animates until a feature stylesheet references a token, so loading this on
+   every JobTread page has no visual effect when all features are off.
+
+   Token values are exactly the values already in use — this is consolidation,
+   not a retune. Before: 15 distinct durations spelled in two unit conventions
+   (0.15s and 150ms are the same value) across 14 stylesheets. */
+:root {
+  /* ── Durations ──────────────────────────────────────────────────────
+     Named for intent, not milliseconds, so a future retune is one edit. */
+  --jtt-duration-instant: 100ms; /* state flips that should feel immediate */
+  --jtt-duration-fast: 150ms;    /* hover/focus — the dominant case */
+  --jtt-duration-base: 200ms;    /* open/close on small surfaces */
+  --jtt-duration-slow: 300ms;    /* panels, drawers, large surfaces */
+
+  /* ── Easings ────────────────────────────────────────────────────────
+     Kept as the keywords already in use so behaviour is byte-identical.
+     Note: `ease` IS cubic-bezier(0.25, 0.1, 0.25, 1) — the tokens file
+     spelled it out longhand, which read as a bespoke curve but was not. */
+  --jtt-ease: ease;
+  --jtt-ease-out: ease-out;
+  --jtt-ease-in-out: ease-in-out;
+  --jtt-ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* decelerate, Material-style */
+}
+
+/* ── Motion sensitivity ───────────────────────────────────────────────
+   Scoped to our own `jt-`-prefixed elements: JobTread's own motion is the
+   host app's call, not ours, and dark-mode.css deliberately restyles
+   JobTread's classes — we don't want to reach into those here.
+
+   0.01ms rather than `none` so transitionend/animationend still fire. No
+   code listens for them today, but a future listener silently never firing
+   is a nasty class of bug to inherit for no gain. */
+@media (prefers-reduced-motion: reduce) {
+  [class^="jt-"],
+  [class*=" jt-"],
+  [class^="jt-"]::before,
+  [class^="jt-"]::after,
+  [class*=" jt-"]::before,
+  [class*=" jt-"]::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Exceptions: both looping animations carry state, so collapsing them
+     would report the wrong thing. They are slowed, never stopped.
+
+     - .jt-notes-loading marks an in-flight save; a frozen ring reads as
+       finished.
+     - .jt-forms-status-pill.is-saving shares its background and text colour
+       exactly with .is-saved — the pulse is the ONLY thing distinguishing
+       "saving" from "saved". Removing it would make the two states visually
+       identical, which is a worse accessibility outcome than the motion. */
+  .jt-notes-loading::before {
+    animation-duration: 1.6s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .jt-forms-status-pill.is-saving {
+    animation-duration: 2.8s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
