@@ -367,7 +367,14 @@ const AccountService = (() => {
           }
 
           logError('Token refresh failed', result.error);
-          await clearAuthData();
+          // Only a 401/403 means the server actively rejected the refresh
+          // token — the session is really over. Anything else (500, 502,
+          // 503 during a deploy, 429, ...) is transient: the refresh token
+          // is still good, so leave stored auth alone and let the next
+          // attempt succeed instead of signing the extension out over a blip.
+          if (response.status === 401 || response.status === 403) {
+            await clearAuthData();
+          }
           return { success: false, error: result.error || 'Token refresh failed' };
         }
       } catch (error) {
