@@ -137,12 +137,13 @@ const FeatureGuides = (() => {
       docs: 'fat-gantt'
     },
 
-    scheduleMonthBanding: {
-      title: 'Schedule Month Banding',
+    scheduleMonthShading: {
+      title: 'Schedule Month Shading',
       tier: 'free',
-      summary: 'Shades alternating months on the Schedule calendar and draws a rule ' +
-        'down the first of each month, so you can tell at a glance where one month ' +
-        'ends and the next begins in a grid that shows three of them at once.',
+      summary: 'Shades alternating months on the Schedule calendar and traces the ' +
+        'month boundary itself — stepping along the top of the new month, down the ' +
+        'left of the 1st, then along the next week — so you can tell at a glance ' +
+        'where one month ends and the next begins in a grid that shows three at once.',
       where: 'Schedule → calendar views.',
       apiAccess: API_ACCESS.NONE,
       media: null,

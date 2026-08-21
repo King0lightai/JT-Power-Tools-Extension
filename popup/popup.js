@@ -18,7 +18,7 @@ const HAS_FIREFOX_SIDEBAR = !!(FIREFOX_SIDEBAR_API && typeof FIREFOX_SIDEBAR_API
 
 // All feature toggle IDs (used by master toggle)
 const FEATURE_TOGGLE_IDS = [
-  'kanbanTypeFilter', 'autoCollapseGroups', 'documentSort', 'printScope', 'ganttLines', 'scheduleMonthBanding', 'dragDrop',
+  'kanbanTypeFilter', 'autoCollapseGroups', 'documentSort', 'printScope', 'ganttLines', 'scheduleMonthShading', 'dragDrop',
   'availabilityFilter', 'taskTypeFilter', 'budgetTools', 'formatter',
   'characterCounter', 'smartJobSwitcher', 'quickNotes', 'freezeHeader',
   'pdfMarkupTools', 'reverseThreadOrder', 'previewMode', 'customFieldFilter',
@@ -208,7 +208,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
     darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
     quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
     kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
-    ganttLines: true, scheduleMonthBanding: false, pdfMarkupTools: true, reverseThreadOrder: false,
+    ganttLines: true, scheduleMonthShading: false, pdfMarkupTools: true, reverseThreadOrder: false,
     jobAccessCollapse: false, orgLogo: true,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
     savedThemes: [null, null, null]
@@ -770,7 +770,7 @@ async function loadSettings() {
     setCheckbox('printScope', settings.printScope !== undefined ? settings.printScope : false);
     setCheckbox('budgetTools', settings.budgetTools !== undefined ? settings.budgetTools : false);
     setCheckbox('ganttLines', settings.ganttLines !== undefined ? settings.ganttLines : true);
-    setCheckbox('scheduleMonthBanding', settings.scheduleMonthBanding !== undefined ? settings.scheduleMonthBanding : false);
+    setCheckbox('scheduleMonthShading', settings.scheduleMonthShading !== undefined ? settings.scheduleMonthShading : false);
     setCheckbox('jobAccessCollapse', settings.jobAccessCollapse !== undefined ? settings.jobAccessCollapse : false);
     setCheckbox('autoSequence', settings.autoSequence !== undefined ? settings.autoSequence : false);
 
@@ -1072,7 +1072,7 @@ async function getCurrentSettings() {
     printScope: getCheckboxValue('printScope', defaultSettings.printScope),
     budgetTools: getCheckboxValue('budgetTools', defaultSettings.budgetTools),
     ganttLines: getCheckboxValue('ganttLines', defaultSettings.ganttLines),
-    scheduleMonthBanding: getCheckboxValue('scheduleMonthBanding', defaultSettings.scheduleMonthBanding),
+    scheduleMonthShading: getCheckboxValue('scheduleMonthShading', defaultSettings.scheduleMonthShading),
     autoSequence: getCheckboxValue('autoSequence', defaultSettings.autoSequence),
     availabilityFilter: getCheckboxValue('availabilityFilter', false),
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),

@@ -79,7 +79,7 @@ const LicenseService = (() => {
     'budgetTools',      // Auto Sum — simple totals helper
     'documentSort',     // Sortable column headers on Job > Documents table
     'printScope',       // Print button on the document preview modal
-    'scheduleMonthBanding', // DOM-only alternating month wash on the calendar
+    'scheduleMonthShading', // DOM-only alternating month wash on the calendar
     // Date-driven schedule resequencing. NOTE: the only free feature that talks to
     // the Pave API, so it needs a configured grant key — it degrades to an
     // actionable "connect a grant key" message rather than working DOM-only.
