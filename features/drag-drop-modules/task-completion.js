@@ -209,8 +209,14 @@ const TaskCompletion = (() => {
     checkbox.style.opacity = '0.5';
     checkbox.style.pointerEvents = 'none';
 
-    // Open sidebar to access the progress controls
-    toggleKanbanTaskCompletion(headerButton, checkbox, wasComplete);
+    trySaveViaApi({
+      probeElements: [taskNameDiv, headerButton, card],
+      nameElement: taskNameDiv,
+      checkbox,
+      wasComplete
+    }).then((handled) => {
+      if (!handled) toggleKanbanTaskCompletion(headerButton, checkbox, wasComplete);
+    });
   }
 
   /**
@@ -344,8 +350,90 @@ const TaskCompletion = (() => {
     checkbox.style.opacity = '0.5';
     checkbox.style.pointerEvents = 'none';
 
-    // Open sidebar to access the progress controls
-    toggleTaskCompletion(taskCard, checkbox, wasComplete);
+    // Save through the API when we can prove which task this is; the sidebar
+    // path is the fallback, not the default.
+    trySaveViaApi({
+      probeElements: [taskNameContainer, taskCard],
+      nameElement: taskNameContainer,
+      checkbox,
+      wasComplete
+    }).then((handled) => {
+      if (!handled) toggleTaskCompletion(taskCard, checkbox, wasComplete);
+    });
+  }
+
+  /**
+   * Read the task name as rendered on a card, without the parts that aren't
+   * the name: our own checkbox, the completed checkmark, and the subtask
+   * counter ("1/3"). What's left has to match JobTread's stored name exactly,
+   * because that match is what proves the API write targets this task.
+   * @param {HTMLElement} container - the task name container
+   * @returns {string}
+   */
+  function readTaskName(container) {
+    if (!container) return '';
+    const clone = container.cloneNode(true);
+    clone.querySelectorAll('.jt-complete-checkbox, svg, div.grow.shrink-0.text-right')
+      .forEach((el) => el.remove());
+    return clone.textContent.replace(/\s+/g, ' ').trim();
+  }
+
+  /**
+   * Toggle completion with a Pave `updateTask` write.
+   *
+   * Returns false for every "can't prove it" case - no grant key, no id in the
+   * page's props, a name that doesn't match - so the caller runs the sidebar
+   * path instead. A thrown error is different: the write was attempted and
+   * failed, so the user is told rather than silently sent down a second path
+   * that might apply the same change twice.
+   *
+   * @param {Object} args
+   * @param {Array<HTMLElement>} args.probeElements - elements to resolve an id from
+   * @param {HTMLElement} args.nameElement - container holding the rendered name
+   * @param {HTMLElement} args.checkbox
+   * @param {boolean} args.wasComplete
+   * @returns {Promise<boolean>} true when the API path handled it
+   */
+  async function trySaveViaApi({ probeElements, nameElement, checkbox, wasComplete }) {
+    if (!window.TaskApiSave || !window.TaskIdResolver) return false;
+    if (!(await window.TaskApiSave.isAvailable())) return false;
+
+    const expectedName = readTaskName(nameElement);
+    if (!expectedName) return false;
+
+    const found = await window.TaskIdResolver.resolveAny(probeElements);
+    if (!found) return false;
+
+    try {
+      const saved = await window.TaskApiSave.setComplete({
+        taskId: found.taskId,
+        expectedName,
+        complete: !wasComplete
+      });
+      // Unproven id - the sidebar can't target the wrong task, so use it.
+      if (saved === null) {
+        probeElements.forEach((el) => window.TaskIdResolver.forget(el));
+        return false;
+      }
+
+      updateCheckboxState(checkbox, saved);
+      checkbox.style.opacity = '';
+      checkbox.style.pointerEvents = '';
+      if (window.UIUtils) {
+        window.UIUtils.showNotification(`Task ${saved ? 'completed' : 'marked incomplete'}`);
+      }
+      return true;
+    } catch (error) {
+      console.error('TaskCompletion: API save failed:', error);
+      checkbox.style.opacity = '';
+      checkbox.style.pointerEvents = '';
+      if (window.UIUtils) {
+        window.UIUtils.showNotification('Could not save - task unchanged');
+      }
+      // Handled: the write was attempted. Retrying through the sidebar could
+      // apply a change that actually landed.
+      return true;
+    }
   }
 
   /**
@@ -501,6 +589,9 @@ const TaskCompletion = (() => {
   function cleanup() {
     const checkboxes = document.querySelectorAll('.jt-complete-checkbox');
     checkboxes.forEach(checkbox => checkbox.remove());
+
+    if (window.TaskIdResolver) window.TaskIdResolver.destroy();
+    if (window.TaskApiSave) window.TaskApiSave.clearCache();
   }
 
   // Public API

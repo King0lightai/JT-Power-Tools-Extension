@@ -90,6 +90,8 @@
         "features/drag-drop-modules/view-detector.js",
         "features/drag-drop-modules/ui-utils.js",
         "features/drag-drop-modules/sidebar-manager.js",
+        "features/drag-drop-modules/task-id-resolver.js",
+        "features/drag-drop-modules/task-api-save.js",
         "features/drag-drop-modules/task-completion.js",
         "features/drag-drop-modules/action-items-completion.js",
         "features/task-completion-checkboxes.js",
@@ -165,7 +167,7 @@
     },
     {
       "matches": ["https://app.jobtread.com/*"],
-      "js": ["features/pave-capture-page.js"],
+      "js": ["features/pave-capture-page.js", "features/drag-drop-modules/task-id-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     }
