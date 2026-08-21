@@ -2,26 +2,41 @@
 /* Alternating background wash on the Schedule calendar so month boundaries
    read at a glance in a continuous multi-month grid.
 
-   Three rules govern everything below:
+   Four rules govern everything below:
 
    1. No inline styles and no !important. dark-mode.js sets
       `style.backgroundColor` inline on the today cell; inline beats class, so
       today's blue correctly wins over the band. !important here would erase it.
    2. The wash sits BEHIND dense, coloured task cards. Keep it subtle — the
       cards' legibility outranks the band.
-   3. Colours come from the user's own palette where one exists.
-      --jt-theme-background-subtle and --jt-theme-background-muted are two
-      adjacent background steps set on :root by features/rgb-theme.js, which is
-      exactly the pair this needs. The var() fallbacks cover plain JobTread. */
+   3. The band is a `background-image`, never `background-color`. JobTread
+      paints its own `background-color` on weekend cells (`.bg-slate-50`, a
+      real signal — Sun/Sat, not month-aligned). A `background-color` here
+      would win that cascade fight on specificity alone and silently erase it
+      on every banded weekend. A background-image layer composites ABOVE
+      background-color, so JobTread's own colour keeps showing through
+      underneath and no specificity fight is needed.
+   4. Colours come from the user's own palette where one exists.
+      --jt-theme-background-muted is an opaque background step set on :root by
+      features/rgb-theme.js — color-mix() turns it into a translucent tint so
+      it can live in a background-image layer instead of painting over
+      whatever is already on the cell. The var() fallback (`black`, mixed down
+      to the same low alpha) covers plain JobTread. */
 
 /* --- Band A: even months (and the leading trailing-days segment) --- */
 td[data-jt-month-band='0'] {
-  background-color: var(--jt-theme-background-subtle, rgba(0, 0, 0, 0.015));
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--jt-theme-background-muted, black) 6%, transparent),
+    color-mix(in srgb, var(--jt-theme-background-muted, black) 6%, transparent)
+  );
 }
 
 /* --- Band B: odd months --- */
 td[data-jt-month-band='1'] {
-  background-color: var(--jt-theme-background-muted, rgba(0, 0, 0, 0.05));
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--jt-theme-background-muted, black) 14%, transparent),
+    color-mix(in srgb, var(--jt-theme-background-muted, black) 14%, transparent)
+  );
 }
 
 /* --- Month boundary --- */
@@ -36,15 +51,21 @@ td[data-jt-month-start-row] {
 }
 
 /* === Dark Mode === */
-/* Neutral greys, per the JT Power Tools dark palette. Dark Mode does not set
-   the --jt-theme-* custom properties (it is mutually exclusive with Custom
-   Theme), so the bands are named explicitly here. */
+/* Same background-image approach as above, for the same reason: dark-mode.css
+   repaints the weekend cells too (`.bg-slate-50` -> #2b2b2b, a real neutral
+   grey, not a banned blue), and a background-color band would erase that the
+   same way it would in light mode. Dark Mode does not set the --jt-theme-*
+   custom properties (it is mutually exclusive with Custom Theme), so the
+   bands stay neutral greys by lightening with white rather than naming a
+   second dark hex pair — a translucent white wash over #2b2b2b (or whatever
+   JobTread's own dark surface is) reads as neutral grey either way, never
+   blue. */
 body.jt-dark-mode td[data-jt-month-band='0'] {
-  background-color: #2c2c2c;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
 }
 
 body.jt-dark-mode td[data-jt-month-band='1'] {
-  background-color: #252525;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.09));
 }
 
 /* #505050 sits right next to the #404040 gridlines around it and disappears —
