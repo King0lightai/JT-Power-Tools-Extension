@@ -1,0 +1,156 @@
+/* JT Power Tools - Shared Toast Notification
+ *
+ * Lifted from the Editable Tables save toast (.jt-et-toast in
+ * editable-tables.css), the styling reference every other in-page toast in
+ * the extension now shares. Every colour resolves through a local var whose
+ * fallback is the light palette, so
+ *   - plain JobTread            -> light (the default)
+ *   - Custom Theme (rgb-theme)  -> picks up --jt-theme-* automatically
+ *   - Dark Mode                 -> one override block at the bottom
+ *
+ * Deliberately does NOT use .jt-tools-surface, whose tokens are dark-only
+ * (they mirror the popup) and would force pale text onto a white background.
+ */
+
+.jt-tools-toast {
+  /* Theme tokens -> local vars (fallbacks = the light palette) */
+  --jt-toast-bg: var(--jt-theme-background-elevated, #ffffff);
+  --jt-toast-text: var(--jt-theme-text, #1f2937);
+  --jt-toast-text-muted: var(--jt-theme-text-muted, #6b7280);
+  --jt-toast-border: var(--jt-theme-border, #e5e7eb);
+  --jt-toast-shadow: rgba(0, 0, 0, 0.18);
+  --jt-toast-accent: var(--jt-theme-primary, #fe4c0d);
+  --jt-toast-safe: #34a87a;
+  --jt-toast-danger: #dc2626;
+  --jt-toast-info: #2563eb;
+  /* Native controls (e.g. a focused link) follow the surface, not the OS. */
+  color-scheme: light;
+
+  /* Layout */
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2147483001;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Spacing */
+  padding: 10px 14px;
+  /* Colors */
+  background: var(--jt-toast-bg);
+  border: 1px solid var(--jt-toast-border);
+  border-left-width: 4px;
+  border-left-color: var(--jt-toast-info);
+  border-radius: 6px;
+  color: var(--jt-toast-text);
+  box-shadow: 0 6px 20px var(--jt-toast-shadow);
+  /* Typography */
+  font: 12px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Motion */
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity var(--jtt-duration-fast) var(--jtt-ease-out), transform var(--jtt-duration-fast) var(--jtt-ease-out);
+}
+
+.jt-tools-toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* A passive one-line confirmation must never intercept clicks on the page
+ * beneath it (hence pointer-events: none up above). But once the toast
+ * carries something interactive — a link or a dismiss button — it needs to
+ * be clickable. The utility adds this modifier only when it builds that
+ * content, so plain show() toasts stay click-through. */
+.jt-tools-toast-interactive {
+  pointer-events: auto;
+}
+
+.jt-tools-toast-success {
+  border-left-color: var(--jt-toast-safe);
+}
+
+.jt-tools-toast-error {
+  border-left-color: var(--jt-toast-danger);
+}
+
+.jt-tools-toast-info {
+  border-left-color: var(--jt-toast-info);
+}
+
+/* Structured variant — title + body + optional link, each on their own line. */
+.jt-tools-toast-title {
+  font-weight: 600;
+}
+
+.jt-tools-toast-body {
+  color: var(--jt-toast-text-muted);
+  line-height: 1.4;
+}
+
+.jt-tools-toast-link {
+  color: var(--jt-toast-accent);
+  text-decoration: none;
+}
+
+.jt-tools-toast-link:hover {
+  text-decoration: underline;
+}
+
+/* Leave room for the dismiss button so it never sits over the title text. */
+.jt-tools-toast:has(.jt-tools-toast-dismiss) {
+  padding-right: 30px;
+}
+
+.jt-tools-toast-dismiss {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--jt-toast-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jt-tools-toast-dismiss:hover {
+  background: var(--jt-toast-border);
+  color: var(--jt-toast-text);
+}
+
+.jt-tools-toast-dismiss:focus-visible {
+  outline: 2px solid var(--jt-toast-accent);
+  outline-offset: 1px;
+}
+
+/* ── Dark Mode — override the local vars in one place (neutral greys) ── */
+body.jt-dark-mode .jt-tools-toast,
+.dark .jt-tools-toast {
+  --jt-toast-bg: #2c2c2c;
+  --jt-toast-text: #e0e0e0;
+  --jt-toast-text-muted: #b0b0b0;
+  --jt-toast-border: #404040;
+  --jt-toast-shadow: rgba(0, 0, 0, 0.45);
+  --jt-toast-safe: #9fe1cb;
+  --jt-toast-danger: #f87171;
+  --jt-toast-info: #93c5fd;
+  color-scheme: dark;
+}
+
+@media (max-width: 768px) {
+  .jt-tools-toast {
+    left: 8px;
+    right: 8px;
+    max-width: none;
+  }
+}

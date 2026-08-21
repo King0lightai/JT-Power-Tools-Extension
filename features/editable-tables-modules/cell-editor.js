@@ -18,12 +18,9 @@ const EditableTablesEditor = (() => {
   let control = null;      // <input> or <select> inside it
   let session = null;      // { cell, field, recordId, type, original, onNavigate }
   let saving = false;
-  let toastEl = null;
-  let toastTimer = null;
   let repositionHandler = null;
 
   const OVERLAY_ID = 'jt-et-editor';
-  const TOAST_ID = 'jt-et-toast';
 
   // ─── PUBLIC ──────────────────────────────────────────────────
 
@@ -111,9 +108,6 @@ const EditableTablesEditor = (() => {
    */
   function destroy() {
     close();
-    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
-    if (toastEl && toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
-    toastEl = null;
   }
 
   // ─── CONTROL CONSTRUCTION ────────────────────────────────────
@@ -348,22 +342,7 @@ const EditableTablesEditor = (() => {
    * @param {string} kind - 'success' | 'error'
    */
   function showToast(message, kind) {
-    if (!toastEl) {
-      toastEl = document.createElement('div');
-      toastEl.id = TOAST_ID;
-      toastEl.className = 'jt-et-toast';
-      document.body.appendChild(toastEl);
-    }
-    toastEl.textContent = message;
-    toastEl.classList.remove('jt-et-toast-success', 'jt-et-toast-error');
-    toastEl.classList.add(kind === 'error' ? 'jt-et-toast-error' : 'jt-et-toast-success');
-    toastEl.classList.add('jt-et-toast-visible');
-
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      if (toastEl) toastEl.classList.remove('jt-et-toast-visible');
-      toastTimer = null;
-    }, kind === 'error' ? 6000 : 2500);
+    window.JTToast.show(message, { kind });
   }
 
   return {

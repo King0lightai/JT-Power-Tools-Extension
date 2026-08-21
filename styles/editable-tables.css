@@ -18,8 +18,7 @@
    scope, while still defaulting to brand orange. */
 .jt-et-cell,
 .jt-et-edit,
-.jt-et-editor,
-.jt-et-toast {
+.jt-et-editor {
   --jt-et-accent: var(--jt-theme-primary, #fe4c0d);
   --jt-et-accent-hover: var(--jt-theme-primary-hover, #d93d00);
 }
@@ -102,10 +101,9 @@
   }
 }
 
-/* ── Floating surfaces (editor + toast) ─────────────────────────────── */
+/* ── Floating surface (editor) ───────────────────────────────────────── */
 
-.jt-et-editor,
-.jt-et-toast {
+.jt-et-editor {
   /* Theme tokens → local vars (fallbacks = the light palette) */
   --jt-et-bg: var(--jt-theme-background-elevated, #ffffff);
   --jt-et-field-bg: var(--jt-theme-background, #ffffff);
@@ -114,8 +112,6 @@
   --jt-et-border: var(--jt-theme-border, #e5e7eb);
   --jt-et-border-strong: var(--jt-theme-border-strong, #d1d5db);
   --jt-et-shadow: rgba(0, 0, 0, 0.18);
-  --jt-et-safe: #34a87a;
-  --jt-et-danger: #dc2626;
   /* Native selects, date pickers and spinners follow the surface, not the OS. */
   color-scheme: light;
 }
@@ -168,50 +164,9 @@
   white-space: nowrap;
 }
 
-/* Toast */
-.jt-et-toast {
-  /* Layout */
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 2147483001;
-  max-width: 360px;
-  /* Spacing */
-  padding: 10px 14px;
-  /* Colors */
-  background: var(--jt-et-bg);
-  border: 1px solid var(--jt-et-border);
-  border-left-width: 4px;
-  border-radius: 6px;
-  color: var(--jt-et-text);
-  box-shadow: 0 6px 20px var(--jt-et-shadow);
-  /* Typography */
-  font: 12px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* Motion */
-  opacity: 0;
-  transform: translateY(6px);
-  pointer-events: none;
-  transition: opacity var(--jtt-duration-fast) var(--jtt-ease-out), transform var(--jtt-duration-fast) var(--jtt-ease-out);
-}
-
-.jt-et-toast-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.jt-et-toast-success {
-  border-left-color: var(--jt-et-safe);
-}
-
-.jt-et-toast-error {
-  border-left-color: var(--jt-et-danger);
-}
-
 /* ── Dark Mode — override the local vars in one place (neutral greys) ── */
 body.jt-dark-mode .jt-et-editor,
-.dark .jt-et-editor,
-body.jt-dark-mode .jt-et-toast,
-.dark .jt-et-toast {
+.dark .jt-et-editor {
   --jt-et-bg: #2c2c2c;
   --jt-et-field-bg: #1f1f1f;
   --jt-et-text: #e0e0e0;
@@ -219,8 +174,6 @@ body.jt-dark-mode .jt-et-toast,
   --jt-et-border: #404040;
   --jt-et-border-strong: #505050;
   --jt-et-shadow: rgba(0, 0, 0, 0.45);
-  --jt-et-safe: #9fe1cb;
-  --jt-et-danger: #f87171;
   color-scheme: dark;
 }
 

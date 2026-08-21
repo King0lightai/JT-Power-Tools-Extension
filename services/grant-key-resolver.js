@@ -22,27 +22,6 @@ const GrantKeyResolver = (() => {
     }
   }
 
-  /**
-   * Escape HTML entities to prevent XSS in toast messages.
-   * Uses Sanitizer.escapeHTML if available, otherwise a local fallback.
-   * @param {string} str - String to escape
-   * @returns {string} Escaped string
-   */
-  function safeEscapeHTML(str) {
-    if (window.Sanitizer && typeof window.Sanitizer.escapeHTML === 'function') {
-      return window.Sanitizer.escapeHTML(str);
-    }
-    // Local fallback — escapes the same five chars as Sanitizer.escapeHTML
-    // so it's safe in both text-content and attribute-value contexts.
-    if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
   async function getGrantKey() {
     // Bail silently if extension context was invalidated (reload/update)
     if (!isContextValid()) return null;
@@ -150,10 +129,18 @@ const GrantKeyResolver = (() => {
     }
   }
 
-  function showMissingKeyToast(orgName, reason = 'no-key') {
-    if (document.getElementById('jt-missing-key-toast')) return;
+  // Show-once guard: while a missing-key toast is up, another call for the
+  // same or a different org must not interrupt it. A local timer (independent
+  // of the toast's own lifetime, since the toast is now persistent and closed
+  // by the user, not on a clock) rather than a DOM check, since the toast is
+  // a shared element other features can also be showing.
+  const MISSING_KEY_TOAST_GUARD_MS = 8000;
+  let missingKeyToastVisible = false;
 
-    const escapedOrgName = safeEscapeHTML(orgName);
+  function showMissingKeyToast(orgName, reason = 'no-key') {
+    if (missingKeyToastVisible) return;
+    missingKeyToastVisible = true;
+    setTimeout(() => { missingKeyToastVisible = false; }, MISSING_KEY_TOAST_GUARD_MS);
 
     // Two distinct causes get two distinct messages:
     //  - 'signin': no portal account token yet → the user must sign in to the extension
@@ -161,53 +148,18 @@ const GrantKeyResolver = (() => {
     const isSignIn = reason === 'signin';
     const title = isSignIn
       ? 'Sign in to use API features'
-      : `No API key for "${escapedOrgName}"`;
+      : `No API key for "${orgName}"`;
     const body = isSignIn
-      ? `Open the JT Power Tools extension and sign in to your account to enable API features for "${escapedOrgName}".`
-      : `Add one at <a href="https://app.jtpowertools.com/dashboard" target="_blank" style="color: #FF6B35; text-decoration: none;">app.jtpowertools.com</a>`;
+      ? `Open the JT Power Tools extension and sign in to your account to enable API features for "${orgName}".`
+      : 'Add a grant key for this org in the portal to enable API features.';
 
-    const toast = document.createElement('div');
-    toast.id = 'jt-missing-key-toast';
-    toast.style.cssText = `
-      position: fixed; bottom: 24px; right: 24px; z-index: 999999;
-      background: #2c2c2c; color: #e0e0e0; border: 1px solid #404040;
-      border-radius: 8px; padding: 14px 20px; max-width: 380px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px; line-height: 1.5; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      opacity: 0; transform: translateY(10px);
-    `;
-    toast.innerHTML = `
-      <div style="display: flex; align-items: flex-start; gap: 10px;">
-        <span style="font-size: 16px; flex-shrink: 0;">&#9888;&#65039;</span>
-        <div>
-          <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
-          <div style="color: #b0b0b0;">${body}</div>
-        </div>
-        <button style="background: none; border: none; color: #707070; cursor: pointer; font-size: 16px; padding: 0; margin-left: 8px; flex-shrink: 0;" aria-label="Dismiss notification">&#10005;</button>
-      </div>
-    `;
-
-    // Attach close handler via addEventListener (no inline onclick)
-    const closeBtn = toast.querySelector('button');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => toast.remove());
-    }
-
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
-
-    setTimeout(() => {
-      if (toast.parentElement) {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        setTimeout(() => toast.remove(), 300);
-      }
-    }, 8000);
+    // Persistent + dismissible: the user needs time to reach for the link,
+    // and a way to clear the toast themselves once they're done with it.
+    window.JTToast.showStructured({
+      title,
+      body,
+      link: isSignIn ? null : { text: 'app.jtpowertools.com', href: 'https://app.jtpowertools.com/dashboard' }
+    }, { kind: 'error', persistent: true, dismissible: true });
   }
 
   function invalidateCache() {

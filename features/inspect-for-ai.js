@@ -422,7 +422,7 @@ const InspectForAiFeature = (() => {
     if (!el) return;
     if (el === highlightEl || el === infoEl) return;
     // Don't highlight extension chrome (alert modals, editor pages, multi-pick chip, etc.)
-    if (el.closest && el.closest('.jt-tools-popup, .jt-tools-picker-info, .jt-tools-picker-outline, .jt-tools-multi-chip, .jt-tweak-edit-, .jt-tweak-alert-overlay, .jt-tools-inspect-toast')) {
+    if (el.closest && el.closest('.jt-tools-popup, .jt-tools-picker-info, .jt-tools-picker-outline, .jt-tools-multi-chip, .jt-tweak-edit-, .jt-tweak-alert-overlay, .jt-tools-toast')) {
       return;
     }
     if (el === lastHighlighted) {
@@ -1152,22 +1152,8 @@ const InspectForAiFeature = (() => {
     return '<' + tag + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + (dataAttrs ? ' ' + dataAttrs : '') + '>';
   }
 
-  let toastEl = null;
-  let toastTimer = null;
   function showToast(msg, isError = false) {
-    if (!toastEl) {
-      toastEl = document.createElement('div');
-      toastEl.className = 'jt-tools-inspect-toast';
-      toastEl.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:10px 16px;background:#252525;color:#e0e0e0;border-radius:4px;border:1px solid #404040;font:13px system-ui;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 200ms';
-      document.body.appendChild(toastEl);
-    }
-    toastEl.textContent = msg;
-    toastEl.style.borderColor = isError ? '#a02020' : '#404040';
-    toastEl.style.opacity = '1';
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      if (toastEl) toastEl.style.opacity = '0';
-    }, 2000);
+    window.JTToast.show(msg, { kind: isError ? 'error' : 'success' });
   }
 
   function cleanup() {
@@ -1183,9 +1169,6 @@ const InspectForAiFeature = (() => {
       }
     });
     eventListeners = [];
-    if (toastEl && toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
-    toastEl = null;
-    if (toastTimer) clearTimeout(toastTimer);
     // Picker styles stay injected — they're inert without the active class.
     // Removing them on cleanup would just re-inject on next init().
     isActive = false;

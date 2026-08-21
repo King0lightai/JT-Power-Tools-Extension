@@ -621,55 +621,6 @@
 }
 
 /* ============================================================
-   Toast — viewport-scoped conflict notification
-   Intentionally NOT themed: needs to remain a contrasting fixed
-   surface that reads correctly regardless of drawer theme.
-   ============================================================ */
-.jt-forms-toast {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  max-width: 360px;
-  padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid #e1e4e8;
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 13px;
-  color: #24292e;
-  /* Hidden by default — slide-in animation */
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity var(--jtt-duration-base) var(--jtt-ease-out), transform var(--jtt-duration-base) var(--jtt-ease-out);
-  pointer-events: none;
-  /* Above drawer + tab */
-  z-index: 99999;
-}
-
-.jt-forms-toast.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.jt-forms-toast-title {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.jt-forms-toast-message {
-  color: #6a737d;
-  line-height: 1.4;
-}
-
-.jt-forms-toast-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-/* ============================================================
    DARK MODE — body.jt-dark-mode selector
    Color palette per .claude/rules/code-style.md (neutral greys)
    Drawer chrome is themed via var(--jt-theme-*); fallback hex is the
@@ -907,35 +858,16 @@ body.jt-dark-mode .jt-forms-signature-image {
   background: #ffffff;
 }
 
-/* Toast — dark mode keeps fixed-surface behavior (intentionally NOT themed) */
-body.jt-dark-mode .jt-forms-toast {
-  background: #2c2c2c;
-  border-color: #404040;
-  color: #e0e0e0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-
-body.jt-dark-mode .jt-forms-toast-message {
-  color: #b0b0b0;
-}
-
 /* ============================================================
    Responsive — narrow viewports
    The trigger button piggybacks on JT's job action bar (which JT
    already lays out responsively), so no mobile-specific trigger
-   styling is needed. We only widen the drawer + tighten the toast.
+   styling is needed. We only widen the drawer.
    ============================================================ */
 @media (max-width: 768px) {
   .jt-forms-drawer {
     width: 100vw;
     max-width: 100vw;
-  }
-
-  .jt-forms-toast {
-    top: 8px;
-    right: 8px;
-    left: 8px;
-    max-width: none;
   }
 }
 
@@ -1123,15 +1055,16 @@ body.jt-dark-mode .jt-forms-save-pdf:hover {
     border: 0 !important;
   }
 
-  /* Strip drawer chrome — header, footer, resize, toast, buttons. */
+  /* Strip drawer chrome — header, footer, resize, buttons. The toast lives
+     outside .jt-forms-drawer (a shared component, JTToast) and is already
+     hidden by the body > *:not(.jt-forms-drawer) rule above. */
   .jt-forms-header,
   .jt-forms-footer,
   .jt-forms-resize-handle,
   .jt-forms-status-pill,
   .jt-forms-back,
   .jt-forms-close,
-  .jt-forms-print,
-  .jt-forms-toast {
+  .jt-forms-print {
     display: none !important;
   }
 

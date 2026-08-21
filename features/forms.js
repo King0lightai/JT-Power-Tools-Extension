@@ -466,7 +466,7 @@ const FormsFeature = (() => {
     const text = 'Synced edits from ' + who + ' · ' + count
       + ' field' + (count === 1 ? '' : 's')
       + ' refreshed: ' + names.join(', ') + more;
-    showToast(text);
+    showToast(text, 'info');
   }
 
   /**
@@ -487,19 +487,8 @@ const FormsFeature = (() => {
     return m;
   }
 
-  function showToast(text) {
-    let toast = document.querySelector('.jt-forms-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'jt-forms-toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = text;
-    toast.classList.add('is-visible');
-    if (toast._hideTimer) clearTimeout(toast._hideTimer);
-    toast._hideTimer = setTimeout(() => {
-      toast.classList.remove('is-visible');
-    }, 6000);
+  function showToast(text, kind) {
+    window.JTToast.show(text, { kind });
   }
 
   // ─── View renderers ─────────────────────────────────────────────────
@@ -805,7 +794,7 @@ const FormsFeature = (() => {
         if (flush && typeof flush.then === 'function') await flush;
       } catch (saveErr) {
         showToast('Could not save worksheet before exporting: ' + (saveErr && saveErr.message
-          ? saveErr.message : 'unknown error'));
+          ? saveErr.message : 'unknown error'), 'error');
         return;
       }
 
@@ -831,10 +820,10 @@ const FormsFeature = (() => {
         message: 'Signed worksheet: ' + (activeTemplate.name || 'Worksheet'),
       });
 
-      showToast('Saved to Job Files: ' + (file && file.name ? file.name : fileName));
+      showToast('Saved to Job Files: ' + (file && file.name ? file.name : fileName), 'success');
     } catch (err) {
       console.error('FormsFeature: Save signed PDF failed', err);
-      showToast('Save signed PDF failed: ' + (err && err.message ? err.message : 'unknown error'));
+      showToast('Save signed PDF failed: ' + (err && err.message ? err.message : 'unknown error'), 'error');
     } finally {
       window.FormsDrawer.setSavePdfBusy(false);
     }
@@ -1007,16 +996,6 @@ const FormsFeature = (() => {
     }
 
     removeStylesheet();
-
-    // Drop any toast we left in document.body
-    const toast = document.querySelector('.jt-forms-toast');
-    if (toast) {
-      if (toast._hideTimer) {
-        clearTimeout(toast._hideTimer);
-        toast._hideTimer = null;
-      }
-      toast.remove();
-    }
 
     // Detach any pending afterprint listener and drop the injected header.
     if (printAfterHandler) {

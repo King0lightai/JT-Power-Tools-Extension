@@ -346,46 +346,6 @@
 }
 
 /* ========================================
-   Toast Message
-   ======================================== */
-
-.jt-ttf-toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: #1F2937;
-  color: #F9FAFB;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 10000;
-  opacity: 0;
-  transition: opacity var(--jtt-duration-slow) ease, transform var(--jtt-duration-slow) ease;
-  pointer-events: none;
-  max-width: 500px;
-  text-align: center;
-}
-
-.jt-ttf-toast.visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-body.jt-dark-mode .jt-ttf-toast,
-.dark .jt-ttf-toast {
-  background: #404040;
-  color: #e0e0e0;
-}
-
-.jt-custom-theme .jt-ttf-toast {
-  background: var(--jt-theme-background-emphasis, #1F2937);
-  color: var(--jt-theme-text, #F9FAFB);
-}
-
-/* ========================================
    Dark Mode (neutral greys — NOT dark blues)
    ======================================== */
 
