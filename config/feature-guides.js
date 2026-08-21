@@ -137,6 +137,18 @@ const FeatureGuides = (() => {
       docs: 'fat-gantt'
     },
 
+    scheduleMonthBanding: {
+      title: 'Schedule Month Banding',
+      tier: 'free',
+      summary: 'Shades alternating months on the Schedule calendar and draws a rule ' +
+        'down the first of each month, so you can tell at a glance where one month ' +
+        'ends and the next begins in a grid that shows three of them at once.',
+      where: 'Schedule → calendar views.',
+      apiAccess: API_ACCESS.NONE,
+      media: null,
+      docs: null
+    },
+
     autoSequence: {
       title: 'Auto Sequence',
       tier: 'free',

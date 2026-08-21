@@ -420,14 +420,21 @@
 
           <!-- Dark Mode lives here rather than in the Features list: it is a
                theme choice, and the one most people reach for before they ever
-               touch a custom palette. All three rows use the same .feature-item
+               touch a custom palette. All rows use the same .feature-item
                markup as the Features tab so the two tabs read as one product.
                v4.8.2 — Custom Theme moved here from the Features tab; it keeps
                id="rgbThemeFeature" so popup.js's premium gating still binds.
-               Contrast Fix joined them for the same reason, and one more: the
-               three are mutually exclusive (see the change handler in
-               popup.js), so turning one on silently turns the others off.
-               Sitting them together makes that visible instead of surprising. -->
+               Contrast Fix joined them for the same reason, and one more: Dark
+               Mode, Contrast Fix and Custom Theme are mutually exclusive (see
+               the change handler in popup.js), so turning one on silently
+               turns the other two off. Sitting them together makes that
+               visible instead of surprising.
+               Schedule Month Banding is NOT part of that group — it is
+               additive and designed to work alongside any of the three (it
+               derives its colours from --jt-theme-* and has its own
+               body.jt-dark-mode block), so the change handler does not touch
+               it. It lives here only because it is a visual treatment rather
+               than a schedule behaviour. -->
           <div class="theme-feature-list">
             <div class="feature-item">
               <i class="ph ph-moon feature-icon" aria-hidden="true"></i>
@@ -447,6 +454,17 @@
               </div>
               <label class="toggle">
                 <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="feature-item">
+              <i class="ph ph-calendar-blank feature-icon" aria-hidden="true"></i>
+              <div class="feature-info">
+                <h3>Schedule Month Banding <i class="ph ph-question feature-help" data-guide-for="scheduleMonthBanding" title="Learn more"></i> <span class="badge new">New</span></h3>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="scheduleMonthBanding" data-feature="scheduleMonthBanding">
                 <span class="slider"></span>
               </label>
             </div>

@@ -1,0 +1,56 @@
+/* === JT Power Tools - Schedule Month Banding === */
+/* Alternating background wash on the Schedule calendar so month boundaries
+   read at a glance in a continuous multi-month grid.
+
+   Three rules govern everything below:
+
+   1. No inline styles and no !important. dark-mode.js sets
+      `style.backgroundColor` inline on the today cell; inline beats class, so
+      today's blue correctly wins over the band. !important here would erase it.
+   2. The wash sits BEHIND dense, coloured task cards. Keep it subtle — the
+      cards' legibility outranks the band.
+   3. Colours come from the user's own palette where one exists.
+      --jt-theme-background-subtle and --jt-theme-background-muted are two
+      adjacent background steps set on :root by features/rgb-theme.js, which is
+      exactly the pair this needs. The var() fallbacks cover plain JobTread. */
+
+/* --- Band A: even months (and the leading trailing-days segment) --- */
+td[data-jt-month-band='0'] {
+  background-color: var(--jt-theme-background-subtle, rgba(0, 0, 0, 0.015));
+}
+
+/* --- Band B: odd months --- */
+td[data-jt-month-band='1'] {
+  background-color: var(--jt-theme-background-muted, rgba(0, 0, 0, 0.05));
+}
+
+/* --- Month boundary --- */
+/* The boundary a user actually perceives is the horizontal week row where the
+   new month begins, not the single cell that happens to hold the month name
+   (a month rarely starts on a Sunday). data-jt-month-start-row is written to
+   every cell in that row, including cells still belonging to the previous
+   month, so the rule reads as one line across the full width of the grid.
+   inset box-shadow rather than a border: a border on a <td> reflows the grid. */
+td[data-jt-month-start-row] {
+  box-shadow: inset 0 3px 0 0 var(--jt-theme-border-strong, rgba(0, 0, 0, 0.32));
+}
+
+/* === Dark Mode === */
+/* Neutral greys, per the JT Power Tools dark palette. Dark Mode does not set
+   the --jt-theme-* custom properties (it is mutually exclusive with Custom
+   Theme), so the bands are named explicitly here. */
+body.jt-dark-mode td[data-jt-month-band='0'] {
+  background-color: #2c2c2c;
+}
+
+body.jt-dark-mode td[data-jt-month-band='1'] {
+  background-color: #252525;
+}
+
+/* #505050 sits right next to the #404040 gridlines around it and disappears —
+   this is a deliberate emphasis line, so it needs real separation. Slightly
+   thicker than the light-mode rule too, since a grey-on-grey line needs more
+   help reading as intentional than a shadow on a light background does. */
+body.jt-dark-mode td[data-jt-month-start-row] {
+  box-shadow: inset 0 4px 0 0 #7a7a7a;
+}

@@ -153,6 +153,11 @@ const featureModules = {
     feature: () => window.GanttLinesFeature,
     instance: null
   },
+  scheduleMonthBanding: {
+    name: 'Schedule Month Banding',
+    feature: () => window.ScheduleMonthBandingFeature,
+    instance: null
+  },
   reverseThreadOrder: {
     name: 'Reverse Thread Order',
     feature: () => window.ReverseThreadOrderFeature,
@@ -232,7 +237,7 @@ let currentSettings = window.JTDefaults
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
     budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false, invoiceForecast: false,
     editableTables: false,
-    autoSequence: false,
+    autoSequence: false, scheduleMonthBanding: false,
     jobAccessCollapse: false, orgLogo: false,
     inspectForAi: false, paveCapture: false, tweakEngine: true, forms: true, assistantPanel: true,
     themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },

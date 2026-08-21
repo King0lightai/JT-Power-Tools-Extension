@@ -20,6 +20,8 @@ const JTDefaults = (() => {
     autoCollapseGroups: false,
     ganttLines: true,
     autoSequence: false,
+    // Repaints the calendar grid, so opt-in rather than on by default.
+    scheduleMonthBanding: false,
 
     // Free Features - Productivity Tools
     formatter: true,
@@ -89,8 +91,10 @@ const JTDefaults = (() => {
   // sections, their counts, and the within-category order straight from this —
   // so nothing drifts and a new feature just slots into the right list. Order
   // within each list is Free → Essential → Pro → Power User, then alphabetical.
-  // (Tweaks/AI features — tweakEngine, inspectForAi, paveCapture — live in their
-  // own tabs and are intentionally NOT listed here.)
+  // (Tweaks/AI features — tweakEngine, inspectForAi, paveCapture — and theme
+  // features that live on the Theme tab — darkMode, rgbTheme, contrastFix,
+  // scheduleMonthBanding — have their own tabs and are intentionally NOT
+  // listed here.)
   const FEATURE_CATEGORIES = [
     {
       id: 'schedule',
