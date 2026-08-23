@@ -18,6 +18,19 @@ const AccountService = (() => {
   const API_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
   const SYNC_URL = 'https://jt-tools-license-proxy.king0light-ai.workers.dev';
 
+  // Headers for the auth endpoints the server gates behind a Turnstile
+  // captcha (login / register / forgot / reset). The extension has no
+  // hostname-bound widget to render, so the server skips the captcha for
+  // extension traffic — it normally recognizes that from the
+  // chrome-/moz-/safari-web-extension:// Origin, but a browser that runs
+  // WebExtensions on its own engine (Orion) sends an Origin the server
+  // doesn't know, and sign-in failed there with "Missing captcha token".
+  // This header carries the same signal without depending on the Origin.
+  const AUTH_HEADERS = {
+    'Content-Type': 'application/json',
+    'X-JT-Client': 'extension'
+  };
+
   // Storage keys
   const STORAGE_KEYS = {
     ACCESS_TOKEN: 'jtAccountAccessToken',
@@ -153,7 +166,7 @@ const AccountService = (() => {
 
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: AUTH_HEADERS,
         body: JSON.stringify(body)
       });
 
@@ -238,7 +251,7 @@ const AccountService = (() => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: AUTH_HEADERS,
         body: JSON.stringify({ email, password })
       });
 
@@ -1409,9 +1422,7 @@ const AccountService = (() => {
 
       const response = await fetch(`${API_URL}/auth/forgot`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: AUTH_HEADERS,
         body: JSON.stringify({ email: email.toLowerCase() })
       });
 
@@ -1450,9 +1461,7 @@ const AccountService = (() => {
 
       const response = await fetch(`${API_URL}/auth/reset`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: AUTH_HEADERS,
         body: JSON.stringify({ token, newPassword })
       });
 
