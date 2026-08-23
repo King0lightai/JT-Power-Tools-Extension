@@ -641,6 +641,22 @@
   font-size: 16px;
 }
 
+/* AI Button */
+.jt-ai-btn {
+  font-size: 16px;
+}
+
+/* In-flight state while a Proofread/Rewrite round-trip is out (up to 20s) */
+.jt-ai-btn.jt-ai-btn-busy {
+  cursor: progress;
+  animation: jt-ai-btn-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes jt-ai-btn-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.8; }
+}
+
 /* Compact Toolbar for Sidebars */
 .jt-formatter-toolbar.jt-formatter-compact {
   padding: 0.25rem;
@@ -2311,4 +2327,37 @@
   background: var(--jt-theme-primary, #3b82f6);
   border-color: var(--jt-theme-primary, #3b82f6);
   color: #ffffff;
+}
+
+/* AI Assist - transient failure message (shown when the composer/assistant
+   could not be opened) */
+.jt-ai-error {
+  position: fixed;
+  z-index: 2147483000;
+  max-width: 260px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  color: #8a6d3b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+body.jt-dark-mode .jt-ai-error,
+.dark .jt-ai-error {
+  background: #2c2c2c;
+  border-color: #404040;
+  color: #a0a0a0;
+}
+
+/* AI Assist - hides JobTread's message composer card while the Writing
+   Assistant hand-off is in progress. The Assistant is a SIBLING modal card
+   and is never targeted by this class — see ai-assist.js. Always paired
+   with the inert attribute; both are guaranteed to be reversed in
+   ai-assist.js's teardown(), including when the composer cannot be closed
+   (fail visible, never fail hidden). */
+.jt-ai-composer-hidden {
+  display: none !important;
 }

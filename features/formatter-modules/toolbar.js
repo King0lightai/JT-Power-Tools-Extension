@@ -15,6 +15,8 @@ const FormatterToolbar = (() => {
   let budgetScrollCleanup = null; // cleanup function for budget toolbar scroll listener
   let expandCollapseAllBtn = null;       // The injected button element
   let expandCollapseAllCleanup = null;   // Cleanup function for button listeners
+  let aiErrorEl = null;
+  let aiErrorTimeout = null;
 
   // WeakSet tracking cells that contain/contained a Description placeholder textarea.
   // Used to recognize transparent editing textareas in the Description column even
@@ -337,29 +339,32 @@ const FormatterToolbar = (() => {
     }
 
     // All buttons in priority order (lower = more important, shown first)
+    if (window.FormatterAiAssist && window.FormatterAiAssist.shouldOffer(field)) {
+      toolbarHTML += `<button class="jt-toolbar-item jt-ai-btn" data-action="ai" data-priority="1" title="AI: proofread or rewrite">${icons.ai}</button>`;
+    }
     toolbarHTML += `
-      <button class="jt-toolbar-item" data-format="bold" data-priority="1" title="Bold (*text*) - Ctrl/Cmd+B"><strong>B</strong></button>
-      <button class="jt-toolbar-item" data-format="italic" data-priority="2" title="Italic (^text^) - Ctrl/Cmd+I"><em>I</em></button>
-      <button class="jt-toolbar-item" data-format="underline" data-priority="3" title="Underline (_text_) - Ctrl/Cmd+U"><u>U</u></button>
-      <button class="jt-toolbar-item" data-format="strikethrough" data-priority="4" title="Strikethrough (~text~)"><s>S</s></button>
-      <button class="jt-toolbar-item" data-format="h1" data-priority="5" title="Heading 1">H<sub>1</sub></button>
-      <button class="jt-toolbar-item" data-format="h2" data-priority="6" title="Heading 2">H<sub>2</sub></button>
-      <button class="jt-toolbar-item" data-format="h3" data-priority="7" title="Heading 3">H<sub>3</sub></button>
-      <button class="jt-toolbar-item" data-format="h4" data-priority="8" title="Heading 4">H<sub>4</sub></button>
-      <button class="jt-toolbar-item" data-format="justify-left" data-priority="9" title="Align Left (:--)">${icons.alignLeft}</button>
-      <button class="jt-toolbar-item" data-format="justify-center" data-priority="10" title="Align Center (-:-)">${icons.alignCenter}</button>
-      <button class="jt-toolbar-item" data-format="justify-right" data-priority="11" title="Align Right (--:)">${icons.alignRight}</button>
-      <button class="jt-toolbar-item" data-format="bullet" data-priority="12" title="Bullet List">${icons.bullet}</button>
-      <button class="jt-toolbar-item" data-format="numbered" data-priority="13" title="Numbered List">${icons.numbered}</button>
-      <button class="jt-toolbar-item" data-format="link" data-priority="14" title="Insert Link">${icons.link}</button>
-      <button class="jt-toolbar-item" data-format="quote" data-priority="15" title="Quote">${icons.quote}</button>
-      <button class="jt-toolbar-item" data-format="table" data-priority="16" title="Insert Table">${icons.table}</button>
-      <button class="jt-toolbar-item" data-format="hr" data-priority="17" title="Horizontal Rule (---)">${icons.hr}</button>
-      <button class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" data-priority="18" title="Green">A</button>
-      <button class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" data-priority="19" title="Yellow">A</button>
-      <button class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" data-priority="20" title="Blue">A</button>
-      <button class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" data-priority="21" title="Red">A</button>
-      <button class="jt-toolbar-item jt-alert-btn" data-format="alert" data-priority="22" title="Insert Alert">${icons.alert}</button>
+      <button class="jt-toolbar-item" data-format="bold" data-priority="2" title="Bold (*text*) - Ctrl/Cmd+B"><strong>B</strong></button>
+      <button class="jt-toolbar-item" data-format="italic" data-priority="3" title="Italic (^text^) - Ctrl/Cmd+I"><em>I</em></button>
+      <button class="jt-toolbar-item" data-format="underline" data-priority="4" title="Underline (_text_) - Ctrl/Cmd+U"><u>U</u></button>
+      <button class="jt-toolbar-item" data-format="strikethrough" data-priority="5" title="Strikethrough (~text~)"><s>S</s></button>
+      <button class="jt-toolbar-item" data-format="h1" data-priority="6" title="Heading 1">H<sub>1</sub></button>
+      <button class="jt-toolbar-item" data-format="h2" data-priority="7" title="Heading 2">H<sub>2</sub></button>
+      <button class="jt-toolbar-item" data-format="h3" data-priority="8" title="Heading 3">H<sub>3</sub></button>
+      <button class="jt-toolbar-item" data-format="h4" data-priority="9" title="Heading 4">H<sub>4</sub></button>
+      <button class="jt-toolbar-item" data-format="justify-left" data-priority="10" title="Align Left (:--)">${icons.alignLeft}</button>
+      <button class="jt-toolbar-item" data-format="justify-center" data-priority="11" title="Align Center (-:-)">${icons.alignCenter}</button>
+      <button class="jt-toolbar-item" data-format="justify-right" data-priority="12" title="Align Right (--:)">${icons.alignRight}</button>
+      <button class="jt-toolbar-item" data-format="bullet" data-priority="13" title="Bullet List">${icons.bullet}</button>
+      <button class="jt-toolbar-item" data-format="numbered" data-priority="14" title="Numbered List">${icons.numbered}</button>
+      <button class="jt-toolbar-item" data-format="link" data-priority="15" title="Insert Link">${icons.link}</button>
+      <button class="jt-toolbar-item" data-format="quote" data-priority="16" title="Quote">${icons.quote}</button>
+      <button class="jt-toolbar-item" data-format="table" data-priority="17" title="Insert Table">${icons.table}</button>
+      <button class="jt-toolbar-item" data-format="hr" data-priority="18" title="Horizontal Rule (---)">${icons.hr}</button>
+      <button class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" data-priority="19" title="Green">A</button>
+      <button class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" data-priority="20" title="Yellow">A</button>
+      <button class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" data-priority="21" title="Blue">A</button>
+      <button class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" data-priority="22" title="Red">A</button>
+      <button class="jt-toolbar-item jt-alert-btn" data-format="alert" data-priority="23" title="Insert Alert">${icons.alert}</button>
     `;
 
     // More menu (always visible, contains overflow items)
@@ -379,6 +384,7 @@ const FormatterToolbar = (() => {
     // Setup handlers
     setupResponsiveToolbar(toolbar);
     setupFormatButtons(toolbar, field);
+    setupAiButton(toolbar, field);
     setupCustomTooltips(toolbar);
 
     if (hasPreviewMode) {
@@ -1330,6 +1336,82 @@ const FormatterToolbar = (() => {
     });
   }
 
+  /* The AI button. Snapshots the field at click time: opening JobTread's
+     composer blurs it and, on the budget grid, toolbars are destroyed and
+     rebuilt rather than restyled — so nothing here may rely on activeField
+     surviving the trip. One click opens the composer, injects the text, and
+     opens JobTread's own Writing Assistant — no menu, no review panel.
+     JobTread's own dialog is both; its "Use This" is the review step. */
+  function setupAiButton(toolbar, field) {
+    const aiBtn = toolbar.querySelector('[data-action="ai"]');
+    if (!aiBtn || !window.FormatterAiAssist) return;
+
+    aiBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
+    aiBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const targetField = activeField || field;
+      if (!targetField) return;
+
+      const text = targetField.value || '';
+      if (!text.trim()) return;
+
+      const rect = aiBtn.getBoundingClientRect();
+      setAiBusy(aiBtn, true);
+      try {
+        await window.FormatterAiAssist.run({ field: targetField, text });
+      } catch (err) {
+        console.warn('FormatterAiAssist: could not open the assistant', err);
+        showAiError(rect, err);
+      } finally {
+        setAiBusy(aiBtn, false);
+      }
+    });
+  }
+
+  function clearAiError() {
+    if (aiErrorTimeout) {
+      clearTimeout(aiErrorTimeout);
+      aiErrorTimeout = null;
+    }
+    if (aiErrorEl) {
+      aiErrorEl.remove();
+      aiErrorEl = null;
+    }
+  }
+
+  function showAiError(rect, err) {
+    clearAiError();
+    let message = 'AI request failed. Please try again.';
+    if (err && err.message === 'composer-already-open') {
+      // Distinct from the generic failure text on purpose — this one is
+      // actionable (unlike a transport/DOM failure, the user can fix it),
+      // and the generic text would leave them retrying blind against their
+      // own open message.
+      message = 'Close your open message first, then try AI again.';
+    } else if (err && err.message === 'ambiguous-composer-trigger') {
+      message = 'Could not safely open the composer. Please try again.';
+    }
+
+    aiErrorEl = document.createElement('div');
+    aiErrorEl.className = 'jt-ai-error';
+    aiErrorEl.textContent = message;
+    document.body.appendChild(aiErrorEl);
+    aiErrorEl.style.top = `${Math.round(rect.bottom + 4)}px`;
+    aiErrorEl.style.left = `${Math.round(rect.left)}px`;
+    aiErrorTimeout = setTimeout(clearAiError, 4000);
+  }
+
+  /* Lightweight in-flight indication while the composer and assistant are
+     opening. Guarded by document.body.contains() because the anchor button,
+     like activeField, may not survive a budget-grid toolbar rebuild. */
+  function setAiBusy(anchor, busy) {
+    if (!anchor || !document.body.contains(anchor)) return;
+    anchor.classList.toggle('jt-ai-btn-busy', busy);
+  }
+
   /**
    * Setup custom tooltips
    * @param {HTMLElement} toolbar
@@ -1645,6 +1727,9 @@ const FormatterToolbar = (() => {
    */
   function hideToolbar() {
     clearHideTimeout();
+
+    // Clear any AI error toast anchored to whatever toolbar is being hidden.
+    clearAiError();
 
     // Close overflow dropdowns on all embedded toolbars
     hideAllEmbeddedToolbars(null);
@@ -1988,6 +2073,10 @@ const FormatterToolbar = (() => {
    */
   function destroyToolbar(toolbar) {
     if (!toolbar) return;
+    // Direct destroyToolbar() callers (formatter.js cleanup/SPA-nav sweeps,
+    // quick-notes.js) bypass hideToolbar() entirely, so the AI error toast
+    // needs its own clearAiError() here too.
+    clearAiError();
     if (toolbar._resizeObserver) {
       toolbar._resizeObserver.disconnect();
       toolbar._resizeObserver = null;
@@ -2014,7 +2103,8 @@ const FormatterToolbar = (() => {
     injectExpandCollapseAllButton,
     removeExpandCollapseAllButton,
     removeStrayBudgetToolbars,
-    destroyToolbar
+    destroyToolbar,
+    clearAiError
   };
 })();
 

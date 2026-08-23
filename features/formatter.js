@@ -126,6 +126,18 @@ const FormatterFeature = (() => {
     document.removeEventListener('click', handleGlobalClick, true);
     document.removeEventListener('keydown', handleKeydown, true);
 
+    // ai-assist.js is a module, not a feature, so it has no cleanup of its
+    // own — the Formatter owns reversing it. v2 never hides or appends
+    // anything of its own to the DOM, so the only state it can leave behind
+    // is an active watch for "Use This" (a document click listener plus a
+    // MutationObserver) while the user is mid-conversation with JobTread's
+    // own Writing Assistant. detach() drops both without touching the
+    // composer itself — it's the user's now, visible, and theirs to close.
+    Toolbar().clearAiError();
+    if (window.FormatterAiAssist) {
+      window.FormatterAiAssist.detach();
+    }
+
     // Remove injected CSS
     if (styleElement) {
       styleElement.remove();
@@ -725,6 +737,19 @@ const FormatterFeature = (() => {
   function handleGlobalClick(e) {
     const clickedElement = e.target;
 
+    // ai-assist.js drives JobTread's OWN controls — the "Message" composer
+    // trigger, the Writing Assistant, Proofread/Rewrite, Close. Those are
+    // JobTread's markup, so no allowlist clause below can name them, and
+    // this capture-phase handler would read each one as "the user clicked
+    // away" and tear the toolbar down in the middle of the round-trip the
+    // click is part of. isDriving() is true only for the synchronous
+    // duration of one such synthetic click, so a real user click during the
+    // round-trip still dismisses the toolbar normally.
+    const ai = window.FormatterAiAssist;
+    if (ai && typeof ai.isDriving === 'function' && ai.isDriving()) {
+      return;
+    }
+
     // Don't hide if clicking on a formatter-ready field or the toolbar
     // Use data-formatter-ready attribute for more reliable detection
     //
@@ -737,6 +762,10 @@ const FormatterFeature = (() => {
     // clicking any overflowed button (the colours overflow first) hid the
     // toolbar before the insert ran — nulling activeField, and on a budget
     // Description field destroying the dropdown mid-click.
+    //
+    // ai-assist.js v2 no longer appends anything of its own to document.body
+    // (no menu, no review panel — JobTread's own Writing Assistant and its
+    // "Use This" are the whole UI), so there is no clause to add here for it.
     if (clickedElement.closest('[data-formatter-ready="true"]') ||
         clickedElement.closest('.jt-formatter-toolbar') ||
         clickedElement.closest('.jt-overflow-dropdown') ||

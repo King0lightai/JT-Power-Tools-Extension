@@ -84,6 +84,7 @@
         "features/formatter-modules/formats.js",
         "features/formatter-modules/toolbar.js",
         "features/formatter-modules/alert-modal.js",
+        "features/formatter-modules/ai-assist.js",
         "features/formatter.js",
         "features/preview-mode-modules/jt-markdown.js",
         "features/preview-mode.js",
