@@ -55,11 +55,240 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.10.14 — Orion support (iPhone/iPad via the Firefox build), small-screen fixes across Invoice Forecast, the AI button and the formatter toolbar, subscription status fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.14</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">August 23, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📱</span> JT Power Tools now runs on iPhone and iPad</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Install the <strong>Firefox</strong> build in Orion &mdash; not the Chrome one</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><a href="https://kagi.com/orion/" target="_blank" rel="noopener">Orion</a> is a browser for Mac, iPhone and iPad that runs Chrome and Firefox extensions. That makes it the one way to get JT Power Tools onto a phone or tablet &mdash; Safari and Chrome on iOS cannot install it at all.</li>
+                            <li class="sub-item"><strong>The Chrome build does not work there, and cannot be made to.</strong> It relies on a background process Orion does not run, and every feature that talks to JobTread's API goes through it. The Firefox build is built differently and has no such dependency. Same features, same account, same license.</li>
+                            <li class="sub-item">Grab the Firefox package from the <a href="https://github.com/King0lightai/JT-Power-Tools/releases" target="_blank" rel="noopener">Releases page</a> and add it in Orion. Sign in as usual and your plan carries over.</li>
+                            <li class="sub-item"><strong>One thing to know:</strong> Orion has no settings sync, so your toggles are saved on that device rather than following you between browsers. Everything else behaves the same.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Signing in works, and your plan actually unlocks</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Sign-in used to fail outright on Orion with a captcha the extension had no way to answer. That is fixed, along with three separate faults behind it: the popup opened to a blank shell, the subscription showed as inactive, and the API-backed features kept asking you to sign in when you already had.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Tap the version number for a health check</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">There is no way to inspect a browser on a phone, so the extension now reports on itself. Tapping the version number in the popup runs nine checks &mdash; sign-in, plan, storage, API access &mdash; and shows what passed and what did not, with a <strong>Copy for support</strong> button. If something is not working, that output tells us why in one message instead of several rounds of guessing.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Fixed: your subscription showing as inactive</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">An active plan could read "Inactive" with every paid feature locked</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The extension was checking for an old-style license file on your computer rather than asking your account. If you subscribed through the portal, or signed in on a new browser, it decided you had nothing &mdash; while the popup cheerfully displayed your correct plan name above the locked features.</li>
+                            <li class="sub-item">It now uses one answer for both, so what the popup shows and what actually unlocks can no longer disagree.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📐</span> Features that were missing on small screens</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Invoice Forecast is back on narrow windows</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Below the width where JobTread folds its Reports tabs into a menu button, the Invoice Forecast tab was not hidden &mdash; it was never added at all. It now appears inside that menu alongside JobTread's own tabs.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">The AI button works on a phone</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">On a narrow screen the control it needs moves into a collapsed menu, so the AI button failed silently before it began. It opens that menu itself now, and closes it again if the request cannot continue.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">The formatter toolbar fits the screen</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">On a budget row it was running roughly three screens wide on a phone, with most buttons only reachable by scrolling the table sideways. It now fits, and the buttons that do not fit move into the <strong>&hellip;</strong> menu &mdash; nine visible on a phone, all twenty-two on a desktop.</li>
+                            <li class="sub-item">It was also rendering 6px wider than the space it sat in at <em>every</em> screen size, which pushed the page sideways and clipped its own right edge.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">👆</span> Buttons you can actually hit with a thumb</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Touch targets across the formatter, Quick Notes and the message composer</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The formatter's buttons were 22 pixels square, and Quick Notes' close button 24 &mdash; fine with a mouse, a coin toss with a thumb. They are now sized for touch: 32px in the dense formatter row, 44px for the panel buttons that have room to be generous.</li>
+                            <li class="sub-item"><strong>Only on touch devices.</strong> The change keys off the pointer you are using rather than the size of the window, so a mouse-driven desktop looks exactly as it did &mdash; including a narrow one docked beside another window.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 4.10.8 — Formatter AI button, Schedule Month Shading, API-backed task checkboxes, PDF page rendering + file markup via MCP, Assistant on Opus 5 with bigger pools, Orion sign-in fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.8</span>
+                <span class="version-date">August 23, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> An AI button in the Text Formatter (Free)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Proofread or rewrite any long-form field, using JobTread's own writing assistant</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Budget line descriptions, task descriptions and daily logs get an <strong>AI</strong> button on the formatter toolbar. One click opens JobTread's Writing Assistant with your text already loaded &mdash; Proofread, Rewrite, or type your own request. Click its <strong>Use This</strong> and the result lands back in the field you started from.</li>
+                            <li class="sub-item"><strong>No separate AI subscription.</strong> It drives the assistant JobTread already gives you, so there's nothing extra to buy and nothing of yours sent anywhere new. Free tier.</li>
+                            <li class="sub-item"><strong>The "New Job Message" card stays out of your way.</strong> Reaching the assistant means opening JobTread's composer first; that card is hidden the moment it opens, so the only dialog you see is the one you asked for. If you close the assistant without using a result, the composer is closed for you.</li>
+                            <li class="sub-item"><strong>It will never touch a message you were already writing.</strong> If a composer is already open, it refuses outright and tells you to close your own draft first, rather than risk adopting it.</li>
+                            <li class="sub-item">Appears on fields inside a job &mdash; the round-trip needs a job to scope the assistant to.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📅</span> Schedule Month Shading (Free)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">See where one month ends and the next begins</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A Month view routinely shows three months at once, and the only cue for a boundary is a small blue "1 August" label &mdash; scroll a few weeks and you lose track of what you're looking at. Every other month now carries a background wash, with a stronger rule on the boundary itself.</li>
+                            <li class="sub-item"><strong>The boundary follows the dates instead of cutting straight across.</strong> A month rarely starts on a Sunday, so the rule steps down and around: along the top of the new month's cells, down the left edge of the 1st, then along the top of the week still sitting under the old month.</li>
+                            <li class="sub-item"><strong>It follows whatever theme you run</strong> &mdash; dark wash on a light theme, light wash on a dark one, including under Custom Theme. Weekend shading, task cards and Dark Mode's highlight on today all still show through.</li>
+                            <li class="sub-item">Off by default, toggled on the <strong>Theme</strong> tab. Re-applies itself on Load More and when the calendar re-renders.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Task checkboxes are now instant (Pro)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">A tick used to take about a second and a half. Now it's one write.</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Completing a task from the Schedule used to hide the sidebar with injected CSS, click the card, wait for the panel, hunt for the Progress control, then close the sidebar again. It's now a single API call, and the checkbox reflects what JobTread actually stored rather than what was clicked.</li>
+                            <li class="sub-item"><strong>The task is proven before anything is written.</strong> A schedule card carries no id in the page, so the id is read from JobTread's own data and then checked back against it &mdash; the task's name must match the card you clicked. A wrong id would complete someone else's task on another job with nothing on screen to show it.</li>
+                            <li class="sub-item"><strong>Still works without a grant key.</strong> No key, or any failure to prove the id, falls back to the old sidebar path &mdash; so nothing that worked before stops working. Calendar rows and Kanban cards both.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">📐</span> Your AI can finally look at a drawing (Power User)</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Render a PDF page as an image through the MCP server</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Every route from a JobTread plan to a model's eyes was closed: text extraction returns embedded photos, which a CAD export simply doesn't have, and handing over the PDF is impossible &mdash; a 6&nbsp;MB drawing set costs roughly 2.4 million tokens. Rendering the page server-side costs about 1,500. That's what makes "where does this go on the plan?" a question an AI can answer.</li>
+                            <li class="sub-item"><strong>Crop and zoom to read small text.</strong> A full sheet at 1x is already legible for room labels and plan notes; a dimension string needs a tight crop at 4x, which comes back crisp for a fraction of the cost. The response reports the page size so a follow-up crop can be aimed from what the first render showed.</li>
+                            <li class="sub-item"><strong>Start from a plan, not a file.</strong> Pass a plan directly and it resolves the file and page itself. If the plan is calibrated, the response carries its scale and the exact pixels-per-foot conversion &mdash; so a measurement taken off the image turns into feet without re-deriving the scale by hand.</li>
+                            <li class="sub-item"><strong>Oversized requests are shrunk, never rejected</strong>, and the response says it shrank them and why. A render that admits what it is beats a failure.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Photo and PDF markup is now writable</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The paintbrush annotations from the JobTread UI can be written through the MCP server. The original file is kept untouched and the marked-up version rides alongside it, so markup can be stripped later and the original comes back.</li>
+                            <li class="sub-item"><strong>Job-level files only for now.</strong> Photos that arrived through a daily log or message need a different path that isn't open yet, and will say so plainly rather than failing quietly.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🤖</span> Assistant: Opus 5, bigger pools, and a protected lane for automations</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Background work and chat can no longer starve each other</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">One allowance used to fund everything &mdash; panel chat, playbooks and nightly task-trigger sweeps all drew from the same bucket. That's fine while automation is occasional and wrong once it runs every night. Each paid tier now gets a <strong>reserved automation pool that chat cannot spend</strong>, and which cannot spend chat's credits either.</li>
+                            <li class="sub-item"><strong>Top-ups still fund chat only.</strong> A top-up is what you buy when chat hits the wall; quietly spending it on background work would put it where nobody asked for it.</li>
+                            <li class="sub-item">The heavy lane now runs <strong>Claude Opus 5</strong> at the same rate as before, and every pool got substantially bigger.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎨</span> Polish</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Every notification looks like the same product</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Editable Tables, Worksheets, Inspect for AI and the missing-key warning each built their own toast &mdash; different corners, colours and durations. They all share one component now, themed to match, with errors staying up longer than confirmations because a failure takes longer to read.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Reduced motion is honoured everywhere</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Two stylesheets respected your system's reduced-motion setting; twelve didn't. All of them do now, scoped to our own elements. Two spinners are <em>slowed rather than stopped</em> on purpose &mdash; a frozen saving indicator reads as finished, and on the forms status pill the pulse is the only thing distinguishing "saving" from "saved".</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Contrast Fix moved to the Theme tab</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">It sits between Dark Mode and Custom Theme now. The three are mutually exclusive &mdash; switching one on switches the others off &mdash; so splitting them across two tabs made that impossible to see. Editable Tables is badged <strong>New</strong> in the feature list.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Sign-in was impossible in some browsers</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The sign-in endpoints are protected by a captcha that only the website can answer; the extension is waved through instead, which the server decided by recognising the browser's extension address. <strong>Orion</strong> &mdash; a WebKit browser that runs Chrome and Firefox extensions &mdash; doesn't use any of the addresses we looked for, so its users hit a captcha the extension had no way to answer and could not sign in at all. Extension traffic is now recognised three ways, including one that doesn't depend on the browser at all.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">The Assistant could deny access on a stale plan</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Every plan check was event-driven, and the only one that fires without visiting the portal is a daily job &mdash; so someone working entirely in the extension could sit on an out-of-date plan for up to a day. It re-checks itself now.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Paid sections stayed visible after a license lapsed</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The portal gated Notes, MCP, Tweaks, Skills, Worksheets, Email-to-Job and Automations on plan and role but never on whether the license was still valid, and the Worksheets status check the extension polls skipped its plan check too. Both are hardening rather than an incident &mdash; nothing was reachable that shouldn't have been, but the interface shouldn't have offered it.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Support now routes to email, not GitHub</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">"Open a GitHub issue" was the documented support route across Support, Roadmap, the privacy policy and the MCP setup guides &mdash; which asks a contractor to make an account on a developer site to report a bug. All of it points at email now.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.10.7 — Editable Tables, in-popup feature guides, feature list redesign, custom field paging fix, org switch cache fix -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.10.7</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">August 13, 2026</span>
             </div>
 

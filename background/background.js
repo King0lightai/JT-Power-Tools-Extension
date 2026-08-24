@@ -274,6 +274,29 @@ function isAllowedApiSender(sender) {
     return true;
   }
 
+  // Last resort: this engine gave us nothing to identify the sender with.
+  // Kept in step with the same branch in background/service-worker.js — this
+  // file is the MV2 build's copy of that logic, and the MV2 build is the one
+  // WebKit engines can actually run (an MV3 service worker does not start in
+  // Orion at all). Fixing only the MV3 copy would leave the build that works
+  // still broken, which is the same half-fix that let a WebKit sign-in bug
+  // survive a release.
+  //
+  // Safe for the same reason: chrome.runtime.onMessage only ever delivers
+  // messages from this extension's own scripts. Neither manifest declares
+  // externally_connectable, nothing registers onMessageExternal, and content
+  // scripts only run on JobTread hosts — so an unidentifiable sender is still
+  // one of ours. tests/features/service-worker-sender-trust.test.js fails if
+  // any of that stops being true.
+  if (!sender?.id && !sender?.tab?.url) {
+    console.warn(
+      'JT-Tools: message sender carries neither id nor tab.url — this engine ' +
+      'withholds both. Treating it as same-extension, which is what onMessage ' +
+      'guarantees while externally_connectable is unset.'
+    );
+    return true;
+  }
+
   return false;
 }
 

@@ -25,7 +25,8 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>POWER TOOLS</h1>
-        <span class="version">v4.10.7</span>
+        <span class="version" id="versionLabel" role="button" tabindex="0"
+              title="Tap for diagnostics">v4.10.14</span>
         <button class="header-action-btn" id="refreshBtn" title="Refresh current tab">
           <i class="ph ph-arrows-clockwise"></i>
         </button>
@@ -1131,7 +1132,11 @@
     </div>
   </dialog>
 
+  <section id="diagnosticsPanel" class="jt-diag-panel" hidden
+           aria-label="Extension diagnostics"></section>
+
   <script src="../utils/browser-polyfill.js"></script>
+  <script src="diagnostics.js"></script>
   <script src="../utils/defaults.js"></script>
   <script src="../utils/sanitizer.js"></script>
   <script src="../utils/tweak-validator.js"></script>

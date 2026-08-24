@@ -186,6 +186,54 @@ const InvoiceForecastFeature = (() => {
     return null;
   }
 
+  /* ---- Collapsed (narrow-viewport) tab strip --------------------------------
+     JobTread renders the reports tabs two completely different ways. Wide: the
+     horizontal scrolling bar findTabBar() looks for. Narrow: a hamburger
+     trigger showing the current tab name, which opens a dropdown list of
+     anchors. They share no markup — the collapsed form has no
+     `.flex.overflow-auto.border-b` anywhere — so findTabBar() returned null,
+     tryInject() bailed at its first guard, and the Invoice Forecast tab was
+     simply never created on a small screen. Not hidden, never built.
+
+     The trigger is identified by its hamburger icon path rather than by its
+     Tailwind classes: the classes encode active state (`border-t-jtOrange`
+     comes and goes) while the icon is what the control *is*. Matching host
+     SVG paths is the same technique auto-collapse-groups.js and
+     task-completion.js already use against JobTread's DOM. */
+  const HAMBURGER_PATH = 'M4 5h16M4 12h16M4 19h16';
+
+  function findCollapsedTrigger() {
+    for (const p of document.querySelectorAll(`svg path[d="${HAMBURGER_PATH}"]`)) {
+      const btn = p.closest('[role="button"]');
+      // `.grow` holds the current tab's name — it is what separates this
+      // control from any other hamburger JobTread may render on the page.
+      if (btn && btn.querySelector('.grow')) return btn;
+    }
+    return null;
+  }
+
+  /* The open dropdown. Found via its own anchors rather than its container
+     classes, which are generic (`shadow-lg`, `max-w-xs`) and shared with every
+     other popover in the app. Requiring two or more report links keeps a lone
+     link elsewhere on the page from being mistaken for the menu. Returns null
+     while the menu is closed, since JobTread removes it from the DOM. */
+  function findCollapsedMenu() {
+    for (const a of document.querySelectorAll('a[href^="/reports"].block.w-full')) {
+      const menu = a.parentElement;
+      if (menu && menu.querySelectorAll('a[href^="/reports"]').length >= 2) return menu;
+    }
+    return null;
+  }
+
+  /* The element to hang the panel's mount context off, whichever layout is
+     live. findMountContext() walks up from here looking for the report content
+     region, and that walk works from the trigger exactly as it does from the
+     wide bar — but NOT from the dropdown, which is a popover with no content
+     region after it. */
+  function findTabStrip() {
+    return findTabBar() || findCollapsedTrigger();
+  }
+
   // Find the wrapper that holds the tab bar plus the report content region that
   // follows it. Returns the wrapper AND every following sibling, so we can hide
   // the whole content region — not just the first block — when our panel mounts.
@@ -202,12 +250,53 @@ const InvoiceForecastFeature = (() => {
     return null;
   }
 
+  /* Build our row inside the collapsed dropdown, matching the shape of
+     JobTread's own entries: an anchor carrying the row classes wrapping a
+     `border-b p-3 font-bold` label. Placed before the trailing Close button so
+     it reads as one of the tabs rather than an afterthought below the list. */
+  function injectIntoCollapsedMenu(menu) {
+    const wrapper = document.createElement('div');
+    wrapper.id = TAB_ID;
+
+    const anchor = document.createElement('a');
+    anchor.href = '#';
+    anchor.dataset.jtIfTab = '1';
+    anchor.dataset.jtIfCollapsed = '1';
+    anchor.className = MENU_ITEM_BASE.join(' ');
+
+    const label = document.createElement('div');
+    label.className = 'border-b p-3 font-bold';
+    label.textContent = 'Invoice Forecast';
+    anchor.appendChild(label);
+
+    addListener(anchor, 'click', onTabClick);
+    wrapper.appendChild(anchor);
+
+    // The Close control is a role=button, unlike the anchors above it.
+    const closeBtn = menu.querySelector(':scope > [role="button"]');
+    if (closeBtn) menu.insertBefore(wrapper, closeBtn);
+    else menu.appendChild(wrapper);
+
+    menu.querySelectorAll('a[href^="/reports"]:not([data-jt-if-tab])').forEach(a => {
+      addListener(a, 'click', unmountPanel);
+    });
+
+    setTabActive(isMounted);
+  }
+
   function tryInject() {
     if (!isReportsPage()) { removeTab(); unmountPanel(); return; }
     if (document.getElementById(TAB_ID)) return;
 
     const tabBar = findTabBar();
-    if (!tabBar) return;
+    if (!tabBar) {
+      // Narrow layout: no wide bar exists. Inject into the dropdown instead,
+      // but only while it is open — JobTread removes it from the DOM on close,
+      // taking our row with it, and the observer re-injects on the next open.
+      const menu = findCollapsedMenu();
+      if (menu) injectIntoCollapsedMenu(menu);
+      return;
+    }
 
     const filler = tabBar.querySelector('.grow.min-w-0');
     const wrapper = document.createElement('div');
@@ -249,6 +338,16 @@ const InvoiceForecastFeature = (() => {
   const TAB_ACTIVE = ['border-t-2', 'border-jtOrange', 'bg-gray-50'];
   const TAB_INACTIVE = ['border-t', 'border-white'];
 
+  /* The dropdown marks its active row differently from the wide bar: the row
+     is `border-l-2` throughout and gains `border-jtOrange bg-gray-50` when
+     selected, where the wide bar swaps a top border. Applying the wide bar's
+     classes to a menu row would draw an orange line along the wrong edge. */
+  const MENU_ITEM_BASE = [
+    'block', 'w-full', 'relative', 'cursor-pointer', 'border-l-2',
+    'hover:bg-gray-50', 'active:bg-gray-100'
+  ];
+  const MENU_ACTIVE = ['border-jtOrange', 'bg-gray-50'];
+
   function onTabClick(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -264,12 +363,16 @@ const InvoiceForecastFeature = (() => {
   function setTabActive(active) {
     const a = getOurAnchor();
     if (!a) return;
+    // Which class set applies depends on which layout our tab landed in.
+    const [on, off] = a.dataset.jtIfCollapsed
+      ? [MENU_ACTIVE, []]
+      : [TAB_ACTIVE, TAB_INACTIVE];
     if (active) {
-      a.classList.remove(...TAB_INACTIVE);
-      a.classList.add(...TAB_ACTIVE);
+      if (off.length) a.classList.remove(...off);
+      a.classList.add(...on);
     } else {
-      a.classList.remove(...TAB_ACTIVE);
-      a.classList.add(...TAB_INACTIVE);
+      a.classList.remove(...on);
+      if (off.length) a.classList.add(...off);
     }
   }
 
@@ -278,17 +381,30 @@ const InvoiceForecastFeature = (() => {
   // so JT's router won't re-highlight unless it re-renders for another reason.
   function deactivateNativeTabs() {
     const bar = findTabBar();
-    if (!bar) return;
-    bar.querySelectorAll('a[href^="/reports"]:not([data-jt-if-tab])').forEach(a => {
-      a.classList.remove('border-t-2', 'border-jtOrange', 'bg-gray-50');
-      if (!a.classList.contains('border-t')) a.classList.add('border-t');
-      if (!a.classList.contains('border-white')) a.classList.add('border-white');
+    if (bar) {
+      bar.querySelectorAll('a[href^="/reports"]:not([data-jt-if-tab])').forEach(a => {
+        a.classList.remove('border-t-2', 'border-jtOrange', 'bg-gray-50');
+        if (!a.classList.contains('border-t')) a.classList.add('border-t');
+        if (!a.classList.contains('border-white')) a.classList.add('border-white');
+      });
+      return;
+    }
+    // Collapsed layout: only the orange left border and tint mark the active
+    // row, and there is no inactive class to restore in its place.
+    const menu = findCollapsedMenu();
+    if (!menu) return;
+    menu.querySelectorAll('a[href^="/reports"]:not([data-jt-if-tab])').forEach(a => {
+      a.classList.remove(...MENU_ACTIVE);
     });
   }
 
   function mountPanel() {
     if (isMounted) return;
-    const tabBar = findTabBar();
+    // Whichever strip is live. On a narrow viewport this is the hamburger
+    // trigger; anchoring to the dropdown instead would not work, since the
+    // menu is a popover with no report content region following it — and it
+    // is about to be closed anyway.
+    const tabBar = findTabStrip();
     if (!tabBar) return;
 
     const panel = document.createElement('div');

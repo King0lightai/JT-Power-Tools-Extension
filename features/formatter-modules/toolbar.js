@@ -1074,8 +1074,34 @@ const FormatterToolbar = (() => {
     });
 
     // Get available width (toolbar width minus overflow button width and padding)
-    const toolbarRect = toolbar.getBoundingClientRect();
-    const overflowBtnWidth = 28; // Approximate width of overflow button
+    //
+    // Clamped to the viewport, because the toolbar's own width is not a
+    // reliable measure of how much room the user actually has. An embedded
+    // toolbar is `width: 100%` of its container, and on the budget grid that
+    // container is a table cell in a horizontally scrolling table — so the
+    // toolbar reports 1040px on a 375px phone, concludes everything fits, and
+    // sends almost nothing to the overflow menu. The result is a toolbar three
+    // screens wide whose buttons can only be reached by scrolling the table
+    // sideways. Measuring the smaller of the two keeps the visible row
+    // genuinely reachable, and never changes the desktop case, where the
+    // toolbar is narrower than the viewport to begin with.
+    // The clamp only applies when the viewport reports a usable width. A zero
+    // or missing clientWidth (jsdom, a detached document, a display:none
+    // ancestor) would otherwise drive availableWidth negative and move every
+    // single item into the dropdown — the toolbar would come back empty rather
+    // than merely narrow, which is a far worse failure than not clamping.
+    const rawRect = toolbar.getBoundingClientRect();
+    const viewportWidth = document.documentElement.clientWidth;
+    const toolbarRect = {
+      width: viewportWidth > 0 ? Math.min(rawRect.width, viewportWidth) : rawRect.width
+    };
+    // Measured, not assumed: the overflow button is 28px wide with a mouse but
+    // 44px under `pointer: coarse` (see the touch-target block in
+    // styles/formatter-toolbar.css). A hardcoded 28 under-reserves by 16px on
+    // touch, which is exactly enough for the "..." button itself to be pushed
+    // past the toolbar's right edge. Falls back to 28 only if the button has
+    // not been laid out yet.
+    const overflowBtnWidth = overflowMenu.offsetWidth || 28;
     const padding = 16; // Toolbar padding
     const availableWidth = toolbarRect.width - overflowBtnWidth - padding;
 

@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-4.10.7-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-4.10.14-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://jtpowertools.com/changelog.html)
 [![Docs](https://img.shields.io/badge/docs-jtpowertools.com-purple)](https://jtpowertools.com)
 

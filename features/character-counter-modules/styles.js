@@ -212,6 +212,21 @@ const CharacterCounterStyles = `
       box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
     }
 
+    /* Touch targets. These render 45x36 / 46x36, under the 44px minimum a
+       thumb needs, so the hit area grows on touch devices only.
+
+       TRADE-OFF worth knowing: this class exists to match JobTread's own
+       upload/copy/gif buttons, and growing ours means we no longer match them
+       exactly on a phone or tablet. Accessibility was judged to win over
+       pixel parity with a host control that is itself undersized — but if
+       parity matters more, deleting this block is the whole revert. */
+    @media (pointer: coarse) {
+      .jt-native-btn {
+        min-width: 44px;
+        min-height: 44px;
+      }
+    }
+
     .jt-native-btn svg {
       display: inline-block;
       overflow: visible;
@@ -1028,7 +1043,7 @@ const CharacterCounterStyles = `
     #jt-dark-mode-styles ~ * .jt-template-created-by {
       color: #707070;
     }
-  `;
+  `;
 
 // Make available globally
 if (typeof window !== undefined) {

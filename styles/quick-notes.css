@@ -2117,3 +2117,33 @@ body.jt-dark-mode .jt-color-swatch.jt-color-none.selected,
 .jt-quick-notes-panel.custom-theme.sidebar-collapsed .jt-notes-sidebar-header {
   background: var(--jt-notes-bg, white);
 }
+
+/* ==========================================================================
+   Touch targets
+   ==========================================================================
+   Every control here is sized by padding alone, which lands them between 24px
+   and 38px tall — under the 44px minimum a thumb needs. The two icon buttons
+   (collapse, close) are the worst at 24x24, and they are the ones that dismiss
+   the panel, so missing them is the most annoying miss available.
+
+   Gated on `pointer: coarse`, not a width breakpoint: the constraint is the
+   input device, not the screen. Mouse rendering is unchanged.
+   ========================================================================== */
+@media (pointer: coarse) {
+  .jt-notes-collapse-btn,
+  .jt-notes-sidebar-close-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .jt-notes-action-button,
+  .jt-notes-new-button,
+  .jt-notes-tab {
+    min-height: 44px;
+  }
+
+  /* An input under 44px is a mis-tap that puts the caret somewhere else. */
+  .jt-notes-search-input {
+    min-height: 44px;
+  }
+}

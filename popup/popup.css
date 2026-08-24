@@ -2972,3 +2972,77 @@ body.dark-theme .fg-access--required {
   cursor: pointer;
 }
 .fg-tip-close:hover { color: var(--fg-strong); }
+
+/* ==========================================================================
+   Diagnostics panel
+   ==========================================================================
+   Reachable by tapping the version label. Exists because a browser can be
+   broken somewhere you cannot look — on iOS there is no console and no way to
+   attach an inspector, so this is the only channel for "what is actually
+   happening in there".
+   ========================================================================== */
+.jt-diag-panel {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.jt-diag-output {
+  margin: 0 0 8px;
+  padding: 8px;
+  max-height: 240px;
+  overflow: auto;
+  /* Wraps rather than scrolling sideways: on a phone a horizontal scroll
+     inside a popup is close to unusable, and these lines are meant to be read
+     and screenshotted. -webkit- prefix included for WebKit engines. */
+  white-space: pre-wrap;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.jt-diag-copy {
+  padding: 6px 12px;
+  min-height: 32px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #374151;
+}
+
+.jt-diag-copy:hover { background: #f3f4f6; }
+
+.version[role="button"] { cursor: pointer; }
+
+/* Neutral greys, never dark blues (see .claude/rules/code-style.md). */
+body.jt-dark-mode .jt-diag-panel,
+.dark .jt-diag-panel {
+  background: #252525;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-diag-output,
+.dark .jt-diag-output {
+  background: #2c2c2c;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-diag-copy,
+.dark .jt-diag-copy {
+  background: #333333;
+  border-color: #505050;
+  color: #b0b0b0;
+}
+
+body.jt-dark-mode .jt-diag-copy:hover,
+.dark .jt-diag-copy:hover { background: #3a3a3a; }

@@ -497,7 +497,8 @@ function syncLockIcons() {
 }
 
 async function checkLicenseStatus() {
-  const licenseData = await LicenseService.getLicenseData();
+  // No getLicenseData() here any more: entitlement is the resolved tier, which
+  // already folds in the Gumroad license. See the comment on the branch below.
   const tier = await LicenseService.getTier();
   const licenseStatus = document.getElementById('licenseStatus');
   const statusText = licenseStatus ? licenseStatus.querySelector('.status-text') : null;
@@ -543,8 +544,24 @@ async function checkLicenseStatus() {
   const paveCaptureFeature = document.getElementById('paveCaptureFeature');
   const paveCaptureCheckbox = document.getElementById('paveCapture');
 
-  if (licenseData && licenseData.valid && tier) {
-    // Valid license - show tier name
+  // Entitlement is the RESOLVED TIER, not a stored Gumroad license.
+  //
+  // This used to also require `licenseData.valid`, which meant a Gumroad
+  // license cached on the device was the only thing that could unlock a
+  // toggle. An account whose subscription lives in the portal — no Gumroad
+  // key, which is every account created since the portal launched, and any
+  // existing one signing in on a new browser — fell through to the else
+  // branch and had every paid feature locked, while the account panel right
+  // above it reported the subscription active and named the tier. The two
+  // checks disagreed because they were asking different questions.
+  //
+  // getTier() already resolves both sources (the higher of the portal account
+  // tier and the Gumroad license tier), so a non-null tier IS the entitlement
+  // — the extra condition could only ever subtract from it. This also matches
+  // what content.js enforces on the page (isFeatureAllowedByTier → getTier),
+  // so the popup no longer locks toggles the content script would have run.
+  if (tier) {
+    // Entitled - show tier name
     const tierDisplayName = LicenseService.getTierDisplayName(tier);
     if (licenseStatus) licenseStatus.className = 'license-status active';
     if (statusText) statusText.textContent = `✓ ${tierDisplayName} Active`;
@@ -1891,8 +1908,49 @@ function initFeatureHelpLinks() {
   });
 }
 
+/**
+ * Names of init steps that failed this session. Read by the diagnostics panel.
+ * @type {string[]}
+ */
+window.JTPopupInitFailures = [];
+
+/**
+ * Run one popup-initialisation step without letting it take down the rest.
+ *
+ * Startup used to be a bare chain of awaits, so the first step that threw
+ * ended the whole handler and everything below it silently never ran. In
+ * Orion, `chrome.storage.sync` is not implemented: one unguarded read threw,
+ * and because `initAccountUI()` is further down the chain, the popup opened
+ * with no login form, no feature list and no way to recover — from a single
+ * missing API on one browser.
+ *
+ * A step that fails now loses only itself. The failure is recorded rather than
+ * swallowed, so the diagnostics panel can name it instead of leaving someone
+ * to guess which part of the popup is missing and why.
+ *
+ * @param {string} name - step name, as it should appear in diagnostics
+ * @param {() => any} fn - the step
+ * @param {*} [fallback] - value to return if it throws
+ */
+async function safeInitStep(name, fn, fallback = undefined) {
+  try {
+    return await fn();
+  } catch (err) {
+    window.JTPopupInitFailures.push(name);
+    console.error(`JT Power Tools: popup init step "${name}" failed (continuing):`, err);
+    return fallback;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
+
+  // NOTE: the diagnostics trigger is NOT wired here. popup/diagnostics.js
+  // attaches it itself, from a script that loads before this one, because a
+  // listener registered inside this DOMContentLoaded chain is unreachable in
+  // the exact case the panel exists to diagnose — one unsupported API aborting
+  // the chain before this line is ever reached. Adding a second listener here
+  // would also toggle the panel twice per tap, which looks like a dead button.
 
   // Keep the popup version label in sync with the manifest so it never drifts.
   const versionEl = document.querySelector('.version');
@@ -1914,7 +1972,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Initialize popup theme first (before any other UI updates)
-  await initPopupTheme();
+  await safeInitStep('theme', initPopupTheme);
 
   // Setup theme toggle button
   document.getElementById('popupThemeToggle').addEventListener('click', togglePopupTheme);
@@ -1923,7 +1981,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTabNavigation();
 
   // Check license status first (just UI, don't modify settings)
-  const licenseStatus = await checkLicenseStatus();
+  // Falls back to a free-tier shape: a popup showing fewer features beats
+  // one showing none because tier resolution threw.
+  const licenseStatus = await safeInitStep('license', checkLicenseStatus, { hasLicense: false, tier: null });
   const { hasLicense, tier } = licenseStatus;
 
   // Re-check the plan with Gumroad in the background. Opening the popup is the
@@ -1944,7 +2004,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Check API status
-  await checkApiStatus();
+  await safeInitStep('api-status', checkApiStatus);
 
   // Reorganize the Features tab into categories from the single source of
   // truth BEFORE loading settings / wiring categories (it reparents existing
@@ -1952,10 +2012,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderFeatureCategories();
 
   // Load current settings and update UI
-  await loadSettings();
+  await safeInitStep('settings', loadSettings);
 
   // Initialize master toggle (after settings are loaded)
-  await initMasterToggle();
+  await safeInitStep('master-toggle', initMasterToggle);
 
   // Initialize collapsible categories
   initializeCategories();
@@ -1981,7 +2041,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // If no license, ensure licensed features stay disabled
   // Merge with defaults first so FREE features (formatter, darkMode, etc.)
   // are always preserved even if stored settings are incomplete
-  const currentSettingsResult = await chrome.storage.sync.get(['jtToolsSettings']);
+  // The exact line that blanked the popup in Orion: unguarded, with every
+  // remaining step — the account UI included — sitting below it.
+  const currentSettingsResult = await safeInitStep(
+    'read-settings', () => chrome.storage.sync.get(['jtToolsSettings']), {});
   const mergedCurrentSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.mergeWithDefaults)
     ? JTDefaults.mergeWithDefaults(currentSettingsResult.jtToolsSettings)
     : { ...defaultSettings, ...(currentSettingsResult.jtToolsSettings || {}) };
@@ -2016,7 +2079,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (needsUpdate) {
-      await chrome.storage.sync.set({ jtToolsSettings: updatedSettings });
+      await safeInitStep('write-settings',
+        () => chrome.storage.sync.set({ jtToolsSettings: updatedSettings }));
     }
   }
 
@@ -2039,7 +2103,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Initialize account UI
-  await initAccountUI();
+  // Last, and the one that matters most: without this there is no login
+  // form, so nothing above may be allowed to prevent it running.
+  await safeInitStep('account-ui', initAccountUI);
 
   // Listen for checkbox changes (skip master toggle — handled separately)
   const checkboxes = document.querySelectorAll('input[type="checkbox"]:not(#masterToggle)');
@@ -3420,10 +3486,29 @@ async function updateAccountUI() {
     const user = AccountService.getCurrentUser();
     document.getElementById('accountEmail').textContent = user?.email || 'Unknown';
     document.getElementById('accountOrg').textContent = user?.orgName || '';
-    // Show the resolved effective tier (higher of account + license) so the
-    // chip matches the feature gating everywhere else. Fall back to the raw
-    // account tier only if resolution somehow returns null.
-    document.getElementById('accountTier').textContent = `${LicenseService.getTierDisplayName((await LicenseService.getTier()) || user?.tier)} Tier`;
+    // Show the resolved effective tier — the SAME value that gates every
+    // feature, with no fallback.
+    //
+    // This used to read `getTier() || user?.tier`, and that fallback hid a
+    // real failure: when resolution returned null the chip still printed the
+    // tier from the login response, so the popup reported "Power User" while
+    // the gate denied every paid feature. A UI that reports success the gate
+    // does not agree with is how that stayed invisible. Null now renders as
+    // Free, which is what null actually means to the gate.
+    const effectiveTier = await LicenseService.getTier();
+    document.getElementById('accountTier').textContent = effectiveTier
+      ? `${LicenseService.getTierDisplayName(effectiveTier)} Tier`
+      : 'Free Tier';
+
+    // Divergence is a bug, not a state — the account says one thing and the
+    // gate does another. Say so where whoever is debugging will see it.
+    if (user?.tier && user.tier !== effectiveTier) {
+      console.warn(
+        `Account tier "${user.tier}" does not match the resolved gate tier ` +
+        `"${effectiveTier}". Paid features follow the gate, so they are locked ` +
+        'to the lower value. Check chrome.storage.local jtAccountUserData / jtToolsLicense.'
+      );
+    }
 
     // Update license status indicator
     const licenseStatusEl = document.getElementById('accountLicenseStatus');

@@ -328,3 +328,118 @@
     globalThis.__JT_IS_FIREFOX = true;
   }
 })();
+
+/* ===========================================================================
+   chrome.storage.sync fallback
+   ===========================================================================
+   Some browsers that run WebExtensions on their own engine implement
+   chrome.storage.local but not chrome.storage.sync. Orion is one: it runs
+   Chrome and Firefox extensions on WebKit and supports "a growing number of
+   Web Extensions APIs", sync not yet among them.
+
+   Every setting in this extension lives in chrome.storage.sync, across 86 call
+   sites. When sync is missing the failure is not graceful: loadSettings()
+   catches its own error and shows "Error loading settings", and the very next
+   unguarded `await chrome.storage.sync.get(...)` in the popup's init chain
+   throws uncaught — aborting the rest of initialization, so the account panel
+   never renders and the login form and feature list simply are not there.
+
+   This aliases sync onto local when sync cannot be used. Settings then persist
+   per-device instead of following the user between browsers, which is a real
+   downgrade but a far smaller one than an extension that will not open.
+
+   Written as a wrapper rather than a startup probe because sync can fail three
+   different ways — absent entirely, present but throwing synchronously, or
+   present and returning a rejected promise — and a probe would have to be
+   async, which is too late: popup.js reads storage during its own module
+   evaluation. Each call falls back on its own, so an engine that half-works is
+   handled too.
+
+   Supports BOTH calling conventions, because the codebase uses both:
+   utils/storage-wrapper.js passes callbacks, popup.js awaits the promise.
+   =========================================================================== */
+(function () {
+  'use strict';
+
+  if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) return;
+
+  const local = chrome.storage.local;
+  // Reading the property can itself throw on an engine that defines
+  // storage.sync as a throwing getter — and an unguarded read here would take
+  // down the very shim meant to survive that, leaving every caller broken.
+  let sync;
+  try {
+    sync = chrome.storage.sync;
+  } catch (err) {
+    sync = undefined;
+  }
+  const METHODS = ['get', 'set', 'remove', 'clear', 'getBytesInUse'];
+
+  let warned = false;
+  function warnOnce(err) {
+    if (warned) return;
+    warned = true;
+    console.warn(
+      'JT Power Tools: chrome.storage.sync is unavailable in this browser — ' +
+      'falling back to chrome.storage.local. Settings will persist on this ' +
+      'device but will not sync between browsers.',
+      err && err.message ? err.message : err
+    );
+  }
+
+  function callLocal(method, args) {
+    if (typeof local[method] !== 'function') {
+      return Promise.reject(new Error(`chrome.storage.local.${method} is unavailable`));
+    }
+    return Promise.resolve(local[method](...args));
+  }
+
+  function makeFallback(method) {
+    return function (...args) {
+      // Trailing function argument = callback style. Strip it so the
+      // underlying call returns a promise we can catch on.
+      const callback = typeof args[args.length - 1] === 'function' ? args.pop() : null;
+
+      let attempt;
+      try {
+        attempt = (sync && typeof sync[method] === 'function')
+          ? Promise.resolve(sync[method](...args))
+          : Promise.reject(new Error('chrome.storage.sync is unavailable'));
+      } catch (err) {
+        attempt = Promise.reject(err); // threw synchronously
+      }
+
+      const settled = attempt.catch((err) => {
+        warnOnce(err);
+        return callLocal(method, args);
+      });
+
+      if (!callback) return settled;
+      // Callback style never rejects — mirror the chrome.* contract, where a
+      // failure surfaces via runtime.lastError and the callback still fires.
+      settled.then(
+        (result) => callback(result),
+        () => callback(undefined)
+      );
+      return undefined;
+    };
+  }
+
+  const shim = {};
+  for (const method of METHODS) shim[method] = makeFallback(method);
+  // onChanged must keep working; fall back to local's when sync has none.
+  shim.onChanged = (sync && sync.onChanged) || local.onChanged;
+  // Quota constants some callers read.
+  shim.QUOTA_BYTES = (sync && sync.QUOTA_BYTES) || local.QUOTA_BYTES;
+  shim.QUOTA_BYTES_PER_ITEM = (sync && sync.QUOTA_BYTES_PER_ITEM) || 8192;
+
+  try {
+    Object.defineProperty(chrome.storage, 'sync', {
+      value: shim,
+      writable: true,
+      configurable: true
+    });
+  } catch (err) {
+    console.error('JT Power Tools: could not install the storage.sync fallback', err);
+  }
+})();

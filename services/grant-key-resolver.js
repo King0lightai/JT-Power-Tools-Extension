@@ -82,7 +82,12 @@ const GrantKeyResolver = (() => {
           // so the toast points the user to the right next step.
           const needsSignIn = !!(response && response.error &&
             /not authenticated|sign in/i.test(response.error));
-          showMissingKeyToast(orgName, needsSignIn ? 'signin' : 'no-key');
+          // Distinguish the three silent shapes of "no key": the worker said
+          // why, the worker said nothing useful, or the worker never answered.
+          const detail = response
+            ? (response.error || 'worker returned no key and gave no reason')
+            : 'no reply from the extension service worker';
+          showMissingKeyToast(orgName, needsSignIn ? 'signin' : 'no-key', detail);
         }
         return null;
       } catch (err) {
@@ -137,7 +142,7 @@ const GrantKeyResolver = (() => {
   const MISSING_KEY_TOAST_GUARD_MS = 8000;
   let missingKeyToastVisible = false;
 
-  function showMissingKeyToast(orgName, reason = 'no-key') {
+  function showMissingKeyToast(orgName, reason = 'no-key', detail = '') {
     if (missingKeyToastVisible) return;
     missingKeyToastVisible = true;
     setTimeout(() => { missingKeyToastVisible = false; }, MISSING_KEY_TOAST_GUARD_MS);
@@ -149,9 +154,16 @@ const GrantKeyResolver = (() => {
     const title = isSignIn
       ? 'Sign in to use API features'
       : `No API key for "${orgName}"`;
+    // "no-key" is a catch-all: the org genuinely has no key, the server call
+    // failed, the worker returned some other error, or it never replied at
+    // all. Those need different fixes and the message named none of them —
+    // which sent a real Orion investigation down the wrong path for days,
+    // because the only visible symptom was advice to add a key that already
+    // existed. Carry the underlying reason so the toast diagnoses itself.
+    const reasonSuffix = (!isSignIn && detail) ? ` (${String(detail).slice(0, 120)})` : '';
     const body = isSignIn
       ? `Open the JT Power Tools extension and sign in to your account to enable API features for "${orgName}".`
-      : 'Add a grant key for this org in the portal to enable API features.';
+      : `Add a grant key for this org in the portal to enable API features.${reasonSuffix}`;
 
     // Persistent + dismissible: the user needs time to reach for the link,
     // and a way to clear the toast themselves once they're done with it.

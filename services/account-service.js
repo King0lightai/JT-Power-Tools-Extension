@@ -436,6 +436,24 @@ const AccountService = (() => {
     currentUser = data.user;
     tokenExpiry = Date.now() + (data.expiresIn * 1000);
 
+    // Subscription validity arrives as `license.valid` at the TOP LEVEL of the
+    // login payload — it is not on the user object. The popup's status chip
+    // reads `user.licenseStatus`, a field the server has never sent, so that
+    // half of its check was dead: the chip could only ever go active off a
+    // stored Gumroad license, and an account whose subscription lives purely
+    // in the portal read "Inactive" no matter how valid it was. Carry the
+    // authoritative value onto the record we persist.
+    //
+    // Absent on the register payload, which has no license block — a brand-new
+    // account has nothing active to report, and leaving the field undefined
+    // keeps the chip falling back to the stored-license check as before.
+    if (data.license && typeof data.license.valid === 'boolean') {
+      currentUser = {
+        ...currentUser,
+        licenseStatus: data.license.valid ? 'active' : 'inactive'
+      };
+    }
+
     await chrome.storage.local.set({
       [STORAGE_KEYS.ACCESS_TOKEN]: accessToken,
       [STORAGE_KEYS.REFRESH_TOKEN]: refreshToken,

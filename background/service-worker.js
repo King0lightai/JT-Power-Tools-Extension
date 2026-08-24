@@ -3,8 +3,24 @@
  * Handles settings persistence, syncing, and tab communication
  */
 
+// Note: Service workers use importScripts instead of ES modules.
+
+// The browser polyfill must load FIRST and in its own try, because everything
+// below depends on what it fixes. It installs the chrome.storage.sync ->
+// chrome.storage.local fallback, and this worker reads and writes sync in six
+// places — including the migration that moves a raw JobTread grant key out of
+// it. On a browser that does not implement storage.sync (Orion), those calls
+// throw and the worker's settings and grant-key handling fail, which is what
+// left API/grant-key features asking the user to sign in when they already
+// had. Content scripts and the popup already load this file; the worker was
+// the one context still missing it.
+try {
+  importScripts('../utils/browser-polyfill.js');
+} catch (e) {
+  console.warn('JT Power Tools: Could not import browser-polyfill.js', e);
+}
+
 // Import shared defaults
-// Note: Service workers use importScripts instead of ES modules
 try {
   importScripts('../utils/defaults.js');
 } catch (e) {
@@ -257,8 +273,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Security: this returns a full org API credential — enforce the same
         // sender check its sibling handlers use before doing any work.
         if (!isAllowedApiSender(sender)) {
+          const shape = describeSender(sender);
           console.warn('JT-Tools: Rejected grant-key request from untrusted sender:', sender);
-          sendResponse({ success: false, error: 'Untrusted sender' });
+          // Carry the shape back so the popup's diagnostics panel can show why.
+          // Which of these is false is the whole answer on an engine that
+          // populates `sender` differently, and there is no console on a phone.
+          sendResponse({ success: false, error: 'Untrusted sender', senderShape: shape });
           return false;
         }
         handleFetchExtensionGrantKey(message.orgName)
@@ -369,7 +389,57 @@ function isAllowedApiSender(sender) {
     return true;
   }
 
+  // Last resort: this engine gave us nothing to identify the sender with.
+  //
+  // chrome.runtime.onMessage only ever delivers messages from THIS extension's
+  // own scripts. Neither manifest declares `externally_connectable` and there
+  // is no onMessageExternal listener anywhere, so a web page cannot reach this
+  // handler at all — and our content scripts only run on app.jobtread.com per
+  // the manifest match patterns. A sender we cannot identify is therefore
+  // still, by construction, one of our own scripts on a JobTread page.
+  //
+  // The branch above already accommodates WebKit withholding sender.tab.url;
+  // an engine that also omits sender.id fails every check and gets denied,
+  // which costs every API-backed feature — the user signs in successfully and
+  // is then told to sign in. Allowing here grants nothing the two checks above
+  // do not already grant.
+  //
+  // This reasoning depends entirely on externally_connectable staying absent.
+  // tests/features/service-worker-sender-trust.test.js fails if it is ever
+  // added to either manifest — read that before loosening anything here.
+  if (!sender?.id && !sender?.tab?.url) {
+    console.warn(
+      'JT-Tools: message sender carries neither id nor tab.url — this engine ' +
+      'withholds both. Treating it as same-extension, which is what onMessage ' +
+      'guarantees while externally_connectable is unset.'
+    );
+    return true;
+  }
+
   return false;
+}
+
+/**
+ * Describe a rejected sender, without leaking anything sensitive.
+ *
+ * A bare "Untrusted sender" is unactionable on a phone: there is no console to
+ * inspect the sender in, and the shape of that object is exactly what varies
+ * between engines — WebKit already withholds sender.tab.url (see the branch
+ * above), and an engine that also omits sender.id would fail every check here
+ * with no way to tell from the outside. Booleans and a hostname only.
+ */
+function describeSender(sender) {
+  let hostname = null;
+  if (sender?.tab?.url) {
+    try { hostname = new URL(sender.tab.url).hostname; } catch (e) { hostname = '(unparseable)'; }
+  }
+  return {
+    hasId: !!sender?.id,
+    idMatches: sender?.id === chrome.runtime.id,
+    hasTab: !!sender?.tab,
+    hasTabUrl: !!sender?.tab?.url,
+    hostname
+  };
 }
 
 /**

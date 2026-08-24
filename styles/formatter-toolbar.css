@@ -1,4 +1,11 @@
 .jt-formatter-toolbar {
+  /* The embedded variant is `width: 100%` with horizontal padding and a
+     border. Under the browser default content-box those add to the 100%, so
+     the toolbar rendered exactly 6px wider than its container at EVERY
+     viewport (381 on a 375px phone, 1030 on a 1024px tablet), scrolling the
+     whole document sideways and clipping its own right edge. Nothing else in
+     this file sets box-sizing, so it has to be stated here. */
+  box-sizing: border-box;
   position: absolute;
   z-index: 999999;
   background: #ffffff;
@@ -2360,4 +2367,60 @@ body.jt-dark-mode .jt-ai-error,
    (fail visible, never fail hidden). */
 .jt-ai-composer-hidden {
   display: none !important;
+}
+
+/* ==========================================================================
+   Touch targets
+   ==========================================================================
+   Apple's HIG puts the minimum tap target at 44x44 CSS px; Material says 48.
+   The toolbar's controls are 22x22 (and the overflow button 32x22), which is
+   half that — fine for a mouse, too small for a thumb on a phone or tablet.
+
+   Gated on `pointer: coarse` rather than a width breakpoint on purpose. The
+   constraint is the input device, not the screen: a 1024px tablet needs big
+   targets and a 900px split-screen desktop does not. A width query would get
+   both backwards. Desktop rendering is untouched.
+
+   Growing the items means fewer fit across a narrow bar — that is handled,
+   not ignored: recalculateOverflow() measures offsetWidth and moves whatever
+   no longer fits into the overflow dropdown, so a phone shows fewer buttons
+   plus a fuller "..." menu rather than a squeezed row.
+   ========================================================================== */
+@media (pointer: coarse) {
+  .jt-responsive-toolbar .jt-toolbar-item {
+    min-width: 32px;
+    height: 32px;
+    padding: 0.25rem 0.375rem;
+  }
+
+  /* Icons stay visually small — only the hit area grows. A 14px glyph in a
+     32px button reads as deliberate; a 24px glyph reads as a zoomed page. */
+  .jt-responsive-toolbar .jt-toolbar-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .jt-responsive-toolbar .jt-toolbar-item strong,
+  .jt-responsive-toolbar .jt-toolbar-item em,
+  .jt-responsive-toolbar .jt-toolbar-item u,
+  .jt-responsive-toolbar .jt-toolbar-item s {
+    font-size: 13px;
+  }
+
+  /* Scoped to the toolbar to outrank `.jt-formatter-toolbar button`
+     (specificity 0,1,1), which sets min-width: 32px and otherwise wins
+     against a bare `.jt-overflow-btn` (0,1,0) — the height applied and the
+     width silently did not, leaving a 32x44 button. */
+  .jt-formatter-toolbar .jt-overflow-btn {
+    min-width: 32px;
+    height: 32px;
+  }
+
+  /* Dropdown rows are full-width already; only their height was short. They
+     stay at the roomier size: the dropdown is a vertical list with space to
+     spare, so the density argument that keeps the toolbar row at 32px does
+     not apply to it. */
+  .jt-overflow-dropdown .jt-toolbar-item {
+    min-height: 44px;
+  }
 }

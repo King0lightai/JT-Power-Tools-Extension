@@ -201,6 +201,12 @@ const LicenseService = (() => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Identifies extension traffic to the proxy's origin check. Browsers
+          // that run WebExtensions on their own engine (Orion) send an Origin
+          // the proxy cannot recognise, and without this every license call
+          // came back 403 — the account signed in fine and then showed an
+          // inactive subscription with nothing unlocked.
+          'X-JT-Client': 'extension',
         },
         body: JSON.stringify({
           licenseKey: licenseKey,
@@ -263,6 +269,12 @@ const LicenseService = (() => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Identifies extension traffic to the proxy's origin check. Browsers
+          // that run WebExtensions on their own engine (Orion) send an Origin
+          // the proxy cannot recognise, and without this every license call
+          // came back 403 — the account signed in fine and then showed an
+          // inactive subscription with nothing unlocked.
+          'X-JT-Client': 'extension',
         },
         body: JSON.stringify({
           licenseKey: licenseData.key,

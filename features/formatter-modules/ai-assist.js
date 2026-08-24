@@ -38,6 +38,9 @@ const FormatterAiAssist = (() => {
     BOT_PATH_PREFIX: 'M12 8V4H8',
     COMPOSER_BODY: 'textarea[placeholder="Message"]',
     CLICKABLE: '[class*="cursor-pointer"], [role="button"]',
+    // Lucide `menu`. JobTread collapses the job action bar behind this glyph
+    // on a narrow viewport, taking the "Message" trigger with it.
+    HAMBURGER_PATH: 'M4 5h16M4 12h16M4 19h16',
     TRIGGER_TEXT: 'Message',
     CLOSE_TEXT: 'Close',
     USE_THIS_TEXT: 'Use This'
@@ -216,14 +219,71 @@ const FormatterAiAssist = (() => {
      2. The trigger lookup ("Message") is a generic label with nothing to
         scope it to before the composer exists. Rather than click the first
         match blindly, refuse on ambiguity too. */
+  function messageTriggers() {
+    return [...document.querySelectorAll(JT.CLICKABLE)]
+      .filter((el) => (el.textContent || '').trim() === JT.TRIGGER_TEXT);
+  }
+
+  /* On a narrow viewport JobTread collapses the job's action bar into a
+     hamburger, and "Message" moves inside the dropdown it opens. That
+     dropdown is not in the DOM until the hamburger is clicked, so the
+     document-wide lookup above finds nothing and the run dies at
+     `no-composer-trigger` before it starts — the AI button simply did not
+     work on a phone or a narrow window.
+
+     Identified by icon path, not by class: the classes here are generic
+     Tailwind utilities shared with every other control in the bar, while the
+     icon is what the button IS. Two things are deliberately excluded:
+
+     - Buttons with a `.grow` text child. The collapsed REPORTS tab strip uses
+       the same hamburger glyph but names the current tab inside `.grow`;
+       clicking that would navigate away mid-run.
+     - Anything inside `.invisible`. JobTread renders a ghost copy of the bar
+       to measure it, so the hamburger exists twice and one of them cannot be
+       clicked by a user at all. */
+  function findCollapsedActionsTrigger() {
+    for (const p of document.querySelectorAll(`svg path[d="${JT.HAMBURGER_PATH}"]`)) {
+      const btn = p.closest('[role="button"]');
+      if (!btn) continue;
+      if (btn.querySelector('.grow')) continue;
+      if (btn.closest('.invisible')) continue;
+      if (!btn.offsetParent && getComputedStyle(btn).position !== 'fixed') continue;
+      return btn;
+    }
+    return null;
+  }
+
   async function openComposer() {
     const preexisting = document.querySelector(JT.COMPOSER_BODY);
     if (preexisting) throw new Error('composer-already-open');
 
-    const candidates = [...document.querySelectorAll(JT.CLICKABLE)]
-      .filter((el) => (el.textContent || '').trim() === JT.TRIGGER_TEXT);
+    let candidates = messageTriggers();
+    // Track it so a failed run can put the menu back the way it was found.
+    let openedActionsMenu = null;
+
+    if (candidates.length === 0) {
+      const burger = findCollapsedActionsTrigger();
+      if (burger) {
+        driveClick(burger);
+        openedActionsMenu = burger;
+        try {
+          await waitFor(() => messageTriggers().length > 0, { timeout: 2000 });
+        } catch (err) {
+          // The menu opened but holds no Message entry — not the bar we
+          // wanted. Close it again rather than leaving a dropdown hanging
+          // open over the page the user was reading.
+          driveClick(burger);
+          throw new Error('no-composer-trigger');
+        }
+        candidates = messageTriggers();
+      }
+    }
+
     if (candidates.length === 0) throw new Error('no-composer-trigger');
-    if (candidates.length > 1) throw new Error('ambiguous-composer-trigger');
+    if (candidates.length > 1) {
+      if (openedActionsMenu) driveClick(openedActionsMenu);
+      throw new Error('ambiguous-composer-trigger');
+    }
 
     driveClick(candidates[0]);
     const body = await waitFor(() => document.querySelector(JT.COMPOSER_BODY), { timeout: 5000 });
