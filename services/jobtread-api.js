@@ -95,6 +95,14 @@ const JobTreadAPI = (() => {
     CUSTOM_FIELDS_CACHE: 'jtToolsCustomFieldsCacheV2',
     CUSTOM_FIELDS_TIMESTAMP: 'jtToolsCustomFieldsTimestampV2',
     JOBS_TIMESTAMP: 'jtToolsJobsTimestamp',
+    // Which org the cached custom fields / locations belong to. The caches
+    // share one global key each, and the jt-org-changed handler only clears
+    // them on a REAL switch (previousOrg non-null) — so opening a second org
+    // in a NEW TAB is a first detection and inherited the other org's fields
+    // for up to an hour: Editable Tables silently read-only, Custom Field
+    // Filter showing fields that don't exist there. Stamping the org makes a
+    // mismatch a cache miss instead.
+    CACHE_ORG: 'jtToolsCacheOrgName',
     // Retired keys, removed on clearCache so they don't linger in storage.
     LEGACY_CUSTOM_FIELDS_CACHE: 'jtToolsCustomFieldsCache',
     LEGACY_CUSTOM_FIELDS_TIMESTAMP: 'jtToolsCustomFieldsTimestamp'
@@ -146,44 +154,87 @@ const JobTreadAPI = (() => {
   }
 
   // Cache for org ID discovered from grant key (avoids repeated Pave calls)
-  let discoveredOrgId = null;
+  // Discovered org ids, keyed by the ACTIVE ORG NAME. A single slot meant a
+  // switch served the previous org's id until something cleared it.
+  const discoveredOrgIds = {};
 
   /**
-   * Get the organization ID.
-   * When multi-org resolver is active, discovers org ID from the grant key
-   * via a lightweight currentGrant query (cached per session).
-   * Falls back to legacy storage for single-org setups.
+   * The JobTread organization ID for the org the user is currently looking at.
+   *
+   * Resolution order — the point of the order is that a WRONG id is worse than
+   * no id, because callers write with it:
+   *   1. the server's per-org grant-key row (authoritative)
+   *   2. the grant key's memberships, matched to the active org BY NAME
+   *   3. the legacy install-wide value, only when no org is detected at all
+   *
    * @returns {Promise<string|null>}
    */
   async function getOrgId() {
-    try {
-      // Legacy storage check first (fast path)
-      const result = await chrome.storage.sync.get(STORAGE_KEYS.ORG_ID);
-      if (result[STORAGE_KEYS.ORG_ID]) return result[STORAGE_KEYS.ORG_ID];
-    } catch (error) {
-      console.error('JobTreadAPI: Error getting org ID:', error);
+    const activeOrg = window.OrgDetector?.getActiveOrg?.() || null;
+
+    // 1. The server's answer for the org we are actually in. Authoritative:
+    //    it comes from the grant-key row an admin configured in the portal.
+    if (activeOrg && window.GrantKeyResolver?.getOrgContext) {
+      try {
+        const ctx = await window.GrantKeyResolver.getOrgContext();
+        if (ctx?.orgId && ctx.orgName === activeOrg) return ctx.orgId;
+      } catch (e) {
+        console.warn('JobTreadAPI: org context lookup failed:', e.message);
+      }
     }
 
-    // Multi-org: discover from grant key
-    if (window.GrantKeyResolver && window.OrgDetector?.getActiveOrg()) {
-      if (discoveredOrgId) return discoveredOrgId;
+    // 2. Discover from the grant key, matching the ACTIVE org by name.
+    //    This used to take memberships[0], which for a user who belongs to two
+    //    orgs is an arbitrary one — so every feature that needs an org id
+    //    targeted the wrong company on the second org's pages. Memoised per
+    //    org, not globally, so switching back and forth doesn't reshuffle it.
+    if (activeOrg) {
+      if (discoveredOrgIds[activeOrg]) return discoveredOrgIds[activeOrg];
       try {
         const data = await paveQuery({
           currentGrant: {
             user: {
               memberships: {
+                // Pave pages at 10 by default; the org we want may be past it.
+                $: { size: 100 },
                 nodes: {
-                  organization: { id: {} }
+                  organization: { id: {}, name: {} }
                 }
               }
             }
           }
         });
-        discoveredOrgId = data?.currentGrant?.user?.memberships?.nodes?.[0]?.organization?.id || null;
-        return discoveredOrgId;
+        const nodes = data?.currentGrant?.user?.memberships?.nodes || [];
+        const match = nodes.find((n) => n?.organization?.name === activeOrg);
+        if (match?.organization?.id) {
+          discoveredOrgIds[activeOrg] = match.organization.id;
+          return match.organization.id;
+        }
+        // The key reaches orgs, but none is named like the page we are on.
+        console.warn(
+          'JobTreadAPI: grant key reaches no org named "' + activeOrg + '"' +
+          ' (reaches: ' + nodes.map((n) => n?.organization?.name).filter(Boolean).join(', ') + ')'
+        );
       } catch (e) {
         console.error('JobTreadAPI: Failed to discover org ID from grant key:', e);
       }
+      // We KNOW which org the user is looking at and could not map it to an id.
+      // Stop here. The legacy value below is a different org's id as often as
+      // not, and handing it back is how a feature ends up reading — or worse,
+      // writing — the wrong company. No id is a feature that stays off.
+      return null;
+    }
+
+    // 3. The legacy install-wide value, and only when the active org is
+    //    unknown. It lives in chrome.storage.sync, so it follows the user
+    //    between devices, and any successful connection test overwrites it
+    //    (see setOrgId) — which makes it the worst answer for a two-org user
+    //    and the only answer for a pre-portal single-org install.
+    try {
+      const result = await chrome.storage.sync.get(STORAGE_KEYS.ORG_ID);
+      if (result[STORAGE_KEYS.ORG_ID]) return result[STORAGE_KEYS.ORG_ID];
+    } catch (error) {
+      console.error('JobTreadAPI: Error getting org ID:', error);
     }
 
     return null;
@@ -304,6 +355,8 @@ const JobTreadAPI = (() => {
         user: {
           id: {},
           memberships: {
+            // Pave pages at 10 without this; the org in question may be past it.
+            $: { size: 100 },
             nodes: {
               organization: {
                 id: {},
@@ -323,7 +376,15 @@ const JobTreadAPI = (() => {
     if (DEBUG) console.log('JobTreadAPI: memberships found:', memberships.length);
 
     if (memberships.length > 0) {
-      const org = memberships[0].organization;
+      // Prefer the org whose name matches the page we are on. testConnection
+      // persists whatever this returns as the install-wide org id, so on a
+      // two-org account picking memberships[0] wrote the wrong org into
+      // chrome.storage.sync — where it followed the user to every device.
+      const activeOrg = window.OrgDetector?.getActiveOrg?.() || null;
+      const matched = activeOrg
+        ? memberships.find((m) => m?.organization?.name === activeOrg)
+        : null;
+      const org = (matched || memberships[0]).organization;
       return {
         id: org.id,
         name: org.name
@@ -484,6 +545,40 @@ const JobTreadAPI = (() => {
   }
 
   /**
+   * True when the org-scoped caches belong to the org we are looking at now.
+   *
+   * Compares the ORG NAME: it is what OrgDetector gives us synchronously, so
+   * the check costs nothing and can't itself trigger the org resolution it is
+   * guarding. An unknown active org is treated as "can't confirm" and the
+   * cache is used — that is the pre-existing single-org behaviour, and
+   * refusing every cache on a page where detection failed would make the
+   * extension noticeably slower for everyone.
+   */
+  async function cacheOrgIsCurrent() {
+    const activeOrg = window.OrgDetector?.getActiveOrg?.() || null;
+    if (!activeOrg) return true;
+    try {
+      const stored = await chrome.storage.local.get(STORAGE_KEYS.CACHE_ORG);
+      const stamped = stored[STORAGE_KEYS.CACHE_ORG];
+      // No stamp at all: a cache written before this existed. Treat as a miss
+      // once, so it gets rewritten with a stamp rather than trusted forever.
+      if (!stamped) return false;
+      return stamped === activeOrg;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Record which org the caches now hold. Called on every cache write. */
+  async function stampCacheOrg() {
+    const activeOrg = window.OrgDetector?.getActiveOrg?.() || null;
+    if (!activeOrg) return;
+    try {
+      await chrome.storage.local.set({ [STORAGE_KEYS.CACHE_ORG]: activeOrg });
+    } catch { /* a missing stamp only costs a refetch */ }
+  }
+
+  /**
    * Fetch custom field definitions for jobs
    * @param {string} orgId - Organization ID (optional, will use stored if not provided)
    * @returns {Promise<Array>} List of custom field definitions
@@ -498,7 +593,8 @@ const JobTreadAPI = (() => {
 
       const cacheAge = Date.now() - (cached[STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP] || 0);
 
-      if (cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE] && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
+      if (cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE] && cacheAge < CUSTOM_FIELDS_CACHE_DURATION
+          && await cacheOrgIsCurrent()) {
         console.log('JobTreadAPI: Using cached custom fields');
         return cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE];
       }
@@ -525,6 +621,7 @@ const JobTreadAPI = (() => {
         [STORAGE_KEYS.CUSTOM_FIELDS_CACHE]: jobDefinitions,
         [STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP]: Date.now()
       });
+      await stampCacheOrg();
 
       return jobDefinitions;
     } catch (error) {
@@ -546,7 +643,8 @@ const JobTreadAPI = (() => {
         'jtToolsLocationFieldsTimestampV2'
       ]);
       const cacheAge = Date.now() - (cached.jtToolsLocationFieldsTimestampV2 || 0);
-      if (cached.jtToolsLocationFieldsCacheV2 && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
+      if (cached.jtToolsLocationFieldsCacheV2 && cacheAge < CUSTOM_FIELDS_CACHE_DURATION
+          && await cacheOrgIsCurrent()) {
         console.log('JobTreadAPI: Using cached location custom fields');
         return cached.jtToolsLocationFieldsCacheV2;
       }
@@ -565,6 +663,7 @@ const JobTreadAPI = (() => {
         jtToolsLocationFieldsCacheV2: fields,
         jtToolsLocationFieldsTimestampV2: Date.now()
       });
+      await stampCacheOrg();
 
       return fields;
     } catch (error) {
@@ -586,7 +685,8 @@ const JobTreadAPI = (() => {
         'jtToolsLocationsTimestamp'
       ]);
       const cacheAge = Date.now() - (cached.jtToolsLocationsTimestamp || 0);
-      if (cached.jtToolsLocationsCache && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
+      if (cached.jtToolsLocationsCache && cacheAge < CUSTOM_FIELDS_CACHE_DURATION
+          && await cacheOrgIsCurrent()) {
         console.log('JobTreadAPI: Using cached locations');
         return cached.jtToolsLocationsCache;
       }
@@ -615,6 +715,7 @@ const JobTreadAPI = (() => {
       const locations = result.organization?.locations?.nodes || [];
       console.log('JobTreadAPI: Fetched locations:', locations.length);
 
+      await stampCacheOrg();
       await chrome.storage.local.set({
         jtToolsLocationsCache: locations,
         jtToolsLocationsTimestamp: Date.now()
@@ -876,12 +977,13 @@ const JobTreadAPI = (() => {
         STORAGE_KEYS.CUSTOM_FIELDS_CACHE,
         STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP,
         STORAGE_KEYS.JOBS_TIMESTAMP,
+        STORAGE_KEYS.CACHE_ORG,
         STORAGE_KEYS.LEGACY_CUSTOM_FIELDS_CACHE,
         STORAGE_KEYS.LEGACY_CUSTOM_FIELDS_TIMESTAMP,
         'jtToolsLocationFieldsCache',
         'jtToolsLocationFieldsTimestamp'
       ]);
-      discoveredOrgId = null; // Clear discovered org ID on cache clear
+      for (const k of Object.keys(discoveredOrgIds)) delete discoveredOrgIds[k];
       console.log('JobTreadAPI: Cache cleared');
     } catch (error) {
       console.error('JobTreadAPI: Error clearing cache:', error);
@@ -891,7 +993,6 @@ const JobTreadAPI = (() => {
   // Clear discovered org ID when org changes
   if (typeof window !== 'undefined') {
     window.addEventListener('jt-org-changed', (event) => {
-      discoveredOrgId = null;
 
       // The cached custom fields, jobs and locations are all org-scoped, but
       // they share one global storage key - so a switch leaves the previous

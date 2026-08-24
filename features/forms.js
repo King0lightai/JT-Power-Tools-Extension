@@ -42,6 +42,7 @@ const FormsFeature = (() => {
   let savedAtTimer = null;        // ticks the "Saved Ns ago" relative time
   let printHeaderEl = null;       // injected print-only header element (cleaned in afterprint)
   let printAfterHandler = null;   // reference to the afterprint listener so we can detach
+  let orgChangeHandler = null;    // jt-org-changed listener, detached in cleanup()
 
   // ─── Helpers: tier + auth gate ──────────────────────────────────────
 
@@ -111,8 +112,11 @@ const FormsFeature = (() => {
     currentJob = job;
     formsCache = null;
 
-    // Lazily resolve the org id when we first see a job. The org doesn't
-    // change mid-session for a given user, so we only kick this off once.
+    // Lazily resolve the org id when we first see a job. Re-resolved when the
+    // org changes (see the jt-org-changed listener in init) — "the org doesn't
+    // change mid-session" is false for anyone with two JobTread orgs, and this
+    // id is written to form_instances.jt_org_id, so a stale one filed a
+    // worksheet under the wrong company where nothing could find it again.
     // If the resolution races the open handler, that handler awaits its
     // own getOrgId() fallback before fetching.
     if (job && !currentOrgId && typeof JobTreadAPI !== 'undefined') {
@@ -964,13 +968,33 @@ const FormsFeature = (() => {
 
     window.FormsJobDetector.start(handleJobChange);
 
+    // Re-resolve the org id on an org switch — see handleOrgChanged.
+    orgChangeHandler = handleOrgChanged;
+    window.addEventListener('jt-org-changed', orgChangeHandler);
+
     active = true;
     log('init: ready');
+  }
+
+  /**
+   * Drop the resolved org id when the user switches JobTread orgs, so the next
+   * job change resolves it again. Also drops the per-job forms cache, which is
+   * keyed by job but only meaningful within one org.
+   */
+  function handleOrgChanged() {
+    log('org changed — re-resolving org id');
+    currentOrgId = null;
+    formsCache = null;
   }
 
   function cleanup() {
     if (!active) return;
     log('cleanup');
+
+    if (orgChangeHandler) {
+      window.removeEventListener('jt-org-changed', orgChangeHandler);
+      orgChangeHandler = null;
+    }
 
     // Kill any in-flight save engine + timer
     if (window.FormsSaveEngine) {

@@ -617,6 +617,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         break;
 
+      case 'GET_ORG_CONTEXT':
+        // The active org's NAME and JobTread ID, for extension pages (popup,
+        // side panel) that must tell the server which org a request is about.
+        //
+        // Deliberately here and not in a feature module: tweak-engine answers
+        // GET_ACTIVE_ORG, but it is a Pro-tier feature that may not be loaded,
+        // and it returns only the name. Anything that has to name an org to the
+        // server needs the id, and content.js always runs.
+        (async () => {
+          try {
+            const orgName = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
+            const ctx = window.GrantKeyResolver && window.GrantKeyResolver.getOrgContext
+              ? await window.GrantKeyResolver.getOrgContext()
+              : { orgName, orgId: null };
+            sendResponse({ orgName: ctx.orgName || orgName || null, orgId: ctx.orgId || null });
+          } catch (error) {
+            // Never leave the caller hanging — a missing org is a valid answer.
+            sendResponse({ orgName: null, orgId: null, error: error.message });
+          }
+        })();
+        return true; // async response
+
       default:
         // Not ours — return false WITHOUT calling sendResponse so other
         // listeners (tweak-engine's GET_ACTIVE_ORG / TWEAK_DRY_RUN handler,

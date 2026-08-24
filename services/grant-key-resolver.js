@@ -6,6 +6,10 @@
  */
 const GrantKeyResolver = (() => {
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  // Org-detection wait bounds — see getGrantKey().
+  const ORG_WAIT_INTERVAL_MS = 500;
+  const ORG_WAIT_MIN_MS = 2500;   // grace even if the detector reports idle
+  const ORG_WAIT_MAX_MS = 20000;  // matches OrgDetector's own poll window
   let cache = {}; // { orgName: { grantKey, orgId, expiresAt } }
   const inFlight = {}; // { orgName: Promise<grantKey|null> } — dedup concurrent fetches
   const toastShownForOrgs = new Set();
@@ -28,15 +32,30 @@ const GrantKeyResolver = (() => {
 
     let orgName = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
 
-    // If org not detected yet, wait briefly for the SPA header to render.
+    // If org not detected yet, wait for the SPA header to render.
     // This prevents a race where features call isConfigured() before OrgDetector
     // finds the search bar placeholder. Without this, portal-only users (no legacy
     // storage keys) get "No API configured" on first load.
+    //
+    // The wait runs to ORG_WAIT_MAX_MS while OrgDetector is still acquiring,
+    // not to a fixed short deadline. Giving up first and falling through to
+    // getFallbackGrantKey() means handing out the license's HOME-org key —
+    // which, on a second org's slow-loading page, points every API feature at
+    // the wrong company. Waiting out the detector's own acquisition window
+    // costs a slow first call; guessing costs cross-org writes.
     if (!orgName && window.OrgDetector) {
-      for (let i = 0; i < 5; i++) {
-        await new Promise(r => setTimeout(r, 500));
+      const startedAt = Date.now();
+      while (Date.now() - startedAt < ORG_WAIT_MAX_MS) {
+        await new Promise(r => setTimeout(r, ORG_WAIT_INTERVAL_MS));
         orgName = window.OrgDetector.getActiveOrg();
         if (orgName) break;
+        // Detector has stopped looking (no org search bar on this page, or its
+        // poll window closed) and it has had at least the old 2.5s grace.
+        // Nothing more is coming — take the fallback path.
+        const acquiring = typeof window.OrgDetector.isAcquiring === 'function'
+          ? window.OrgDetector.isAcquiring()
+          : true;
+        if (!acquiring && Date.now() - startedAt >= ORG_WAIT_MIN_MS) break;
       }
     }
 
@@ -134,12 +153,19 @@ const GrantKeyResolver = (() => {
     }
   }
 
+  // The missing-key toast is pinned to the page's bottom-right corner at the
+  // top of the z-order, so for as long as it is up it sits over whatever
+  // JobTread draws there. It used to be persistent — up until the user found
+  // its close button — which turned "this org has no key yet" into a corner of
+  // the app a multi-org user could not click, on every page load. Long enough
+  // to read and reach the link, then gone; the close button still clears it
+  // sooner.
+  const MISSING_KEY_TOAST_DURATION_MS = 30000;
   // Show-once guard: while a missing-key toast is up, another call for the
-  // same or a different org must not interrupt it. A local timer (independent
-  // of the toast's own lifetime, since the toast is now persistent and closed
-  // by the user, not on a clock) rather than a DOM check, since the toast is
-  // a shared element other features can also be showing.
-  const MISSING_KEY_TOAST_GUARD_MS = 8000;
+  // same or a different org must not interrupt it. A local timer rather than a
+  // DOM check, since the toast is a shared element other features can also be
+  // showing. Matched to the toast's own lifetime.
+  const MISSING_KEY_TOAST_GUARD_MS = MISSING_KEY_TOAST_DURATION_MS;
   let missingKeyToastVisible = false;
 
   function showMissingKeyToast(orgName, reason = 'no-key', detail = '') {
@@ -165,13 +191,14 @@ const GrantKeyResolver = (() => {
       ? `Open the JT Power Tools extension and sign in to your account to enable API features for "${orgName}".`
       : `Add a grant key for this org in the portal to enable API features.${reasonSuffix}`;
 
-    // Persistent + dismissible: the user needs time to reach for the link,
-    // and a way to clear the toast themselves once they're done with it.
+    // Long-lived + dismissible: the user needs time to reach for the link, and
+    // a way to clear the toast sooner. NOT persistent — see
+    // MISSING_KEY_TOAST_DURATION_MS above.
     window.JTToast.showStructured({
       title,
       body,
       link: isSignIn ? null : { text: 'app.jtpowertools.com', href: 'https://app.jtpowertools.com/dashboard' }
-    }, { kind: 'error', persistent: true, dismissible: true });
+    }, { kind: 'error', duration: MISSING_KEY_TOAST_DURATION_MS, dismissible: true });
   }
 
   function invalidateCache() {
@@ -183,6 +210,34 @@ const GrantKeyResolver = (() => {
   // The cache is keyed by orgName, so each org has its own independent
   // entry — switching orgs reads the correct entry. In-flight fetch dedup
   // (see `inFlight` above) handles the rapid-switch race.
+
+  /**
+   * The active org's JobTread org ID, as the server reported it alongside the
+   * grant key. Returns `{ orgName, orgId }` so callers can confirm the answer
+   * still describes the org that was active when they asked.
+   *
+   * Callers that talk to our own server need this: a grant key belongs to a
+   * JobTread USER and can reach several orgs, so the key alone cannot say
+   * which org a request is about. Without it the server falls back to the
+   * license's home org — which is the wrong company on a second org's page.
+   *
+   * Null orgId is a normal answer (no org detected, or no key for this org);
+   * callers should omit the org rather than substitute a guess.
+   */
+  async function getOrgContext() {
+    const orgName = window.OrgDetector ? window.OrgDetector.getActiveOrg() : null;
+    if (!orgName) return { orgName: null, orgId: null };
+
+    const cached = cache[orgName];
+    if (cached && cached.expiresAt > Date.now()) {
+      return { orgName, orgId: cached.orgId || null };
+    }
+
+    // Populate the cache (deduped via inFlight), then read it back.
+    await getGrantKey();
+    const refreshed = cache[orgName];
+    return { orgName, orgId: refreshed?.orgId || null };
+  }
 
   /**
    * Get the logo URL for the current org from cached grant key data.
@@ -206,7 +261,7 @@ const GrantKeyResolver = (() => {
     return { orgName, logoUrl: refreshedCache?.logoUrl || null };
   }
 
-  return { getGrantKey, getLogoUrl, invalidateCache, getFallbackGrantKey };
+  return { getGrantKey, getOrgContext, getLogoUrl, invalidateCache, getFallbackGrantKey };
 })();
 
 window.GrantKeyResolver = GrantKeyResolver;

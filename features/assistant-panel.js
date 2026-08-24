@@ -439,7 +439,31 @@ const AssistantPanelFeature = (() => {
         error: 'Sign in to your JT Power Tools account (extension popup) to use the assistant.',
       };
     }
-    return { bearer: `${licenseData.key}:${grantKey}`, accountToken };
+    // Which org this session is about. A license:grant bearer carries no org —
+    // a grant key reaches every org its JobTread user belongs to — so without
+    // this the server binds the session to the license's home org, and a panel
+    // opened on a second org's page read and WROTE the wrong company (its
+    // drafts, sessions and usage all filed under the home org too). Null when
+    // no org is detected or no key is configured for it; the caller then omits
+    // the header rather than guessing.
+    const { orgId } = (await window.GrantKeyResolver.getOrgContext?.()) || {};
+    return { bearer: `${licenseData.key}:${grantKey}`, accountToken, orgId: orgId || null };
+  }
+
+  /**
+   * Headers every agent call shares. `X-JT-Org` is omitted rather than sent
+   * empty when the org is unknown, so the server applies its own precedence
+   * instead of being handed a blank selector to reject.
+   */
+  function agentHeaders(auth, extra = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${auth.bearer}`,
+      'X-Account-Token': auth.accountToken,
+      ...extra,
+    };
+    if (auth.orgId) headers['X-JT-Org'] = auth.orgId;
+    return headers;
   }
 
   // ─── Suggested prompts (context-aware chips) ──────────────────────
@@ -1646,12 +1670,7 @@ const AssistantPanelFeature = (() => {
     try {
       const response = await fetch(AGENT_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.bearer}`,
-          'X-Account-Token': auth.accountToken,
-          Accept: 'text/event-stream',
-        },
+        headers: agentHeaders(auth, { Accept: 'text/event-stream' }),
         body: JSON.stringify({
           task,
           session_id: sessionId || undefined,
@@ -1800,11 +1819,7 @@ const AssistantPanelFeature = (() => {
       if (auth.error) return { error: auth.error };
       const res = await fetch(`${AGENT_BASE}/${path}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.bearer}`,
-          'X-Account-Token': auth.accountToken,
-        },
+        headers: agentHeaders(auth),
         body: JSON.stringify(payload || {}),
       });
       if (!res.ok) {

@@ -51,20 +51,34 @@
   opacity: 0;
   transform: translateY(6px);
   pointer-events: none;
-  transition: opacity var(--jtt-duration-fast) var(--jtt-ease-out), transform var(--jtt-duration-fast) var(--jtt-ease-out);
+  /* A hidden toast is opacity: 0, which is still hit-testable — an interactive
+   * one (see below) would go on eating clicks on whatever sits under the
+   * bottom-right corner, and its link would stay tab-reachable. `visibility`
+   * takes it out of hit-testing and the tab order; transitioning it means the
+   * fade-out still plays (visibility flips at the end of the transition). */
+  visibility: hidden;
+  transition: opacity var(--jtt-duration-fast) var(--jtt-ease-out), transform var(--jtt-duration-fast) var(--jtt-ease-out), visibility var(--jtt-duration-fast) var(--jtt-ease-out);
 }
 
 .jt-tools-toast-visible {
   opacity: 1;
   transform: translateY(0);
+  visibility: visible;
 }
 
 /* A passive one-line confirmation must never intercept clicks on the page
  * beneath it (hence pointer-events: none up above). But once the toast
  * carries something interactive — a link or a dismiss button — it needs to
  * be clickable. The utility adds this modifier only when it builds that
- * content, so plain show() toasts stay click-through. */
-.jt-tools-toast-interactive {
+ * content, so plain show() toasts stay click-through.
+ *
+ * Scoped to -visible deliberately. Unscoped, a dismissed (or timed-out)
+ * interactive toast stayed a 360px invisible click target pinned over the
+ * page's bottom-right corner: it swallowed clicks on whatever JobTread draws
+ * there, and a click that landed on its link navigated to jtpowertools.com.
+ * That outlived the extension being switched off, because the node stays in
+ * the page until a reload. */
+.jt-tools-toast-interactive.jt-tools-toast-visible {
   pointer-events: auto;
 }
 

@@ -207,18 +207,12 @@ const TaskTypeFilterFeature = (() => {
    * @throws {Error} if the organization cannot be determined
    */
   async function discoverOrgId() {
-    const orgResult = await JobTreadAPI.paveQuery({
-      currentGrant: {
-        user: {
-          memberships: {
-            nodes: {
-              organization: { id: {} }
-            }
-          }
-        }
-      }
-    });
-    const orgId = orgResult?.currentGrant?.user?.memberships?.nodes?.[0]?.organization?.id;
+    // JobTreadAPI.getOrgId() is the canonical resolver: it asks the server for
+    // the ACTIVE org's id and, failing that, matches the org by name against
+    // the grant key's memberships. This function used to run its own
+    // currentGrant query and take memberships[0] — an arbitrary org for anyone
+    // who belongs to two, so the filter listed the wrong company's task types.
+    const orgId = await JobTreadAPI.getOrgId();
     if (!orgId) throw new Error('Could not determine organization from grant key');
     return orgId;
   }

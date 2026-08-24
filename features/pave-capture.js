@@ -37,6 +37,10 @@ const PaveCaptureFeature = (() => {
   // observable postMessage bus. Cached per org; refetched on org change.
   let grantKey = null;
   let grantKeyOrg = null;
+  // The JobTread org id the cached credential belongs to, as the server
+  // reported it. Sent with each upload so captures are filed against the org
+  // the user is actually in — a grant key can't say that on its own.
+  let grantKeyOrgId = null;
   // Per-session nonce handed to the MAIN-world sniffer so we can authenticate
   // the captures it emits (CTX-2). Regenerated on each init.
   let captureNonce = null;
@@ -201,6 +205,7 @@ const PaveCaptureFeature = (() => {
     if (!org) return Promise.resolve(null);
     if (grantKey && grantKeyOrg === org) return Promise.resolve(grantKey);
     grantKey = null;
+    grantKeyOrgId = null;
     grantKeyOrg = org;
     return new Promise((resolve) => {
       try {
@@ -213,7 +218,14 @@ const PaveCaptureFeature = (() => {
             return;
           }
           // Guard against an org switch during the round-trip.
-          if (grantKeyOrg === org) grantKey = res.grantKey;
+          if (grantKeyOrg === org) {
+            grantKey = res.grantKey;
+            // The server tells us which org this key was issued for. Captures
+            // are filed by org, and the key alone cannot say which — it reaches
+            // every org its JobTread user belongs to — so without this they
+            // were filed under whichever org JobTread happened to list first.
+            grantKeyOrgId = res.orgId || null;
+          }
           resolve(res.grantKey);
         });
       } catch (e) {
@@ -231,7 +243,7 @@ const PaveCaptureFeature = (() => {
     buffer = [];
     try {
       chrome.runtime.sendMessage(
-        { type: 'PAVE_CAPTURE_UPLOAD', grantKey: key, queries },
+        { type: 'PAVE_CAPTURE_UPLOAD', grantKey: key, orgId: grantKeyOrgId || undefined, queries },
         (res) => {
           // Surface (but never throw) chrome.runtime errors.
           if (chrome.runtime.lastError) {
@@ -350,6 +362,7 @@ const PaveCaptureFeature = (() => {
     buffer = [];
     grantKey = null;
     grantKeyOrg = null;
+    grantKeyOrgId = null;
     captureNonce = null;
     isActive = false;
     console.log('PaveCapture: Cleaned up');

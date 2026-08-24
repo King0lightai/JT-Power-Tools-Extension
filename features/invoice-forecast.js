@@ -691,10 +691,12 @@ const InvoiceForecastFeature = (() => {
   }
 
   async function discoverOrgId() {
-    const r = await JobTreadAPI.paveQuery({
-      currentGrant: { user: { memberships: { nodes: { organization: { id: {} } } } } }
-    });
-    const id = r?.currentGrant?.user?.memberships?.nodes?.[0]?.organization?.id;
+    // Was a private currentGrant query taking memberships[0], which on a
+    // two-org account is an arbitrary org — the forecast then covered the wrong
+    // company. JobTreadAPI.getOrgId() resolves the ACTIVE org (server first,
+    // then a name match against the key's memberships), so there is nothing
+    // left worth doing here that it doesn't already do.
+    const id = await JobTreadAPI.getOrgId();
     if (!id) throw new Error('Could not determine organization from grant key');
     return id;
   }

@@ -260,7 +260,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: 'Untrusted sender' });
           return false;
         }
-        handlePaveCaptureUpload(message.grantKey, message.queries)
+        handlePaveCaptureUpload(message.grantKey, message.queries, message.orgId)
           .then(result => sendResponse(result))
           .catch(error => {
             console.error('PaveCapture: upload failed:', error);
@@ -517,7 +517,7 @@ async function handleApiRequest(url, options) {
  * @param {Array} queries - [{ query, operation, entity, type }]
  * @returns {Promise<Object>} { success, stored } or { success: false, error }
  */
-async function handlePaveCaptureUpload(grantKey, queries) {
+async function handlePaveCaptureUpload(grantKey, queries, orgId) {
   if (!grantKey || typeof grantKey !== 'string') {
     return { success: false, error: 'Missing grantKey' };
   }
@@ -532,7 +532,10 @@ async function handlePaveCaptureUpload(grantKey, queries) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'omit',
-      body: JSON.stringify({ grantKey, queries }),
+      // orgId says which org these captures belong to. Omitted (not sent
+      // empty) when unknown, so the server keeps its own fallback instead of
+      // being handed a blank value to reject.
+      body: JSON.stringify(orgId ? { grantKey, orgId, queries } : { grantKey, queries }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {

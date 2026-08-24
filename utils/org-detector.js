@@ -207,6 +207,18 @@ const OrgDetector = (() => {
   }
 
   /**
+   * True while the first-org acquisition poll is still running — i.e. no org
+   * has been detected yet, but the search bar may still be rendering.
+   *
+   * GrantKeyResolver waits on this before it considers falling back to the
+   * license's home-org key: handing that key out while a second org's page is
+   * merely slow to render would point API features at the wrong company.
+   */
+  function isAcquiring() {
+    return !!pollTimer;
+  }
+
+  /**
    * Exposed for debugging from the console:
    *   window.OrgDetector.getDiagnostic()
    * Returns details about the last detection attempt — what strategy
@@ -236,7 +248,7 @@ const OrgDetector = (() => {
     lastDiagnostic = null;
   }
 
-  return { init, getActiveOrg, getDiagnostic, cleanup };
+  return { init, getActiveOrg, isAcquiring, getDiagnostic, cleanup };
 })();
 
 window.OrgDetector = OrgDetector;

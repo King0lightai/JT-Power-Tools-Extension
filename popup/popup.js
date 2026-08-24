@@ -4886,6 +4886,23 @@ function showAccountError(formType, message) {
 const JT_JOB_URL_RE = /^https:\/\/app\.jobtread\.com\/jobs\/([^/?#]+)/i;
 const JOB_EMAIL_ENDPOINT = '/admin/job-email/address';
 
+/**
+ * The JobTread org id for the org shown in a JT tab, via content.js's
+ * GET_ORG_CONTEXT. Returns null on any failure — no content script on that
+ * tab, org not detected yet, or no grant key configured for it — because a
+ * wrong org is worse than no org: the server's own fallback is at least the
+ * license's home org rather than a guess.
+ */
+async function getTabOrgId(tab) {
+  if (!tab || !tab.id) return null;
+  try {
+    const resp = await chrome.tabs.sendMessage(tab.id, { type: 'GET_ORG_CONTEXT' });
+    return (resp && resp.orgId) || null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 async function initJobEmailCard(tier) {
   const card = document.getElementById('jobEmailCard');
   if (!card) return;
@@ -4914,6 +4931,14 @@ async function initJobEmailCard(tier) {
   const match = url && JT_JOB_URL_RE.exec(url);
   if (!match) return;
   const jobId = match[1];
+
+  // Which org this job belongs to. Job-email rows are keyed
+  // (license_id, org_id, job_id), and the server otherwise assumes the
+  // license's HOME org — so provisioning from a second org's job filed the
+  // address under the wrong company and inbound mail tried to auto-post there.
+  // Ask the content script on that tab; a null answer means the server keeps
+  // its own default, which is right for a single-org license.
+  const orgId = await getTabOrgId(tab);
 
   // Wire copy button BEFORE the fetch so the user can interact the
   // moment the value lands. The button starts disabled until fetch
@@ -4954,7 +4979,7 @@ async function initJobEmailCard(tier) {
     const response = await AccountService.authenticatedFetch(JOB_EMAIL_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jobId }),
+      body: JSON.stringify(orgId ? { jobId, orgId } : { jobId }),
     });
     const payload = await response.json().catch(() => ({}));
 

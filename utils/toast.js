@@ -186,7 +186,13 @@ const JTToast = (() => {
    */
   function dismiss() {
     if (timer) { clearTimeout(timer); timer = null; }
-    if (toastEl) toastEl.classList.remove('jt-tools-toast-visible');
+    if (!toastEl) return;
+    toastEl.classList.remove('jt-tools-toast-visible');
+    // Belt-and-braces with the CSS (.jt-tools-toast-interactive is scoped to
+    // -visible there): a dismissed toast must stop being a click target even
+    // if the stylesheet never loaded. It gets re-added by the next
+    // showStructured() that builds a link or a dismiss button.
+    toastEl.classList.remove('jt-tools-toast-interactive');
   }
 
   /**
