@@ -55,11 +55,67 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 4.10.16 - Multi-org: a second JobTread organization can finally be connected, and every surface acts on the org whose page you are on -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v4.10.16</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">August 24, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🏢</span> If you work in two JobTread organizations, read this one</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">You can finally connect a second organization</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">A JobTread API key belongs to <em>you</em>, not to one company &mdash; so if you belong to two organizations, your single key reaches both. We were picking whichever one JobTread happened to list first and treating that as the answer. The result was a wall you could not get around: <strong>Add</strong> saved the first company and then rejected itself as a duplicate, <strong>Validate</strong> read back the wrong company's name, and <strong>Rotate</strong> refused perfectly good keys. Making a fresh key in JobTread never helped, because the order never changed.</li>
+                            <li class="sub-item"><strong>The portal now asks you.</strong> Validate lists every organization your key reaches and lets you choose before saving. The free-text box that used to sit above the key is now a <strong>Label</strong> below it, filled in from the company you actually picked &mdash; it looked like the field that chose the organization, so typing a second company's name there quietly connected the first one again.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Features now act on the organization whose page you are on</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Every feature that talks to JobTread was reading one organization saved across your whole install &mdash; synced between your devices, and overwritten by any connection test. For anyone in two companies that value is a coin toss, so the <strong>Task Type Filter</strong>, <strong>Invoice Forecast</strong>, <strong>Editable Tables</strong>, the <strong>Custom Field Filter</strong>, <strong>Worksheets</strong> and saved-filter sync could all be working against the other company while you looked at this one.</li>
+                            <li class="sub-item">They now follow the page you are actually on. When the organization is known but cannot be matched to a key, features stay off rather than guessing &mdash; we would rather a feature be quiet than confidently wrong about whose money it is looking at.</li>
+                            <li class="sub-item"><strong>Opening the second company in a new tab</strong> used to inherit the first one's custom fields for up to an hour, which left Editable Tables silently read-only and showed you fields that do not exist there. Worksheets had a related fault: after switching companies, new ones were filed under the previous one, where nothing could find them again.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">The AI Assistant answers about the company you opened it on</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">The panel sent no organization at all, so every conversation bound to your main one. Opening the assistant on a second company's job read the first company's data and <em>wrote to the first company in JobTread</em> &mdash; along with filing its drafts, sessions and credit usage there. It now goes where you opened it.</li>
+                            <li class="sub-item">The credit breakdown in the portal adds up again, too. The pool is shared across your whole license, but the per-person table beside it only counted your main organization &mdash; so credits spent elsewhere drew the pool down while appearing in nobody's row.</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Invoices emailed to a second organization are no longer dropped</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Mail sent to a second company's bills address matched nothing and was discarded &mdash; while the AI tools printed that same address as the place to forward invoices. Five live organizations were affected. <strong>No invoices were actually lost:</strong> none of the five had an approved sender set up yet, so nothing had begun forwarding.</li>
+                            <li class="sub-item">Per-job email addresses had the mirror-image problem: one created from a second company's job was filed under the first, and mail to it then tried to post to a job that company does not have.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Fixed: a dismissed notification that ate your clicks</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">An invisible button sat in the corner of JobTread until you reloaded</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Closing one of our notifications only faded it out. It stayed on the page at full size and invisible, pinned over the bottom-right corner &mdash; so clicks meant for whatever sits there went nowhere, and one landing on the notification's own link opened our website instead of doing what you asked. Switching the extension off did not clear it, because the leftover element stayed until the next reload.</li>
+                            <li class="sub-item">The <em>"no API key for this organization"</em> notice made it worse by never going away on its own, turning that corner into dead space on every page load. It now stays long enough to read and reach the link, then leaves.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 4.10.14 — Orion support (iPhone/iPad via the Firefox build), small-screen fixes across Invoice Forecast, the AI button and the formatter toolbar, subscription status fix -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v4.10.14</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">August 23, 2026</span>
             </div>
 
