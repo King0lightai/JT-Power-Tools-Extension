@@ -165,6 +165,8 @@
         "features/budget-changelog-modules/report-app.js",
         "styles/formatter-toolbar.css",
         "styles/dark-mode.css",
+        "styles/dark-mode-soft.css",
+        "styles/dark-mode-double.css",
         "styles/quick-notes.css",
         "styles/forms.css",
         "styles/preview-mode.css",

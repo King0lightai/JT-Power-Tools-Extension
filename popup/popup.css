@@ -600,6 +600,85 @@ body.dark-theme .feature-item:not([data-tier]) .feature-icon { background: var(-
 
 .feature-item:hover { background: var(--bg-raised); }
 
+/* ── Stacked feature row ──
+   A row whose control is too wide to sit beside the title (the 380px popup
+   leaves ~350px of content). Title line first, control on its own line below. */
+.feature-item-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.feature-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Step toggle ──
+   A segmented control for a setting with more than two states. Reads as one
+   object with a moving selection rather than four buttons: a sunken track, a
+   single raised segment, hairline dividers between the rest. */
+.step-toggle {
+  display: flex;
+  padding: 2px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+}
+.step-toggle-option {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background var(--duration) var(--ease), color var(--duration) var(--ease);
+}
+/* Dividers sit between unselected segments only — a rule running into the
+   selected segment's edge reads as a seam in it. */
+.step-toggle-option + .step-toggle-option {
+  box-shadow: inset 1px 0 0 var(--rule-soft);
+}
+.step-toggle-option[aria-checked="true"],
+.step-toggle-option[aria-checked="true"] + .step-toggle-option {
+  box-shadow: none;
+}
+.step-toggle-option:hover {
+  color: var(--fg);
+}
+.step-toggle-option[aria-checked="true"] {
+  background: var(--accent);
+  color: #ffffff;
+}
+.step-toggle-option:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+/* "Off" selected is a state, not an accent — colouring it orange would make an
+   inactive feature the loudest row on the tab. */
+.step-toggle-option[data-level="off"][aria-checked="true"] {
+  background: var(--bg-raised);
+  color: var(--fg);
+}
+
+.step-toggle-hint {
+  margin: 0;
+  color: var(--fg-subtle);
+  font-size: 11px;
+  line-height: 1.4;
+}
+/* The one hint that is an instruction rather than a description: Double Dark
+   needs JobTread's own dark mode switched on to have anything to sit on. */
+.step-toggle-hint.needs-action {
+  color: var(--accent-ink);
+}
+
 .feature-info {
   flex: 1;
   min-width: 0;

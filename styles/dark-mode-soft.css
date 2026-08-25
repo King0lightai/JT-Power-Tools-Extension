@@ -1,0 +1,113 @@
+/* === JT Power Tools — "Kinda Dark" (soft) === */
+/* Level 1 of the Dark Mode toggle. This is still a LIGHT theme: dark text on
+   light surfaces, exactly as JobTread ships it. All it does is take the glare
+   off — JobTread paints most of the app in pure #ffffff, which is punishing on
+   a bright monitor for eight hours. Every white surface drops to a soft warm
+   grey, and the borders come up a step so edges still read against it.
+
+   Deliberately narrow. It only remaps surface, border and shadow — never text
+   colour, never a semantic colour (status chips, alerts, the schedule's
+   colour-coded bars). Those already meet contrast on a light background and
+   still do on a slightly darker one.
+
+   This file is only in the page when the level is active, so the utility
+   classes are remapped bare, the same way styles/dark-mode.css does it. */
+
+/* === Surfaces === */
+/* The main app surface. Everything JobTread paints white — page background,
+   cards, table bodies, modals, the top bar. */
+.bg-white {
+    background-color: #ececec;
+}
+
+/* JobTread's own greys sit *under* white as subtle zebra/heading fills. They
+   have to move down with it or they stop being distinguishable. */
+.bg-gray-50 {
+    background-color: #e2e2e2;
+}
+
+.bg-gray-100 {
+    background-color: #dcdcdc;
+}
+
+.bg-slate-50 {
+    background-color: #e2e2e2;
+}
+
+/* === Inputs === */
+/* Inputs carry .bg-white too, so the rule above would sink them into the page
+   and cost the affordance that says "you can type here". Put them back to
+   near-white so they read as raised against the softened surface. */
+input.bg-white,
+textarea.bg-white,
+select.bg-white,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+    background-color: #fafafa;
+}
+
+/* === Borders === */
+/* JobTread's default border grey is tuned against pure white. On a #ececec
+   surface it nearly vanishes, which is what makes a naively dimmed UI look
+   muddy rather than calm — the structure disappears. Bring it up a step. */
+*, ::backdrop, ::file-selector-button, :after, :before {
+    border-color: #c4c4c4;
+}
+
+.border-transparent {
+    border-color: transparent;
+}
+
+/* Orange stays brand orange. */
+.border-jtOrange {
+    border-color: #ff5600;
+}
+
+.border-white {
+    border-color: #ececec;
+}
+
+/* === Shadows === */
+/* JobTread's controls carry `shadow-xs` (Tailwind v4's name for what v3 called
+   shadow-sm), and on a toolbar that shadow is doing real work — a button group
+   sits on a bar close enough to its own fill that the shadow plus the border is
+   most of what separates them.
+   A shadow calibrated against pure white loses contrast on a #ececec ground, so
+   these are nudged UP rather than flattened. Getting this backwards is the
+   classic dimmed-UI mistake: the page calms down and every control goes soft
+   with it. */
+.shadow-xs,
+.shadow-sm,
+.shadow {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+/* Modals and popovers need to lift clear of the page, not just off it. */
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.20);
+}
+
+/* === Gradients === */
+/* JobTread fades long content out to white ("show more" affordances). That
+   gradient has to end on the new surface colour or it stops short with a
+   visible band. */
+.from-white {
+    --tw-gradient-from: #ececec;
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #ececec var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+}
+
+.to-white {
+    --tw-gradient-to: #ececec;
+}
+
+/* === Stripe === */
+/* Stripe's iframe renders its own white field; matching the input treatment
+   above keeps the payment form from looking like a hole in the page. */
+.StripeElement {
+    background-color: #fafafa;
+    padding: 10px;
+    border-radius: 4px;
+}

@@ -14,7 +14,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   : {
     // Inline fallback - should match defaults.js DEFAULT_SETTINGS
     dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
+    darkMode: false, darkModeLevel: 'dark', rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
     pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,

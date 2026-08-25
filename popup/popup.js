@@ -205,7 +205,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   ? JTDefaults.getDefaultSettings()
   : {
     dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
+    darkMode: false, darkModeLevel: 'dark', rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
     quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
     kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
     ganttLines: true, scheduleMonthShading: false, pdfMarkupTools: true, reverseThreadOrder: false,
@@ -777,6 +777,13 @@ async function loadSettings() {
     // FREE features - work for everyone (no license required)
     setCheckbox('formatter', settings.formatter);
     setCheckbox('darkMode', settings.darkMode);
+    // Seed the remembered level before painting the step control. Settings saved
+    // before this was a 4-step toggle have no darkModeLevel, and those users had
+    // the standard dark theme — so that is what an absent value means.
+    if (settings.darkModeLevel && DARK_MODE_STEPS.some(s => s.level === settings.darkModeLevel)) {
+      darkModeLevel = settings.darkModeLevel;
+    }
+    syncDarkModeSteps();
     setCheckbox('contrastFix', settings.contrastFix);
     setCheckbox('characterCounter', settings.characterCounter !== undefined ? settings.characterCounter : false);
     setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
@@ -1057,6 +1064,99 @@ async function saveSettings(settings) {
   }
 }
 
+// ═══ Dark Mode step toggle ═══
+// Dark Mode is a 4-step setting rather than an on/off one. Step "off" maps to
+// darkMode = false; the other three map to darkMode = true plus a darkModeLevel.
+// The #darkMode checkbox stays the on/off source of truth (see popup.html), so
+// everything else in this file — mutual exclusion, getCurrentSettings, the
+// master toggle — keeps working against a boolean.
+const DARK_MODE_STEPS = [
+  { level: 'off', hint: "JobTread's own theme, untouched." },
+  { level: 'soft', hint: 'Kinda Dark — still a light theme, with the glare taken off.' },
+  { level: 'dark', hint: 'Dark — the standard JT Power Tools dark theme.' },
+  {
+    level: 'double',
+    hint: "Double Dark — sits on top of JobTread's dark mode and takes the blue out of it. Switch JobTread's own theme to Dark as well.",
+    needsAction: true
+  }
+];
+
+// The level to restore when the user steps back onto a dark step. Seeded from
+// saved settings; 'dark' until then.
+let darkModeLevel = 'dark';
+
+// Paint the step control from the current checkbox state. Called on load, on
+// every step click, and after appearance-mode exclusion silently unchecks
+// darkMode — without that last one the control would still read "Dark" while
+// Contrast Fix had taken over.
+function syncDarkModeSteps() {
+  const group = document.getElementById('darkModeSteps');
+  const checkbox = document.getElementById('darkMode');
+  const hint = document.getElementById('darkModeHint');
+  if (!group || !checkbox) return;
+
+  const active = checkbox.checked ? darkModeLevel : 'off';
+  const step = DARK_MODE_STEPS.find(s => s.level === active) || DARK_MODE_STEPS[0];
+
+  group.querySelectorAll('.step-toggle-option').forEach(btn => {
+    const selected = btn.dataset.level === active;
+    btn.setAttribute('aria-checked', selected ? 'true' : 'false');
+    // Roving tabindex: the group is one tab stop, arrows move within it.
+    btn.tabIndex = selected ? 0 : -1;
+  });
+
+  if (hint) {
+    hint.textContent = step.hint;
+    hint.classList.toggle('needs-action', Boolean(step.needsAction));
+  }
+}
+
+// Select a step. Writes through to the checkbox and dispatches `change` so the
+// existing listener saves the settings — this must not become a second save path.
+function selectDarkModeStep(level) {
+  const checkbox = document.getElementById('darkMode');
+  if (!checkbox) return;
+
+  const wantsDark = level !== 'off';
+  if (wantsDark) darkModeLevel = level;
+
+  checkbox.checked = wantsDark;
+  syncDarkModeSteps();
+
+  // Setting .checked in script never fires `change`, and stepping between two
+  // dark levels doesn't move the checkbox at all — so dispatch it explicitly.
+  // The existing listener then runs appearance-mode exclusion and saves, which
+  // keeps this off a second save path.
+  checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function initDarkModeSteps() {
+  const group = document.getElementById('darkModeSteps');
+  if (!group) return;
+
+  const options = Array.from(group.querySelectorAll('.step-toggle-option'));
+
+  options.forEach((btn, index) => {
+    btn.addEventListener('click', () => selectDarkModeStep(btn.dataset.level));
+
+    // Arrow keys move between steps, matching the radiogroup role the markup
+    // advertises. Without this the group is reachable but not operable by
+    // keyboard beyond the one focused step.
+    btn.addEventListener('keydown', (e) => {
+      let next = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (index + 1) % options.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (index - 1 + options.length) % options.length;
+      if (next === null) return;
+
+      e.preventDefault();
+      options[next].focus();
+      selectDarkModeStep(options[next].dataset.level);
+    });
+  });
+
+  syncDarkModeSteps();
+}
+
 // Helper to safely get checkbox value with fallback
 function getCheckboxValue(id, fallback = false) {
   const el = document.getElementById(id);
@@ -1075,6 +1175,7 @@ async function getCurrentSettings() {
     formatter: getCheckboxValue('formatter', defaultSettings.formatter),
     previewMode: getCheckboxValue('previewMode', defaultSettings.previewMode),
     darkMode: getCheckboxValue('darkMode', defaultSettings.darkMode),
+    darkModeLevel: darkModeLevel,
     rgbTheme: getCheckboxValue('rgbTheme', defaultSettings.rgbTheme),
     smartJobSwitcher: getCheckboxValue('smartJobSwitcher', defaultSettings.smartJobSwitcher),
     budgetHierarchy: getCheckboxValue('budgetHierarchy', defaultSettings.budgetHierarchy),
@@ -2107,6 +2208,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // form, so nothing above may be allowed to prevent it running.
   await safeInitStep('account-ui', initAccountUI);
 
+  // Dark Mode's 4-step control. Bound before the checkbox listener below so a
+  // step click has a listener to fire into.
+  initDarkModeSteps();
+
   // Listen for checkbox changes (skip master toggle — handled separately)
   const checkboxes = document.querySelectorAll('input[type="checkbox"]:not(#masterToggle)');
   checkboxes.forEach(checkbox => {
@@ -2132,6 +2237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (contrastFixEl) contrastFixEl.checked = false;
           if (darkModeEl) darkModeEl.checked = false;
         }
+
+        // Dark Mode's step control mirrors the checkbox, so it has to be
+        // repainted whenever the exclusion above turns Dark Mode off.
+        syncDarkModeSteps();
       }
 
       // If the user just enabled a feature that needs a grant key but

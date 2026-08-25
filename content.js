@@ -231,7 +231,7 @@ let currentSettings = window.JTDefaults
   : {
     // Inline fallback if JTDefaults not loaded (should not happen)
     dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
-    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
+    darkMode: false, darkModeLevel: 'dark', rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false, budgetRowHighlight: false,
     quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
     characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false, documentSort: false, printScope: false, budgetTools: false,
     pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
@@ -361,6 +361,10 @@ async function initializeFeature(featureKey) {
       // Special handling for RGB theme - pass theme colors
       if (featureKey === 'rgbTheme' && currentSettings.themeColors) {
         await FeatureClass.init(currentSettings.themeColors);
+      } else if (featureKey === 'darkMode') {
+        // Dark Mode is a 4-step setting: darkMode carries on/off, darkModeLevel
+        // carries which of the three darkness levels is on.
+        await FeatureClass.init(currentSettings.darkModeLevel);
       } else {
         await FeatureClass.init();
       }
@@ -557,9 +561,21 @@ async function handleSettingsChange(newSettings) {
       }
     }
 
+    // Apply a Dark Mode level change live. The transition loop above only sees
+    // darkMode going on/off, so switching between Kinda Dark / Dark / Double
+    // Dark while it stays on would otherwise need a page reload.
+    if (mergedSettings.darkMode && mergedSettings.darkModeLevel !== currentSettings.darkModeLevel) {
+      const DarkMode = window.DarkModeFeature;
+      if (DarkMode && typeof DarkMode.isActive === 'function' && DarkMode.isActive() &&
+          typeof DarkMode.setLevel === 'function') {
+        DarkMode.setLevel(mergedSettings.darkModeLevel);
+      }
+    }
+
     // Refresh budget hierarchy shading when theme changes
     const themeChanged =
       mergedSettings.darkMode !== currentSettings.darkMode ||
+      (mergedSettings.darkMode && mergedSettings.darkModeLevel !== currentSettings.darkModeLevel) ||
       mergedSettings.rgbTheme !== currentSettings.rgbTheme ||
       (mergedSettings.rgbTheme && JSON.stringify(mergedSettings.themeColors) !== JSON.stringify(currentSettings.themeColors));
 

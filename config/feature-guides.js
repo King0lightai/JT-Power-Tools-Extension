@@ -409,9 +409,12 @@ const FeatureGuides = (() => {
     darkMode: {
       title: 'Dark Mode',
       tier: 'free',
-      summary: 'A dark theme for JobTread, in neutral greys rather than the blue-black ' +
-        'most dark modes default to.',
-      where: 'Everywhere in JobTread.',
+      summary: 'Four steps rather than a switch: Off, Kinda Dark (a light theme with ' +
+        'the glare taken off), Dark (the standard JT Power Tools theme), and Double ' +
+        'Dark, which layers on top of JobTread\'s own dark mode and takes the blue ' +
+        'out of it. All of them in neutral greys rather than the blue-black most ' +
+        'dark modes default to.',
+      where: 'Everywhere in JobTread. Double Dark needs JobTread\'s own theme set to Dark.',
       apiAccess: API_ACCESS.NONE,
       media: null,
       docs: 'dark-mode'

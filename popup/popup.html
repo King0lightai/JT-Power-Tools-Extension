@@ -437,15 +437,30 @@
                it. It lives here only because it is a visual treatment rather
                than a schedule behaviour. -->
           <div class="theme-feature-list">
-            <div class="feature-item">
-              <i class="ph ph-moon feature-icon" aria-hidden="true"></i>
-              <div class="feature-info">
-                <h3>Dark Mode <i class="ph ph-question feature-help" data-guide-for="darkMode" title="Learn more"></i></h3>
+            <!-- Dark Mode is the one appearance row with more than two states,
+                 so it stacks: title line, then a 4-step control, then a hint
+                 describing whichever step is selected.
+                 The #darkMode checkbox stays in the DOM (hidden) and remains the
+                 single on/off source of truth — appearance-mode mutual
+                 exclusion, getCurrentSettings(), the row's "off" styling and the
+                 master toggle all still read it. The step control writes to it
+                 and dispatches `change`, so it rides the existing save path
+                 rather than a parallel one. -->
+            <div class="feature-item feature-item-stacked">
+              <div class="feature-item-head">
+                <i class="ph ph-moon feature-icon" aria-hidden="true"></i>
+                <div class="feature-info">
+                  <h3>Dark Mode <i class="ph ph-question feature-help" data-guide-for="darkMode" title="Learn more"></i></h3>
+                </div>
               </div>
-              <label class="toggle">
-                <input type="checkbox" id="darkMode" data-feature="darkMode">
-                <span class="slider"></span>
-              </label>
+              <input type="checkbox" id="darkMode" data-feature="darkMode" hidden>
+              <div class="step-toggle" id="darkModeSteps" role="radiogroup" aria-label="Dark Mode level">
+                <button type="button" class="step-toggle-option" role="radio" data-level="off" aria-checked="true" tabindex="0">Off</button>
+                <button type="button" class="step-toggle-option" role="radio" data-level="soft" aria-checked="false" tabindex="-1">Kinda</button>
+                <button type="button" class="step-toggle-option" role="radio" data-level="dark" aria-checked="false" tabindex="-1">Dark</button>
+                <button type="button" class="step-toggle-option" role="radio" data-level="double" aria-checked="false" tabindex="-1">Double</button>
+              </div>
+              <p class="step-toggle-hint" id="darkModeHint"></p>
             </div>
 
             <div class="feature-item">

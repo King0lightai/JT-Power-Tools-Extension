@@ -40,6 +40,12 @@ const JTDefaults = (() => {
 
     // Free Features - Appearance & Themes
     darkMode: false,
+    // Which of Dark Mode's three darkness levels is in force when darkMode is
+    // on: 'soft' (Kinda Dark — a dimmed light theme), 'dark' (the standard JT
+    // Power Tools dark theme) or 'double' (Double Dark — layered on top of
+    // JobTread's own dark mode). darkMode stays a boolean so the ~10 places
+    // that read it, and the appearance-mode exclusion logic, are unchanged.
+    darkModeLevel: 'dark',
     budgetHierarchy: false,
     budgetRowHighlight: false,
 

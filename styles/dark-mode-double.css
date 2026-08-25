@@ -1,0 +1,243 @@
+/* === JT Power Tools — "Double Dark" === */
+/* Level 3 of the Dark Mode toggle. Unlike the other levels this one does not
+   theme JobTread from scratch — JobTread's own dark mode does that now. This
+   sits on top of it and fixes the two things that make it hard to sit in front
+   of for a day:
+
+   1. It is blue. JobTread is a Tailwind app and Tailwind's default neutral ramp
+      is cool-tinted — gray-900 is #111827, gray-800 is #1f2937. That navy cast
+      is exactly what the JT Power Tools palette rules out, and it is most of why
+      their dark mode reads as "dimmed" rather than dark.
+   2. It is not very dark. Their surfaces land in the mid-greys.
+
+   HOW JOBTREAD'S DARK MODE WORKS, and why this file is shaped the way it is:
+   they do NOT add `dark:`-prefixed utilities to elements. A toolbar button in
+   dark mode carries exactly the classes it carries in light mode —
+   `bg-white text-gray-600 hover:bg-gray-50 shadow-xs`. What changes is what
+   those classes resolve to, redefined under Tailwind v4's `--color-*` custom
+   properties when `.dark` is set.
+
+   Two consequences, both of which this file depends on:
+
+   * The shade names here read INVERTED. `bg-white` is the darkest surface, not
+     the lightest; `text-gray-800` is the brightest text. These are the same
+     shades styles/dark-mode.css targets, for the same reason.
+   * The override has to be class-based, not token-based. Redefining
+     `--color-white` would be shorter, but `--color-white` also backs
+     `text-white` — the label on every orange and blue button — and those would
+     go dark and unreadable. Overriding `.bg-white` touches backgrounds only.
+
+   Loaded alongside styles/dark-mode.css, which keeps covering what no CSS-only
+   dark mode can reach: task cards coloured by inline `style="background-color"`
+   (a user's own colour choice, invisible to any stylesheet rule targeting
+   classes), JobTread's hard-coded inline brand navy, and JT Power Tools' own
+   injected UI — the formatter toolbar, quick notes, alert modals.
+
+   EVERY rule is scoped to `.dark`, the class JobTread's theme picker sets, and
+   carries !important so it wins over both JobTread's own dark values and
+   dark-mode.css's lighter ones. If the user has not switched JobTread itself to
+   Dark, nothing in this file applies — they get the standard theme rather than a
+   half-lit page. */
+
+/* === Palette === */
+/* Neutral greys, a step darker than the standard Dark level's #2c2c2c surface.
+   Declared as tokens so a tuning pass is one edit rather than eighty. Note these
+   are OUR tokens (--jtd2-*), deliberately not Tailwind's --color-* — see above. */
+.dark {
+    --jtd2-bg-deep: #1a1a1a;     /* page ground, behind everything */
+    --jtd2-bg-surface: #1e1e1e;  /* bg-white — cards, tables, modals, panels */
+    --jtd2-bg-elev: #272727;     /* gray-50/100 — headers, toolbars, sticky rows */
+    --jtd2-bg-chip: #303030;     /* gray-200 — buttons, chips, inputs */
+    --jtd2-bg-hover: #383838;
+    --jtd2-border: #383838;
+    --jtd2-border-strong: #4a4a4a;
+    --jtd2-text: #e6e6e6;
+    --jtd2-text-2: #b0b0b0;
+    --jtd2-text-muted: #909090;
+}
+
+/* === Surfaces === */
+.dark body {
+    background-color: var(--jtd2-bg-deep) !important;
+}
+
+.dark [class~="bg-white"] {
+    background-color: var(--jtd2-bg-surface) !important;
+}
+
+.dark [class~="bg-gray-50"],
+.dark [class~="bg-gray-100"],
+.dark [class~="bg-slate-50"],
+.dark [class~="bg-slate-100"] {
+    background-color: var(--jtd2-bg-elev) !important;
+}
+
+.dark [class~="bg-gray-200"],
+.dark [class~="bg-slate-200"] {
+    background-color: var(--jtd2-bg-chip) !important;
+}
+
+/* === Hover === */
+/* Their own group, because these fire on :hover only and an exact-token match
+   (see the selector note below) will not catch a `hover:`-prefixed class.
+   Without them the surface rules above flatten every hover state to one grey and
+   rows stop responding to the pointer — the fastest way to make a dark theme
+   feel broken. */
+.dark [class~="hover:bg-gray-50"]:hover,
+.dark [class~="hover:bg-gray-100"]:hover,
+.dark [class~="hover:bg-slate-50"]:hover,
+.dark [class~="hover:bg-slate-100"]:hover {
+    background-color: var(--jtd2-bg-hover) !important;
+}
+
+/* Why [class~="..."] rather than a substring match: `~=` matches a whole
+   whitespace-separated class token, so `[class~="bg-gray-50"]` hits the base
+   class and leaves `hover:bg-gray-50` to the rule above. A substring match
+   ([class*=]) would hit both, giving hover-only elements a permanent fill. */
+
+/* === Text === */
+/* Inverted shades, as described at the top: in JobTread's dark mode the high
+   gray numbers are the bright text. */
+.dark [class~="text-gray-900"],
+.dark [class~="text-gray-800"],
+.dark [class~="text-gray-700"],
+.dark [class~="text-slate-800"],
+.dark [class~="text-slate-700"] {
+    color: var(--jtd2-text) !important;
+}
+
+.dark [class~="text-gray-600"],
+.dark [class~="text-gray-500"],
+.dark [class~="text-slate-600"],
+.dark [class~="text-slate-500"] {
+    color: var(--jtd2-text-2) !important;
+}
+
+.dark [class~="text-gray-400"],
+.dark [class~="text-slate-400"] {
+    color: var(--jtd2-text-muted) !important;
+}
+
+/* === Borders === */
+/* The global default first: the great majority of JobTread's rules are an
+   uncoloured `border` / `border-y`, which picks up Tailwind's default border
+   colour. Left alone it keeps the blue-grey cast this level exists to remove. */
+.dark *,
+.dark ::backdrop,
+.dark ::file-selector-button,
+.dark :after,
+.dark :before {
+    border-color: var(--jtd2-border);
+}
+
+.dark [class~="border-gray-200"],
+.dark [class~="border-gray-300"],
+.dark [class~="border-slate-200"],
+.dark [class~="border-slate-300"],
+.dark [class~="divide-gray-200"],
+.dark [class~="divide-gray-300"] {
+    border-color: var(--jtd2-border) !important;
+}
+
+.dark [class~="border-gray-400"],
+.dark [class~="border-gray-500"] {
+    border-color: var(--jtd2-border-strong) !important;
+}
+
+/* Brand orange is brand orange at every level. */
+.dark [class~="border-jtOrange"] {
+    border-color: #ff5600 !important;
+}
+
+.dark [class~="border-transparent"] {
+    border-color: transparent !important;
+}
+
+/* === Buttons and elevation === */
+/* JobTread's controls carry `shadow-xs` (Tailwind v4's name for what v3 called
+   shadow-sm), and that shadow is doing real work: a toolbar button group sits on
+   a bar close enough to its own fill that the shadow plus the border is most of
+   what separates them. Taking the ramp darker would erase it — a shadow
+   calibrated against a mid-grey has nothing left to darken against #1a1a1a — and
+   the buttons would flatten into the bar.
+   So the small shadows are deepened rather than left alone, and paired with a
+   hairline top edge: on a dark ground a light edge reads as "raised" far more
+   reliably than a dark blur does. */
+.dark [class~="shadow-xs"],
+.dark [class~="shadow-sm"],
+.dark [class~="shadow"],
+.dark [class~="shadow-md"] {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+/* The pressed state inverts that: the highlight edge moves to the bottom so the
+   control reads as pushed in rather than merely darker. */
+.dark [class~="active:shadow-inner"]:active {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6), inset 0 -1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Floating surfaces still need a real shadow — a modal or dropdown has to lift
+   clear of the page, and at this depth only a large, dark blur will do it. */
+.dark [class~="shadow-lg"],
+.dark [class~="shadow-xl"],
+.dark [class~="shadow-2xl"] {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Bordered controls get the stronger of the two greys — their outline is the
+   other half of the affordance, and the global hairline above is tuned for table
+   rules, which want to be quieter than a control does. */
+.dark [role="button"][class~="border"],
+.dark [role="button"][class~="border-y"],
+.dark button[class~="border"],
+.dark button[class~="border-y"] {
+    border-color: var(--jtd2-border-strong) !important;
+}
+
+/* === Inputs === */
+/* Inputs need to sit above the surface they are on, not below it — at this depth
+   a "sunken" field is indistinguishable from a gap. */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.dark textarea,
+.dark select {
+    background-color: var(--jtd2-bg-chip) !important;
+    color: var(--jtd2-text) !important;
+    border-color: var(--jtd2-border-strong) !important;
+}
+
+.dark ::placeholder {
+    color: var(--jtd2-text-muted) !important;
+}
+
+/* === Semantic colours === */
+/* Status, alert and accent colours are left alone on purpose — they carry
+   meaning, and JobTread's dark mode already picks readable variants. The
+   exception is the shade-50 alert fills, near-white washes designed for a light
+   page, which blow out against a #1a1a1a ground. */
+.dark [class~="bg-green-50"] {
+    background-color: #16302a !important;
+}
+
+.dark [class~="bg-yellow-50"] {
+    background-color: #382d14 !important;
+}
+
+.dark [class~="bg-red-50"] {
+    background-color: #391818 !important;
+}
+
+.dark [class~="bg-orange-50"] {
+    background-color: #392114 !important;
+}
+
+.dark [class~="bg-blue-50"],
+.dark [class~="bg-blue-100"] {
+    background-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+/* === Scrollbars === */
+/* Left at the browser default, a light scrollbar track is the brightest thing on
+   the page. */
+.dark * {
+    scrollbar-color: #4a4a4a var(--jtd2-bg-deep);
+}
