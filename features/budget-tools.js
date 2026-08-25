@@ -306,7 +306,11 @@ const BudgetTools = (() => {
   // ─── Theme detection ─────────────────────────────────────────────────────
 
   function getThemeColors() {
-    const isDark = document.getElementById('jt-dark-mode-styles') !== null;
+    // Dark by either route: our own theme, or JobTread's own dark mode.
+    const bridge = window.NativeDarkBridge;
+    const isDark = (bridge && typeof bridge.isPageDark === 'function')
+      ? bridge.isPageDark()
+      : document.getElementById('jt-dark-mode-styles') !== null;
     const isCustom = document.getElementById('jt-custom-theme-styles') !== null;
 
     if (isCustom) {

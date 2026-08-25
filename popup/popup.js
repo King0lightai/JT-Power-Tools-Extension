@@ -1072,7 +1072,7 @@ async function saveSettings(settings) {
 // master toggle — keeps working against a boolean.
 const DARK_MODE_STEPS = [
   { level: 'off', hint: "JobTread's own theme, untouched." },
-  { level: 'soft', hint: 'Kinda Dark — still a light theme, with the glare taken off.' },
+  { level: 'soft', hint: "Kinda Dark — still a light theme, with the glare taken off. Needs JobTread's own theme set to Light." },
   { level: 'dark', hint: 'Dark — the standard JT Power Tools dark theme.' },
   {
     level: 'double',

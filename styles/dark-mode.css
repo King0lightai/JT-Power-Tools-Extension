@@ -466,6 +466,37 @@ div.border-l div.select-none.break-inside-avoid {
     border: solid 1px #414141;
 }
 
+/* JobTread's controls carry `shadow-xs` — Tailwind v4's name for what v3 called
+   shadow-sm, which is why the rule above never matched them and toolbar buttons
+   sat flat against the bar behind them. A shadow calibrated against a white page
+   has nothing left to darken against #2c2c2c, so these are deepened rather than
+   inherited. */
+.shadow-xs,
+.shadow,
+.shadow-md {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* The hairline highlight goes on CONTROLS ONLY. On a dark ground a light top
+   edge reads as "raised" far more reliably than a dark blur does, but JobTread
+   shadows cards as well as buttons — message threads, list rows, panels — and
+   giving each of those a bright edge turns a list into a stack of outlined boxes
+   that fight each other. A button is a discrete thing you press and earns the
+   edge; a card is a region and does not. */
+button.shadow-xs,
+button.shadow,
+[role="button"].shadow-xs,
+[role="button"].shadow {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Floating surfaces need to lift clear of the page, not just off it. */
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
 /* Scrollbar track (background) */
 ::-webkit-scrollbar {
   width: 12px; /* or height for horizontal scrollbars */

@@ -79,7 +79,13 @@ const BudgetRowHighlight = (() => {
         .getPropertyValue('--jt-theme-background').trim();
       return isDarkColor(bg) ? 'dark' : 'light';
     }
-    if (document.getElementById('jt-dark-mode-styles')) return 'dark';
+    const bridge = window.NativeDarkBridge;
+    // Dark by either route: our own theme, or JobTread's own dark mode.
+    if (bridge && typeof bridge.isPageDark === 'function') {
+      if (bridge.isPageDark()) return 'dark';
+    } else if (document.getElementById('jt-dark-mode-styles')) {
+      return 'dark';
+    }
     return 'light';
   }
 

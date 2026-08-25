@@ -21,8 +21,12 @@ const BudgetHierarchyFeature = (() => {
     generateShades
   } = window.ColorUtils || {};
 
-  // Check if dark mode styles are injected in DOM
+  // The page is dark if OUR theme is painting it or JobTread's own dark mode is
+  // on. NativeDarkBridge knows both; the stylesheet check is the fallback for
+  // when it hasn't loaded.
   function isDarkModeActive() {
+    const bridge = window.NativeDarkBridge;
+    if (bridge && typeof bridge.isPageDark === 'function') return bridge.isPageDark();
     return document.getElementById('jt-dark-mode-styles') !== null;
   }
 
@@ -612,7 +616,16 @@ const BudgetHierarchyFeature = (() => {
         // Watch for attribute changes (like style or class changes on expand/collapse)
         if (mutation.type === 'attributes') {
           const target = mutation.target;
-          if (target.classList?.contains('group/row') ||
+
+          // A class change on <body> is how the theme now announces itself:
+          // NativeDarkBridge toggles jt-dark-mode there when JobTread's own dark
+          // mode is switched on or off. Without this, flipping JobTread's theme
+          // picker left the shading derived from the previous theme's colors
+          // until the next reload — the style-injection check below only fires
+          // when OUR stylesheet is added or removed.
+          if (target === document.body) {
+            shouldRefreshTheme = true;
+          } else if (target.classList?.contains('group/row') ||
               target.querySelector?.('.group\\/row')) {
             shouldReapply = true;
           }

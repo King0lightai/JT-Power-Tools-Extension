@@ -78,6 +78,11 @@ const featureModules = {
     feature: () => window.QuickNotesFeature,
     instance: null
   },
+  nativeDarkBridge: {
+    name: 'Native Dark Mode Bridge',
+    feature: () => window.NativeDarkBridge,
+    instance: null
+  },
   helpSidebarSupport: {
     name: 'Help Sidebar Support',
     feature: () => window.HelpSidebarSupportFeature,
@@ -297,7 +302,8 @@ async function isFeatureAllowedByTier(featureKey) {
     // content.js. Fail closed: only allow explicitly-internal features so the
     // extension's core plumbing still works, but don't grant anything paid.
     console.warn('JT-Tools: LicenseService not available — blocking tier-gated features');
-    return featureKey === 'helpSidebarSupport' || featureKey === 'keyboardShortcuts';
+    return featureKey === 'helpSidebarSupport' || featureKey === 'keyboardShortcuts' ||
+      featureKey === 'nativeDarkBridge';
   }
 
   if (license.isInternalFeature(featureKey)) return true;
@@ -477,6 +483,9 @@ async function initializeAllFeatures() {
   for (const [key, enabled] of Object.entries(currentSettings)) {
     if (enabled && featureModules[key]) keysToInit.add(key);
   }
+  // The theme bridge goes first: it decides whether body.jt-dark-mode is set,
+  // and every other feature's injected UI reads that when it mounts.
+  if (featureModules.nativeDarkBridge) keysToInit.add('nativeDarkBridge');
   if (featureModules.helpSidebarSupport) keysToInit.add('helpSidebarSupport');
   if (featureModules.keyboardShortcuts) keysToInit.add('keyboardShortcuts');
   // tweakBuilder is a companion to tweakEngine — init it whenever the engine is enabled.
@@ -529,7 +538,7 @@ async function handleSettingsChange(newSettings) {
       if (!featureModules[key]) continue;
 
       // Skip always-enabled features - not user-toggleable
-      if (key === 'helpSidebarSupport' || key === 'keyboardShortcuts') continue;
+      if (key === 'helpSidebarSupport' || key === 'keyboardShortcuts' || key === 'nativeDarkBridge') continue;
 
       const wasEnabled = currentSettings[key];
 

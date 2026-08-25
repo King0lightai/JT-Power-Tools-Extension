@@ -146,7 +146,10 @@ const LicenseService = (() => {
 
   const INTERNAL_FEATURES = [
     'helpSidebarSupport',
-    'keyboardShortcuts'
+    'keyboardShortcuts',
+    // Theme plumbing, not a feature: decides whether body.jt-dark-mode is set
+    // so JT Power Tools' own injected UI matches whichever dark mode is on.
+    'nativeDarkBridge'
   ];
 
   /**
