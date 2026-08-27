@@ -280,8 +280,16 @@ const PreviewModeFeature = (() => {
     const body = document.body;
     if (!body) return false;
 
-    // Check for dark mode class on body or html
-    if (body.classList.contains('dark') || document.documentElement.classList.contains('dark')) {
+    // NativeDarkBridge owns this answer — it keys on `jt-dark`, the class
+    // JobTread's theme picker really sets (their Tailwind v4 build compiles
+    // `dark:` to `:where(.jt-dark, .jt-dark *)`). The class check below looked
+    // for Tailwind's default `dark` and so never matched; only the luminance
+    // fallback underneath it was carrying this function.
+    const bridge = window.NativeDarkBridge;
+    if (bridge && typeof bridge.isNativeDark === 'function') {
+      if (bridge.isNativeDark()) return true;
+    } else if (body.classList.contains('jt-dark') || document.documentElement.classList.contains('jt-dark') ||
+      body.classList.contains('dark') || document.documentElement.classList.contains('dark')) {
       return true;
     }
 
@@ -314,8 +322,14 @@ const PreviewModeFeature = (() => {
       // Remove existing theme classes
       element.classList.remove('dark-theme', 'custom-theme');
 
-      // Check if dark mode is enabled (either via settings OR JobTread's native dark mode)
-      if (settings.darkMode || isJobTreadDarkMode()) {
+      // Is this page dark, by EITHER route? Prefer the bridge: `settings.darkMode`
+      // is also true for the "Kinda Dark" level, which is a dimmed LIGHT theme,
+      // so it would put a dark preview on a light page.
+      const bridge = window.NativeDarkBridge;
+      const pageIsDark = bridge && typeof bridge.isPageDark === 'function'
+        ? bridge.isPageDark()
+        : (settings.darkMode || isJobTreadDarkMode());
+      if (pageIsDark) {
         element.classList.add('dark-theme');
         return;
       }

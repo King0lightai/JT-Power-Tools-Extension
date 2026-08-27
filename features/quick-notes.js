@@ -1972,8 +1972,17 @@ const QuickNotesFeature = (() => {
       // Remove existing theme classes
       notesPanel.classList.remove('dark-theme', 'custom-theme');
 
-      // Check if dark mode is enabled
-      if (settings.darkMode) {
+      // Is this page dark, by EITHER route? NativeDarkBridge owns that answer:
+      // JobTread's own dark mode counts, and the "Kinda Dark" level does not —
+      // it is a dimmed LIGHT theme, so a dark notes panel on it is wrong.
+      // `settings.darkMode` alone got both of those backwards: it stayed false
+      // on JobTread's dark pages (leaving this panel white on a dark app) and
+      // true on Kinda Dark (darkening a panel on a light page).
+      const bridge = window.NativeDarkBridge;
+      const pageIsDark = bridge && typeof bridge.isPageDark === 'function'
+        ? bridge.isPageDark()
+        : settings.darkMode;
+      if (pageIsDark) {
         notesPanel.classList.add('dark-theme');
         return;
       }

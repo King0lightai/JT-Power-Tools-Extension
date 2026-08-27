@@ -679,6 +679,39 @@ body.dark-theme .feature-item:not([data-tier]) .feature-icon { background: var(-
   color: var(--accent-ink);
 }
 
+/* ── Step toggle notice ──
+   Says JobTread's own theme is set the wrong way for the selected step, and
+   where to change it. Boxed and washed so it reads as a prompt rather than
+   more hint text, but quiet enough that it never competes with the control
+   above it — it appears and disappears as the user steps through the levels. */
+.step-toggle-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--accent-wash);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+}
+.step-toggle-notice[hidden] { display: none; }
+
+.step-toggle-notice-text {
+  margin: 0;
+  color: var(--fg);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* The "here is where to change it" line. JobTread's Appearance setting is the
+   only thing that can move that theme — we can read it but not set it. */
+.step-toggle-notice-help {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .feature-info {
   flex: 1;
   min-width: 0;

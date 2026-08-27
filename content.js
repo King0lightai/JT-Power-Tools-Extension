@@ -83,6 +83,11 @@ const featureModules = {
     feature: () => window.NativeDarkBridge,
     instance: null
   },
+  jobtreadTheme: {
+    name: 'JobTread Theme Reader',
+    feature: () => window.JobTreadTheme,
+    instance: null
+  },
   helpSidebarSupport: {
     name: 'Help Sidebar Support',
     feature: () => window.HelpSidebarSupportFeature,
@@ -303,7 +308,7 @@ async function isFeatureAllowedByTier(featureKey) {
     // extension's core plumbing still works, but don't grant anything paid.
     console.warn('JT-Tools: LicenseService not available — blocking tier-gated features');
     return featureKey === 'helpSidebarSupport' || featureKey === 'keyboardShortcuts' ||
-      featureKey === 'nativeDarkBridge';
+      featureKey === 'nativeDarkBridge' || featureKey === 'jobtreadTheme';
   }
 
   if (license.isInternalFeature(featureKey)) return true;
@@ -486,6 +491,10 @@ async function initializeAllFeatures() {
   // The theme bridge goes first: it decides whether body.jt-dark-mode is set,
   // and every other feature's injected UI reads that when it mounts.
   if (featureModules.nativeDarkBridge) keysToInit.add('nativeDarkBridge');
+  // Answers the popup's read of JobTread's own theme. Always on: it is a
+  // message handler, not a treatment, and the popup has to be able to ask on
+  // any JT page.
+  if (featureModules.jobtreadTheme) keysToInit.add('jobtreadTheme');
   if (featureModules.helpSidebarSupport) keysToInit.add('helpSidebarSupport');
   if (featureModules.keyboardShortcuts) keysToInit.add('keyboardShortcuts');
   // tweakBuilder is a companion to tweakEngine — init it whenever the engine is enabled.
@@ -538,7 +547,8 @@ async function handleSettingsChange(newSettings) {
       if (!featureModules[key]) continue;
 
       // Skip always-enabled features - not user-toggleable
-      if (key === 'helpSidebarSupport' || key === 'keyboardShortcuts' || key === 'nativeDarkBridge') continue;
+      if (key === 'helpSidebarSupport' || key === 'keyboardShortcuts' ||
+        key === 'nativeDarkBridge' || key === 'jobtreadTheme') continue;
 
       const wasEnabled = currentSettings[key];
 

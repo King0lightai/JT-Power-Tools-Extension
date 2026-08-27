@@ -780,9 +780,7 @@ async function loadSettings() {
     // Seed the remembered level before painting the step control. Settings saved
     // before this was a 4-step toggle have no darkModeLevel, and those users had
     // the standard dark theme — so that is what an absent value means.
-    if (settings.darkModeLevel && DARK_MODE_STEPS.some(s => s.level === settings.darkModeLevel)) {
-      darkModeLevel = settings.darkModeLevel;
-    }
+    DarkModeSteps.restoreLevel(settings.darkModeLevel);
     syncDarkModeSteps();
     setCheckbox('contrastFix', settings.contrastFix);
     setCheckbox('characterCounter', settings.characterCounter !== undefined ? settings.characterCounter : false);
@@ -1065,96 +1063,19 @@ async function saveSettings(settings) {
 }
 
 // ═══ Dark Mode step toggle ═══
-// Dark Mode is a 4-step setting rather than an on/off one. Step "off" maps to
-// darkMode = false; the other three map to darkMode = true plus a darkModeLevel.
-// The #darkMode checkbox stays the on/off source of truth (see popup.html), so
-// everything else in this file — mutual exclusion, getCurrentSettings, the
-// master toggle — keeps working against a boolean.
-const DARK_MODE_STEPS = [
-  { level: 'off', hint: "JobTread's own theme, untouched." },
-  { level: 'soft', hint: "Kinda Dark — still a light theme, with the glare taken off. Needs JobTread's own theme set to Light." },
-  { level: 'dark', hint: 'Dark — the standard JT Power Tools dark theme.' },
-  {
-    level: 'double',
-    hint: "Double Dark — sits on top of JobTread's dark mode and takes the blue out of it. Switch JobTread's own theme to Dark as well.",
-    needsAction: true
-  }
-];
-
-// The level to restore when the user steps back onto a dark step. Seeded from
-// saved settings; 'dark' until then.
-let darkModeLevel = 'dark';
-
-// Paint the step control from the current checkbox state. Called on load, on
-// every step click, and after appearance-mode exclusion silently unchecks
-// darkMode — without that last one the control would still read "Dark" while
-// Contrast Fix had taken over.
+// The control itself — the 4 steps, the remembered level, and the offer to
+// switch JobTread's own theme when the selected step needs a different one —
+// lives in popup/dark-mode-steps.js as window.DarkModeSteps. It was moved out
+// so it can be exercised in jsdom: this file runs license checks, account UI
+// and a dozen network calls on load, and none of that is loadable in a test.
+//
+// These two wrappers keep the existing call sites in this file unchanged.
 function syncDarkModeSteps() {
-  const group = document.getElementById('darkModeSteps');
-  const checkbox = document.getElementById('darkMode');
-  const hint = document.getElementById('darkModeHint');
-  if (!group || !checkbox) return;
-
-  const active = checkbox.checked ? darkModeLevel : 'off';
-  const step = DARK_MODE_STEPS.find(s => s.level === active) || DARK_MODE_STEPS[0];
-
-  group.querySelectorAll('.step-toggle-option').forEach(btn => {
-    const selected = btn.dataset.level === active;
-    btn.setAttribute('aria-checked', selected ? 'true' : 'false');
-    // Roving tabindex: the group is one tab stop, arrows move within it.
-    btn.tabIndex = selected ? 0 : -1;
-  });
-
-  if (hint) {
-    hint.textContent = step.hint;
-    hint.classList.toggle('needs-action', Boolean(step.needsAction));
-  }
-}
-
-// Select a step. Writes through to the checkbox and dispatches `change` so the
-// existing listener saves the settings — this must not become a second save path.
-function selectDarkModeStep(level) {
-  const checkbox = document.getElementById('darkMode');
-  if (!checkbox) return;
-
-  const wantsDark = level !== 'off';
-  if (wantsDark) darkModeLevel = level;
-
-  checkbox.checked = wantsDark;
-  syncDarkModeSteps();
-
-  // Setting .checked in script never fires `change`, and stepping between two
-  // dark levels doesn't move the checkbox at all — so dispatch it explicitly.
-  // The existing listener then runs appearance-mode exclusion and saves, which
-  // keeps this off a second save path.
-  checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+  DarkModeSteps.sync();
 }
 
 function initDarkModeSteps() {
-  const group = document.getElementById('darkModeSteps');
-  if (!group) return;
-
-  const options = Array.from(group.querySelectorAll('.step-toggle-option'));
-
-  options.forEach((btn, index) => {
-    btn.addEventListener('click', () => selectDarkModeStep(btn.dataset.level));
-
-    // Arrow keys move between steps, matching the radiogroup role the markup
-    // advertises. Without this the group is reachable but not operable by
-    // keyboard beyond the one focused step.
-    btn.addEventListener('keydown', (e) => {
-      let next = null;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (index + 1) % options.length;
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (index - 1 + options.length) % options.length;
-      if (next === null) return;
-
-      e.preventDefault();
-      options[next].focus();
-      selectDarkModeStep(options[next].dataset.level);
-    });
-  });
-
-  syncDarkModeSteps();
+  DarkModeSteps.init();
 }
 
 // Helper to safely get checkbox value with fallback
@@ -1175,7 +1096,7 @@ async function getCurrentSettings() {
     formatter: getCheckboxValue('formatter', defaultSettings.formatter),
     previewMode: getCheckboxValue('previewMode', defaultSettings.previewMode),
     darkMode: getCheckboxValue('darkMode', defaultSettings.darkMode),
-    darkModeLevel: darkModeLevel,
+    darkModeLevel: DarkModeSteps.getLevel(),
     rgbTheme: getCheckboxValue('rgbTheme', defaultSettings.rgbTheme),
     smartJobSwitcher: getCheckboxValue('smartJobSwitcher', defaultSettings.smartJobSwitcher),
     budgetHierarchy: getCheckboxValue('budgetHierarchy', defaultSettings.budgetHierarchy),

@@ -149,7 +149,11 @@ const LicenseService = (() => {
     'keyboardShortcuts',
     // Theme plumbing, not a feature: decides whether body.jt-dark-mode is set
     // so JT Power Tools' own injected UI matches whichever dark mode is on.
-    'nativeDarkBridge'
+    'nativeDarkBridge',
+    // Theme plumbing too: answers the popup's read/write of JobTread's OWN
+    // theme, which two Dark Mode levels depend on. A message handler, not a
+    // treatment — nothing to gate.
+    'jobtreadTheme'
   ];
 
   /**

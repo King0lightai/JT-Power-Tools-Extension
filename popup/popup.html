@@ -461,6 +461,19 @@
                 <button type="button" class="step-toggle-option" role="radio" data-level="double" aria-checked="false" tabindex="-1">Double</button>
               </div>
               <p class="step-toggle-hint" id="darkModeHint"></p>
+              <!-- Kinda Dark and Double Dark each need JobTread's OWN theme set
+                   a particular way, or their stylesheet self-disables and the
+                   step silently does nothing. When they disagree, say so and
+                   point at JobTread's Settings → Appearance, which is the only
+                   place that theme can actually be changed — see the
+                   measurement in features/jobtread-theme.js. Hidden entirely
+                   when the popup wasn't opened over a JobTread tab, because
+                   there is nothing to report. Both lines are populated by
+                   dark-mode-steps.js. -->
+              <div class="step-toggle-notice" id="darkModeThemeNotice" hidden>
+                <p class="step-toggle-notice-text" id="darkModeThemeNoticeText"></p>
+                <p class="step-toggle-notice-help" id="darkModeThemeHelp"></p>
+              </div>
             </div>
 
             <div class="feature-item">
@@ -1173,6 +1186,7 @@
   <script src="../features/tweak-engine/storage.js"></script>
   <script src="../features/tweak-engine/port.js"></script>
   <script src="feature-guide.js"></script>
+  <script src="dark-mode-steps.js"></script>
   <script src="popup.js"></script>
   <script src="pave-explorer.js"></script>
 </body>

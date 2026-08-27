@@ -337,47 +337,117 @@ const FreezeHeaderFeature = (() => {
       color: #111827;
     }
 
-    /* Dark mode compatibility - uses body.jt-dark-mode class added by dark-mode.js */
+    /* Dark mode compatibility */
     /* Note: Both classes are on body, so use body.class1.class2 (no space) */
     /* Note: .jt-top-header excluded - dark mode feature handles it directly */
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container,
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
-    body.jt-dark-mode.jt-freeze-header-active .jt-action-toolbar,
-    body.jt-dark-mode.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
-    body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container,
-    body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container > div,
-    body.jt-dark-mode.jt-freeze-header-active .jt-files-folder-bar,
-    body.jt-dark-mode.jt-freeze-header-active .jt-files-list-header,
-    body.jt-dark-mode.jt-freeze-header-active .jt-files-list-header > div,
-    body.jt-dark-mode.jt-freeze-header-active .jt-files-sidebar,
-    body.jt-dark-mode.jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
+    /*
+     * Everything above forces "background-color: white !important" so the frozen
+     * bars stay opaque over scrolling content. On a dark page that has to be
+     * undone, and there are TWO dark pages to undo it for:
+     *
+     *   body.jt-dark-standard  our Dark level loaded styles/dark-mode.css and
+     *                          repainted the app in the JT Power Tools greys
+     *   body.jt-native-dark    JobTread's own dark theme is the ground
+     *
+     * jt-dark-mode is set for both (NativeDarkBridge owns it), so it cannot
+     * tell them apart — and it used to gate this whole block, which put our warm
+     * #2c2c2c bars on JobTread's cooler, bluer dark as a visible foreign patch.
+     */
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    body.jt-dark-standard.jt-freeze-header-active .jt-action-toolbar,
+    body.jt-dark-standard.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    body.jt-dark-standard.jt-freeze-header-active .jt-schedule-header-container,
+    body.jt-dark-standard.jt-freeze-header-active .jt-schedule-header-container > div,
+    body.jt-dark-standard.jt-freeze-header-active .jt-files-folder-bar,
+    body.jt-dark-standard.jt-freeze-header-active .jt-files-list-header,
+    body.jt-dark-standard.jt-freeze-header-active .jt-files-list-header > div,
+    body.jt-dark-standard.jt-freeze-header-active .jt-files-sidebar,
+    body.jt-dark-standard.jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
       background-color: #2c2c2c !important;
       border-color: #464646 !important;
     }
 
     /* Dark mode box-shadow for gap coverage */
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container,
-    body.jt-dark-mode.jt-freeze-header-active .jt-action-toolbar {
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-dark-standard.jt-freeze-header-active .jt-action-toolbar {
       box-shadow: 0 1px 0 0 #2c2c2c !important;
     }
 
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container a {
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container a {
       color: #e5e7eb !important;
     }
 
     /* Active tab in dark mode */
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
       background-color: #353535 !important;
     }
 
     /* Job context label in dark mode */
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-context-label {
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-context-label {
       color: #e0e0e0;
       border-left-color: #464646;
     }
 
-    body.jt-dark-mode.jt-freeze-header-active .jt-job-context-label:hover {
+    body.jt-dark-standard.jt-freeze-header-active .jt-job-context-label:hover {
       color: #ffffff;
+    }
+
+    /*
+     * JobTread's own dark palette is the ground. Every bar below is one of THEIR
+     * elements that we forced white, so the job is to hand it back the colour
+     * they would have painted — read from their live tokens rather than a second
+     * hardcoded palette of ours.
+     *
+     * Their scale INVERTS under dark (gray-100 #1e2128 is a surface, gray-800
+     * #e0e3e9 is text) and --color-white never flips, so it is not a surface
+     * colour and is never used here.
+     *
+     * --jtd2-keep is defined (66%) only while Double Dark is loaded, so the
+     * fallback 100% leaves the token untouched otherwise and these bars darken
+     * with the rest of the page under that level for free.
+     */
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-action-toolbar,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-schedule-header-container,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-schedule-header-container > div,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-files-folder-bar,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-files-list-header,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-files-list-header > div,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-files-sidebar,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
+      background-color: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black) !important;
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black) !important;
+    }
+
+    /* Box-shadow for gap coverage - must be the same colour as the bar itself */
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-action-toolbar {
+      box-shadow: 0 1px 0 0 color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black) !important;
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-tabs-container a {
+      color: var(--color-gray-800, #e0e3e9) !important;
+    }
+
+    /* Active tab. This element carries JobTread's own bg-gray-50 class, which
+       their dark mode renders #15171c - DARKER than the bar, not lighter. Read
+       that exact token back rather than inventing a raised state: the rule only
+       exists to undo the light rgb(249, 250, 251) we forced on it. */
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
+      background-color: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black) !important;
+    }
+
+    /* Job context label - our own element, so it takes the text tokens */
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-context-label {
+      color: var(--color-gray-800, #e0e3e9);
+      border-left-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard).jt-freeze-header-active .jt-job-context-label:hover {
+      color: var(--color-gray-900, #eef0f4);
     }
 
     /* Custom theme compatibility - uses body.jt-custom-theme class added by rgb-theme.js */

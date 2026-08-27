@@ -21,23 +21,51 @@ const DarkModeFeature = (() => {
   //            theme to be set to Dark.
   // `nativeDark` records how a level relates to JobTread's own dark mode:
   //   'required'   — the level only makes sense on top of it (Double Dark)
-  //   'conflicts'  — the level is a light theme and cannot coexist with it (soft)
-  //   null         — independent of it (the standard dark theme)
-  // Both stylesheets enforce this themselves, via a .dark / html:not(.dark)
+  //   'conflicts'  — the level wants JobTread's theme set to Light (soft, dark)
+  //   null         — independent of it (no level currently is)
+  // `nativeDarkWarning` is what we say when the two disagree.
+  //
+  // Kinda and Double enforce it themselves, via an html:not(.jt-dark) / .jt-dark
   // scope, so a mismatch self-disables rather than half-lighting the page. The
-  // warning exists so the reason shows up somewhere when it does.
+  // standard Dark level does NOT self-disable — it has no such scope, and
+  // repainting the whole app in the JT Power Tools greys on top of JobTread's
+  // own dark mode leaves two dark systems fighting over the same surfaces. For
+  // that level the warning is the only signal, which is why it earns one.
   const LEVELS = {
     soft: {
       styles: ['styles/dark-mode-soft.css'],
       bodyClasses: ['jt-dark-soft'],
       highlightDate: false,
-      nativeDark: 'conflicts'
+      nativeDark: 'conflicts',
+      nativeDarkWarning:
+        'Kinda Dark is a light theme and JobTread\'s own dark mode is on, so it ' +
+        'has nothing to dim and stays out of the way. Set JobTread\'s theme to ' +
+        'Light, or pick the "Dark" or "Double" level instead.'
     },
     dark: {
-      styles: ['styles/dark-mode.css'],
-      bodyClasses: ['jt-dark-mode'],
+      // dark-mode-documents.css themes JobTread's .jt-light regions, which
+      // every level sheet deliberately excludes. See that file's header.
+      styles: ['styles/dark-mode.css', 'styles/dark-mode-documents.css'],
+      // `jt-dark-standard` means "the surrounding app is painted in the JT Power
+      // Tools greys". Only this level loads styles/dark-mode.css, which is what
+      // does that repainting — `double` darkens JobTread's own palette in place
+      // and `soft` is a light theme, so neither may claim it. Injected UI needs
+      // the distinction because `jt-dark-mode` is set by BOTH our theme and
+      // JobTread's own dark mode (NativeDarkBridge), so it cannot answer "which
+      // dark am I sitting on?" — and our warm greys read as a foreign patch on
+      // JobTread's cooler dark ground.
+      bodyClasses: ['jt-dark-mode', 'jt-dark-standard'],
       highlightDate: true,
-      nativeDark: null
+      // This level repaints the app rather than layering on JobTread's dark
+      // mode, so it wants their theme on Light. Run on top of their dark mode
+      // the two systems fight: their inverted gray scale and our neutral greys
+      // land on different halves of the page, and unlike Kinda and Double this
+      // sheet has no scope that makes it stand down.
+      nativeDark: 'conflicts',
+      nativeDarkWarning:
+        'Dark repaints JobTread in the JT Power Tools greys, and JobTread\'s own ' +
+        'dark mode is on, so two dark themes are fighting over the same surfaces. ' +
+        'Set JobTread\'s theme to Light, or pick the "Double" level instead.'
     },
     double: {
       // Only the double layer. Loading styles/dark-mode.css here would repaint
@@ -46,10 +74,14 @@ const DarkModeFeature = (() => {
       // JobTread's own dark mode in place rather than replacing it. JT Power
       // Tools' own injected UI is already themed for their dark mode by the
       // `.dark` blocks in its individual feature stylesheets.
-      styles: ['styles/dark-mode-double.css'],
+      styles: ['styles/dark-mode-double.css', 'styles/dark-mode-documents.css'],
       bodyClasses: ['jt-dark-mode', 'jt-dark-double'],
       highlightDate: true,
-      nativeDark: 'required'
+      nativeDark: 'required',
+      nativeDarkWarning:
+        'Double Dark layers on top of JobTread\'s own dark mode, which is ' +
+        'currently off. Turn on Dark in JobTread\'s theme picker, or pick the ' +
+        '"Dark" level in JT Power Tools instead.'
     }
   };
 
@@ -65,19 +97,30 @@ const DarkModeFeature = (() => {
   const STYLE_IDS = {
     'styles/dark-mode.css': 'jt-dark-mode-styles',
     'styles/dark-mode-soft.css': 'jt-dark-mode-soft-styles',
-    'styles/dark-mode-double.css': 'jt-dark-mode-double-styles'
+    'styles/dark-mode-double.css': 'jt-dark-mode-double-styles',
+    'styles/dark-mode-documents.css': 'jt-dark-mode-documents-styles'
   };
 
   function normalizeLevel(level) {
     return Object.prototype.hasOwnProperty.call(LEVELS, level) ? level : DEFAULT_LEVEL;
   }
 
-  // Is JobTread itself in dark mode? Their theme picker sets Tailwind's `dark`
-  // class. Double Dark is a layer on top of that, so without it the user would
-  // get our theme fighting a light page.
+  // Is JobTread itself in dark mode? Double Dark is a layer on top of it, so
+  // without it the user would get our theme fighting a light page.
+  //
+  // NativeDarkBridge owns this answer — see the class note there. Delegating
+  // rather than keeping a second copy is deliberate: this predicate and the
+  // bridge's disagreed for the whole of the 4-step rollout (both looked for
+  // Tailwind's default `dark`, while JobTread actually sets `jt-dark`), and two
+  // copies of one rule is how a fix like that lands in only one of them. The
+  // local fallback covers load order only — the bridge is always-on, but this
+  // module must not assume it has initialised yet.
   function isNativeDarkModeOn() {
-    return document.documentElement.classList.contains('dark') ||
-      document.body.classList.contains('dark');
+    const bridge = window.NativeDarkBridge;
+    if (bridge && typeof bridge.isNativeDark === 'function') return bridge.isNativeDark();
+    return ['jt-dark', 'dark'].some(cls =>
+      document.documentElement.classList.contains(cls) ||
+      document.body.classList.contains(cls));
   }
 
   // Initialize the feature
@@ -111,18 +154,11 @@ const DarkModeFeature = (() => {
     const config = LEVELS[level];
 
     const nativeDark = isNativeDarkModeOn();
-    if (config.nativeDark === 'required' && !nativeDark) {
-      console.warn(
-        'DarkMode: Double Dark layers on top of JobTread\'s own dark mode, which ' +
-        'is currently off. Turn on Dark in JobTread\'s theme picker, or pick the ' +
-        '"Dark" level in JT Power Tools instead.'
-      );
-    } else if (config.nativeDark === 'conflicts' && nativeDark) {
-      console.warn(
-        'DarkMode: Kinda Dark is a light theme and JobTread\'s own dark mode is on, ' +
-        'so it has nothing to dim and stays out of the way. Set JobTread\'s theme to ' +
-        'Light, or pick the "Dark" or "Double" level instead.'
-      );
+    const mismatched =
+      (config.nativeDark === 'required' && !nativeDark) ||
+      (config.nativeDark === 'conflicts' && nativeDark);
+    if (mismatched && config.nativeDarkWarning) {
+      console.warn(`DarkMode: ${config.nativeDarkWarning}`);
     }
 
     config.bodyClasses.forEach(cls => document.body.classList.add(cls));

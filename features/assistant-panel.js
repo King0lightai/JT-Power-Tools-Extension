@@ -46,6 +46,11 @@ const AssistantPanelFeature = (() => {
   const PENDING_RUN_MAX_AGE_MS = 10 * 60 * 1000;
   const DEFAULT_PANEL_WIDTH = 380;
   const MIN_PANEL_WIDTH = 300;
+  // Mobile layout breakpoint. Matches every other responsive feature in the
+  // extension (quick-notes, forms, preview-mode, jt-tools-toast). Width-only,
+  // no pointer-type gate, so DevTools responsive mode reproduces it exactly.
+  const MOBILE_MAX_WIDTH = 768;
+  const MOBILE_QUERY = `(max-width: ${MOBILE_MAX_WIDTH}px)`;
   // How long to keep watching for JobTread's help bubble to render before
   // giving up. The top bar is usually present on the first look; this only
   // covers a slow SPA mount. There is no fallback launcher — if the bubble
@@ -140,6 +145,13 @@ const AssistantPanelFeature = (() => {
   let priorTransition = null; // …and its inline transition
   let restoreTimer = null; // defers transition-restore until the close animation ends
   let panelResizeDrag = null; // { startX, startWidth } while the edge handle is dragged
+  let vvBound = false; // visualViewport listeners currently attached
+  let vvFrame = 0; // pending rAF id for the visual-viewport handler
+  let vvTarget = null; // the visualViewport we bound to — unbind from THIS, not a re-read
+  let vvLastHeight = 0; // last seen visible height, to tell a shrink from a pan
+  let vvPendingScroll = false; // a shrink is waiting to ride the next coalesced frame
+  let mobileQuery = null; // MediaQueryList while init'd (null when matchMedia is absent)
+  let mobileQueryHandler = null; // its 'change' handler, tracked for removal
   const eventListeners = []; // document/window-level — must be removed in cleanup()
   const draftConfirmTimers = new Set(); // pending two-step "are you sure?" reset timers
   // Help-bubble activation fork. The assistant is reached exclusively through
@@ -771,6 +783,18 @@ const AssistantPanelFeature = (() => {
   // the header/main reflow into the narrower box — a real push, not an overlay.
   // Falls back to document.body if #root is ever absent.
 
+  // Narrow-viewport layout: the panel becomes a full-viewport overlay and
+  // stops pushing JobTread. matchMedia is feature-detected on purpose — jsdom
+  // (and therefore the whole unit suite) has no matchMedia, and an unguarded
+  // call throws at init(). The innerWidth fallback keeps jsdom's 1024 in
+  // desktop mode, so existing tests are unaffected.
+  function isMobileLayout() {
+    if (typeof window.matchMedia === 'function') {
+      return window.matchMedia(MOBILE_QUERY).matches;
+    }
+    return (window.innerWidth || 0) <= MOBILE_MAX_WIDTH;
+  }
+
   function getSqueezeTarget() {
     return document.getElementById('root') || document.body;
   }
@@ -786,11 +810,24 @@ const AssistantPanelFeature = (() => {
   // Live-set the panel width and keep the page squeeze in lockstep.
   function setPanelWidth(width) {
     panelWidth = width;
+    // Mobile is a full-viewport overlay — the media query owns the size, and
+    // an inline width would beat it.
+    if (isMobileLayout()) {
+      if (panelEl) panelEl.style.width = '';
+      return;
+    }
     if (panelEl) panelEl.style.width = `${width}px`;
     if (squeezeTarget) squeezeTarget.style.marginRight = `${width}px`;
   }
 
   function applySqueeze() {
+    // Mobile overlays the page instead of pushing it — leave #root untouched
+    // so closing the panel is a true no-op. squeezeTarget stays null, which
+    // releaseSqueeze()/restoreSqueezeImmediate() already handle.
+    if (isMobileLayout()) {
+      if (panelEl) panelEl.style.width = '';
+      return;
+    }
     squeezeTarget = getSqueezeTarget();
     priorMarginRight = squeezeTarget.style.marginRight;
     priorTransition = squeezeTarget.style.transition;
@@ -835,6 +872,88 @@ const AssistantPanelFeature = (() => {
     squeezeTarget = null;
     priorMarginRight = null;
     priorTransition = null;
+  }
+
+  // ─── Mobile keyboard fit ───────────────────────────────────────────
+  // position:fixed measures against the LAYOUT viewport, which does NOT
+  // shrink when the on-screen keyboard opens — so the composer ends up
+  // underneath it. visualViewport is the only API reporting the actually
+  // visible box. The panel is already a flex column with a flex:1 scrolling
+  // message list, so constraining its height is the entire fix: the composer
+  // stays pinned and the list gives up the space.
+
+  function applyViewportFit() {
+    vvFrame = 0;
+    const vv = vvTarget;
+    if (!vv || !panelEl) return;
+    panelEl.style.height = `${vv.height}px`;
+    panelEl.style.transform = `translateY(${vv.offsetTop}px)`;
+    if (vvPendingScroll) {
+      vvPendingScroll = false;
+      scrollToBottom(); // keep the newest message above the keyboard
+    }
+  }
+
+  // rAF-coalesced: visualViewport 'scroll' fires on every pixel of an iOS
+  // rubber-band, and the mobile gate weights unthrottled hot handlers x3.
+  // Only a SHRINK means the keyboard opened; a pan keeps the height and just
+  // moves offsetTop, and scrolling there would yank the user off a message
+  // they had deliberately scrolled up to read.
+  function onVisualViewportChange() {
+    if (!vvTarget) return;
+    if (vvTarget.height < vvLastHeight) vvPendingScroll = true;
+    vvLastHeight = vvTarget.height;
+    if (vvFrame) return;
+    vvFrame = requestAnimationFrame(applyViewportFit);
+  }
+
+  // Bound on open (mobile only) and unbound on close — NOT via addListener(),
+  // which is for the feature's whole lifetime.
+  function bindViewportFit() {
+    const vv = window.visualViewport;
+    if (vvBound || !vv) return; // no visualViewport → the CSS 100dvh fallback
+    vvTarget = vv;
+    vvLastHeight = vv.height;
+    vv.addEventListener('resize', onVisualViewportChange); /* mobile-ok: onVisualViewportChange coalesces every event into one rAF */
+    vv.addEventListener('scroll', onVisualViewportChange); /* mobile-ok: onVisualViewportChange coalesces every event into one rAF */
+    vvBound = true;
+    applyViewportFit();
+  }
+
+  function unbindViewportFit() {
+    if (vvTarget && vvBound) {
+      vvTarget.removeEventListener('resize', onVisualViewportChange);
+      vvTarget.removeEventListener('scroll', onVisualViewportChange);
+    }
+    vvTarget = null;
+    vvBound = false;
+    vvLastHeight = 0; // a later open re-baselines from its own bind
+    vvPendingScroll = false;
+    if (vvFrame) {
+      cancelAnimationFrame(vvFrame);
+      vvFrame = 0;
+    }
+    if (panelEl) {
+      panelEl.style.height = '';
+      panelEl.style.transform = '';
+    }
+  }
+
+  // Crossing the breakpoint with the panel open (rotation, or dragging a
+  // desktop window) has to hand off cleanly in BOTH directions — otherwise a
+  // half-applied squeeze is stranded on #root with no panel beside it.
+  // panelWidth is never written from mobile mode, so the user's chosen desktop
+  // width survives a round trip through a narrow viewport.
+  function onMobileLayoutChange() {
+    if (!panelEl || !panelEl.classList.contains('jt-assistant-open')) return;
+    if (isMobileLayout()) {
+      releaseSqueeze(); // hand #root's width back
+      panelEl.style.width = ''; // let the media query own the size
+      bindViewportFit();
+    } else {
+      unbindViewportFit(); // also clears the inline height/transform
+      applySqueeze(); // re-dock at the persisted width
+    }
   }
 
   function persistPanelWidth(width) {
@@ -1162,6 +1281,7 @@ const AssistantPanelFeature = (() => {
   // Viewport shrank with the panel open — re-clamp so it never exceeds max.
   function onWindowResize() {
     if (!panelEl || !panelEl.classList.contains('jt-assistant-open')) return;
+    if (isMobileLayout()) return; // full-viewport overlay — no docked width to re-clamp
     const clamped = clampWidth(panelWidth);
     if (clamped !== panelWidth) setPanelWidth(clamped);
   }
@@ -1281,6 +1401,7 @@ const AssistantPanelFeature = (() => {
     const open = panelEl.classList.toggle('jt-assistant-open');
     if (open) {
       applySqueeze(); // dock: push JobTread left to make room
+      if (isMobileLayout()) bindViewportFit(); // mobile: sit above the keyboard
       renderChips(); // the SPA route may have changed since last open
       if (!statusChecked) {
         statusChecked = true; // once per page load, whatever the result
@@ -1295,6 +1416,7 @@ const AssistantPanelFeature = (() => {
         void recoverPendingRun(record);
       }
     } else {
+      unbindViewportFit();
       releaseSqueeze(); // undock: hand the page's width back
     }
   }
@@ -2090,6 +2212,17 @@ const AssistantPanelFeature = (() => {
     // Re-clamp the docked width if the viewport shrinks with the panel open.
     addListener(window, 'resize', onWindowResize);
 
+    // Live breakpoint transitions. matchMedia is feature-detected — without it
+    // (jsdom, very old engines) the panel simply never switches modes
+    // mid-session, which is correct for a fixed-size environment.
+    if (typeof window.matchMedia === 'function') {
+      mobileQuery = window.matchMedia(MOBILE_QUERY);
+      if (typeof mobileQuery.addEventListener === 'function') {
+        mobileQueryHandler = onMobileLayoutChange;
+        mobileQuery.addEventListener('change', mobileQueryHandler);
+      }
+    }
+
     // JobTread SPA org switches don't reload the page — re-attach the entry
     // point and reset the session when the active org changes.
     addListener(window, 'jt-org-changed', handleOrgChange);
@@ -2131,6 +2264,12 @@ const AssistantPanelFeature = (() => {
     // resize drag (userSelect was pinned in onPanelResizePointerDown).
     if (panelResizeDrag) document.body.style.userSelect = '';
     panelResizeDrag = null;
+    unbindViewportFit(); // clears panelEl's inline height/transform while it's still attached
+    if (mobileQuery && mobileQueryHandler) {
+      mobileQuery.removeEventListener('change', mobileQueryHandler);
+    }
+    mobileQuery = null;
+    mobileQueryHandler = null;
     restoreSqueezeImmediate();
 
     if (panelEl) {

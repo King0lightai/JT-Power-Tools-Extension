@@ -35,6 +35,49 @@ const BudgetHierarchyFeature = (() => {
     return document.getElementById('jt-custom-theme-styles') !== null;
   }
 
+  // Is JobTread's OWN dark mode painting the page, with our Dark level NOT
+  // repainting it in the JT Power Tools greys? Same split the stylesheets make
+  // with `body.jt-native-dark:not(.jt-dark-standard)`; NativeDarkBridge owns
+  // jt-native-dark and DarkModeFeature owns jt-dark-standard.
+  function isNativeDarkGround() {
+    const body = document.body;
+    return !!body && body.classList.contains('jt-native-dark') &&
+      !body.classList.contains('jt-dark-standard');
+  }
+
+  // JobTread's dark palette is a cooler, bluer grey than ours, and this feature
+  // paints its shades with !important — so seeding from the JT Power Tools
+  // #424242 on their budget page lays a warm block a long way lighter than
+  // every row around it. Their --color-gray-100 is the surface those rows sit
+  // on. Measured on the live app 2026-08-25: their scale is INVERTED under
+  // jt-dark, so a LOW number is a surface and a high one is text.
+  const NATIVE_DARK_SEED = '#1e2128';
+
+  // Double Dark mixes every JobTread surface 66% toward black via --jtd2-keep.
+  // That is a CSS-only mechanism and these shades are computed in JS, so
+  // without this the rows would sit above a page that had moved without them.
+  const DOUBLE_DARK_DROP = 0.34;
+
+  function nativeDarkBaseColor() {
+    let seed = NATIVE_DARK_SEED;
+    try {
+      const declared = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-gray-100').trim();
+      // Only a plain hex: Tailwind may publish the token as oklch() or rgb(),
+      // and the measured value is a better answer than a failed parse.
+      if (/^#[0-9a-fA-F]{6}$/.test(declared)) seed = declared;
+    } catch (_error) {
+      // Computed styles can be unavailable very early in a page's life.
+    }
+
+    if (!document.body || !document.body.classList.contains('jt-dark-double')) return seed;
+    if (typeof hexToHsl !== 'function' || typeof adjustLightness !== 'function') return seed;
+
+    const hsl = hexToHsl(seed);
+    if (!hsl) return seed;
+    return adjustLightness(seed, -Math.round(hsl.l * DOUBLE_DARK_DROP));
+  }
+
   // Detect which theme is active by checking DOM, not feature state
   function getActiveTheme() {
     // Check if custom theme CSS is actually injected in DOM
@@ -51,6 +94,16 @@ const BudgetHierarchyFeature = (() => {
       return {
         type: 'custom',
         baseColor: '#F3E8FF' // Default custom theme background
+      };
+    }
+
+    // JobTread's own dark mode is the ground: take their surface, not ours.
+    // Still type 'dark' — that is what picks the 2% shade step and the
+    // lighten-upward direction, both of which are right on either ground.
+    if (isNativeDarkGround()) {
+      return {
+        type: 'dark',
+        baseColor: nativeDarkBaseColor()
       };
     }
 

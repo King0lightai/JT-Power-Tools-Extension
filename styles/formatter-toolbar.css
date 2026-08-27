@@ -1887,6 +1887,114 @@
   box-shadow: none;
 }
 
+/* ========================================
+   Dark Mode Support — the classes JobTread actually produces
+   ========================================
+   The `.dark` / [data-theme] / [data-mode] groups above never fire. JobTread
+   sets NEITHER: it is a Tailwind v4 app with a CUSTOM dark variant whose theme
+   picker puts `jt-dark` on <html>. They are left in place because they cost
+   nothing and would start working if JobTread ever moved to the stock variant.
+
+   NativeDarkBridge gives us the two classes that do exist, both on <body>:
+     jt-dark-mode     — this page is dark, by either route
+     jt-native-dark   — JobTread's OWN dark mode is on
+   and DarkModeFeature adds a third:
+     jt-dark-standard — our Dark level is repainting the app in the JT Power
+                        Tools greys (it is the only level that loads
+                        styles/dark-mode.css, which does that repainting)
+
+   So there are two different grounds to sit on, and they need different
+   palettes. Ours is a warm neutral grey; JobTread's is cooler and bluer, and on
+   it our greys read as a foreign patch.
+
+   SPECIFICITY NOTE: the button rules scope through :where(), which contributes
+   no specificity of its own. That is deliberate. The colour-swatch buttons
+   (.jt-color-green and friends) carry their own text colour at (0,2,1), and a
+   body-prefixed selector would outrank all six and turn the colour picker
+   monochrome. Zero-weight scoping still beats the plain `.jt-formatter-toolbar
+   button` rules on source order, while every more specific rule in this file
+   keeps winning. The container rules take the full prefix — nothing there needs
+   to outrank them. */
+
+/* --- Our standard Dark theme repaints the app in the JT Power Tools greys --- */
+/* Values deliberately match styles/dark-mode.css, which paints this same
+   toolbar with !important and therefore wins outright while it is loaded. These
+   exist so the toolbar is still themed if that block ever moves or is split. */
+body.jt-dark-standard .jt-formatter-toolbar,
+body.jt-dark-standard .jt-formatter-toolbar-embedded,
+body.jt-dark-standard .jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
+  background-color: #353535;
+  border-color: #464646;
+  box-shadow: none;
+}
+
+:where(body.jt-dark-standard) .jt-formatter-toolbar button {
+  background-color: #353535;
+  border-color: transparent;
+  color: #e0e0e0;
+}
+
+:where(body.jt-dark-standard) .jt-formatter-toolbar button:hover {
+  background-color: #464646;
+  border-color: #5a5a5a;
+  color: #e0e0e0;
+}
+
+:where(body.jt-dark-standard) .jt-formatter-toolbar button.active {
+  background-color: #3b82f6;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+body.jt-dark-standard .jt-formatter-toolbar .jt-toolbar-divider {
+  background-color: #464646;
+}
+
+/* --- JobTread's own dark palette is the ground --- */
+/* Inherit their live tokens so we are the same colour family, and ride Double
+   Dark's darkening automatically: --jtd2-keep is defined (66%) only while that
+   level is active, so the fallback 100% leaves the token untouched otherwise.
+   Remember their scale is INVERTED under dark — low numbers are surfaces, high
+   numbers are text — and --color-white never flips, so it is not a surface. */
+body.jt-native-dark:not(.jt-dark-standard) .jt-formatter-toolbar,
+body.jt-native-dark:not(.jt-dark-standard) .jt-formatter-toolbar-embedded,
+body.jt-native-dark:not(.jt-dark-standard) .jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
+  background-color: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  box-shadow: none;
+}
+
+/* Transparent rather than a surface colour: the buttons then show the toolbar's
+   own ground, so they darken with it under Double Dark for free. */
+:where(body.jt-native-dark:not(.jt-dark-standard)) .jt-formatter-toolbar button {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-gray-600, #aab2bf);
+}
+
+/* No `color` here on purpose. At this weight it would beat the six colour-swatch
+   buttons' own text colour, and their pastel hover background wins regardless —
+   light-grey glyphs on pastel green is worse than leaving the swatch alone. The
+   idle grey-600 stays legible on grey-200 (about 6:1). The jt-dark-standard twin
+   above CAN set it because dark-mode.css already forces every button to
+   #e0e0e0 with !important while that level is loaded. */
+:where(body.jt-native-dark:not(.jt-dark-standard)) .jt-formatter-toolbar button:hover {
+  background-color: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+/* The active accent stays blue on both grounds — it is a state signal, not a
+   surface, and it reads on JobTread's dark palette as-is. */
+:where(body.jt-native-dark:not(.jt-dark-standard)) .jt-formatter-toolbar button.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+body.jt-native-dark:not(.jt-dark-standard) .jt-formatter-toolbar .jt-toolbar-divider {
+  background-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
 /* Dark mode for overflow dropdown */
 /* Target .jt-dark-mode (extension's dark mode), .dark, [data-theme="dark"], [data-mode="dark"] */
 /* Use neutral grays to match the main toolbar (#353535) instead of blue-tinted Tailwind grays */
@@ -1914,6 +2022,35 @@
 [data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover {
   background: #505050 !important;
   border-color: #606060 !important;
+}
+
+/* --- The overflow dropdown on JobTread's own dark ground --- */
+/* The toolbar itself got its native-dark variant above; its overflow menu is
+   the same surface and was missed, so it stayed on the #353535 / #404040
+   JT Power Tools greys over JobTread's cooler palette. Same tokens, same
+   --jtd2-keep darkening, and the !important is forced: the rules these
+   replace carry it, and an !important declaration outranks a normal one
+   whatever the specificity.
+
+   NO `color` here, deliberately. The .jt-dark-mode rule above already forces
+   every item to #e0e0e0 — a near-white that reads on either ground — while
+   the six .jt-color-* swatch rules sit at (0,4,0)!important. Setting colour
+   at this weight (0,4,1) would outrank all six and turn the colour picker
+   monochrome, the same trap documented for the toolbar buttons. */
+body.jt-native-dark:not(.jt-dark-standard) .jt-overflow-dropdown {
+  background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black) !important;
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black) !important;
+  box-shadow: none !important;
+}
+
+body.jt-native-dark:not(.jt-dark-standard) .jt-overflow-dropdown .jt-toolbar-item {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black) !important;
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black) !important;
+}
+
+body.jt-native-dark:not(.jt-dark-standard) .jt-overflow-dropdown .jt-toolbar-item:hover {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black) !important;
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black) !important;
 }
 
 /* Dark mode for more dropdown */

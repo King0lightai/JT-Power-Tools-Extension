@@ -1,0 +1,229 @@
+/* === JT Power Tools — Dark Documents === */
+/* The ONLY stylesheet that deliberately themes JobTread's `.jt-light` regions.
+ *
+ * WHY IT IS A SEPARATE FILE
+ * JobTread marks every document and print region with `jt-light`, and inside it
+ * their own dark variant stands down: the paper computes rgb(255,255,255) and
+ * the body copy rgb(0,0,0), because those regions become PDFs read on paper.
+ * The three level stylesheets therefore exclude the subtree entirely, via
+ * `:where(:not(.jt-light, .jt-light *))` on every rule — a blanket exclusion,
+ * so no rule can leak in by accident and repaint a document nobody meant to
+ * touch. That is what produced the original bug: `.bg-white` went to #2c2c2c
+ * while the text stayed black, at roughly 1:1 contrast.
+ *
+ * Theming documents dark is a deliberate product decision, not a leak, so it
+ * lives here instead of poking holes in that exclusion. Keeping it in one file
+ * also means the behaviour can be dropped by not loading the file.
+ *
+ * HOW IT WORKS
+ * Rather than restyle each element, redefine JobTread's own `--color-*` tokens
+ * inside the region — the same mechanism they use for their own dark mode. Every
+ * utility that reads a token then resolves dark without being named: bg-white,
+ * bg-gray-50, text-gray-800, border-gray-200 and the rest.
+ *
+ * Two things tokens cannot reach, handled explicitly below:
+ *   - `text-black` and `text-white`, which resolve to literals in some Tailwind
+ *     builds and to `--color-black`/`--color-white` in others. Both are covered.
+ *   - Inline colours. JobTread hardcodes its brand navy on document headers, and
+ *     OUR OWN formatter writes inline green/yellow highlights into document
+ *     content. The navy is remapped; the formatter's colours are deliberately
+ *     left alone, because they are the user's authored content and re-colouring
+ *     them would be editing the document rather than theming it.
+ *
+ * PRINTING
+ * `@media print` puts the whole region back to light at the end of this file.
+ * A dark document is a screen preference; printing one wastes ink and reads
+ * badly. The PDF a client receives is generated server-side and was never
+ * affected either way. */
+
+/* ── Standard Dark: the JT Power Tools greys ───────────────────────────── */
+body.jt-dark-standard .jt-light {
+  --color-white: #2c2c2c;
+  --color-black: #e0e0e0;
+  --color-gray-50: #262626;
+  --color-gray-100: #303030;
+  --color-gray-200: #3a3a3a;
+  --color-gray-300: #464646;
+  --color-gray-400: #6b6b6b;
+  --color-gray-500: #909090;
+  --color-gray-600: #b0b0b0;
+  --color-gray-700: #c8c8c8;
+  --color-gray-800: #e0e0e0;
+  --color-gray-900: #f0f0f0;
+  color: #e0e0e0;
+}
+
+/* ── Double Dark: JobTread's own palette, darkened in place ────────────── */
+/* Scoped to the level rather than to `jt-native-dark`, because this file is
+   loaded only by the levels that theme documents. `--jtd2-keep` is defined by
+   dark-mode-double.css, so the mixing below only ever runs while it is loaded. */
+body.jt-dark-double .jt-light {
+  --color-white: color-mix(in oklab, #1b1e24 var(--jtd2-keep, 100%), black);
+  --color-black: #eef0f4;
+  --color-gray-50: color-mix(in oklab, #15171c var(--jtd2-keep, 100%), black);
+  --color-gray-100: color-mix(in oklab, #1e2128 var(--jtd2-keep, 100%), black);
+  --color-gray-200: color-mix(in oklab, #2c303a var(--jtd2-keep, 100%), black);
+  --color-gray-300: color-mix(in oklab, #3a4150 var(--jtd2-keep, 100%), black);
+  --color-gray-400: #6b7280;
+  --color-gray-500: #8b93a1;
+  --color-gray-600: #aab2bf;
+  --color-gray-700: #c8cdd6;
+  --color-gray-800: #e0e3e9;
+  --color-gray-900: #eef0f4;
+  color: #e0e3e9;
+}
+
+/* ── What tokens cannot reach ──────────────────────────────────────────── */
+
+/* `text-black` is the document body copy. In builds where it compiles to a
+   literal rather than to `--color-black`, the token override above misses it
+   and it stays pure black on a dark ground — the exact 1:1 failure this file
+   exists to prevent. */
+body.jt-dark-standard .jt-light [class~="text-black"] {
+  color: #e0e0e0;
+}
+
+body.jt-dark-double .jt-light [class~="text-black"] {
+  color: #eef0f4;
+}
+
+/* `text-white` is the label on a filled button, and the token override would
+   otherwise drag it dark and hide it against its own fill. */
+body.jt-dark-standard .jt-light [class~="text-white"],
+body.jt-dark-double .jt-light [class~="text-white"] {
+  color: #ffffff;
+}
+
+/* JobTread hardcodes its brand navy inline on document headers ("Prepared by",
+   "Prepared for", totals). An inline style beats every rule above, so the navy
+   would sit nearly invisible on the darkened paper. */
+body.jt-dark-standard .jt-light [style*="color: rgb(25, 34, 82)"],
+body.jt-dark-standard .jt-light [style*="color:rgb(25, 34, 82)"] {
+  color: #e0e0e0 !important;
+}
+
+body.jt-dark-double .jt-light [style*="color: rgb(25, 34, 82)"],
+body.jt-dark-double .jt-light [style*="color:rgb(25, 34, 82)"] {
+  color: #eef0f4 !important;
+}
+
+/* ── Callouts ─────────────────────────────────────────────────────────── */
+/* Documents carry tinted callouts — a "Notes" box, a stage highlight — as a
+   pale fill with a coloured left border. Those tints are picked to sit on white
+   paper and stay near-white on a darkened one, so the lightened body copy above
+   would land on them as light-on-light. That is the same failure as dark paper
+   under black text, in reverse.
+ *
+ * Alpha tints rather than opaque fills, matching the app-level treatment: they
+ * compose with whatever ground is behind them, so one set works for both levels
+ * and keeps its hue at any darkness.
+ *
+ * Every family is listed. Enumerating a subset is what left amber callouts
+ * cream with white text on them elsewhere in the theme — the whole Tailwind
+ * alert range is cheap to cover and a missing one is invisible until a user
+ * finds it. Accent borders are untouched: they are the only thing telling a
+ * note apart from a warning. */
+body.jt-dark-standard .jt-light [class~="bg-blue-50"],
+body.jt-dark-standard .jt-light [class~="bg-blue-100"],
+body.jt-dark-double .jt-light [class~="bg-blue-50"],
+body.jt-dark-double .jt-light [class~="bg-blue-100"] {
+  background-color: rgba(59, 130, 246, 0.18);
+}
+
+body.jt-dark-standard .jt-light [class~="bg-green-50"],
+body.jt-dark-standard .jt-light [class~="bg-green-100"],
+body.jt-dark-double .jt-light [class~="bg-green-50"],
+body.jt-dark-double .jt-light [class~="bg-green-100"] {
+  background-color: rgba(52, 211, 153, 0.16);
+}
+
+body.jt-dark-standard .jt-light [class~="bg-yellow-50"],
+body.jt-dark-standard .jt-light [class~="bg-yellow-100"],
+body.jt-dark-standard .jt-light [class~="bg-amber-50"],
+body.jt-dark-standard .jt-light [class~="bg-amber-100"],
+body.jt-dark-double .jt-light [class~="bg-yellow-50"],
+body.jt-dark-double .jt-light [class~="bg-yellow-100"],
+body.jt-dark-double .jt-light [class~="bg-amber-50"],
+body.jt-dark-double .jt-light [class~="bg-amber-100"] {
+  background-color: rgba(251, 191, 36, 0.16);
+}
+
+body.jt-dark-standard .jt-light [class~="bg-orange-50"],
+body.jt-dark-standard .jt-light [class~="bg-orange-100"],
+body.jt-dark-double .jt-light [class~="bg-orange-50"],
+body.jt-dark-double .jt-light [class~="bg-orange-100"] {
+  background-color: rgba(251, 146, 60, 0.16);
+}
+
+body.jt-dark-standard .jt-light [class~="bg-red-50"],
+body.jt-dark-standard .jt-light [class~="bg-red-100"],
+body.jt-dark-double .jt-light [class~="bg-red-50"],
+body.jt-dark-double .jt-light [class~="bg-red-100"] {
+  background-color: rgba(248, 113, 113, 0.16);
+}
+
+body.jt-dark-standard .jt-light [class~="bg-purple-50"],
+body.jt-dark-standard .jt-light [class~="bg-purple-100"],
+body.jt-dark-double .jt-light [class~="bg-purple-50"],
+body.jt-dark-double .jt-light [class~="bg-purple-100"] {
+  background-color: rgba(167, 139, 250, 0.16);
+}
+
+/* The 500-weight accents inside a callout are picked for contrast against a
+   near-white wash and lose too much against a dark one. */
+body.jt-dark-standard .jt-light [class~="text-blue-500"],
+body.jt-dark-double .jt-light [class~="text-blue-500"] {
+  color: #93c5fd;
+}
+
+body.jt-dark-standard .jt-light [class~="text-amber-500"],
+body.jt-dark-standard .jt-light [class~="text-yellow-500"],
+body.jt-dark-double .jt-light [class~="text-amber-500"],
+body.jt-dark-double .jt-light [class~="text-yellow-500"] {
+  color: #fbbf24;
+}
+
+/* ── Printing ──────────────────────────────────────────────────────────── */
+/* Hand the region back to JobTread untouched. Everything above is a screen
+   preference; a printed dark document wastes ink and reads badly. */
+@media print {
+  body.jt-dark-standard .jt-light,
+  body.jt-dark-double .jt-light {
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+    color: #000000;
+  }
+
+  body.jt-dark-standard .jt-light [class~="text-black"],
+  body.jt-dark-double .jt-light [class~="text-black"] {
+    color: #000000;
+  }
+
+  body.jt-dark-standard .jt-light [class*="bg-blue-5"],
+  body.jt-dark-double .jt-light [class*="bg-blue-5"],
+  body.jt-dark-standard .jt-light [class*="bg-amber-5"],
+  body.jt-dark-double .jt-light [class*="bg-amber-5"],
+  body.jt-dark-standard .jt-light [class*="bg-yellow-5"],
+  body.jt-dark-double .jt-light [class*="bg-yellow-5"],
+  body.jt-dark-standard .jt-light [class*="bg-green-5"],
+  body.jt-dark-double .jt-light [class*="bg-green-5"],
+  body.jt-dark-standard .jt-light [class*="bg-red-5"],
+  body.jt-dark-double .jt-light [class*="bg-red-5"] {
+    background-color: revert;
+  }
+
+  body.jt-dark-standard .jt-light [class~="text-blue-500"],
+  body.jt-dark-double .jt-light [class~="text-blue-500"] {
+    color: #3b82f6;
+  }
+}

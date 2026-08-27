@@ -716,6 +716,142 @@ body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
 }
 
 /* ========================================
+   JobTread's own dark mode is the ground
+   ======================================== */
+
+/* NativeDarkBridge sets body.jt-native-dark when JobTread's own theme picker is
+   on Dark, and DarkModeFeature adds body.jt-dark-standard when OUR Dark level
+   is repainting the app in the JT Power Tools greys. The block above already
+   fires here — body.jt-dark-mode means "the page is dark by either route" — but
+   it paints those warm greys, which sit on JobTread's cooler ground as a
+   foreign patch. These rules override only the greys with JobTread's LIVE
+   tokens, so we are the same colour family as the page around us.
+
+   Gating, both halves deliberate:
+     :not(.jt-dark-standard)  our Dark level owns the page it repaints.
+     :not(.jt-custom-theme)   the RGB theme is a palette the user chose. Its
+                              rules are less specific than these, so without the
+                              guard this block would silently take it away.
+
+   Their scale is INVERTED under jt-dark — low numbers are surfaces, high
+   numbers are text — and --color-white never flips, so it is never a surface.
+   --jtd2-keep is defined (66%) only while Double Dark is loaded, so the 100%
+   fallback is a no-op otherwise and every surface here darkens with that level
+   for free.
+
+   Only greys are remapped. The blue active chip, the amber category chip, the
+   partial chip's warm tint, the red delete hover and the blue save button are
+   state signals, not surfaces — they read on both grounds unchanged, and the
+   dark block above already sets them. Shadows are left alone for the same
+   reason. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-bar {
+  background: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+  border-bottom-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-bar-title {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-badge {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+/* A divider glyph, not text — it takes a border tone rather than a text one. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-bar-separator {
+  color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-chip {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-chip:hover {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-role-count {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-action {
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-action:hover {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-toggle,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-bar-empty,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-drawer-label {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-filter-toggle:hover {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-drawer-label:hover {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-900, #eef0f4);
+}
+
+/* Saved views popover */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-btn {
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-btn:hover {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-dropdown {
+  background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-header,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-actions {
+  background: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-header {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-views-empty,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-view-delete {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-view-item {
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-view-item:hover {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-saved-view-name {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+/* Background only — the dashed blue border and blue label are the affordance. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-save-view-btn {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+}
+
+/* ========================================
    RGB Theme Support
    ======================================== */
 
@@ -1128,6 +1264,61 @@ body.jt-dark-mode .jt-avail-add-option.active .jt-avail-add-check,
 body.jt-dark-mode .jt-avail-add-empty,
 .dark .jt-avail-add-empty {
   color: #a0a0a0;
+}
+
+/* ---- JobTread's own dark palette ---- */
+/* Same contract as the block further up: override only the greys, leave the
+   blue check state and the focus ring alone, and let --jtd2-keep carry Double
+   Dark's darkening. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-assignee-dropdown {
+  background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-header {
+  background: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+  border-bottom-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-search {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-toolbar {
+  border-bottom-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-action {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-action:hover {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-option {
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-option:hover,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-option.highlighted {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+}
+
+/* Unchecked only — the checked state is the blue fill, which is a signal. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-check {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-empty {
+  color: var(--color-gray-600, #aab2bf);
 }
 
 /* ---- Custom (RGB) theme ---- */

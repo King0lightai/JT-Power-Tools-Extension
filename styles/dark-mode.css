@@ -1,6 +1,45 @@
 /* === JT Power Tools - Dark Mode Theme === */
 /* Custom dark theme for JobTread interface */
 
+/* ── THE .jt-light OPT-OUT ──────────────────────────────────────────────────
+ * JobTread wraps every document and print region in a class `jt-light`. It is
+ * their marker, not ours: inside it their own dark variant stands down, the
+ * paper computes rgb(255,255,255) and the body copy computes rgb(0,0,0),
+ * because those regions become PDFs a client reads on white paper.
+ *
+ * `.bg-white { background-color: #2c2c2c }` on a real document page therefore
+ * produced dark paper under black text — roughly 1:1 contrast, i.e. invisible.
+ * So every rule in this file that targets JOBTREAD'S OWN DOM carries
+ *
+ *     :where(:not(.jt-light, .jt-light *))
+ *
+ * `:where()` contributes ZERO specificity, so the guard excludes the subtree
+ * without shifting a single rule's weight — the ordering this file depends on
+ * (`.border-transparent` beating the universal border rule, and so on) is
+ * exactly what it was. Both arms are needed: `.jt-light *` covers the contents,
+ * `.jt-light` the wrapper itself when the marker lands on the paper element.
+ *
+ * The alternative — restoring JobTread's light values inside `.jt-light` —
+ * was rejected: it would mean guessing what their tokens resolve to in there,
+ * and every `!important` in this file would have to be out-shouted. Not
+ * matching needs no such knowledge, and it leaves user-authored content
+ * (including the formatter's inline green/yellow highlights) untouched.
+ *
+ * NOT guarded, deliberately:
+ *   - rules for JT Power Tools' OWN injected UI (`.jt-formatter-toolbar`,
+ *     `.jt-alert-*`, `.jt-dropdown-menu`, `.jt-preview-content`, the budget
+ *     hierarchy row classes). The toolbar is inserted next to the field it
+ *     serves, so it CAN land inside a document region — and its own sheet
+ *     (styles/formatter-toolbar.css) keys its dark rules on
+ *     `body.jt-dark-standard`, which does not know about `.jt-light`. Guarding
+ *     only this half would produce a toolbar that is dark in places and light
+ *     in others.
+ *   - the `::-webkit-scrollbar` rules. A guard would have to sit ahead of a
+ *     WebKit-private pseudo-element, and a selector WebKit rejects drops the
+ *     rule entirely. Scrollbars are chrome, not document presentation.
+ *
+ * tests/features/dark-mode-jobtread-contract.test.js enforces this split. */
+
 /* === Z-Index Fixes for Sidebars === */
 /* Ensure sidebar panels appear above job tabs and content bars when scrolling */
 .jt-job-tabs-container {
@@ -10,20 +49,20 @@
 
 /* Sidebar panels (Daily Log, etc.) need higher z-index to stay above page content */
 /* Target the absolute positioned sidebars on the right side */
-.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"],
-div.z-30.absolute.top-0.bottom-0.right-0 {
+.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"]:where(:not(.jt-light, .jt-light *)),
+div.z-30.absolute.top-0.bottom-0.right-0:where(:not(.jt-light, .jt-light *)) {
     z-index: 35 !important;
 }
 
 /* Ensure the inner content of sidebars also has proper stacking */
-.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"] > .absolute.inset-0,
-div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
+.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"] > .absolute.inset-0:where(:not(.jt-light, .jt-light *)),
+div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0:where(:not(.jt-light, .jt-light *)) {
     z-index: inherit;
 }
 
 /* === Logo Colors === */
 /* Make the JOBTREAD text white in dark mode, but keep orange elements orange */
-.text-gray-800 {
+.text-gray-800:where(:not(.jt-light, .jt-light *)) {
     color: #ffffff !important;
 }
 
@@ -36,23 +75,23 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
    navy text stays dark and renders nearly-invisibly on the themed dark
    `bg-white` (#2c2c2c). Override the inline navy to the standard dark
    mode primary text color. */
-[style*="color: rgb(25, 34, 82)"],
-[style*="color:rgb(25, 34, 82)"] {
+[style*="color: rgb(25, 34, 82)"]:where(:not(.jt-light, .jt-light *)),
+[style*="color:rgb(25, 34, 82)"]:where(:not(.jt-light, .jt-light *)) {
     color: #e0e0e0 !important;
 }
 
 /* === Schedule Card Overrides (Inline Styles) === */
 /* Dark overlay on task cards to darken bright backgrounds */
 /* Covers month view (td), week/day view (div.select-none), and direct cards (border-l-2) */
-td div.cursor-pointer[style*="background-color"],
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] {
+td div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:where(:not(.jt-light, .jt-light *)) {
     position: relative !important;
 }
 
-td div.cursor-pointer[style*="background-color"]::before,
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before,
-div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]::before {
+td div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before,
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before {
     content: '' !important;
     position: absolute !important;
     inset: 0 !important;
@@ -62,37 +101,37 @@ div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]::bef
 }
 
 /* Ensure text and content stays above the overlay */
-td div.cursor-pointer[style*="background-color"] > *,
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *,
-div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > * {
+td div.cursor-pointer[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)),
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)),
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)) {
     position: relative !important;
     z-index: 1 !important;
 }
 
 /* Force white text on darkened task cards */
-td div.cursor-pointer[style*="background-color"],
-td div.cursor-pointer[style*="background-color"] *,
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *,
-div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"],
-div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] * {
+td div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+td div.cursor-pointer[style*="background-color"] *:where(:not(.jt-light, .jt-light *)),
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *:where(:not(.jt-light, .jt-light *)),
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] *:where(:not(.jt-light, .jt-light *)) {
     color: white !important;
 }
 
 /* Keep the left border visible (task type indicator) */
-td div.cursor-pointer[style*="border-left"],
-div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"],
-div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"] {
+td div.cursor-pointer[style*="border-left"]:where(:not(.jt-light, .jt-light *)),
+div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"]:where(:not(.jt-light, .jt-light *)),
+div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"]:where(:not(.jt-light, .jt-light *)) {
     border-left-width: 4px !important;
 }
 
 /* === Availability View Task Cards (Inline Styles) === */
 /* These cards use text-xs with inline background-color/color, not cursor-pointer */
-td div.h-full > div.text-xs[style*="background-color"] {
+td div.h-full > div.text-xs[style*="background-color"]:where(:not(.jt-light, .jt-light *)) {
     position: relative !important;
 }
 
-td div.h-full > div.text-xs[style*="background-color"]::before {
+td div.h-full > div.text-xs[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before {
     content: '' !important;
     position: absolute !important;
     inset: 0 !important;
@@ -102,31 +141,31 @@ td div.h-full > div.text-xs[style*="background-color"]::before {
 }
 
 /* Ensure text stays above the dark overlay */
-td div.h-full > div.text-xs[style*="background-color"] > * {
+td div.h-full > div.text-xs[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)) {
     position: relative !important;
     z-index: 1 !important;
 }
 
 /* Force white text on darkened availability cards */
-td div.h-full > div.text-xs[style*="background-color"],
-td div.h-full > div.text-xs[style*="background-color"] * {
+td div.h-full > div.text-xs[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+td div.h-full > div.text-xs[style*="background-color"] *:where(:not(.jt-light, .jt-light *)) {
     color: white !important;
 }
 
 /* === Week/Day View Schedule Cards === */
 /* Week/day view uses grid-based layout instead of table cells */
 /* Target the grid column containers (calendar cell backgrounds, not task cards) */
-div.border-l[style*="grid-column"] {
+div.border-l[style*="grid-column"]:where(:not(.jt-light, .jt-light *)) {
     background-color: #2c2c2c !important;
 }
 
 /* Target all week/day view card wrappers (calendar cell backgrounds) */
-div.select-none.break-inside-avoid.p-0.align-top {
+div.select-none.break-inside-avoid.p-0.align-top:where(:not(.jt-light, .jt-light *)) {
     background-color: #2c2c2c !important;
 }
 
 /* Also target when inside border-l container */
-div.border-l div.select-none.break-inside-avoid {
+div.border-l div.select-none.break-inside-avoid:where(:not(.jt-light, .jt-light *)) {
     background-color: #2c2c2c !important;
 }
 
@@ -134,33 +173,33 @@ div.border-l div.select-none.break-inside-avoid {
 
 /* === General Styles === */
 /* Global border color */
-*, ::backdrop, ::file-selector-button, :after, :before {
+*:where(:not(.jt-light, .jt-light *)), :where(:not(.jt-light, .jt-light *))::backdrop, :where(:not(.jt-light, .jt-light *))::file-selector-button, :where(:not(.jt-light, .jt-light *)):after, :where(:not(.jt-light, .jt-light *)):before {
     border-color: #464646;
 }
 
 /* Transparent border */
-.border-transparent {
+.border-transparent:where(:not(.jt-light, .jt-light *)) {
     border-color: transparent;
 }
 
 /* Transparent background */
-.relative.overflow-hidden.select-none.pointer-events-none.rounded-sm.border.p-2.w-full.appearance-none.transition {
+.relative.overflow-hidden.select-none.pointer-events-none.rounded-sm.border.p-2.w-full.appearance-none.transition:where(:not(.jt-light, .jt-light *)) {
     background-color: transparent;
     border-color: transparent;
 }
 
 /* Dark caret color */
-.caret-black {
+.caret-black:where(:not(.jt-light, .jt-light *)) {
     caret-color: #ffffff;
 }
 
 /* White border for dark mode */
-.border-white {
+.border-white:where(:not(.jt-light, .jt-light *)) {
     border-color: #353535;
 }
 
 /* Orange border */
-.border-jtOrange {
+.border-jtOrange:where(:not(.jt-light, .jt-light *)) {
     border-color: #ff5600;
 }
 
@@ -170,11 +209,11 @@ div.border-l div.select-none.break-inside-avoid {
    the darkened modal. Repaint just those default borders. The border-2 /
    border-gray-300 borders that form the document body are intentionally NOT
    targeted, so the scope content is unchanged. */
-.max-w-screen-lg .border,
-.max-w-screen-lg .border-t,
-.max-w-screen-lg .border-b,
-.max-w-screen-lg .border-l,
-.max-w-screen-lg .border-r {
+.max-w-screen-lg .border:where(:not(.jt-light, .jt-light *)),
+.max-w-screen-lg .border-t:where(:not(.jt-light, .jt-light *)),
+.max-w-screen-lg .border-b:where(:not(.jt-light, .jt-light *)),
+.max-w-screen-lg .border-l:where(:not(.jt-light, .jt-light *)),
+.max-w-screen-lg .border-r:where(:not(.jt-light, .jt-light *)) {
     border-color: #464646;
 }
 
@@ -183,82 +222,91 @@ div.border-l div.select-none.break-inside-avoid {
    note below), so in dark mode that padding band reads as a light-grey frame
    around the document. Scope the darken to the dialog card's gray-200 padding
    wrapper only, so JobTread's other bare bg-gray-200 indicators are untouched. */
-.max-w-screen-lg .bg-gray-200.p-5 {
+.max-w-screen-lg .bg-gray-200.p-5:where(:not(.jt-light, .jt-light *)) {
     background-color: #2c2c2c;
 }
 
 /* Ring color */
-.ring-gray-200 {
+.ring-gray-200:where(:not(.jt-light, .jt-light *)) {
     --tw-ring-color: #696969;
 }
 
 /* Stripe CSS */
-.StripeElement {
+.StripeElement:where(:not(.jt-light, .jt-light *)) {
     background-color: #ffffff;
     padding: 10px;
     border-radius: 4px;
 }
 
 /* Show more */
-.from-white {
+.from-white:where(:not(.jt-light, .jt-light *)) {
     --tw-gradient-from: var(--color-white);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #232323 var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
 }
 
 /* === Background Colors === */
-.bg-white {
+.bg-white:where(:not(.jt-light, .jt-light *)) {
     background-color: #2c2c2c;
 }
 
-.bg-gray-50 {
+.bg-gray-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #353535;
 }
 
-.bg-gray-100 {
+.bg-gray-100:where(:not(.jt-light, .jt-light *)) {
     background-color: #353535;
 }
 
-.bg-gray-700 {
+.bg-gray-700:where(:not(.jt-light, .jt-light *)) {
     background-color: #515151;
 }
 
-.bg-yellow-100 {
+.bg-yellow-100:where(:not(.jt-light, .jt-light *)) {
     background-color: #46442e;
 }
 
-.bg-slate-50 {
+.bg-slate-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #2b2b2b;
 }
 
-.bg-blue-100,
-.bg-blue-50 {
+.bg-blue-100:where(:not(.jt-light, .jt-light *)),
+.bg-blue-50:where(:not(.jt-light, .jt-light *)) {
     background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
 }
 
 /* SVG fill colors for dark mode - used by checkbox/radio circle interiors */
-.fill-blue-50 {
+.fill-blue-50:where(:not(.jt-light, .jt-light *)) {
     fill: #2c2c2c; /* Match dark mode background so checkbox circle interior is dark */
 }
 
 /* Alert background colors for dark mode */
-.bg-green-50 {
+.bg-green-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #1a3a2e; /* Dark green for green alerts */
 }
 
-.bg-yellow-50 {
+.bg-yellow-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #4a3a1a; /* Dark yellow/amber for yellow alerts */
 }
 
-.bg-red-50 {
+.bg-red-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #4a1f1f; /* Dark red for red alerts */
 }
 
-.bg-orange-50 {
+.bg-orange-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #4a2a1a; /* Dark orange for orange alerts */
 }
 
-.bg-purple-50 {
+.bg-purple-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #3a2a4a; /* Dark purple for purple alerts */
+}
+
+/* Amber was missing from this palette while every other alert colour was here,
+   so an amber callout kept Tailwind's cream #fffbeb fill and then took the
+   white body text set below — white on cream, i.e. unreadable. JobTread uses
+   amber for document "Notes" boxes. */
+.bg-amber-50:where(:not(.jt-light, .jt-light *)),
+.bg-amber-100:where(:not(.jt-light, .jt-light *)) {
+    background-color: #4a3a1a;
 }
 
 /* Active document-item row — JT marks the active line-item row with
@@ -267,124 +315,154 @@ div.border-l div.select-none.break-inside-avoid {
    row's text-gray-400 body copy. Darken to a clear green so the
    "this row is active" signal stays unambiguous and body text recovers
    contrast. */
-.bg-green-100 {
+.bg-green-100:where(:not(.jt-light, .jt-light *)) {
     background-color: #1f3a2a;
 }
 
-.bg-green-200,
-.group-hover\:bg-green-200:hover,
-.group:hover .group-hover\:bg-green-200 {
+.bg-green-200:where(:not(.jt-light, .jt-light *)),
+.group-hover\:bg-green-200:hover:where(:not(.jt-light, .jt-light *)),
+.group:hover .group-hover\:bg-green-200:where(:not(.jt-light, .jt-light *)) {
     background-color: #2a5040;
 }
 
 /* Alert text and border colors for dark mode */
-.text-green-500,
-.border-green-500 {
+.text-green-500:where(:not(.jt-light, .jt-light *)),
+.border-green-500:where(:not(.jt-light, .jt-light *)) {
     color: #34d399;
     border-color: #34d399;
 }
 
-.text-yellow-500,
-.border-yellow-500 {
+.text-yellow-500:where(:not(.jt-light, .jt-light *)),
+.border-yellow-500:where(:not(.jt-light, .jt-light *)) {
     color: #fbbf24;
     border-color: #fbbf24;
 }
 
-.text-red-500,
-.border-red-500 {
+.text-red-500:where(:not(.jt-light, .jt-light *)),
+.border-red-500:where(:not(.jt-light, .jt-light *)) {
     color: #f87171;
     border-color: #f87171;
 }
 
-.text-orange-500,
-.border-orange-500 {
+.text-orange-500:where(:not(.jt-light, .jt-light *)),
+.border-orange-500:where(:not(.jt-light, .jt-light *)) {
     color: #fb923c;
     border-color: #fb923c;
 }
 
-.text-purple-500,
-.border-purple-500 {
+.text-purple-500:where(:not(.jt-light, .jt-light *)),
+.border-purple-500:where(:not(.jt-light, .jt-light *)) {
     color: #a78bfa;
     border-color: #a78bfa;
 }
 
+/* Blue was the one accent family this block never covered — it was handled only
+   inside `.jt-preview-content`, our own panel, and never for JobTread's DOM. So
+   a blue-accented left border fell through to the universal
+   `* { border-color: #464646 }` above and went grey, while every other colour
+   kept its accent. Double Dark does not load this file, which is why the blue
+   lines survived there and vanished here.
+   #60a5fa matches the value the preview panel already uses. */
+.text-blue-500:where(:not(.jt-light, .jt-light *)) {
+    color: #60a5fa;
+}
+
+/* border-color ONLY. `color` on a border utility inherits, and blue borders sit
+   on CONTAINERS — the focused budget cell, a callout wrapper — so setting it
+   here turned every descendant's text blue. A whole budget description rendered
+   in #60a5fa before this was split out. The neighbouring green/orange/purple/
+   red/yellow rules still set both on one selector and carry the same latent
+   bug; they are left alone because changing them would alter surfaces nobody
+   has reported, but they are the same defect one line over. */
+.border-blue-500:where(:not(.jt-light, .jt-light *)) {
+    border-color: #60a5fa;
+}
+
 /* Alert body text should be white in dark mode, not colored */
 /* Target direct text content inside alert containers */
-.bg-green-50,
-.bg-yellow-50,
-.bg-red-50,
-.bg-orange-50,
-.bg-purple-50 {
+.bg-green-50:where(:not(.jt-light, .jt-light *)),
+.bg-yellow-50:where(:not(.jt-light, .jt-light *)),
+.bg-amber-50:where(:not(.jt-light, .jt-light *)),
+.bg-amber-100:where(:not(.jt-light, .jt-light *)),
+.bg-red-50:where(:not(.jt-light, .jt-light *)),
+.bg-orange-50:where(:not(.jt-light, .jt-light *)),
+.bg-purple-50:where(:not(.jt-light, .jt-light *)) {
     color: #ffffff;
 }
 
+/* Keep the accent border readable on the darkened fill. */
+.border-amber-500:where(:not(.jt-light, .jt-light *)) {
+    color: #fbbf24;
+    border-color: #fbbf24;
+}
+
 /* Keep the header/title colored (override the white text for header elements) */
-.bg-green-50 .text-green-500 {
+.bg-green-50 .text-green-500:where(:not(.jt-light, .jt-light *)) {
     color: #34d399 !important;
 }
 
-.bg-yellow-50 .text-yellow-500 {
+.bg-yellow-50 .text-yellow-500:where(:not(.jt-light, .jt-light *)) {
     color: #fbbf24 !important;
 }
 
-.bg-red-50 .text-red-500 {
+.bg-red-50 .text-red-500:where(:not(.jt-light, .jt-light *)) {
     color: #f87171 !important;
 }
 
-.bg-orange-50 .text-orange-500 {
+.bg-orange-50 .text-orange-500:where(:not(.jt-light, .jt-light *)) {
     color: #fb923c !important;
 }
 
-.bg-purple-50 .text-purple-500 {
+.bg-purple-50 .text-purple-500:where(:not(.jt-light, .jt-light *)) {
     color: #a78bfa !important;
 }
 
 /* Sticky columns need solid colors to prevent see-through when scrolling */
 /* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
-.sticky[style*="left"].bg-blue-50,
-.sticky[style*="left"].bg-blue-100 {
+.sticky[style*="left"].bg-blue-50:where(:not(.jt-light, .jt-light *)),
+.sticky[style*="left"].bg-blue-100:where(:not(.jt-light, .jt-light *)) {
     background-color: #2f3d54 !important; /* Solid blend of #2c2c2c + 20% blue */
 }
 
-.group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
-.group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
+.group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100):where(:not(.jt-light, .jt-light *)),
+.group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100):where(:not(.jt-light, .jt-light *)) {
     background-color: #2f3d54 !important; /* Solid blend for sticky columns */
 }
 
-.sticky[style*="top: 0px"].bg-blue-50,
-.sticky[style*="top: 0px"].bg-blue-100,
-.sticky[style*="top:0px"].bg-blue-50,
-.sticky[style*="top:0px"].bg-blue-100,
-.sticky[style*="top: 0"].bg-blue-50,
-.sticky[style*="top: 0"].bg-blue-100 {
+.sticky[style*="top: 0px"].bg-blue-50:where(:not(.jt-light, .jt-light *)),
+.sticky[style*="top: 0px"].bg-blue-100:where(:not(.jt-light, .jt-light *)),
+.sticky[style*="top:0px"].bg-blue-50:where(:not(.jt-light, .jt-light *)),
+.sticky[style*="top:0px"].bg-blue-100:where(:not(.jt-light, .jt-light *)),
+.sticky[style*="top: 0"].bg-blue-50:where(:not(.jt-light, .jt-light *)),
+.sticky[style*="top: 0"].bg-blue-100:where(:not(.jt-light, .jt-light *)) {
     background-color: #2f3d54 !important; /* Solid blend for sticky rows at top: 0 only */
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
 /* Exclude Gantt task bars which have rounded-l-sm/rounded-r-sm and inline background colors */
-.bg-blue-500:not(.rounded-l-sm):not(.rounded-r-sm):not([style*="background-color"]) {
+.bg-blue-500:not(.rounded-l-sm):not(.rounded-r-sm):not([style*="background-color"]):where(:not(.jt-light, .jt-light *)) {
     background-color: #3b82f6 !important;
 }
 
-.bg-blue-500.text-white {
+.bg-blue-500.text-white:where(:not(.jt-light, .jt-light *)) {
     color: #ffffff !important;
 }
 
 /* Gantt task bars - preserve their inline background-color (task type colors) */
 /* These bars have bg-blue-500 as a fallback but should use inline style colors */
-.h-4.rounded-l-sm.rounded-r-sm.bg-blue-500[style*="background-color"] {
+.h-4.rounded-l-sm.rounded-r-sm.bg-blue-500[style*="background-color"]:where(:not(.jt-light, .jt-light *)) {
     /* Allow inline styles to take precedence - no !important override */
 }
 
-.bg-gray-800\/80 {
+.bg-gray-800\/80:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, oklch(0.2 0 0) 80%, transparent);
 }
 
-.focus\:bg-white:focus {
+.focus\:bg-white:focus:where(:not(.jt-light, .jt-light *)) {
     background-color: #4b4b4b;
 }
 
-.shadow-sm.font-bold {
+.shadow-sm.font-bold:where(:not(.jt-light, .jt-light *)) {
     border: none !important;
 }
 
@@ -392,76 +470,86 @@ div.border-l div.select-none.break-inside-avoid {
 /* Wrapped in @media screen to prevent light text colors from being included
    in spreadsheet exports (e.g., Mac Numbers shows blank data with white text) */
 @media screen {
-    .text-gray-500 {
+    /* gray-400 was the one step missing from this ramp. JobTread uses it for
+       secondary icon buttons — the menu affordance on every dashboard card is
+       `text-gray-400 hover:text-gray-700` — so it kept Tailwind's #9ca3af while
+       every neighbouring step was remapped. Follows the ramp's inversion: a
+       lower Tailwind number lands darker here, so gray-400 sits a step under
+       gray-500's #b8b8b8. #a0a0a0 is the documented "text muted" token. */
+    .text-gray-400:where(:not(.jt-light, .jt-light *)) {
+        color: #a0a0a0;
+    }
+
+    .text-gray-500:where(:not(.jt-light, .jt-light *)) {
         color: #b8b8b8;
     }
 
-    .text-gray-600 {
+    .text-gray-600:where(:not(.jt-light, .jt-light *)) {
         color: #e0e0e0;
     }
 
-    .text-slate-500 {
+    .text-slate-500:where(:not(.jt-light, .jt-light *)) {
         color: #8ba0b8;
     }
 
-    .text-slate-600 {
+    .text-slate-600:where(:not(.jt-light, .jt-light *)) {
         color: #9ab0c8;
     }
 
     /* Help/tutorial article body copy is text-slate-700; headings climb to
        slate-800/900. Mirror the gray hierarchy (higher number = lighter in
        dark) so the whole slate scale stays readable on the dark page. */
-    .text-slate-700 {
+    .text-slate-700:where(:not(.jt-light, .jt-light *)) {
         color: #b9cadb;
     }
 
-    .text-slate-800 {
+    .text-slate-800:where(:not(.jt-light, .jt-light *)) {
         color: #d3e0ec;
     }
 
-    .text-slate-900 {
+    .text-slate-900:where(:not(.jt-light, .jt-light *)) {
         color: #eaf1f8;
     }
 
-    .text-gray-700 {
+    .text-gray-700:where(:not(.jt-light, .jt-light *)) {
         color: #ececec;
     }
 
-    .text-gray-800 {
+    .text-gray-800:where(:not(.jt-light, .jt-light *)) {
         color: #f2f2f2;
     }
 
-    .text-gray-900 {
+    .text-gray-900:where(:not(.jt-light, .jt-light *)) {
         color: #f9f9f9;
     }
 
-    .text-black {
+    .text-black:where(:not(.jt-light, .jt-light *)) {
         color: #ffffff;
     }
 
-    .sticky.uppercase {
+    .sticky.uppercase:where(:not(.jt-light, .jt-light *)) {
         color: #ffffff !important;
     }
 
-    .break-inside-avoid .uppercase, .space-x-2 .uppercase {
+    .break-inside-avoid .uppercase:where(:not(.jt-light, .jt-light *)), .space-x-2 .uppercase:where(:not(.jt-light, .jt-light *)) {
         color: #f5f5f5 !important;
     }
 }
 
 /* === Shadow Styles === */
-.shadow-line-right {
+.shadow-line-right:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 1px 0 0 #464646;
 }
 
-.shadow-line-left {
+.shadow-line-left:where(:not(.jt-light, .jt-light *)) {
     box-shadow: -1px 0 0 #353535;
 }
 
-.shadow-line-bottom {
+.shadow-line-bottom:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 1px 0 #3d3d3d;
 }
 
-.shadow-sm {
+.shadow-sm:where(:not(.jt-light, .jt-light *)) {
     --tw-shadow: none;
     border: solid 1px #414141;
 }
@@ -471,9 +559,9 @@ div.border-l div.select-none.break-inside-avoid {
    sat flat against the bar behind them. A shadow calibrated against a white page
    has nothing left to darken against #2c2c2c, so these are deepened rather than
    inherited. */
-.shadow-xs,
-.shadow,
-.shadow-md {
+.shadow-xs:where(:not(.jt-light, .jt-light *)),
+.shadow:where(:not(.jt-light, .jt-light *)),
+.shadow-md:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
@@ -483,54 +571,80 @@ div.border-l div.select-none.break-inside-avoid {
    giving each of those a bright edge turns a list into a stack of outlined boxes
    that fight each other. A button is a discrete thing you press and earns the
    edge; a card is a region and does not. */
-button.shadow-xs,
-button.shadow,
-[role="button"].shadow-xs,
-[role="button"].shadow {
+button.shadow-xs:where(:not(.jt-light, .jt-light *)),
+button.shadow:where(:not(.jt-light, .jt-light *)),
+[role="button"].shadow-xs:where(:not(.jt-light, .jt-light *)),
+[role="button"].shadow:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Floating surfaces need to lift clear of the page, not just off it. */
-.shadow-lg,
-.shadow-xl,
-.shadow-2xl {
+.shadow-lg:where(:not(.jt-light, .jt-light *)),
+.shadow-xl:where(:not(.jt-light, .jt-light *)),
+.shadow-2xl:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
 }
 
-/* Scrollbar track (background) */
-::-webkit-scrollbar {
+/* === Scrollbars ===
+ * Scoped to `body.jt-dark-standard` — i.e. only while THIS level is painting
+ * the app in the JT Power Tools greys.
+ *
+ * These were bare `::-webkit-scrollbar` selectors with no scope at all, which
+ * made every scrollbar on the page ours the moment this file loaded, and
+ * nobody's the moment it did not. Kinda and Double never load this file, so a
+ * user stepping between levels saw the scrollbars change with them for no
+ * reason they could name. Double Dark now styles its own to match JobTread's
+ * ground (see styles/dark-mode-double.css).
+ *
+ * The colours were also off-palette: #5f5f5f and #969696 are mid greys that
+ * sat brighter than anything around them. These are the documented tokens —
+ * `Background (secondary)` for the track and `Border (secondary)` for the
+ * thumb, which is what a control resting on a #2c2c2c surface should be. */
+body.jt-dark-standard ::-webkit-scrollbar {
   width: 12px; /* or height for horizontal scrollbars */
-  background-color: #5f5f5f; /* light gray background */
+  background-color: #252525;
 }
 
-/* Scrollbar thumb (the draggable bar) */
-::-webkit-scrollbar-thumb {
-  background-color: #969696; /* dark gray thumb */
-  border-radius: 6px; /* rounded corners */
-  border: 3px solid #5f5f5f !important;
+body.jt-dark-standard ::-webkit-scrollbar-thumb {
+  background-color: #505050;
+  border-radius: 6px;
+  border: 3px solid #252525 !important;
+}
+
+body.jt-dark-standard ::-webkit-scrollbar-thumb:hover {
+  background-color: #5a5a5a;
 }
 
 /* === Focus Styles === */
-.focus-within\:bg-white {
+.focus-within\:bg-white:where(:not(.jt-light, .jt-light *)) {
     background-color: #2c2c2c;
 }
 
-.focus-within\:border-cyan-500:focus-within {
-    border-color: #646464;
-}
+/* JobTread's cyan focus ring is deliberately left alone.
+ *
+ * This used to be overridden to `border-color: #646464`, which is a very weak
+ * indicator against the #2c2c2c ground — and it is the only signal of which
+ * cell is active when tabbing through a budget. Cyan-500 is high contrast on
+ * every level's background, so keeping their affordance is both the more
+ * accessible option and the consistent one: the Kinda and Double levels do not
+ * load this file, so overriding here made the focus ring differ by level for
+ * no reason a user could infer.
+ *
+ * The dark-mode contract suite asserts no level stylesheet reintroduces an
+ * override for it. */
 
-.focus-within\:bg-blue-50:focus-within {
+.focus-within\:bg-blue-50:focus-within:where(:not(.jt-light, .jt-light *)) {
     background-color: rgba(59, 130, 246, 0.3); /* Blue with 30% opacity for selection in dark mode */
 }
 
-.focus\:bg-gray-100 {
+.focus\:bg-gray-100:where(:not(.jt-light, .jt-light *)) {
     &:focus {
         background-color: #353535;
     }
 }
 
 /* === Hover Styles === */
-.hover\:\[\&\:not\(\:focus-within\)\]\:bg-gray-50 {
+.hover\:\[\&\:not\(\:focus-within\)\]\:bg-gray-50:where(:not(.jt-light, .jt-light *)) {
     &:hover {
         &:not(:focus-within) {
             background-color: #313131;
@@ -538,46 +652,46 @@ button.shadow,
     }
 }
 
-.hover\:bg-gray-50:hover {
+.hover\:bg-gray-50:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: #353535;
 }
 
-.hover\:bg-gray-100:hover {
+.hover\:bg-gray-100:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: #353535;
 }
 
-.hover\:bg-gray-200:hover {
+.hover\:bg-gray-200:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: #515151;
 }
 
-.hover\:bg-slate-50:hover {
+.hover\:bg-slate-50:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: #353535;
 }
 
-.hover\:bg-gray-800:hover {
+.hover\:bg-gray-800:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: #5a5a5a;
 }
 
-.hover\:text-gray-800:hover {
+.hover\:text-gray-800:hover:where(:not(.jt-light, .jt-light *)) {
     color: #f2f2f2;
 }
 
-.hover\:text-gray-900:hover {
+.hover\:text-gray-900:hover:where(:not(.jt-light, .jt-light *)) {
     color: #ffffff;
 }
 
-.hover\:bg-blue-50 {
+.hover\:bg-blue-50:where(:not(.jt-light, .jt-light *)) {
     &:hover {
         background-color: rgba(59, 130, 246, 0.25); /* Blue with 25% opacity for hover in dark mode */
     }
 }
 
-.hover\:bg-blue-100:hover {
+.hover\:bg-blue-100:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for hover in dark mode */
 }
 
 /* === Active Styles === */
-.active\:bg-gray-200 {
+.active\:bg-gray-200:where(:not(.jt-light, .jt-light *)) {
     &:active {
         background-color: #2c2c2c;
     }
@@ -591,32 +705,32 @@ button.shadow,
    in dark mode the "hidden" indicator renders as a glaring light-grey block.
    Scope the fix to these 30px eye controls and swap in dark "active" highlights,
    keeping the header a notch stronger than the row (mirroring gray-400 > gray-200). */
-[role="button"].bg-gray-400.w-\[30px\] {
+[role="button"].bg-gray-400.w-\[30px\]:where(:not(.jt-light, .jt-light *)) {
     background-color: #505050 !important;
 }
 
-.bg-gray-200.shrink-0[style*="width: 30px"] {
+.bg-gray-200.shrink-0[style*="width: 30px"]:where(:not(.jt-light, .jt-light *)) {
     background-color: #404040 !important;
 }
 
 /* === Group Hover Styles === */
-.group-hover\/row\:bg-gray-50 {
+.group-hover\/row\:bg-gray-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #353535; /* Tailwind Zinc-900 */
 }
 
-.group-hover\/row\:bg-blue-100 {
+.group-hover\/row\:bg-blue-100:where(:not(.jt-light, .jt-light *)) {
     background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for group hover in dark mode */
 }
 
-.group:hover .group-hover\:text-gray-800 {
+.group:hover .group-hover\:text-gray-800:where(:not(.jt-light, .jt-light *)) {
     color: #f2f2f2;
 }
 
-.group:hover .group-hover\:bg-slate-50 {
+.group:hover .group-hover\:bg-slate-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #383b3f;
 }
 
-.group:hover .row\:bg-gray-50 {
+.group:hover .row\:bg-gray-50:where(:not(.jt-light, .jt-light *)) {
     background-color: #383b3f;
 }
 
@@ -740,11 +854,11 @@ button.shadow,
 
 /* === Column Resize Handles === */
 /* Reduce z-index so they don't appear over sticky headers when scrolling */
-.absolute.z-10.cursor-col-resize {
+.absolute.z-10.cursor-col-resize:where(:not(.jt-light, .jt-light *)) {
     z-index: 1 !important;
 }
 
-.absolute.z-10.cursor-col-resize:hover {
+.absolute.z-10.cursor-col-resize:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: #555555 !important;
 }
 
@@ -947,7 +1061,7 @@ button.shadow,
 
 /* Active: replace the glaring light-gray pill with a dark highlight and tint the
    icon with the dark-mode accent. */
-[role="button"].bg-gray-200:has(> svg.fill-purple-500) {
+[role="button"].bg-gray-200:has(> svg.fill-purple-500):where(:not(.jt-light, .jt-light *)) {
     background-color: #3a3a3a !important;
     color: #818cf8 !important;
 }
@@ -955,9 +1069,9 @@ button.shadow,
 /* The sparkle's outline (stroke = text-gray-200) is meant to "cut out" of the
    light pill. Re-point it to the dark backdrop it actually sits on so it does not
    render a light ring. */
-[role="button"]:has(> svg.fill-purple-500) > svg.fill-purple-500 {
+[role="button"]:has(> svg.fill-purple-500) > svg.fill-purple-500:where(:not(.jt-light, .jt-light *)) {
     color: #2c2c2c !important; /* inactive: matches the dark header (bg-white -> #2c2c2c) */
 }
-[role="button"].bg-gray-200:has(> svg.fill-purple-500) > svg.fill-purple-500 {
+[role="button"].bg-gray-200:has(> svg.fill-purple-500) > svg.fill-purple-500:where(:not(.jt-light, .jt-light *)) {
     color: #3a3a3a !important; /* active: matches the active highlight above */
 }

@@ -22,12 +22,27 @@ const NativeDarkBridge = (() => {
   let isActive = false;
   let observer = null;
 
-  // Is JobTread itself in dark mode? Their theme picker sets Tailwind's `dark`
-  // class; it has been seen on both the document element and body, so check
-  // both rather than assuming.
+  // Is JobTread itself in dark mode?
+  //
+  // Their theme picker sets `jt-dark`, NOT Tailwind's default `dark`. JobTread
+  // is a Tailwind v4 app with a CUSTOM dark variant: their compiled bundle emits
+  //
+  //     .dark\:h-16:where(.jt-dark, .jt-dark *)
+  //
+  // so `dark:` utilities in their markup resolve against `.jt-dark`. Verified
+  // against the live app: `html.jt-dark`, with `--color-gray-50` flipping from
+  // `oklch(98.5% …)` to `#15171c`.
+  //
+  // This checked `dark` until 2026-08-25, which meant it never fired once — the
+  // whole bridge was inert in production and our injected UI stayed painted for
+  // a light page whenever JobTread's own dark mode was on. `dark` is kept as a
+  // fallback only so a future Tailwind-default deployment still works.
+  const NATIVE_DARK_CLASSES = ['jt-dark', 'dark'];
+
   function isNativeDark() {
-    return document.documentElement.classList.contains('dark') ||
-      document.body.classList.contains('dark');
+    return NATIVE_DARK_CLASSES.some(cls =>
+      document.documentElement.classList.contains(cls) ||
+      document.body.classList.contains(cls));
   }
 
   // Is JT Power Tools' own dark theme painting the page? Levels 'dark' and

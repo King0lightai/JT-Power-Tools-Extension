@@ -1,8 +1,9 @@
 /* AI Assistant Panel — right-side docked chat sidebar (Agent Core).
    The panel follows the page's active JT Power Tools theme via panel-scoped
    --jta-* variables (see the "Theme tokens" block): light is the default
-   (stock JobTread), body.jt-dark-mode maps to warm-neutral greys, and
-   body.jt-custom-theme (RGB theme) maps to the user's generated palette.
+   (stock JobTread), body.jt-dark-mode maps to warm-neutral greys,
+   body.jt-custom-theme (RGB theme) maps to the user's generated palette, and
+   body.jt-native-dark maps to JobTread's own live --color-* tokens.
    All classes are prefixed jt-assistant-. */
 
 /* Working glow — soft brand-orange tint around the viewport while the
@@ -47,7 +48,9 @@
    properties rgb-theme.js sets on :root, each with a light fallback so a
    missing var never breaks contrast. If both theme classes are somehow
    present the RGB block wins (declared last, equal specificity) — in
-   practice the popup makes Dark Mode and the RGB theme mutually exclusive. */
+   practice the popup makes Dark Mode and the RGB theme mutually exclusive.
+   A fourth block follows for body.jt-native-dark (JobTread's own dark mode),
+   which is NOT mutually exclusive with either, hence its explicit guards. */
 .jt-assistant-panel,
 .jt-assistant-chooser {
   --jta-bg: #ffffff;
@@ -112,6 +115,48 @@ body.jt-custom-theme .jt-assistant-chooser {
   --jta-danger: #dc2626;
 }
 
+/* JobTread's OWN dark mode is the ground (body.jt-native-dark, set by
+   NativeDarkBridge). The block above already fires here — jt-dark-mode means
+   "the page is dark by either route" — but it paints the JT Power Tools warm
+   greys, which read as a foreign patch on JobTread's cooler palette. So remap
+   the same --jta-* tokens to JobTread's LIVE --color-* values instead.
+
+   Gating, both halves deliberate:
+     :not(.jt-dark-standard)  our Dark level is repainting the whole app in the
+                              JT Power Tools greys — match the app, not the host.
+     :not(.jt-custom-theme)   the RGB theme is an explicit palette the user
+                              chose. It wins today (declared last at equal
+                              weight) and must keep winning: this block is more
+                              specific, so without the guard it would silently
+                              take that choice away.
+
+   Their scale is INVERTED under jt-dark — low numbers are surfaces, high
+   numbers are text — and --color-white never flips, so it is never a surface.
+   --jtd2-keep is defined (66%) only while Double Dark is loaded, so the 100%
+   fallback is a no-op otherwise and these surfaces darken with that level for
+   free. Warn and danger keep the dark-mode values: JobTread publishes no
+   token for either, and both read on this ground. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-assistant-panel,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-assistant-chooser {
+  --jta-bg: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  --jta-bg-2: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+  --jta-bg-elev: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  --jta-bg-hover: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  --jta-bg-sunken: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+  --jta-input-bg: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+  --jta-border: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  --jta-border-2: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  --jta-text: var(--color-gray-900, #eef0f4);
+  --jta-text-2: var(--color-gray-800, #e0e3e9);
+  --jta-text-muted: var(--color-gray-700, #c8cdd6);
+  --jta-text-subtle: var(--color-gray-600, #aab2bf);
+  --jta-accent: #fe4c0d;
+  --jta-accent-hover: #d93d00;
+  --jta-accent-fg: #ffffff;
+  --jta-warn: #fbbf24;
+  --jta-danger: #f87171;
+}
+
 /* Panel — right drawer that DOCKS and pushes the page (JS sets margin-right
    on JobTread's app root). Width is JS-controlled (drag handle + persistence);
    the 380px here is only the pre-JS fallback. */
@@ -121,7 +166,7 @@ body.jt-custom-theme .jt-assistant-chooser {
   top: 0;
   right: 0;
   height: 100vh;
-  width: 380px;
+  width: 380px; /* mobile-ok: desktop docked width — the <=768px block overrides it */
   min-width: 300px;
   max-width: 50vw;
   z-index: 2147483001;
@@ -979,4 +1024,42 @@ body.jt-custom-theme .jt-assistant-chooser {
 .jt-assistant-chooser-item-sub {
   color: var(--jta-text-muted);
   font: 400 11px 'Inter', system-ui, sans-serif;
+}
+
+/* ── Mobile: full-viewport overlay ────────────────────────────────────
+   At narrow widths the dock stops making sense — a 380px panel beside a
+   375px viewport leaves JobTread an unusable sliver. The panel goes
+   full-screen instead and assistant-panel.js suppresses the #root squeeze,
+   so the page underneath is untouched.
+
+   height: 100dvh is only the resting value. dvh tracks browser chrome, NOT
+   the on-screen keyboard, so assistant-panel.js overrides height inline from
+   visualViewport while the panel is open. */
+@media (max-width: 768px) {
+  .jt-assistant-panel {
+    inset: 0;
+    width: auto !important; /* beats any inline width setPanelWidth left behind */
+    max-width: none;
+    min-width: 0;
+    height: 100dvh;
+    border-left: none;
+    box-shadow: none;
+  }
+
+  /* No dock to resize. */
+  .jt-assistant-resize-handle {
+    display: none;
+  }
+
+  /* 240px of composer would swallow the whole panel once the keyboard is up. */
+  .jt-assistant-input {
+    max-height: 120px;
+  }
+
+  /* The overlay covers the whole viewport, so a scroll that chains past the
+     top/bottom of the message list would rubber-band a JobTread page the
+     user can't see behind it. Contain it to this list. */
+  .jt-assistant-messages {
+    overscroll-behavior: contain;
+  }
 }

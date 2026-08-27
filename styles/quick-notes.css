@@ -1200,6 +1200,217 @@
   background: #525252;
 }
 
+/* ============================================
+   Theme Compatibility - JobTread's OWN dark mode
+   ============================================ */
+
+/* The panel marks itself `.dark-theme` whenever NativeDarkBridge.isPageDark()
+   says the page is dark — and that is true for BOTH grounds, ours and
+   JobTread's. The block above then paints the JT Power Tools warm greys, which
+   on JobTread's cooler palette read as a foreign patch. These rules override
+   only the greys with JobTread's LIVE tokens; the cyan accents, the amber pin,
+   the red delete and the indigo drag markers are state signals and stay.
+
+   The panel's own `.dark-theme` is kept in the selector on purpose: it is the
+   marker that says "this panel is in its dark treatment", so these rules are a
+   repaint of that treatment rather than a second, competing one.
+
+   Gating, both halves deliberate:
+     :not(.jt-dark-standard)  our Dark level repaints the whole app in the JT
+                              Power Tools greys — match the app, not the host.
+     :not(.jt-custom-theme)   the RGB theme is a palette the user chose.
+
+   Their scale is INVERTED under jt-dark — low numbers are surfaces, high
+   numbers are text — and --color-white never flips, so it is never a surface.
+   --jtd2-keep is defined (66%) only while Double Dark is loaded, so the 100%
+   fallback is a no-op otherwise and every surface here darkens with that level
+   for free. */
+
+/* Base surfaces */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-sidebar,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-editor,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-list,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-editor-header,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-editor-footer,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-tabs,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-actions-container {
+  background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+/* Structural borders. The sidebar takes a left border on desktop and a bottom
+   one under the 768px block, so both are named here rather than duplicating
+   this rule inside the media query. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-sidebar {
+  border-left-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  border-bottom-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-editor-footer,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-actions-container {
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-tabs {
+  border-bottom-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+/* Raised controls — inputs, cards, buttons */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-search-input,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-title-input,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+/* Focus keeps JobTread-neutral surfaces; the cyan ring is the affordance. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-search-input:focus {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-close-button,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-action-button {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-close-button {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-action-button {
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+/* Hover / pressed */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item:hover,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-close-button:hover,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-action-button:hover {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-action-button:hover {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-action-button:active {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-tab:hover:not(.active),
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button:hover,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-back-button:hover {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn:hover,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn:hover {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn:active,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn:active {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+/* Chips, dividers, tracks — a step above the surface they sit on */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-tab-count,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item-preview code,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-resize-handle::before,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-list::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-tab-count {
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+/* Faded rather than a token step: JobTread publishes no measured grey between
+   gray-300 (a surface) and gray-600 (text), and a scrollbar thumb that brightens
+   on hover needs one. Fading gray-600 toward transparent is not a darkening. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-list::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-gray-600, #aab2bf) 60%, transparent);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover::before {
+  background: var(--color-gray-700, #c8cdd6);
+}
+
+/* Only the track — the spinner head stays cyan. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-loading::before {
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  border-top-color: #22d3ee;
+}
+
+/* Only the surround — the code text stays its own red. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input code {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+/* Text ladder: 900 emphasis, 800 body, 700 secondary, 600 muted */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item-title,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item-preview strong,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input strong,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input b {
+  color: var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-preview,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item-preview em,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input em,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input i {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item-preview,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-tab,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-login-prompt p,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-loading,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-checklist-btn,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-preview-btn,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-back-button {
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-item-date,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-attribution,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-login-prompt svg,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-login-prompt .jt-notes-login-hint,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-empty,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-editor-empty {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-search-input::placeholder,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-title-input::placeholder,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-content-input::placeholder {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+/* Dimmer than any published step — an idle pin at secondary-text brightness
+   makes every note look pinned. A fade, not a darkening. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-note-pin {
+  color: color-mix(in oklab, var(--color-gray-600, #aab2bf) 45%, transparent);
+}
+
 /* Theme Compatibility - Custom RGB Theme */
 .jt-quick-notes-panel.custom-theme {
   /* Use CSS variables that will be set dynamically */
@@ -1913,6 +2124,106 @@ body.jt-dark-mode .jt-color-swatch.jt-color-none.selected,
 .jt-quick-notes-panel.dark-theme .jt-notes-folder-select option {
   background: #353535;
   color: #d1d5db;
+}
+
+/* ============================================
+   Folder Styles - JobTread's OWN dark mode
+   ============================================ */
+
+/* Same contract as the panel block above: greys come from JobTread's live
+   tokens, the cyan focus ring / red delete / teal add-hover stay put, and the
+   chevron in the select's data-URI background is left alone — it is already a
+   neutral that reads on either ground. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-header {
+  background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-header:hover {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-count,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-add {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-name,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-add {
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-chevron,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-count {
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-delete,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn {
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn {
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn:hover {
+  border-color: var(--color-gray-600, #aab2bf);
+}
+
+/* A grab affordance, deliberately the quietest thing in the row. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-drag-handle {
+  color: color-mix(in oklab, var(--color-gray-600, #aab2bf) 45%, transparent);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-select,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-select option {
+  background-color: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-800, #e0e3e9);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-select:hover {
+  background-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-quick-notes-panel.dark-theme .jt-notes-folder-select:focus {
+  background-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+/* The colour picker is appended to document.body, OUTSIDE the panel root, so
+   it cannot use the panel's own .dark-theme marker and keys off body instead —
+   which is why the block further up is the file's only body.jt-dark-mode pair.
+   Its selected-swatch ring is a two-step halo: the inner step must match the
+   picker's own surface or it reads as a warm outline on JobTread's ground. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-folder-color-picker {
+  background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-color-picker-header {
+  color: var(--color-gray-700, #c8cdd6);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-color-swatch.selected {
+  border-color: var(--color-gray-900, #eef0f4);
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black),
+    0 0 0 4px var(--color-gray-900, #eef0f4);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-color-swatch.jt-color-none {
+  background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-color-swatch.jt-color-none:hover {
+  border-color: var(--color-gray-600, #aab2bf);
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-color-swatch.jt-color-none.selected {
+  border-color: var(--color-gray-900, #eef0f4);
 }
 
 /* ============================================

@@ -322,3 +322,38 @@ body.jt-dark-mode .jt-if-panel,
 body.jt-dark-mode .jt-if-status.s-draft, .dark .jt-if-status.s-draft,
 body.jt-dark-mode .jt-if-status.s-unknown, .dark .jt-if-status.s-unknown { background: #3a3a3a; color: #c0c0c0; }
 body.jt-dark-mode .jt-if-error, .dark .jt-if-error { color: #f87171; }
+
+/* ── JobTread's own dark mode ────────────────────────────────────────────
+   The block above paints the JT Power Tools greys, which is right only when
+   our standard Dark level is painting the app around it. NativeDarkBridge
+   also sets `jt-dark-mode` for JobTread's own dark mode, and there our warm
+   neutrals read as a foreign patch on their cooler ground.
+
+   So inherit their live tokens instead. Note their scale is INVERTED under
+   `jt-dark` — gray-50 is the darkest surface (#15171c) and gray-900 the
+   lightest text (#eef0f4) — so the low numbers are surfaces and the high
+   numbers are type. `--color-white` is never used: it stays #fff in their
+   dark mode and is not a surface colour.
+
+   `--jtd2-keep` is defined (66%) only while Double Dark is active, so the
+   100% fallback makes this a no-op at the plain native level and rides the
+   extra darkening automatically when Double is on — no second block.
+
+   `:not(.jt-custom-theme)` keeps the RGB theme winning, as it does today. */
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-if-panel {
+  --if-bg: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+  --if-surface: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  --if-hover: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  --if-emphasis: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  --if-text: var(--color-gray-900, #eef0f4);
+  --if-text-muted: var(--color-gray-600, #aab2bf);
+  --if-border: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+  --if-border-strong: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  --if-accent: #c7d2fe;
+}
+
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-if-status.s-draft,
+body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-if-status.s-unknown {
+  background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+  color: var(--color-gray-800, #e0e3e9);
+}

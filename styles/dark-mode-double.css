@@ -14,62 +14,108 @@
  * neighbours rather than a different colour from them — a gradient, not a clash.
  *
  * HOW THE DARKENING WORKS
- * JobTread is a Tailwind v4 app: `bg-white` compiles to
- * `background-color: var(--color-white)`, and their dark mode works by
- * redefining those `--color-*` properties rather than by adding `dark:` classes
- * to elements. A button carries exactly the same
- * `bg-white text-gray-600 shadow-xs` in both themes.
+ * JobTread is a Tailwind v4 app with a CUSTOM dark variant. Their bundle
+ * compiles `dark:` utilities to `:where(.jt-dark, .jt-dark *)`, so the class
+ * their theme picker sets is `jt-dark` — NOT Tailwind's default `dark`. Every
+ * rule here was scoped to `.jt-dark` until 2026-08-25, which meant the whole level
+ * was inert: it loaded, warned that JobTread's dark mode was off while it was
+ * on, and changed nothing.
  *
- * So each rule below reads JobTread's own token and mixes it toward black:
+ * Their dark mode INVERTS the gray scale rather than darkening it, and leaves
+ * white alone. Measured on the live app with `jt-dark` present:
  *
- *     background-color: color-mix(in oklab, var(--color-white) 66%, black)
+ *     --color-white     #fff      lum 1.000   <- never flips
+ *     --color-gray-50   #15171c   lum 0.090
+ *     --color-gray-100  #1e2128   lum 0.129
+ *     --color-gray-200  #2c303a   lum 0.188
+ *     --color-gray-300  #3a4150   lum 0.253
+ *     --color-gray-600  #aab2bf   lum 0.695   <- LIGHT in dark mode
+ *     --color-gray-700  #c8cdd6   lum 0.802   <- LIGHT in dark mode
+ *     --color-gray-800  #e0e3e9   lum 0.889   <- LIGHT in dark mode
+ *     --color-gray-900  #eef0f4   lum 0.941   <- LIGHT in dark mode
  *
- * Whatever value they assigned is what gets darkened — no need to know it, and
- * the hue survives because oklab mixing toward black changes lightness, not hue.
- * Redefining the tokens directly would be shorter but is impossible: a custom
- * property cannot reference itself, and `--color-white` also backs `text-white`,
- * the label on every orange and blue button.
+ * So "read the token and mix it toward black" only holds for steps 50-300.
+ * Applied to 600-900 it darkens surfaces that are deliberately light, and
+ * applied to `--color-white` it is worse than useless: that token stays #fff
+ * while the surface it names renders #1b1e24, so mixing it yields a MID-GREY
+ * LIGHTER than the surface it was meant to darken. Those five rules are gone.
+ *
+ * `bg-white` is the main canvas, so it still has to darken — it just cannot be
+ * derived from its own token. It mixes from #1b1e24, JobTread's measured dark
+ * surface. That is the one hardcoded colour here, and if JobTread retunes their
+ * dark palette it goes slightly out of step rather than breaking.
  *
  * Text, borders and semantic colours are left alone on purpose. Darkening text
  * on a darkening background costs contrast twice over, and borders read MORE
- * clearly against a darker surface, which is the point.
+ * clearly against a darker surface, which is the point. Leaving the inverted
+ * 600-900 steps alone also means contrast IMPROVES: the same light text now
+ * sits on a darker ground.
  *
- * Every rule is scoped to `.dark`, the class JobTread's theme picker sets, so
- * with their theme on Light nothing here applies. This level does not load
- * styles/dark-mode.css — that file paints the whole app in the JT Power Tools
- * greys, which is the standard Dark level's job and exactly the re-colouring
- * this level exists to avoid. JT Power Tools' own injected UI (formatter
- * toolbar, quick notes, toasts, filters) is already themed for JobTread's dark
- * mode by the `.dark` blocks in its own stylesheets. */
+ * This level does not load styles/dark-mode.css — that file paints the whole
+ * app in the JT Power Tools greys, which is the standard Dark level's job and
+ * exactly the re-colouring this level exists to avoid. JT Power Tools' own
+ * injected UI is themed by `body.jt-dark-mode` rules in its own stylesheets,
+ * which NativeDarkBridge sets whenever the page is dark by either route.
+ *
+ * THE .jt-light OPT-OUT
+ * JobTread marks its document and print regions with `jt-light`, where their
+ * own dark variant stands down and the paper stays white for the PDF. Until
+ * this level's scope was corrected from `.dark` to `.jt-dark` on 2026-08-25 its
+ * rules never fired at all, so nothing here had ever reached that paper; the
+ * moment it started working, `[class~="bg-white"]` would have darkened it under
+ * black body copy. Every rule below therefore carries
+ * `:where(:not(.jt-light, .jt-light *))` — zero specificity, so the darkening
+ * model above is untouched. Full reasoning at the top of styles/dark-mode.css. */
 
-.dark {
+.jt-dark:where(:not(.jt-light, .jt-light *)) {
     /* How much of JobTread's own colour to keep. Lower = darker. This is the
        one number to turn when tuning this level. */
     --jtd2-keep: 66%;
+
+    /* How much of JobTread's own CHROMA to keep on SURFACES. Their dark palette
+       is a blue-grey ramp (gray-200 is #2c303a — b=58 against r=44), and at
+       full strength that blue cast is the most noticeable thing about the
+       level. 0.25 pulls it to near-neutral while leaving a trace of the
+       original hue: #2c303a darkens to rgb(22,23,24) instead of a blue-tinted
+       equivalent, at identical lightness.
+       Applied ONLY to surfaces. Borders, text and the alert tints keep their
+       colour in full — those read as deliberate accents rather than as a cast,
+       and desaturating them is what made an earlier version of this level look
+       like two themes colliding. Desaturating IN PLACE also keeps the property
+       this file is built on: a surface these rules miss is a shade bluer than
+       its neighbours, not a different colour from them. */
+    --jtd2-chroma: 0.25;
 }
 
 /* === Surfaces === */
 /* The fallbacks matter only if JobTread ever stops using Tailwind tokens; they
    are plausible dark-mode values in the same blue-grey family, so a fallback
    that fires still darkens in hue rather than jumping to neutral. */
-.dark [class~="bg-white"] {
-    background-color: color-mix(in oklab, var(--color-white, #1f2937) var(--jtd2-keep), black) !important;
+.jt-dark [class~="bg-white"]:where(:not(.jt-light, .jt-light *)) {
+    /* NOT var(--color-white): that token stays #fff under jt-dark while the
+       surface renders #1b1e24, so mixing it LIGHTENS. #1b1e24 is measured. */
+    background-color: color-mix(in oklab, #1b1e24 var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from #1b1e24 l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
-.dark [class~="bg-gray-50"] {
+.jt-dark [class~="bg-gray-50"]:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-50, #374151) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-50, #374151) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
-.dark [class~="bg-gray-100"] {
+.jt-dark [class~="bg-gray-100"]:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-100, #4b5563) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-100, #4b5563) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
-.dark [class~="bg-gray-200"] {
+.jt-dark [class~="bg-gray-200"]:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-200, #6b7280) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-200, #6b7280) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
-.dark [class~="bg-gray-300"] {
+.jt-dark [class~="bg-gray-300"]:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-300, #9ca3af) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-300, #9ca3af) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
 /* The already-dark shades. These are the ones JobTread's dark mode has no
@@ -77,22 +123,6 @@
    job header, tab strip) reaches for gray-800/900 directly and gets Tailwind's
    stock navy in BOTH themes. They are the largest single source of "their dark
    mode isn't very dark", so they matter most here. */
-.dark [class~="bg-gray-600"] {
-    background-color: color-mix(in oklab, var(--color-gray-600, #4b5563) var(--jtd2-keep), black) !important;
-}
-
-.dark [class~="bg-gray-700"] {
-    background-color: color-mix(in oklab, var(--color-gray-700, #374151) var(--jtd2-keep), black) !important;
-}
-
-.dark [class~="bg-gray-800"] {
-    background-color: color-mix(in oklab, var(--color-gray-800, #1f2937) var(--jtd2-keep), black) !important;
-}
-
-.dark [class~="bg-gray-900"] {
-    background-color: color-mix(in oklab, var(--color-gray-900, #111827) var(--jtd2-keep), black) !important;
-}
-
 /* No `slate` rules here. JobTread reaches for Tailwind's `gray` ramp everywhere
    we have looked, and the slate fallback values are on the JT Power Tools banned
    colour list (scripts/check-banned-colors.js) — writing them down just to cover
@@ -101,58 +131,53 @@
 
 /* The page ground itself, which is usually painted on <body> rather than by a
    utility class. */
-.dark body {
-    background-color: color-mix(in oklab, var(--color-gray-900, #111827) var(--jtd2-keep), black) !important;
-}
-
 /* === Hover === */
 /* Their own group, because these fire on :hover only — an exact-token match
    ([class~=]) deliberately does not catch a `hover:`-prefixed class, so that a
    hover-only element does not end up with a permanent fill. Without these the
    surface rules above flatten every hover state and rows stop responding to the
    pointer, which is the fastest way to make a dark theme feel broken. */
-.dark [class~="hover:bg-gray-50"]:hover {
+.jt-dark [class~="hover:bg-gray-50"]:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-50, #374151) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-50, #374151) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
-.dark [class~="hover:bg-gray-100"]:hover {
+.jt-dark [class~="hover:bg-gray-100"]:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-100, #4b5563) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-100, #4b5563) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
-.dark [class~="hover:bg-gray-200"]:hover {
+.jt-dark [class~="hover:bg-gray-200"]:hover:where(:not(.jt-light, .jt-light *)) {
     background-color: color-mix(in oklab, var(--color-gray-200, #6b7280) var(--jtd2-keep), black) !important;
-}
-
-.dark [class~="hover:bg-gray-700"]:hover {
-    background-color: color-mix(in oklab, var(--color-gray-700, #374151) var(--jtd2-keep), black) !important;
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-200, #6b7280) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black) !important;
 }
 
 /* === Elevation === */
 /* A shadow calibrated against JobTread's lighter dark has nothing left to darken
    against this one, so the toolbar button groups would flatten into the bar
    behind them. Deepened rather than inherited. */
-.dark [class~="shadow-xs"],
-.dark [class~="shadow-sm"],
-.dark [class~="shadow"],
-.dark [class~="shadow-md"] {
+.jt-dark [class~="shadow-xs"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="shadow-sm"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="shadow"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="shadow-md"]:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55) !important;
 }
 
 /* The hairline highlight goes on CONTROLS ONLY — see the matching note in
    styles/dark-mode.css. A button earns the edge; a card is a region and does
    not, and edging every card turns a list into a stack of outlined boxes. */
-.dark button[class~="shadow-xs"],
-.dark button[class~="shadow-sm"],
-.dark button[class~="shadow"],
-.dark [role="button"][class~="shadow-xs"],
-.dark [role="button"][class~="shadow-sm"],
-.dark [role="button"][class~="shadow"] {
+.jt-dark button[class~="shadow-xs"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark button[class~="shadow-sm"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark button[class~="shadow"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [role="button"][class~="shadow-xs"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [role="button"][class~="shadow-sm"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [role="button"][class~="shadow"]:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
-.dark [class~="shadow-lg"],
-.dark [class~="shadow-xl"],
-.dark [class~="shadow-2xl"] {
+.jt-dark [class~="shadow-lg"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="shadow-xl"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="shadow-2xl"]:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65) !important;
 }
 
@@ -164,17 +189,17 @@
 
 /* Schedule task cards coloured by the user's own inline background-color.
    Covers month view (td), week/day view (div.select-none) and direct cards. */
-.dark td div.cursor-pointer[style*="background-color"],
-.dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-.dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"],
-.dark td div.h-full > div.text-xs[style*="background-color"] {
+.jt-dark td div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark td div.h-full > div.text-xs[style*="background-color"]:where(:not(.jt-light, .jt-light *)) {
     position: relative !important;
 }
 
-.dark td div.cursor-pointer[style*="background-color"]::before,
-.dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before,
-.dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]::before,
-.dark td div.h-full > div.text-xs[style*="background-color"]::before {
+.jt-dark td div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before,
+.jt-dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before,
+.jt-dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before,
+.jt-dark td div.h-full > div.text-xs[style*="background-color"]:where(:not(.jt-light, .jt-light *))::before {
     content: '' !important;
     position: absolute !important;
     inset: 0 !important;
@@ -184,29 +209,29 @@
 }
 
 /* Keep the card's own text and content above the overlay. */
-.dark td div.cursor-pointer[style*="background-color"] > *,
-.dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *,
-.dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > *,
-.dark td div.h-full > div.text-xs[style*="background-color"] > * {
+.jt-dark td div.cursor-pointer[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)),
+.jt-dark td div.h-full > div.text-xs[style*="background-color"] > *:where(:not(.jt-light, .jt-light *)) {
     position: relative !important;
     z-index: 1 !important;
 }
 
-.dark td div.cursor-pointer[style*="background-color"],
-.dark td div.cursor-pointer[style*="background-color"] *,
-.dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-.dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *,
-.dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"],
-.dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] *,
-.dark td div.h-full > div.text-xs[style*="background-color"],
-.dark td div.h-full > div.text-xs[style*="background-color"] * {
+.jt-dark td div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark td div.cursor-pointer[style*="background-color"] *:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] *:where(:not(.jt-light, .jt-light *)),
+.jt-dark td div.h-full > div.text-xs[style*="background-color"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark td div.h-full > div.text-xs[style*="background-color"] *:where(:not(.jt-light, .jt-light *)) {
     color: white !important;
 }
 
 /* Keep the left border visible — it is the task type indicator. */
-.dark td div.cursor-pointer[style*="border-left"],
-.dark div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"],
-.dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"] {
+.jt-dark td div.cursor-pointer[style*="border-left"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"]:where(:not(.jt-light, .jt-light *)) {
     border-left-width: 4px !important;
 }
 
@@ -214,7 +239,109 @@
    on document headers, the budget table's sticky column-header row and other
    labels. An inline colour beats any stylesheet rule on specificity, so it stays
    dark and renders nearly invisibly on a dark surface. */
-.dark [style*="color: rgb(25, 34, 82)"],
-.dark [style*="color:rgb(25, 34, 82)"] {
+.jt-dark [style*="color: rgb(25, 34, 82)"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [style*="color:rgb(25, 34, 82)"]:where(:not(.jt-light, .jt-light *)) {
     color: #e0e0e0 !important;
+}
+
+/* === Scrollbars ===
+ * Double Dark does not load styles/dark-mode.css, so without this the page
+ * scrollbars stay JobTread's while everything around them darkens. The user
+ * report was that scrollbars "are sometimes our dark mode" — that inconsistency
+ * was the standard Dark level scoping its scrollbar rules to nothing at all, so
+ * they applied whenever that file happened to be loaded and vanished otherwise.
+ *
+ * Derived from JobTread's own tokens rather than the JT Power Tools greys, for
+ * the same reason every other rule in this file is: this level darkens their
+ * palette in place instead of replacing it. Their scale is INVERTED under
+ * jt-dark, so gray-50 is the darkest surface and gray-300 a raised one.
+ *
+ * Deliberately NOT carrying the .jt-light guard the other rules use: the guard
+ * would have to sit ahead of a WebKit-private pseudo-element, and a selector
+ * WebKit rejects drops the whole rule. Scrollbars are chrome, not document
+ * presentation, so a document region keeps the page's scrollbars either way. */
+.jt-dark ::-webkit-scrollbar {
+    width: 12px;
+    background-color: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep), black);
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-50, #15171c) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black);
+}
+
+.jt-dark ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep), black);
+    background-color: color-mix(in oklab, oklch(from var(--color-gray-300, #3a4150) l calc(c * var(--jtd2-chroma)) h) var(--jtd2-keep), black);
+    border-radius: 6px;
+    border: 3px solid color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep), black) !important;
+}
+
+/* Hover is the SAME token un-mixed, which lands lighter than the 66%-darkened
+   base and so reads as a hover. Reaching for a higher gray step would not work
+   here: JobTread inverts the scale, so gray-600 and up are light TYPE colours,
+   and mixing one toward black darkens the thumb on hover instead of lifting
+   it. The contract suite caught exactly that mistake in this rule. */
+.jt-dark ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-gray-300, #3a4150);
+}
+
+/* === Alert / callout boxes ===
+ * JobTread renders alerts and document callouts as a pale tinted fill with a
+ * coloured left border — bg-blue-50 with border-blue-500, and so on. Those
+ * tints are chosen to sit on white paper, and JobTread's own dark variant does
+ * NOT restyle them, so on a dark page they stay near-white. Measured before
+ * this block: an app-level blue callout kept rgb(239,246,255) while its body
+ * text went to rgb(224,227,233) — light on near-white, unreadable.
+ *
+ * The standard Dark level has handled this for years (see the alert palette in
+ * styles/dark-mode.css); this level never had it, because it does not load that
+ * file. Same problem, one stylesheet over.
+ *
+ * Expressed as ALPHA tints rather than opaque colours on purpose. Double Dark
+ * darkens whatever ground it sits on, and an alpha tint composes with that
+ * ground instead of having to be recomputed against it — so the fill tracks
+ * --jtd2-keep for free and keeps its hue at any darkness.
+ *
+ * The accent borders are deliberately untouched: they already carry their own
+ * 500-weight colour, they are the only thing distinguishing an info box from a
+ * warning, and they were measured correct at this level. */
+.jt-dark [class~="bg-blue-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-blue-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+.jt-dark [class~="bg-green-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-green-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: rgba(52, 211, 153, 0.16) !important;
+}
+
+.jt-dark [class~="bg-yellow-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-yellow-100"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-amber-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-amber-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: rgba(251, 191, 36, 0.16) !important;
+}
+
+.jt-dark [class~="bg-orange-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-orange-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: rgba(251, 146, 60, 0.16) !important;
+}
+
+.jt-dark [class~="bg-red-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-red-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: rgba(248, 113, 113, 0.16) !important;
+}
+
+.jt-dark [class~="bg-purple-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-purple-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: rgba(167, 139, 250, 0.16) !important;
+}
+
+/* Body copy inside a callout, which would otherwise inherit a colour chosen for
+   the pale fill it no longer has. Headings keep their own 500-weight accent. */
+.jt-dark [class~="bg-blue-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-green-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-yellow-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-amber-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-orange-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-red-50"]:where(:not(.jt-light, .jt-light *)),
+.jt-dark [class~="bg-purple-50"]:where(:not(.jt-light, .jt-light *)) {
+    color: var(--color-gray-900, #eef0f4);
 }

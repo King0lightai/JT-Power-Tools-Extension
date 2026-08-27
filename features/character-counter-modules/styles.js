@@ -1043,6 +1043,207 @@ const CharacterCounterStyles = `
     #jt-dark-mode-styles ~ * .jt-template-created-by {
       color: #707070;
     }
+
+    /* ===========================================
+       JOBTREAD'S OWN DARK MODE as the ground
+
+       NativeDarkBridge sets body.jt-native-dark when JobTread's theme picker
+       is on jt-dark, and body.jt-dark-mode alongside it — jt-dark-mode means
+       "the page is dark by either route". So every .jt-dark-mode rule above
+       already fires here, painting this popup in the JT Power Tools warm
+       greys (#252525 / #404040) on top of JobTread's cooler, bluer palette,
+       where they read as a foreign patch.
+
+       These rules inherit JobTread's LIVE tokens instead. Their gray scale is
+       INVERTED under jt-dark — low numbers are surfaces, high numbers are text
+       (--color-gray-800 is #e0e3e9) — and --color-white never flips, so it is
+       never a surface colour. --jtd2-keep is defined (66%) only while Double
+       Dark is loaded, so the 100% fallback is a no-op otherwise and every
+       surface here darkens with that level for free.
+
+       Both guards are load-bearing:
+         :not(.jt-dark-standard)  our Dark level repaints the whole app in the
+                                  JT Power Tools greys — match the app then.
+         :not(.jt-custom-theme)   the RGB theme is a palette the user picked.
+                                  It wins today on source order; these rules
+                                  are more specific, so without the guard they
+                                  would silently override that choice.
+
+       Accents are left alone on purpose: the cyan active tab, the blue Save
+       button and the red delete tint are state signals, not surfaces, and all
+       three read on JobTread's dark ground unchanged. The alpha-based
+       .jt-signature-container / .jt-signature-separator rules are already
+       ground-agnostic and need no variant.
+       =========================================== */
+
+    /* Template dropdown — the "My Templates / Company" popup */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-dropdown {
+      background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-dropdown-item {
+      border-color: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-dropdown-item:hover {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-dropdown-name {
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-dropdown-preview,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-created-by {
+      color: var(--color-gray-600, #aab2bf);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-dropdown-separator {
+      background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    /* Tab bar inside the dropdown and the manager modal */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-tabs {
+      border-bottom-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-tab {
+      color: var(--color-gray-600, #aab2bf);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-tab:hover {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    /* Restated, not inherited. The two rules above carry a class more than the
+       base .jt-template-tab.active rule does, so without this the selected tab
+       would lose its cyan and read as just another idle tab. Declared after
+       :hover so the active tab keeps its accent while hovered — the same
+       precedence the light and .jt-dark-mode rules already have. */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-tab.active {
+      color: #22d3ee;
+      border-bottom-color: #22d3ee;
+    }
+
+    /* Template manager / signature modal */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal {
+      background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-header,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-footer {
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-title {
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-description {
+      color: var(--color-gray-600, #aab2bf);
+    }
+
+    /* The close glyph keeps its light-mode #6b7280 in every dark treatment we
+       ship — about 2.3:1 on this ground. Give it the token instead. */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-close {
+      color: var(--color-gray-600, #aab2bf);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-close:hover {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-textarea,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-name-input {
+      background: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    /* Focus ring rides gray-600 — a LIGHT step under jt-dark, so the border
+       brightens against the field rather than fading into it. */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-textarea:focus,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-name-input:focus {
+      border-color: var(--color-gray-600, #aab2bf);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-gray-600, #aab2bf) 25%, transparent);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-btn-cancel {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-modal-btn-cancel:hover {
+      background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    /* Saved-template rows inside the manager */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-list-item {
+      background: color-mix(in oklab, var(--color-gray-50, #15171c) var(--jtd2-keep, 100%), black);
+      border-color: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-list-item:hover {
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-item-name,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-label,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-checkbox-label {
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-item-preview,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-empty,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-empty-hint {
+      color: var(--color-gray-600, #aab2bf);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-action-btn {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-action-btn:hover {
+      background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+    }
+
+    /* The delete button carries .jt-template-action-btn too, so the hover rule
+       above outranks its danger tint. Restate it: losing the red on the one
+       destructive control in this popup is worse than any palette mismatch. */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-template-action-delete:hover {
+      background: #3d1f1f;
+      border-color: #5c2929;
+    }
+
+    /* The Templates / settings pill that opens all of the above, plus the
+       character counter that sits beside it */
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-native-btn {
+      background: color-mix(in oklab, var(--color-gray-100, #1e2128) var(--jtd2-keep, 100%), black);
+      border-color: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-native-btn:hover {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-btn,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-char-counter.safe,
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-char-counter-message {
+      color: var(--color-gray-600, #aab2bf);
+    }
+
+    body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-signature-btn:hover {
+      background: color-mix(in oklab, var(--color-gray-200, #2c303a) var(--jtd2-keep, 100%), black);
+      color: var(--color-gray-800, #e0e3e9);
+    }
   `;
 
 // Make available globally

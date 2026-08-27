@@ -10,31 +10,45 @@
    colour-coded bars). Those already meet contrast on a light background and
    still do on a slightly darker one.
 
-   SCOPED TO html:not(.dark). JobTread ships a dark mode of its own now, and
+   SCOPED TO html:not(.jt-dark). JobTread ships a dark mode of its own now, and
    this level is a light theme — run on top of their dark mode it would LIGHTEN
    their surfaces back toward grey and produce a half-lit page. Scoping every
    rule this way makes the level self-disable when JobTread's own theme is set
    to Dark, which mirrors how Double Dark self-disables when it is set to Light.
    Note the scope also raises every selector's specificity by one class, so the
    more specific overrides below (.border-transparent and friends) are scoped
-   too — otherwise the scoped universal border rule would start beating them. */
+   too — otherwise the scoped universal border rule would start beating them.
+
+   ALSO GUARDED WITH :where(:not(.jt-light, .jt-light *)). JobTread wraps its
+   document and print regions in `jt-light`, an explicit opt-out from their dark
+   variant: that paper is authored for a PDF a client reads on white. Dimming it
+   to #e4e4e4 is not a catastrophe the way the standard Dark level's #2c2c2c is,
+   but it is still us overruling a region JobTread has marked "leave alone", and
+   the level's job is to take glare off the APP, not to retint the deliverable.
+   `:where()` adds no specificity, so the careful ordering above is unaffected.
+   See the long note at the top of styles/dark-mode.css. */
 
 /* === Surfaces === */
+/* Every value here dropped one step on 2026-08-25 (#ececec -> #e4e4e4 and
+   friends). The level was reported as still bright; the step is deliberately
+   small enough that the theme stays unmistakably LIGHT — see the contrast
+   audit in the text section below for what that costs and what it required. */
+
 /* The main app surface: page background, cards, table bodies, modals, bars. */
-html:not(.dark) .bg-white {
-    background-color: #ececec;
+html:not(.jt-dark) .bg-white:where(:not(.jt-light, .jt-light *)) {
+    background-color: #e4e4e4;
 }
 
 /* JobTread's own greys sit *under* white as subtle zebra and heading fills.
    They have to move down with it or they stop being distinguishable. */
-html:not(.dark) .bg-gray-50,
-html:not(.dark) .bg-slate-50 {
-    background-color: #e2e2e2;
+html:not(.jt-dark) .bg-gray-50:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) .bg-slate-50:where(:not(.jt-light, .jt-light *)) {
+    background-color: #dadada;
 }
 
-html:not(.dark) .bg-gray-100,
-html:not(.dark) .bg-slate-100 {
-    background-color: #dcdcdc;
+html:not(.jt-dark) .bg-gray-100:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) .bg-slate-100:where(:not(.jt-light, .jt-light *)) {
+    background-color: #d4d4d4;
 }
 
 /* === Inputs === */
@@ -43,47 +57,81 @@ html:not(.dark) .bg-slate-100 {
    the browser default and filling a wrapper that is styled instead. So they
    have to be caught by element, not by class, or they stay the brightest thing
    on a dimmed page.
-   They are set BELOW the surface rather than above it. A field lighter than its
-   surroundings on a light theme is a near-white block — which is the glare this
-   level exists to remove — while a slightly sunken well reads as somewhere to
-   type without adding any brightness back. */
-html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-html:not(.dark) textarea,
-html:not(.dark) select {
-    background-color: #e4e4e4;
-}
 
-/* A wrapper-styled field (input inside a bordered container) would otherwise
-   show as a darker block inset within its own frame. Matching the container
-   keeps the control reading as one object. */
-html:not(.dark) .bg-white > input:not([type="checkbox"]):not([type="radio"]),
-html:not(.dark) .bg-white > textarea {
+   TRANSPARENT, not a colour of its own. This used to sink them one step below
+   the surface (#e4e4e4 under #ececec), on the reasoning that a field lighter
+   than its surroundings is a near-white block. The flaw is that a FIXED colour
+   can only match one surface. A field takes its frame from a wrapper far more
+   often than from itself —
+
+       <div class="bg-white border rounded flex"><svg/><input class="grow"/></div>
+
+   — and the wrapper is a surface we repaint, so the well landed as a distinct
+   darker rectangle floating inside the field, next to the search icon and the
+   wrapper's own padding. Reported as "an odd darker square in search boxes".
+   A `.bg-white > input` exception used to cover exactly one nesting depth, so
+   it missed every field whose input sits one flex row further down.
+
+   Transparent has no such failure mode: the field is whatever its container
+   is, at any depth, on a card, in a zebra row or on the page ground. It still
+   removes the glare — nothing renders browser-default white any more — and it
+   is what JobTread's own light theme looks like, one step dimmer, which is all
+   this level promises. The field reads as a field from its border, which the
+   rule below deliberately keeps strong. */
+html:not(.jt-dark) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) textarea:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) select:where(:not(.jt-light, .jt-light *)) {
     background-color: transparent;
 }
 
-/* === Borders === */
-/* JobTread's default border grey is tuned against pure white. On a #ececec
-   surface it nearly vanishes, which is what makes a naively dimmed UI look
-   muddy rather than calm — the structure disappears. Bring it up a step. */
-html:not(.dark) *,
-html:not(.dark) ::backdrop,
-html:not(.dark) ::file-selector-button,
-html:not(.dark) :after,
-html:not(.dark) :before {
-    border-color: #c4c4c4;
+/* === Text === */
+/* The one place this level touches text, and it is here because the claim at
+   the top of the file — that JobTread's colours "already meet contrast on a
+   light background and still do on a slightly darker one" — does not survive
+   measurement for the two 500-weight steps.
+   Tailwind's gray-500 (#6b7280) on pure white is 4.83:1, barely over WCAG AA.
+   On this level's main surface it was already 4.09:1 BEFORE the surfaces moved,
+   and 3.53:1 on the darkest one; slate-500 (#64748b) is a shade worse again.
+   Dimming the ground under text that is already at the edge is what turns a
+   glare fix into an accessibility regression, so the two steps come down far
+   enough to clear 4.5:1 on the darkest surface here (#d4d4d4): 4.55:1 and
+   4.71:1 respectively, 5.31:1 and 5.49:1 on the main one.
+   Only these two. gray-600 and darker are 5.09:1 or better on every surface
+   this file paints and are left exactly as JobTread ships them. */
+html:not(.jt-dark) .text-gray-500:where(:not(.jt-light, .jt-light *)) {
+    color: #545c69;
 }
 
-html:not(.dark) .border-transparent {
+html:not(.jt-dark) .text-slate-500:where(:not(.jt-light, .jt-light *)) {
+    color: #4f5a6b;
+}
+
+/* === Borders === */
+/* JobTread's default border grey is tuned against pure white. On a dimmed
+   surface it nearly vanishes, which is what makes a naively dimmed UI look
+   muddy rather than calm — the structure disappears. Bring it up a step, and
+   keep it the same distance below the surface whenever the surface moves —
+   holding the border still while the ground darkens closes the gap between
+   them and loses the edges all over again. */
+html:not(.jt-dark) *:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) :where(:not(.jt-light, .jt-light *))::backdrop,
+html:not(.jt-dark) :where(:not(.jt-light, .jt-light *))::file-selector-button,
+html:not(.jt-dark) :where(:not(.jt-light, .jt-light *)):after,
+html:not(.jt-dark) :where(:not(.jt-light, .jt-light *)):before {
+    border-color: #bcbcbc;
+}
+
+html:not(.jt-dark) .border-transparent:where(:not(.jt-light, .jt-light *)) {
     border-color: transparent;
 }
 
 /* Orange stays brand orange. */
-html:not(.dark) .border-jtOrange {
+html:not(.jt-dark) .border-jtOrange:where(:not(.jt-light, .jt-light *)) {
     border-color: #ff5600;
 }
 
-html:not(.dark) .border-white {
-    border-color: #ececec;
+html:not(.jt-dark) .border-white:where(:not(.jt-light, .jt-light *)) {
+    border-color: #e4e4e4;
 }
 
 /* === Shadows === */
@@ -91,20 +139,20 @@ html:not(.dark) .border-white {
    shadow-sm), and on a toolbar that shadow is doing real work — a button group
    sits on a bar close enough to its own fill that the shadow plus the border is
    most of what separates them.
-   A shadow calibrated against pure white loses contrast on a #ececec ground, so
+   A shadow calibrated against pure white loses contrast on a #e4e4e4 ground, so
    these are nudged UP rather than flattened. Getting this backwards is the
    classic dimmed-UI mistake: the page calms down and every control goes soft
    along with it. */
-html:not(.dark) .shadow-xs,
-html:not(.dark) .shadow-sm,
-html:not(.dark) .shadow {
+html:not(.jt-dark) .shadow-xs:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) .shadow-sm:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) .shadow:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
 }
 
 /* Modals and popovers need to lift clear of the page, not just off it. */
-html:not(.dark) .shadow-lg,
-html:not(.dark) .shadow-xl,
-html:not(.dark) .shadow-2xl {
+html:not(.jt-dark) .shadow-lg:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) .shadow-xl:where(:not(.jt-light, .jt-light *)),
+html:not(.jt-dark) .shadow-2xl:where(:not(.jt-light, .jt-light *)) {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.20);
 }
 
@@ -112,13 +160,13 @@ html:not(.dark) .shadow-2xl {
 /* JobTread fades long content out to white ("show more" affordances). That
    gradient has to end on the new surface colour or it stops short of it with a
    visible band. */
-html:not(.dark) .from-white {
-    --tw-gradient-from: #ececec;
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #ececec var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+html:not(.jt-dark) .from-white:where(:not(.jt-light, .jt-light *)) {
+    --tw-gradient-from: #e4e4e4;
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #e4e4e4 var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
 }
 
-html:not(.dark) .to-white {
-    --tw-gradient-to: #ececec;
+html:not(.jt-dark) .to-white:where(:not(.jt-light, .jt-light *)) {
+    --tw-gradient-to: #e4e4e4;
 }
 
 /* === Stripe === */
@@ -126,8 +174,91 @@ html:not(.dark) .to-white {
    iframe, which this cannot reach — dimming only the wrapper would frame a
    white field in grey and make the payment form look broken. styles/dark-mode.css
    makes the same call for the same reason. */
-html:not(.dark) .StripeElement {
+html:not(.jt-dark) .StripeElement:where(:not(.jt-light, .jt-light *)) {
     background-color: #fafafa;
     padding: 10px;
     border-radius: 4px;
+}
+
+/* === Pale tinted surfaces (callouts, notes, alert fills) ==================
+ * The header above says this level never touches a semantic colour, and that
+ * still holds for SATURATED ones — a status chip, a schedule bar, a filled
+ * button keeps its colour exactly. But Tailwind's -50/-100 tints are not
+ * semantic fills, they are SURFACES with a hue, and surfaces are precisely what
+ * this level remaps.
+ *
+ * Leaving them alone had a consequence the original reasoning missed. It argued
+ * from contrast, which was right: they still meet contrast on a slightly darker
+ * page. The problem is glare, which is what this level exists to remove.
+ * Measured against a page dimmed to #e4e4e4 (luminance 0.776):
+ *
+ *     bg-blue-50    #eff6ff   luminance 0.915
+ *     bg-amber-50   #fffbeb   luminance 0.963
+ *
+ * So every callout became BRIGHTER than the surface around it, and the glare
+ * this level takes off the page collected in the notes boxes instead.
+ *
+ * Dimmed by lightness only, in place: hue and chroma untouched, so a blue note
+ * stays blue and an amber note stays amber. --jts-tint-dim is the one number to
+ * turn. The plain declaration first is the fallback for an engine without
+ * relative colour syntax; there the tint simply stays as JobTread ships it,
+ * which is today's behaviour rather than a broken one. */
+html:not(.jt-dark) body:where(:not(.jt-light, .jt-light *)) {
+    --jts-tint-dim: 0.9;
+}
+
+html:not(.jt-dark) [class~="bg-blue-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #eff6ff calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-blue-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #dbeafe calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-green-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #f0fdf4 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-green-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #dcfce7 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-yellow-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fefce8 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-yellow-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fef9c3 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-amber-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fffbeb calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-amber-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fef3c7 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-orange-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fff7ed calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-orange-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #ffedd5 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-red-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fef2f2 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-red-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #fee2e2 calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-purple-50"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #faf5ff calc(l * var(--jts-tint-dim)) c h);
+}
+
+html:not(.jt-dark) [class~="bg-purple-100"]:where(:not(.jt-light, .jt-light *)) {
+    background-color: oklch(from #f3e8ff calc(l * var(--jts-tint-dim)) c h);
 }
