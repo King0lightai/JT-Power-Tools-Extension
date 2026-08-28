@@ -14,6 +14,10 @@ const DragDropFeature = (() => {
   let debounceTimer = null;
   const DEBOUNCE_DELAY = 300;
 
+  // Delayed-init timer — must die with cleanup() or toggling off within the
+  // first second still initializes the modules afterward
+  let initTimer = null;
+
   /**
    * Initialize the schedule feature (task completion only - drag & drop disabled)
    */
@@ -27,7 +31,8 @@ const DragDropFeature = (() => {
     // Weekend styling and event handlers no longer needed
 
     // Initial setup - task completion features
-    setTimeout(() => {
+    initTimer = setTimeout(() => {
+      initTimer = null;
       initTaskCompletion();
 
       // Initialize Action Items Completion
@@ -84,6 +89,10 @@ const DragDropFeature = (() => {
       clearTimeout(debounceTimer);
       debounceTimer = null;
     }
+    if (initTimer) {
+      clearTimeout(initTimer);
+      initTimer = null;
+    }
 
     // Disconnect observer
     if (observer) {
@@ -102,6 +111,14 @@ const DragDropFeature = (() => {
     if (window.ActionItemsCompletion) {
       window.ActionItemsCompletion.cleanup();
     }
+
+    // A toggle-off mid-flow must never leave JT's sidebar hidden or our
+    // notification styles behind
+    if (window.SidebarManager) {
+      window.SidebarManager.removeSidebarCSS();
+    }
+    const notificationStyles = document.getElementById('jt-notification-styles');
+    if (notificationStyles) notificationStyles.remove();
   }
 
   /**

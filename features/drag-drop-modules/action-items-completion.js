@@ -10,6 +10,11 @@ const ActionItemsCompletion = (() => {
   // Track which action items have checkboxes added
   const processedItems = new WeakSet();
 
+  // In-flight completion flows (hidden iframe + overall failsafe), so
+  // cleanup() can kill them — an iframe mid-flight would otherwise still
+  // click Progress + Save inside JobTread after the feature is toggled off.
+  const inFlightFlows = new Set();
+
   /**
    * Initialize action items completion feature
    */
@@ -296,10 +301,16 @@ const ActionItemsCompletion = (() => {
 
     const overallFailsafe = setTimeout(() => finish(false), OVERALL_TIMEOUT_MS);
 
+    // Registered so cleanup() can abort this flow (kill = finish(false),
+    // which clears the failsafe and removes the live iframe).
+    const flow = { abort: () => finish(false) };
+    inFlightFlows.add(flow);
+
     function finish(success) {
       if (finished) return;
       finished = true;
       clearTimeout(overallFailsafe);
+      inFlightFlows.delete(flow);
       if (currentIframe && currentIframe.parentNode) {
         currentIframe.remove();
       }
@@ -536,6 +547,10 @@ const ActionItemsCompletion = (() => {
     // Remove all checkboxes
     const checkboxes = document.querySelectorAll('.jt-action-item-checkbox');
     checkboxes.forEach(checkbox => checkbox.remove());
+
+    // Abort in-flight completion flows (removes live iframes, clears failsafes)
+    Array.from(inFlightFlows).forEach(flow => flow.abort());
+    inFlightFlows.clear();
   }
 
   // Public API

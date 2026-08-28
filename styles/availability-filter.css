@@ -1380,3 +1380,114 @@ body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-avail-add-e
 .jt-custom-theme .jt-avail-add-empty {
   color: var(--jt-theme-text-secondary, #94A3B8);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   "Kinda Dark" (body.jt-dark-soft) — a dimmed LIGHT theme
+
+   The level knocks JobTread's white surfaces down to #dde1e5 and deliberately
+   does NOT set jt-dark-mode, so none of the dark blocks above fire and this
+   filter's chrome keeps its stock slate-50 bar and its pure-white popovers.
+   Measured against the level's page ground (#dde1e5, luminance 0.749), slate-50
+   is 0.954 and white is 1.000 — both end up BRIGHTER than the page they sit on,
+   which is the glare the level exists to remove.
+
+   Two different jobs here, so two anchors:
+     • The filter BAR is inline chrome bolted to the schedule, so it keeps the
+       page's own relationship and takes the level's page ramp verbatim —
+       slate-50 → #d3d7db, slate-100 → #cbcfd3, exactly as
+       styles/dark-mode-soft.css maps those two steps on the page itself.
+     • The DROPDOWNS float over the page, so they sit one step proud at #f4f6f8
+       with their headers and footers a step under at #dde1e5, the same shape
+       every other injected panel takes on this level.
+   Structural borders take the level's #adb2b7; the controls' heavier slate-300
+   edge goes to #a8a8a8 so it stays the stronger of the two, and the slate-400
+   hover border is already dark enough to read on any of these greys.
+
+   Semantic colours are untouched: the blue and amber active chips, the blue
+   focus ring, the dashed blue "save view" affordance, the red delete hover.
+   The one exception is `.category-chip.partial`, an amber-50 FILL rather than a
+   semantic accent — dimmed by lightness only, hue and chroma intact, which is
+   what styles/dark-mode-soft.css does to JobTread's own -50 callouts and for
+   the same reason: left alone it is the brightest pixel on a dimmed page.
+
+   SPECIFICITY. Every selector mirrors the light rule it replaces and takes the
+   scope through :where(), which adds none — so each override weighs what its
+   original weighs and wins only by sitting later in the file, leaving the
+   active-chip states above to keep beating it.
+
+   SCOPE. `html:not(.jt-dark)` is the guard every rule in the level's own sheet
+   carries, so this dims exactly when the page dims and stands down with it
+   under JobTread's dark mode. `:not(.jt-native-dark)` is the backstop for the
+   one case where the two could disagree — NativeDarkBridge reads JobTread's
+   class off html OR body, the level sheet only scopes html.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Inline bar and chips — the level's own page ramp */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-bar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-chip {
+  background: #d3d7db;
+}
+
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-chip:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-action:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-action:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-option:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-option.highlighted {
+  background: #cbcfd3;
+}
+
+/* Strong neutral fills — the count badge and the drawer label's hover */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-badge,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-drawer-label:hover {
+  background: #c8c8c8;
+}
+
+/* Amber "partial" chip — a -50 FILL, dimmed by lightness only so it stays
+   amber. Same treatment the level gives JobTread's own tinted callouts. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-chip.category-chip.partial {
+  background: #dedacb;
+}
+
+/* Floating popovers sit one step proud of the page */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-assignee-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-save-view-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-search,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-check {
+  background: #f4f6f8;
+}
+
+/* …with their own chrome a step under it */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-actions,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-view-item:hover {
+  background: #dde1e5;
+}
+
+/* Structural borders */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-bar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-actions,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-assignee-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-header {
+  border-color: #adb2b7;
+}
+
+/* Faint in-list separators stay faint — one step, not the full border. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-view-item,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-toolbar {
+  border-color: #cbcfd3;
+}
+
+/* Control edges keep their extra weight over the structural border. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-chip,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-filter-action,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-saved-views-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-search,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-action,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-avail-add-check {
+  border-color: #a8a8a8;
+}

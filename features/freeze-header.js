@@ -353,6 +353,51 @@ const FreezeHeaderFeature = (() => {
      * tell them apart — and it used to gate this whole block, which put our warm
      * #2c2c2c bars on JobTread's cooler, bluer dark as a visible foreign patch.
      */
+    /*
+     * Kinda Dark is the THIRD page the forced white has to be undone for, and
+     * the one the note above missed: it counted the two DARK grounds and stopped.
+     * Kinda is a light theme, so none of the dark markers match and the bars kept
+     * the forced white -- pure white frozen over a page dimmed to #dde1e5, and
+     * the !important meant the level's own rules could not reach them. The frozen header was the brightest thing left on a screen whose
+     * entire purpose is taking the glare off.
+     *
+     * Scoped html:not(.jt-dark) for the same reason the level's own stylesheet
+     * is: jt-dark-soft stays on the body even when JobTread's own dark mode
+     * makes Kinda stand down, so without the scope these bars would paint a
+     * light grey onto their dark page.
+     *
+     * Still a light theme: surfaces only. No text is recoloured here, because
+     * the body copy under Kinda is JobTread's own dark text and already reads.
+     * The bars take the level's page ground rather than sitting proud of it —
+     * they are chrome framing the page, not panels floating over it, which is
+     * the same relationship the dark variants above use.
+     */
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-job-tabs-container,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-action-toolbar,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-schedule-header-container,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-schedule-header-container > div,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-files-folder-bar,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-files-list-header,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-files-list-header > div,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-files-sidebar,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
+      background-color: #dde1e5 !important;
+      border-color: #adb2b7 !important;
+    }
+
+    /* Gap coverage, matching the ground so no seam shows as content scrolls under. */
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-job-tabs-container,
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-action-toolbar {
+      box-shadow: 0 1px 0 0 #dde1e5 !important;
+    }
+
+    /* The active tab reads by sitting a step UNDER the bar, not above it. */
+    html:not(.jt-dark) body.jt-dark-soft.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
+      background-color: #d3d7db !important;
+    }
+
     body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-standard.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-standard.jt-freeze-header-active .jt-action-toolbar,

@@ -274,6 +274,12 @@ async function loadSettings() {
         : result.jtToolsSettings || currentSettings;
     }
 
+    // darkMode/darkModeLevel are per-device: overlay this device's values
+    // (chrome.storage.local) over the synced blob
+    if (window.JTDeviceSettings) {
+      currentSettings = await window.JTDeviceSettings.overlay(currentSettings);
+    }
+
     console.log('JT-Tools: Settings loaded:', currentSettings);
     return currentSettings;
   } catch (error) {
@@ -531,9 +537,17 @@ async function handleSettingsChange(newSettings) {
 
     // Merge with defaults to ensure FREE features (formatter, darkMode, etc.)
     // are never lost due to incomplete settings objects from popup/background
-    const mergedSettings = window.JTDefaults
+    let mergedSettings = window.JTDefaults
       ? window.JTDefaults.mergeWithDefaults(newSettings)
       : newSettings;
+
+    // darkMode/darkModeLevel are per-device. The popup writes the device
+    // values before broadcasting, so this is a no-op for dark-mode toggles —
+    // but other broadcast paths (license gating, theme slots, logout) carry
+    // the synced blob's stale legacy copies, which must not win here.
+    if (window.JTDeviceSettings) {
+      mergedSettings = await window.JTDeviceSettings.overlay(mergedSettings);
+    }
 
     console.log('JT-Tools: Settings changed:', mergedSettings);
 

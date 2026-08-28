@@ -357,3 +357,62 @@ body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-if-status.s
   background: color-mix(in oklab, var(--color-gray-300, #3a4150) var(--jtd2-keep, 100%), black);
   color: var(--color-gray-800, #e0e3e9);
 }
+
+/* ── "Kinda Dark" (body.jt-dark-soft) ────────────────────────────────────
+   A dimmed LIGHT theme, not a fourth dark state. The level knocks JobTread's
+   white surfaces down to #dde1e5 and deliberately does NOT set jt-dark-mode,
+   so none of the blocks above fire and this panel keeps painting --if-bg
+   #ffffff on a page that no longer has any white on it — the report becomes
+   the brightest thing on screen, which is the glare the level exists to
+   remove. Surfaces and borders move; text stays dark.
+
+   The panel sits one step PROUD of the page (#f4f6f8 over #dde1e5) so it still
+   reads as a card, and the rest of the ramp keeps the light fallbacks' running
+   order — bg > surface > hover — spread a little wider, because a dimmed
+   ground swallows small steps. Borders take the level's own #adb2b7.
+
+   --if-emphasis is a pale indigo tint, not a semantic fill, and gets the same
+   treatment styles/dark-mode-soft.css gives JobTread's -50 callouts: dimmed by
+   LIGHTNESS only, hue and chroma intact, so the count pill stays indigo. The
+   value is baked rather than written as oklch(from …) because this is a custom
+   property — an engine without relative colour syntax stores the invalid
+   function and then fails at USE time, which would leave the pill unpainted
+   instead of falling back.
+
+   --if-text-muted is Tailwind's gray-500 (#6b7280): 4.83:1 on white but only
+   4.13:1 on #f4f6f8, so dimming the ground under it would turn a glare fix
+   into an accessibility regression. #4e555f is the replacement
+   styles/dark-mode-soft.css already picked for .text-gray-500 on this ramp.
+
+   Scope: `html:not(.jt-dark)` is the guard every rule in the level's own sheet
+   carries, so this panel dims exactly when the page dims and stands down with
+   it under JobTread's dark mode. `:not(.jt-native-dark)` is the backstop for
+   the one place the two could disagree — NativeDarkBridge reads JobTread's
+   class off html OR body, the level sheet only scopes html. No
+   `:not(.jt-custom-theme)`: the popup makes Dark Mode (Kinda included) and the
+   RGB theme mutually exclusive, so unlike the native-dark block above this one
+   cannot co-occur with it. The whole scope is wrapped in :where(), which adds
+   no specificity, so these rules weigh exactly what the ones they override
+   weigh and win only by coming later. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-if-panel {
+  --if-bg: #f4f6f8;
+  --if-surface: #dde1e5;
+  --if-hover: #d3d7db;
+  --if-emphasis: #dee2ef;
+  --if-text-muted: #4e555f;
+  --if-border: #adb2b7;
+  --if-border-strong: #a8a8a8;
+}
+
+/* Neutral status badges are the file's only surface outside the vars. slate-100
+   (#f1f5f9, luminance 0.908) is brighter than the dimmed panel under it, so it
+   comes down to the panel's own hover step. slate-500 on that fill is 3.47:1 —
+   #4f5a6b is dark-mode-soft.css's replacement for it, and lands at 5.09:1. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-if-status.s-draft {
+  background: #d3d7db;
+}
+
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-if-status.s-unknown {
+  background: #d3d7db;
+  color: #4f5a6b;
+}

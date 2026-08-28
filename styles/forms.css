@@ -4,6 +4,10 @@
  *
  * Class taxonomy: .jt-forms-* (prefixed to avoid collisions with JT's CSS)
  * Dark mode: keyed off body.jt-dark-mode (matches existing project convention)
+ * "Kinda Dark": keyed off body.jt-dark-soft, which is a dimmed LIGHT theme and
+ *   so re-points the --jt-theme-* vars at a grey ramp instead — see the block
+ *   above @media print. `.jt-forms-signature-image` is deliberately left white
+ *   there: it is a signed artefact rendered as content, not drawer chrome.
  * Color palette: neutral greys per .claude/rules/code-style.md (NOT blue-greys)
  *
  * Trigger: a button injected into JT's job action bar by
@@ -957,6 +961,60 @@ body.jt-dark-mode .jt-forms-save-pdf:hover {
   background: #3a3a3a;
 }
 
+/* ============================================================
+   "Kinda Dark" (body.jt-dark-soft) — a dimmed LIGHT theme
+   ============================================================
+   The level knocks JobTread's white surfaces down to #dde1e5 to take the glare
+   off, and deliberately does NOT set jt-dark-mode — that class is how the
+   block above decides to render dark chrome, and dark chrome on a light page
+   is worse than either. So under Kinda none of the dark rules fire and the
+   drawer keeps its default #ffffff, making it the brightest thing on a page
+   that no longer has any white on it. Exactly the glare the level removes.
+
+   Done through the --jt-theme-* variables rather than by mirroring ninety
+   rules, because that is the mechanism this file already documents at the top:
+   every chrome rule reads `var(--jt-theme-X, <original hex>)`, so redefining
+   the variables on the drawer root re-themes all of them at once — which is
+   precisely what the RGB theme does. Kinda cannot co-occur with the RGB theme
+   (the popup makes Dark Mode, every level, and the RGB theme mutually
+   exclusive), so nothing is being taken away here.
+
+   The ramp: the drawer sits one step PROUD of the page (#f4f6f8 over #dde1e5)
+   so it still reads as a drawer over the app, with the header and footer a step
+   under it and the muted fills a step under those. Borders take the level's own
+   #adb2b7. Note this collapses the per-call-site fallbacks (#e1e4e8 chrome
+   borders and #d1d5da input borders both become #adb2b7) — that is already
+   what happens under the RGB theme, and #adb2b7 is the level's one border step.
+
+   --jt-theme-text-secondary is the one type token that moves. Its light
+   fallback #6a737d is 4.81:1 on white and 4.11:1 on #f4f6f8, so dimming the
+   ground under it without moving it would turn a glare fix into an
+   accessibility regression; #4e555f is the replacement
+   styles/dark-mode-soft.css already picked for gray-500 on this ramp.
+   --jt-theme-text and --jt-theme-text-muted stay: the first is near-black and
+   fine, the second is #959da5, which fails on plain white already (2.75:1) and
+   is used for decorative hints and input borders this level does not regress.
+
+   Scope: `html:not(.jt-dark)` is the guard every rule in the level's own sheet
+   carries, so the drawer dims exactly when the page dims and stands down with
+   it under JobTread's dark mode. `:not(.jt-native-dark)` is the backstop for
+   the one case where the two could disagree — NativeDarkBridge reads
+   JobTread's class off html OR body, the level sheet only scopes html.
+   The whole scope sits inside :where(), which adds no specificity, so this
+   block weighs exactly what the bare `.jt-forms-drawer` rule at the top of the
+   file weighs and beats it only by coming later. That is what lets the @media
+   print reset below — also a bare `.jt-forms-drawer`, later still — keep
+   winning on paper without repeating this selector. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-forms-drawer {
+  --jt-theme-background-elevated: #f4f6f8;
+  --jt-theme-background-subtle: #dde1e5;
+  --jt-theme-background-muted: #d3d7db;
+  --jt-theme-background-hover: #d3d7db;
+  --jt-theme-border: #adb2b7;
+  --jt-theme-border-strong: #a8a8a8;
+  --jt-theme-text-secondary: #4e555f;
+}
+
 /* Print-only header card lives inside .jt-forms-content during print.
    Hidden on screen — only visible when @media print matches. */
 .jt-forms-print-header {
@@ -971,7 +1029,9 @@ body.jt-dark-mode .jt-forms-save-pdf:hover {
    ============================================================ */
 @media print {
   /* Neutralize custom-theme variables for print so the drawer renders
-     black-on-white regardless of the user's chosen theme. */
+     black-on-white regardless of the user's chosen theme. This also catches
+     the Kinda Dark block above: its scope is wrapped in :where(), so it weighs
+     the same as the bare `.jt-forms-drawer` here and loses to it on order. */
   .jt-forms-drawer,
   body.jt-dark-mode .jt-forms-drawer {
     --jt-theme-primary: #000;

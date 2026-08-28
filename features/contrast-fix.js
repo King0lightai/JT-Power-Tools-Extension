@@ -6,6 +6,9 @@ const ContrastFixFeature = (() => {
   let observer = null;
   let debouncedUpdate = null;
   let isActive = false;
+  // Original inline text colors, keyed by element — restored on cleanup so
+  // toggling off doesn't leave rewritten colors behind until React re-renders.
+  const originalColors = new Map();
 
   // Initialize the feature
   function init() {
@@ -64,6 +67,12 @@ const ContrastFixFeature = (() => {
       td.classList.remove('jt-current-date-enhanced');
       td.style.backgroundColor = '';
     });
+
+    // Restore the original inline text colors we overwrote
+    originalColors.forEach((color, element) => {
+      element.style.color = color;
+    });
+    originalColors.clear();
   }
 
   // Parse RGB string to values
@@ -130,6 +139,9 @@ const ContrastFixFeature = (() => {
 
         // Only update if the color is different
         if (currentColor !== contrastColor) {
+          if (!originalColors.has(element)) {
+            originalColors.set(element, element.style.color);
+          }
           const newStyle = style.replace(/(^|[^-])color:\s*rgb\([^)]+\)/, `$1color: ${contrastColor}`);
           element.setAttribute('style', newStyle);
         }

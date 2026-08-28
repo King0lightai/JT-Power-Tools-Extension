@@ -598,3 +598,68 @@ body.jt-dark-mode #jt-ttf-filter-bar-container,
 .jt-custom-theme .jt-ttf-loading-msg {
   color: var(--jt-theme-text-secondary, #9CA3AF);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   "Kinda Dark" (body.jt-dark-soft) — a dimmed LIGHT theme
+
+   The level knocks JobTread's white surfaces down to #dde1e5 and deliberately
+   does NOT set jt-dark-mode, so none of the dark blocks above fire. Two things
+   this filter draws then end up brighter than the page around them: the
+   slate-50 bar (luminance 0.954 against the page's 0.776), and the amber-50
+   task rows it injects into the schedule (0.963) — and those rows run the full
+   width of the grid, so they are the larger of the two by a distance.
+
+   The bar is inline chrome bolted to the schedule, so it takes the level's own
+   page ramp verbatim: slate-50 → #d3d7db and slate-100 → #cbcfd3 are exactly
+   how styles/dark-mode-soft.css maps those two steps on the page itself.
+
+   The injected rows are dimmed by LIGHTNESS only, hue and chroma intact, so
+   they stay unmistakably amber — the same treatment that file gives JobTread's
+   own -50 callouts, at the same 0.9 factor. `!important` matches the rules
+   being overridden; without it these lose to the base. The amber BORDERS and
+   the active chips are semantic accents and stay exactly as they are.
+
+   SPECIFICITY. Every selector mirrors the light rule it replaces and takes the
+   scope through :where(), which adds none, so each override weighs what its
+   original weighs and wins only by sitting later in the file — leaving
+   `.jt-ttf-chip.active` and friends to keep beating it.
+
+   SCOPE. `html:not(.jt-dark)` is the guard every rule in the level's own sheet
+   carries, so this dims exactly when the page dims and stands down with it
+   under JobTread's dark mode. `:not(.jt-native-dark)` is the backstop for the
+   one case where the two could disagree — NativeDarkBridge reads JobTread's
+   class off html OR body, the level sheet only scopes html.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Injected schedule rows — amber-50 dimmed in place */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-injected-row,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-label-cell,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-day-cell {
+  background: #dedacb !important;
+}
+
+/* Inline bar and chips — the level's own page ramp */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-filter-bar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-chip {
+  background: #d3d7db;
+}
+
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-chip:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-action:hover {
+  background: #cbcfd3;
+}
+
+/* The count badge is the one strong neutral fill here. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-badge {
+  background: #c8c8c8;
+}
+
+/* Structural border under the bar, and the heavier control edge above it. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-filter-bar {
+  border-color: #adb2b7;
+}
+
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-chip,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ttf-action {
+  border-color: #a8a8a8;
+}

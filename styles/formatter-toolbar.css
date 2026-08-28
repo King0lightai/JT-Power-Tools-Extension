@@ -2561,3 +2561,191 @@ body.jt-dark-mode .jt-ai-error,
     min-height: 44px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   "Kinda Dark" (body.jt-dark-soft) — a dimmed LIGHT theme
+
+   The level knocks JobTread's white surfaces down to #dde1e5 to take the glare
+   off, and deliberately does NOT set jt-dark-mode — that class is how the dark
+   blocks above decide to paint, and dark chrome on a light page is worse than
+   either. So under Kinda none of them fire and the toolbar keeps its default
+   #ffffff. That matters more here than almost anywhere else in the extension:
+   this toolbar is inserted right next to the field it serves, so it sits
+   directly against a surface the level has just dimmed, and a white strip on a
+   #dde1e5 card is the single brightest thing left on the page.
+
+   Surfaces and borders move; TEXT AND EVERY SEMANTIC COLOUR STAY. The blue
+   active states, the six colour-swatch buttons and their tinted hovers, the
+   green preview toggle — all of it is declared above and all of it still wins,
+   because of the specificity note below.
+
+       #ffffff / white   → #f4f6f8   toolbars, buttons, menus, modal, groups
+       #f8fafc           → #dde1e5   the docked gradient's bottom stop
+       #f9fafb / #f1f5f9 → #d3d7db   hovers and pressed states
+       #e2e8f0 (fill)    → #cbcfd3   dividers, :active
+       borders           → #adb2b7   the level's own border step
+
+   The toolbar sits one step PROUD of the page (#f4f6f8 over #dde1e5) so it
+   still reads as a control strip laid on the field rather than part of it.
+
+   SPECIFICITY. Every selector mirrors the light rule it replaces exactly and
+   takes the scope through :where(), which adds none — so each override weighs
+   what its original weighs and wins only by sitting later in the file. That is
+   load-bearing here, not tidiness: writing the scope as a plain descendant
+   chain would make `… .jt-formatter-toolbar button` out-weigh
+   `.jt-formatter-toolbar button.active` and every `.jt-color-*` state, and
+   flatten the whole toolbar to grey. The two !important pairs at the end are
+   the exception, and only because the rules they override are !important too.
+
+   SCOPE. `html:not(.jt-dark)` is the guard every rule in
+   styles/dark-mode-soft.css carries, so the toolbar dims exactly when the page
+   dims and stands down with it under JobTread's own dark mode.
+   `:not(.jt-native-dark)` is the backstop for the one case where the two could
+   disagree — NativeDarkBridge reads JobTread's class off html OR body while
+   the level sheet only scopes html.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Surfaces (was #ffffff / white) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked .jt-toolbar-group,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-group,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-expanded,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-toolbar-embedded,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-budget-adaptive,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar-embedded button:not(.jt-toolbar-item):not(.jt-overflow-btn),
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-dropdown-menu,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-color-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-footer,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-close,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-menu,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-item,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-btn-cancel,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-formatter-toolbar .jt-toolbar-group,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-format-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-toolbar-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-overflow-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-ai-error {
+  background: #f4f6f8;
+}
+
+/* Focused fields go back to the panel surface — two-class selectors, so they
+   need their own rule to beat the hover pair below. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-subject:focus,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-message:focus {
+  background: #f4f6f8;
+}
+
+/* The docked and alert toolbars fade white → slate-50 down their height. The
+   gradient has to end on the new surface or it stops short of it with a band. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-formatter-toolbar {
+  background: linear-gradient(to bottom, #f4f6f8 0%, #dde1e5 100%);
+}
+
+/* Chrome fill — the more-menu's own button wells (was #f8fafc) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-row button {
+  background: #dde1e5;
+}
+
+/* Hovers and pressed states (was #f9fafb / #f1f5f9) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-expanded button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar-embedded button:not(.jt-toolbar-item):not(.jt-overflow-btn):hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-dropdown-menu button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-close:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-item:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-subject:hover:not(:focus),
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-message:hover:not(:focus),
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-btn-cancel:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-format-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-responsive-toolbar .jt-toolbar-item:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-overflow-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-row button:hover {
+  background: #d3d7db;
+}
+
+/* Strong fills — plain dividers and the pressed toolbar item (was #e2e8f0) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-toolbar-divider,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-divider,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-responsive-toolbar .jt-toolbar-item:active {
+  background: #cbcfd3;
+}
+
+/* The docked dividers are gradients that fade in and out at the ends — same
+   treatment as a border, since that is what they are doing. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked .jt-toolbar-divider,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-divider,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-formatter-toolbar .jt-toolbar-divider {
+  background: linear-gradient(to bottom, transparent 0%, #adb2b7 20%, #adb2b7 80%, transparent 100%);
+}
+
+/* Borders. JobTread's default border grey is tuned against pure white; on a
+   dimmed surface it nearly vanishes, which is what makes a naively dimmed UI
+   look muddy rather than calm. Same step the level uses on the page. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-docked .jt-toolbar-group,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-group,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-expanded,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-expanded button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-toolbar-embedded,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-sticky-active,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-formatter-toolbar-embedded button:not(.jt-toolbar-item):not(.jt-overflow-btn),
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-dropdown-menu,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-color-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-footer,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-modal-close,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-menu,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-dropdown-item,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-subject,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-message-container,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-btn-cancel,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-formatter-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-formatter-toolbar .jt-toolbar-group,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-format-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-alert-toolbar-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-responsive-toolbar .jt-toolbar-item:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-overflow-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-overflow-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-dropdown,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-section:not(:last-child),
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-row button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-more-row button:hover {
+  border-color: #adb2b7;
+}
+
+/* The overflow dropdown's items are the file's only !important surfaces — they
+   fight JobTread's own button styling once the toolbar collapses. Matched with
+   !important because nothing weaker can reach them; still one class short of
+   `.jt-toolbar-item.active` and the `.jt-color-*` states, which are !important
+   too and keep winning. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-overflow-dropdown .jt-toolbar-item {
+  background: #f4f6f8 !important;
+  border-color: #adb2b7 !important;
+}
+
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-overflow-dropdown .jt-toolbar-item:hover {
+  background: #d3d7db !important;
+  border-color: #adb2b7 !important;
+}

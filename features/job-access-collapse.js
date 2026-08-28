@@ -8,6 +8,9 @@ const JobAccessCollapseFeature = (() => {
   let observer = null;
   const STORAGE_KEY = 'jobAccessCollapsed';
   let collapsedState = {};
+  // Click handlers by label, so cleanup can remove them (an anonymous handler
+  // left behind would stack a duplicate on every re-enable).
+  const clickListeners = [];
 
   // Chevron SVG for toggle buttons
   const CHEVRON_RIGHT = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible" style="width:12px;height:12px;transition:transform 0.15s ease" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>';
@@ -88,12 +91,14 @@ const JobAccessCollapseFeature = (() => {
         applyCollapseState(chevronSpan, userRows, isCollapsed);
 
         // Click handler
-        label.addEventListener('click', () => {
+        const handler = () => {
           const nowCollapsed = !collapsedState[sectionName];
           collapsedState[sectionName] = nowCollapsed;
           applyCollapseState(chevronSpan, userRows, nowCollapsed);
           saveState();
-        });
+        };
+        label.addEventListener('click', handler);
+        clickListeners.push({ label, handler });
       }
     }
   }
@@ -125,6 +130,12 @@ const JobAccessCollapseFeature = (() => {
       observer = null;
     }
 
+    // Remove click handlers before stripping the enhanced markers
+    for (const { label, handler } of clickListeners) {
+      label.removeEventListener('click', handler);
+    }
+    clickListeners.length = 0;
+
     // Remove all injected chevrons and restore display
     const enhanced = document.querySelectorAll('[data-jt-collapse-enhanced]');
     for (const label of enhanced) {
@@ -132,6 +143,7 @@ const JobAccessCollapseFeature = (() => {
       label.style.cursor = '';
       label.style.userSelect = '';
       label.style.display = '';
+      label.style.alignItems = '';
       label.style.gap = '';
 
       const chevron = label.querySelector('.jt-collapse-chevron');

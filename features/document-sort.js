@@ -167,6 +167,10 @@ const DocumentSortFeature = (() => {
       cell.style.userSelect = '';
     });
 
+    // Remove the injected spinner keyframes so toggle-off leaves no styles behind
+    const keyframes = document.getElementById('jt-doc-sort-keyframes');
+    if (keyframes) keyframes.remove();
+
     mountedHeader = null;
     mountedRowsContainer = null;
     originalOrder = null;

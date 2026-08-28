@@ -2458,3 +2458,196 @@ body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-color-swatc
     min-height: 44px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   "Kinda Dark" (body.jt-dark-soft) — a dimmed LIGHT theme
+
+   NOT a fourth dark family. The level knocks JobTread's white surfaces down to
+   #dde1e5 to take the glare off and deliberately does not set jt-dark-mode,
+   which is what detectAndApplyTheme() keys `.dark-theme` off (via
+   NativeDarkBridge.isPageDark()). So under Kinda the panel carries no marker
+   class at all and falls through to the light base above — pure white on a page
+   that no longer has any white on it, which makes the notes drawer the
+   brightest thing on screen. Exactly the glare the level exists to remove.
+
+   HOW THE THREE FAMILIES COMPOSE, since this file is large enough that it is
+   not obvious from any one block:
+     • light base       — no marker class. Hardcoded whites and greys.
+     • `.dark-theme`    — a marker class JS puts ON THE PANEL ELEMENT, not on
+                          the body, whenever NativeDarkBridge.isPageDark() is
+                          true: JobTread's own dark mode OR our Dark/Double
+                          levels. Never Kinda. ~200 selectors of warm greys,
+                          which a `body.jt-native-dark:not(…)
+                          .jt-quick-notes-panel.dark-theme …` family then
+                          composes on top of, re-pointing the same surfaces at
+                          JobTread's live --color-* tokens.
+     • `.custom-theme`  — the other panel marker class, with JS setting
+                          --jt-notes-* inline on the panel; the CSS reads those
+                          through var() with the light values as fallbacks.
+   `body.jt-dark-mode` appears in exactly one place, the folder colour picker,
+   which renders on document.body OUTSIDE the panel and so cannot see a panel
+   marker class. This block follows that same rule: it keys off the body, which
+   is where jt-dark-soft lives, so it needs no JS change.
+
+   Surfaces and borders move; TEXT STAYS DARK. The panel sits one step proud of
+   the page (#f4f6f8 over #dde1e5) so it still reads as a floating drawer, and
+   the rest of the ramp keeps the light base's running order — surface >
+   subtle > pressed > strong fill — spread a little wider, because a dimmed
+   ground swallows small steps the way it swallows borders:
+
+       white     → #f4f6f8   panel, sidebar, editor, list, cards, inputs
+       #f9fafb   → #dde1e5   hover and subtle fills
+       #f3f4f6   → #d3d7db   pressed, code spans, folder headers
+       #e5e7eb   → #cbcfd3   dividers, counts, active-press
+       #d1d5db   → #adb2b7   solid affordances (scrollbar, resize grip, chips)
+       borders   → #adb2b7   the level's own border step
+
+   Headers and footers deliberately stay level with the panel body rather than
+   dropping a step: the light base paints them white too, and the separation
+   there comes from the borders, which this block strengthens.
+
+   SPECIFICITY. Every selector below mirrors the light rule it replaces exactly
+   and takes the scope through :where(), which adds none. So each override
+   weighs the same as its original and wins only by sitting later in the file —
+   which means the panel's semantic states (the cyan active card and active
+   tab, the cyan focus ring, the amber pin, the red delete) go on beating it
+   the way they beat the light base, with nothing restated here. Writing the
+   scope as a plain descendant chain instead would out-weigh all of them and
+   flatten the panel to grey.
+
+   SCOPE. `html:not(.jt-dark)` is the guard every rule in
+   styles/dark-mode-soft.css carries, and it is here for the same reason: the
+   panel dims exactly when the page dims, and stands down with it under
+   JobTread's own dark mode. `:not(.jt-native-dark)` is the backstop for the one
+   case where the two could disagree — NativeDarkBridge reads JobTread's class
+   off html OR body while the level sheet only scopes html — and makes this
+   block yield to `.dark-theme` rather than fight it. No `:not(.jt-custom-theme)`
+   guard: the popup makes Dark Mode (every level, Kinda included) and the RGB
+   theme mutually exclusive, so unlike the native-dark family this one cannot
+   co-occur with it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Panel surface (was white) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-quick-notes-panel,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-sidebar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-sidebar-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-search-container,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-actions-container,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-action-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-search-input,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-list,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-note-item,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-editor,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-editor-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-close-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-editor-footer,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-tabs,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-folder-color-picker,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-color-swatch.jt-color-none {
+  background: #f4f6f8;
+}
+
+/* The focused search input and folder select go back to the panel surface —
+   two-class selectors, so they need their own rule to beat the one above. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-search-input:focus,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-select:focus {
+  background: #f4f6f8;
+}
+
+/* Subtle fills and hovers (was #f9fafb) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-select,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-action-button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-search-input:hover:not(:focus),
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-note-item:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-close-button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-tab:hover:not(.active) {
+  background: #dde1e5;
+}
+
+/* Pressed states, code spans and folder headers (was #f3f4f6) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-content-input code,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-note-item-preview code,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-header,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-sidebar-close-button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-action-button:active,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-back-button:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-checklist-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-preview-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-select:hover {
+  background: #d3d7db;
+}
+
+/* Strong fills — dividers, counts, active-press (was #e5e7eb) */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-toolbar-divider,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-tab-count,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-checklist-btn:active,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-preview-btn:active,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-header:hover {
+  background: #cbcfd3;
+}
+
+/* Solid affordances that were #d1d5db — a resize grip, a scrollbar thumb and
+   two folder chips. Held at the border step: left where they were they would
+   sit 28 units off their own ground instead of the 46 they had on white, and
+   these are the parts of the panel you have to be able to find. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-resize-handle::before,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-list::-webkit-scrollbar-thumb,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-count,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-add {
+  background: #adb2b7;
+}
+
+/* Borders. JobTread's default border grey nearly vanishes once the ground it
+   sits on comes down, which is what makes a naively dimmed UI look muddy
+   rather than calm — the structure disappears. Same step the level uses. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-sidebar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-search-container,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-actions-container,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-action-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-search-input,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-note-item,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-close-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-toolbar,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-editor-footer,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-tabs,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-content-input code,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-checklist-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-preview-btn:hover,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-color-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-select,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-folder-color-picker,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-color-swatch.jt-color-none {
+  border-color: #adb2b7;
+}
+
+/* The loading spinner declares its whole ring and its moving arc in ONE rule,
+   so a bare border-color here would take the arc with it. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-loading::before {
+  border-color: #adb2b7;
+  border-top-color: #0891b2;
+}
+
+/* Secondary type. Tailwind's gray-500 (#6b7280) is 4.83:1 on white and 4.13:1
+   on #f4f6f8, so dimming the ground under it without moving it would turn a
+   glare fix into an accessibility regression. #545c69 is the replacement
+   styles/dark-mode-soft.css already picked for .text-gray-500 on this level's
+   ramp: 5.71:1 on the panel surface and 4.51:1 on the darkest one here.
+   #9ca3af is deliberately NOT included — it fails on plain white already
+   (2.54:1), so it is decorative type this level does not regress. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-sidebar-close-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-empty,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-note-item-preview,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-back-button,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-checklist-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-preview-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-word-count,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-tab,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-note-attribution,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-login-prompt p,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-loading,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-folder-chevron,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-notes-collapse-btn,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-color-picker-header {
+  color: #4e555f;
+}

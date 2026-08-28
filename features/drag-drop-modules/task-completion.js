@@ -5,6 +5,16 @@ const TaskCompletion = (() => {
   // Track which tasks have checkboxes added
   const processedTasks = new WeakSet();
 
+  // In-flight failsafe timers, so cleanup() can kill a toggle mid-flow
+  // instead of leaving it to fire after the feature is off. Stale (already
+  // fired/cleared) ids are harmless to clearTimeout again.
+  const pendingFailsafes = new Set();
+
+  function trackFailsafe(id) {
+    pendingFailsafes.add(id);
+    return id;
+  }
+
   /**
    * Add completion checkbox to all task cards (calendar view)
    */
@@ -230,14 +240,14 @@ const TaskCompletion = (() => {
     const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
 
     // Failsafe: Remove CSS after 5 seconds no matter what
-    const failsafeTimeout = setTimeout(() => {
+    const failsafeTimeout = trackFailsafe(setTimeout(() => {
       if (window.SidebarManager) {
         window.SidebarManager.removeSidebarCSS();
       }
       // Restore checkbox
       checkbox.style.opacity = '';
       checkbox.style.pointerEvents = '';
-    }, 5000);
+    }, 5000));
 
     // Click the header button to open sidebar (not the whole card, just the button)
     headerButton.click();
@@ -447,14 +457,14 @@ const TaskCompletion = (() => {
     const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
 
     // Failsafe: Remove CSS after 5 seconds no matter what
-    const failsafeTimeout = setTimeout(() => {
+    const failsafeTimeout = trackFailsafe(setTimeout(() => {
       if (window.SidebarManager) {
         window.SidebarManager.removeSidebarCSS();
       }
       // Restore checkbox
       checkbox.style.opacity = '';
       checkbox.style.pointerEvents = '';
-    }, 5000);
+    }, 5000));
 
     // Click to open sidebar
     if (window.SidebarManager) {
@@ -589,6 +599,10 @@ const TaskCompletion = (() => {
   function cleanup() {
     const checkboxes = document.querySelectorAll('.jt-complete-checkbox');
     checkboxes.forEach(checkbox => checkbox.remove());
+
+    // Kill in-flight failsafe timers from toggles interrupted by toggle-off
+    pendingFailsafes.forEach(id => clearTimeout(id));
+    pendingFailsafes.clear();
 
     if (window.TaskIdResolver) window.TaskIdResolver.destroy();
     if (window.TaskApiSave) window.TaskApiSave.clearCache();

@@ -22,33 +22,33 @@
    ALSO GUARDED WITH :where(:not(.jt-light, .jt-light *)). JobTread wraps its
    document and print regions in `jt-light`, an explicit opt-out from their dark
    variant: that paper is authored for a PDF a client reads on white. Dimming it
-   to #e4e4e4 is not a catastrophe the way the standard Dark level's #2c2c2c is,
+   to #dde1e5 is not a catastrophe the way the standard Dark level's #2c2c2c is,
    but it is still us overruling a region JobTread has marked "leave alone", and
    the level's job is to take glare off the APP, not to retint the deliverable.
    `:where()` adds no specificity, so the careful ordering above is unaffected.
    See the long note at the top of styles/dark-mode.css. */
 
 /* === Surfaces === */
-/* Every value here dropped one step on 2026-08-25 (#ececec -> #e4e4e4 and
+/* Every value here dropped one step on 2026-08-25 (#ececec -> #dde1e5 and
    friends). The level was reported as still bright; the step is deliberately
    small enough that the theme stays unmistakably LIGHT — see the contrast
    audit in the text section below for what that costs and what it required. */
 
 /* The main app surface: page background, cards, table bodies, modals, bars. */
 html:not(.jt-dark) .bg-white:where(:not(.jt-light, .jt-light *)) {
-    background-color: #e4e4e4;
+    background-color: #dde1e5;
 }
 
 /* JobTread's own greys sit *under* white as subtle zebra and heading fills.
    They have to move down with it or they stop being distinguishable. */
 html:not(.jt-dark) .bg-gray-50:where(:not(.jt-light, .jt-light *)),
 html:not(.jt-dark) .bg-slate-50:where(:not(.jt-light, .jt-light *)) {
-    background-color: #dadada;
+    background-color: #d3d7db;
 }
 
 html:not(.jt-dark) .bg-gray-100:where(:not(.jt-light, .jt-light *)),
 html:not(.jt-dark) .bg-slate-100:where(:not(.jt-light, .jt-light *)) {
-    background-color: #d4d4d4;
+    background-color: #cbcfd3;
 }
 
 /* === Inputs === */
@@ -59,7 +59,7 @@ html:not(.jt-dark) .bg-slate-100:where(:not(.jt-light, .jt-light *)) {
    on a dimmed page.
 
    TRANSPARENT, not a colour of its own. This used to sink them one step below
-   the surface (#e4e4e4 under #ececec), on the reasoning that a field lighter
+   the surface (#dde1e5 under #ececec), on the reasoning that a field lighter
    than its surroundings is a near-white block. The flaw is that a FIXED colour
    can only match one surface. A field takes its frame from a wrapper far more
    often than from itself —
@@ -94,16 +94,16 @@ html:not(.jt-dark) select:where(:not(.jt-light, .jt-light *)) {
    and 3.53:1 on the darkest one; slate-500 (#64748b) is a shade worse again.
    Dimming the ground under text that is already at the edge is what turns a
    glare fix into an accessibility regression, so the two steps come down far
-   enough to clear 4.5:1 on the darkest surface here (#d4d4d4): 4.55:1 and
+   enough to clear 4.5:1 on the darkest surface here (#cbcfd3): 4.55:1 and
    4.71:1 respectively, 5.31:1 and 5.49:1 on the main one.
    Only these two. gray-600 and darker are 5.09:1 or better on every surface
    this file paints and are left exactly as JobTread ships them. */
 html:not(.jt-dark) .text-gray-500:where(:not(.jt-light, .jt-light *)) {
-    color: #545c69;
+    color: #4e555f;
 }
 
 html:not(.jt-dark) .text-slate-500:where(:not(.jt-light, .jt-light *)) {
-    color: #4f5a6b;
+    color: #4a5464;
 }
 
 /* === Borders === */
@@ -118,7 +118,7 @@ html:not(.jt-dark) :where(:not(.jt-light, .jt-light *))::backdrop,
 html:not(.jt-dark) :where(:not(.jt-light, .jt-light *))::file-selector-button,
 html:not(.jt-dark) :where(:not(.jt-light, .jt-light *)):after,
 html:not(.jt-dark) :where(:not(.jt-light, .jt-light *)):before {
-    border-color: #bcbcbc;
+    border-color: #adb2b7;
 }
 
 html:not(.jt-dark) .border-transparent:where(:not(.jt-light, .jt-light *)) {
@@ -131,7 +131,7 @@ html:not(.jt-dark) .border-jtOrange:where(:not(.jt-light, .jt-light *)) {
 }
 
 html:not(.jt-dark) .border-white:where(:not(.jt-light, .jt-light *)) {
-    border-color: #e4e4e4;
+    border-color: #dde1e5;
 }
 
 /* === Shadows === */
@@ -139,7 +139,7 @@ html:not(.jt-dark) .border-white:where(:not(.jt-light, .jt-light *)) {
    shadow-sm), and on a toolbar that shadow is doing real work — a button group
    sits on a bar close enough to its own fill that the shadow plus the border is
    most of what separates them.
-   A shadow calibrated against pure white loses contrast on a #e4e4e4 ground, so
+   A shadow calibrated against pure white loses contrast on a #dde1e5 ground, so
    these are nudged UP rather than flattened. Getting this backwards is the
    classic dimmed-UI mistake: the page calms down and every control goes soft
    along with it. */
@@ -161,12 +161,12 @@ html:not(.jt-dark) .shadow-2xl:where(:not(.jt-light, .jt-light *)) {
    gradient has to end on the new surface colour or it stops short of it with a
    visible band. */
 html:not(.jt-dark) .from-white:where(:not(.jt-light, .jt-light *)) {
-    --tw-gradient-from: #e4e4e4;
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #e4e4e4 var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+    --tw-gradient-from: #dde1e5;
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), #dde1e5 var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
 }
 
 html:not(.jt-dark) .to-white:where(:not(.jt-light, .jt-light *)) {
-    --tw-gradient-to: #e4e4e4;
+    --tw-gradient-to: #dde1e5;
 }
 
 /* === Stripe === */
@@ -190,7 +190,7 @@ html:not(.jt-dark) .StripeElement:where(:not(.jt-light, .jt-light *)) {
  * Leaving them alone had a consequence the original reasoning missed. It argued
  * from contrast, which was right: they still meet contrast on a slightly darker
  * page. The problem is glare, which is what this level exists to remove.
- * Measured against a page dimmed to #e4e4e4 (luminance 0.776):
+ * Measured against a page dimmed to #dde1e5 (luminance 0.776):
  *
  *     bg-blue-50    #eff6ff   luminance 0.915
  *     bg-amber-50   #fffbeb   luminance 0.963

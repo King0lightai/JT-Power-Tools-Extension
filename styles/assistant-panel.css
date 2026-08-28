@@ -2,8 +2,10 @@
    The panel follows the page's active JT Power Tools theme via panel-scoped
    --jta-* variables (see the "Theme tokens" block): light is the default
    (stock JobTread), body.jt-dark-mode maps to warm-neutral greys,
-   body.jt-custom-theme (RGB theme) maps to the user's generated palette, and
-   body.jt-native-dark maps to JobTread's own live --color-* tokens.
+   body.jt-custom-theme (RGB theme) maps to the user's generated palette,
+   body.jt-native-dark maps to JobTread's own live --color-* tokens, and
+   body.jt-dark-soft ("Kinda Dark") dims the light surfaces without darkening
+   them — it is a light theme, so it remaps surfaces and leaves text alone.
    All classes are prefixed jt-assistant-. */
 
 /* Working glow — soft brand-orange tint around the viewport while the
@@ -50,7 +52,9 @@
    present the RGB block wins (declared last, equal specificity) — in
    practice the popup makes Dark Mode and the RGB theme mutually exclusive.
    A fourth block follows for body.jt-native-dark (JobTread's own dark mode),
-   which is NOT mutually exclusive with either, hence its explicit guards. */
+   which is NOT mutually exclusive with either, hence its explicit guards, and
+   a fifth for body.jt-dark-soft ("Kinda Dark"), which is a dimmed LIGHT theme
+   and so overrides surfaces only. */
 .jt-assistant-panel,
 .jt-assistant-chooser {
   --jta-bg: #ffffff;
@@ -155,6 +159,56 @@ body.jt-native-dark:not(.jt-dark-standard):not(.jt-custom-theme) .jt-assistant-c
   --jta-accent-fg: #ffffff;
   --jta-warn: #fbbf24;
   --jta-danger: #f87171;
+}
+
+/* "Kinda Dark" (body.jt-dark-soft) — a LIGHT theme, so this is NOT a fifth
+   dark block. The level drops JobTread's white surfaces to #dde1e5 to take the
+   glare off and deliberately does not set jt-dark-mode, which means none of the
+   blocks above fire and the panel keeps its default pure-white surfaces. On a
+   page dimmed to #dde1e5 (luminance 0.749) a #ffffff panel (1.000) becomes the
+   brightest thing on screen — exactly the glare the level exists to remove.
+
+   Surfaces only. Text, accent, warn and danger fall through from the light
+   block above, with one exception noted below.
+
+   The ramp: the panel sits one step PROUD of the page (#f4f6f8 over #dde1e5)
+   so it still reads as a floating drawer, and its own scale keeps the light
+   block's ordering — bg > bg-2 > sunken > elev > hover — just shifted down and
+   spread slightly wider, because a dimmed ground swallows small steps the way
+   it swallows borders. Borders take the level's own #adb2b7 verbatim.
+
+   --jta-text-muted is the exception and it is not optional. It is Tailwind's
+   gray-500 (#6b7280), 4.83:1 on white and only 4.13:1 on #f4f6f8 — dimming the
+   ground under it is what turns a glare fix into an accessibility regression.
+   #4e555f is the same replacement styles/dark-mode-soft.css already picked for
+   .text-gray-500 on this level's ramp: 5.71:1 on the panel surface and 4.51:1
+   on the darkest one here. --jta-text-subtle is left alone; it fails on plain
+   white already, so it is decorative type this level does not regress.
+
+   SCOPE. `html:not(.jt-dark)` is the same guard every rule in
+   styles/dark-mode-soft.css carries, and it is here for the same reason and
+   with the same effect: the panel dims exactly when the page dims, and stands
+   down with it under JobTread's own dark mode. `:not(.jt-native-dark)` is the
+   belt to that braces — the bridge reads JobTread's class off html OR body
+   while the level sheet only scopes html, so if the two ever disagree this
+   block yields to the jt-native-dark block above rather than fighting it.
+   No `:not(.jt-custom-theme)` guard: the popup makes Dark Mode (every level,
+   Kinda included) and the RGB theme mutually exclusive, so unlike the native
+   block above this one cannot co-occur with it. The whole scope is wrapped in
+   :where(), which adds no specificity, so this block weighs exactly what the
+   light block at the top weighs and beats it only by coming later — and every
+   dark block above keeps its natural precedence over it. */
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-assistant-panel,
+:where(html:not(.jt-dark) body.jt-dark-soft:not(.jt-native-dark)) .jt-assistant-chooser {
+  --jta-bg: #f4f6f8;
+  --jta-bg-2: #dde1e5;
+  --jta-bg-elev: #d3d7db;
+  --jta-bg-hover: #cbcfd3;
+  --jta-bg-sunken: #e0e0e0;
+  --jta-input-bg: #f4f6f8;
+  --jta-border: #adb2b7;
+  --jta-border-2: #a8a8a8;
+  --jta-text-muted: #4e555f;
 }
 
 /* Panel — right drawer that DOCKS and pushes the page (JS sets margin-right

@@ -757,9 +757,14 @@ async function loadSettings() {
   try {
     const result = await chrome.storage.sync.get(['jtToolsSettings']);
     // Merge stored settings with defaults so new feature keys are always present
-    const settings = (typeof JTDefaults !== 'undefined' && JTDefaults.mergeWithDefaults)
+    let settings = (typeof JTDefaults !== 'undefined' && JTDefaults.mergeWithDefaults)
       ? JTDefaults.mergeWithDefaults(result.jtToolsSettings)
       : result.jtToolsSettings || defaultSettings;
+
+    // darkMode/darkModeLevel are per-device: this device's values win
+    if (typeof JTDeviceSettings !== 'undefined') {
+      settings = await JTDeviceSettings.overlay(settings);
+    }
 
     // Check user's tier for feature access
     const tier = await LicenseService.getTier();
@@ -1047,6 +1052,14 @@ async function saveSettings(settings) {
     console.log('saveSettings: Customize button visibility:', shouldShowButton ? 'visible' : 'hidden', 'tier:', tier);
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
+    // darkMode/darkModeLevel also land in this device's local overlay — the
+    // synced copies are legacy seed material for not-yet-migrated devices
+    if (typeof JTDeviceSettings !== 'undefined') {
+      await JTDeviceSettings.set({
+        darkMode: settings.darkMode,
+        darkModeLevel: settings.darkModeLevel
+      });
+    }
     console.log('Settings saved:', settings);
 
     // Notify background script of settings change
