@@ -49,6 +49,7 @@
     "scripts": [
       "utils/browser-polyfill.js",
       "utils/defaults.js",
+      "background/portal-session.js",
       "background/background.js"
     ]
   },

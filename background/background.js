@@ -365,94 +365,18 @@ async function handleApiRequest(url, options) {
 
 /**
  * Fetch an extension grant key from the server for a specific org name.
- * Uses the portal JWT access token for authentication.
+ * Delegates to background/portal-session.js — shared with the other
+ * background implementation — which owns this context's one session-renewal
+ * path. Do not add a second /auth/refresh call here: the refresh token is
+ * single-use, and two renewals in flight is the race that signed users out.
  * @param {string} orgName - Organization name to look up
  * @returns {Promise<Object>} { success, grantKey, orgId, orgName } or { success: false, error }
  */
 async function handleFetchExtensionGrantKey(orgName) {
-  if (!orgName) {
-    return { success: false, error: 'orgName is required' };
+  if (typeof JTPortalSession === 'undefined') {
+    return { success: false, error: 'Portal session helper did not load in the background context' };
   }
-
-  const SERVER_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
-
-  try {
-    // Get the portal tokens from local storage
-    const stored = await chrome.storage.local.get([
-      'jtAccountAccessToken',
-      'jtAccountRefreshToken'
-    ]);
-    let accessToken = stored.jtAccountAccessToken;
-    const refreshToken = stored.jtAccountRefreshToken;
-
-    if (!accessToken) {
-      return { success: false, error: 'Not authenticated — sign in to the portal first' };
-    }
-
-    // Try the request
-    let response = await fetch(`${SERVER_URL}/admin/extension-grant-key`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ orgName }),
-    });
-
-    // If 401 and we have a refresh token, try refreshing
-    if (response.status === 401 && refreshToken) {
-      const refreshResponse = await fetch(`${SERVER_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (refreshResponse.ok) {
-        const refreshData = await refreshResponse.json();
-        accessToken = refreshData.accessToken;
-
-        // Store the new tokens. Expiry must be persisted too — without it,
-        // AccountService.isTokenExpiringSoon() reads a stale value and forces
-        // a token rotation on every page load.
-        const tokenUpdate = {
-          jtAccountAccessToken: accessToken,
-          jtAccountTokenExpiry: Date.now() + ((refreshData.expiresIn || 900) * 1000)
-        };
-        if (refreshData.refreshToken) {
-          tokenUpdate.jtAccountRefreshToken = refreshData.refreshToken;
-        }
-        await chrome.storage.local.set(tokenUpdate);
-
-        // Retry the original request with new token
-        response = await fetch(`${SERVER_URL}/admin/extension-grant-key`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ orgName }),
-        });
-      }
-    }
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      const notFound = response.status === 404;
-      return { success: false, error: data.error || 'Server error', notFound };
-    }
-
-    return {
-      success: true,
-      grantKey: data.grantKey,
-      orgId: data.orgId,
-      orgName: data.orgName,
-      logoUrl: data.logoUrl || null,
-    };
-  } catch (error) {
-    console.error('Extension grant key fetch error:', error);
-    return { success: false, error: error.message };
-  }
+  return JTPortalSession.fetchExtensionGrantKey(orgName);
 }
 
 /**
