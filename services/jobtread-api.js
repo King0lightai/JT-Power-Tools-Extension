@@ -673,6 +673,55 @@ const JobTreadAPI = (() => {
   }
 
   /**
+   * Custom field definitions for any Pave targetType ('job', 'customer',
+   * 'vendor', 'location', 'costItem', 'dailyLog', ...).
+   *
+   * Jobs and locations keep their own long-standing cache keys (other
+   * features read them), so those two delegate to the existing fetchers
+   * rather than opening a second cache for the same data. Everything else
+   * caches under a per-target key with the same TTL and org stamp.
+   *
+   * @param {string} targetType
+   * @param {string} [orgId]
+   * @returns {Promise<Array>} definitions in position order
+   */
+  async function fetchCustomFieldsByTarget(targetType, orgId = null) {
+    if (typeof targetType !== 'string' || !targetType) {
+      throw new Error('targetType is required');
+    }
+    if (targetType === 'job') return fetchCustomFieldDefinitions(orgId);
+    if (targetType === 'location') return fetchLocationCustomFields(orgId);
+
+    const cacheKey = 'jtToolsCustomFieldsCache_' + targetType;
+    const stampKey = 'jtToolsCustomFieldsTimestamp_' + targetType;
+
+    try {
+      const cached = await chrome.storage.local.get([cacheKey, stampKey]);
+      const cacheAge = Date.now() - (cached[stampKey] || 0);
+      if (cached[cacheKey] && cacheAge < CUSTOM_FIELDS_CACHE_DURATION
+          && await cacheOrgIsCurrent()) {
+        console.log('JobTreadAPI: Using cached ' + targetType + ' custom fields');
+        return cached[cacheKey];
+      }
+    } catch (e) { /* cache read failed — fall through to a live fetch */ }
+
+    if (!orgId) {
+      orgId = await getOrgId();
+      if (!orgId) throw new Error('Organization ID not configured');
+    }
+
+    const fields = await fetchAllCustomFields(orgId, targetType);
+    console.log('JobTreadAPI: Fetched ' + targetType + ' custom fields:', fields.length);
+
+    try {
+      await chrome.storage.local.set({ [cacheKey]: fields, [stampKey]: Date.now() });
+      await stampCacheOrg();
+    } catch (e) { /* cache write failed — the values are still returned */ }
+
+    return fields;
+  }
+
+  /**
    * Fetch organization locations for filtering
    * @param {string} orgId - Organization ID (optional)
    * @returns {Promise<Array>} List of locations with id and name
@@ -1211,6 +1260,7 @@ const JobTreadAPI = (() => {
     fetchCustomFieldDefinitions,
     fetchLocations,
     fetchLocationCustomFields,
+    fetchCustomFieldsByTarget,
     fetchJobs,
     fetchJobsByCustomField,
     fetchJobsWithFilters,

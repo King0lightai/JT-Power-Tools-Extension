@@ -17,30 +17,74 @@
  * renders whichever saved view is selected (the user's `defaultJobDataView`, or
  * whatever they picked from the dropdown), and that selection appears in no
  * URL, localStorage entry or history state. So the view is identified by
- * fingerprint instead: the one job view whose `fields` array lines up, position
+ * fingerprint instead: the one view whose `fields` array lines up, position
  * for position, with the headers actually on screen. That match is also what
  * proves the positional mapping is safe to write through.
  *
- * Also owns the write: updateJob with a { fieldId: value } customFieldValues
- * map - the same mutation shape the MCP server's jt_job_write uses.
+ * Entity scope: jobs, customers, vendors and locations. JobTread names a data
+ * view's type and a custom field's targetType with the same word for all four,
+ * so one key in SUPPORTED_TYPES drives view lookup, field lookup, row href
+ * matching and the write mutation. Which entity a grid holds comes from the
+ * row links (the row IS the `<a href="/customers/ID">`), and the matched view
+ * must be of that same type — a customer view can never map a vendor grid.
+ *
+ * Also owns the write: updateJob / updateAccount / updateLocation with a
+ * { fieldId: value } customFieldValues map - the same mutation shape the MCP
+ * server's write tools use.
  *
  * @module EditableTablesSchema
  * @requires JobTreadAPI
  */
 const EditableTablesSchema = (() => {
   // Entity types we can resolve a row into a record id for, and write back to.
-  // Extending to tasks/costItems means adding an href prefix + mutation here.
+  //
+  // The key is simultaneously the data view `type`, the custom field
+  // `targetType`, and our own name for the entity — JobTread uses the same
+  // word for all three. Customers and vendors are both Pave `Account`s, so
+  // they share updateAccount and differ only in their route and field set.
+  //
+  // `idPattern` is matched against the row's href. Jobs, customers and
+  // vendors are anchored at the start of the path; locations are not,
+  // because JobTread reaches a location both directly and nested under the
+  // account that owns it.
   const SUPPORTED_TYPES = {
-    job: { hrefPrefix: '/jobs/', mutation: 'updateJob', resultKey: 'job' }
+    job: {
+      hrefPrefix: '/jobs/',
+      idPattern: /^\/jobs\/([A-Za-z0-9]{6,32})(?:[/?#]|$)/,
+      mutation: 'updateJob',
+      resultKey: 'job'
+    },
+    customer: {
+      hrefPrefix: '/customers/',
+      idPattern: /^\/customers\/([A-Za-z0-9]{6,32})(?:[/?#]|$)/,
+      mutation: 'updateAccount',
+      resultKey: 'account'
+    },
+    vendor: {
+      hrefPrefix: '/vendors/',
+      idPattern: /^\/vendors\/([A-Za-z0-9]{6,32})(?:[/?#]|$)/,
+      mutation: 'updateAccount',
+      resultKey: 'account'
+    },
+    location: {
+      hrefPrefix: '/locations/',
+      idPattern: /\/locations\/([A-Za-z0-9]{6,32})(?:[/?#]|$)/,
+      mutation: 'updateLocation',
+      resultKey: 'location'
+    }
   };
+
+  const TYPE_KEYS = Object.keys(SUPPORTED_TYPES);
 
   // Custom field types we deliberately refuse to edit inline. multipleText
   // holds many values per record, and a single cell can't express that safely.
   const UNSUPPORTED_FIELD_TYPES = new Set(['multipleText']);
 
-  // Job data views for the current org, and the resolutions already
-  // fingerprinted. Both cleared on org change (see clearCache).
+  // Saved data views for the current org (all supported types), the custom
+  // field definitions per targetType, and the resolutions already
+  // fingerprinted. All cleared on org change (see clearCache).
   let viewsPromise = null;
+  const definitionsPromises = new Map();
   const resolutionCache = new Map();
 
   /**
@@ -51,10 +95,36 @@ const EditableTablesSchema = (() => {
    */
   function normalizeLabel(text) {
     return String(text || '')
-      .replace(/[▲▼↑↓ ]/g, ' ')
+      .replace(/[▲▼↑↓ ]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();
+  }
+
+  /**
+   * The entity types a row href could belong to, most specific first. A row
+   * is a link to its record, so the route names the entity — except that a
+   * location can hang off an account's route, which is why a customer or
+   * vendor href also admits `location` as a candidate. The saved view that
+   * matches the headers picks between them.
+   * @param {HTMLElement} row
+   * @returns {Array<string>}
+   */
+  function candidateTypes(row) {
+    const href = (row && row.getAttribute) ? (row.getAttribute('href') || '') : '';
+    if (!href) return [];
+    const types = TYPE_KEYS.filter((type) => SUPPORTED_TYPES[type].idPattern.test(href));
+    // Anchored matches come first so a plain /customers/ID row resolves as a
+    // customer before the unanchored location pattern is ever considered.
+    return types.sort((a, b) => href.indexOf(SUPPORTED_TYPES[a].hrefPrefix) - href.indexOf(SUPPORTED_TYPES[b].hrefPrefix));
+  }
+
+  /**
+   * CSS selector matching a row of any supported entity type.
+   * @returns {string}
+   */
+  function rowSelector() {
+    return TYPE_KEYS.map((type) => `a[href^="${SUPPORTED_TYPES[type].hrefPrefix}"]`).join(', ');
   }
 
   /**
@@ -72,28 +142,70 @@ const EditableTablesSchema = (() => {
   }
 
   /**
-   * Every saved job data view in the org, with its ordered field list.
-   * @returns {Promise<Array>}
+   * Every saved data view in the org that we could ever edit through, grouped
+   * by entity type.
+   *
+   * Pave pages at 100, and an org outgrows that (Titus has ~95 views across
+   * every type, jobs alone being a third of them), so the cursor is followed
+   * to the end. Filtering by type happens here rather than in the query: one
+   * paged fetch serves all four types instead of four.
+   *
+   * @returns {Promise<Object>} { [type]: Array<view> }
    */
-  function loadJobDataViews() {
+  function loadDataViews() {
     if (viewsPromise) return viewsPromise;
     viewsPromise = (async () => {
       const orgId = await JobTreadAPI.getOrgId();
       if (!orgId) throw new Error('Organization ID not resolved');
-      const result = await JobTreadAPI.paveQuery({
-        organization: {
-          $: { id: orgId },
-          dataViews: {
-            $: { size: 100, where: ['type', 'job'] },
-            nodes: { id: {}, name: {}, type: {}, fields: {} }
+
+      const byType = {};
+      TYPE_KEYS.forEach((type) => { byType[type] = []; });
+
+      let page;
+      // Bounded so a server that always returns a cursor can't spin forever.
+      for (let request = 0; request < 20; request++) {
+        const args = { size: 100 };
+        if (page) args.page = page;
+        const result = await JobTreadAPI.paveQuery({
+          organization: {
+            $: { id: orgId },
+            dataViews: {
+              $: args,
+              nextPage: {},
+              nodes: { id: {}, name: {}, type: {}, fields: {} }
+            }
           }
-        }
-      });
-      return result.organization?.dataViews?.nodes || [];
+        });
+        const connection = result.organization?.dataViews;
+        (connection?.nodes || []).forEach((view) => {
+          if (view && byType[view.type]) byType[view.type].push(view);
+        });
+        page = connection?.nextPage;
+        if (!page) break;
+      }
+      return byType;
     })();
     // A failed fetch must not poison the cache for the rest of the session.
     viewsPromise.catch(() => { viewsPromise = null; });
     return viewsPromise;
+  }
+
+  /**
+   * Custom field definitions for one entity type, keyed by id. Fetched (and
+   * cached) per type so a customer grid never checks its headers against job
+   * fields.
+   * @param {string} type
+   * @returns {Promise<Map<string, Object>>}
+   */
+  function loadDefinitions(type) {
+    if (definitionsPromises.has(type)) return definitionsPromises.get(type);
+    const promise = (async () => {
+      const list = await JobTreadAPI.fetchCustomFieldsByTarget(type);
+      return new Map((list || []).map((d) => [d.id, d]));
+    })();
+    definitionsPromises.set(type, promise);
+    promise.catch(() => definitionsPromises.delete(type));
+    return promise;
   }
 
   /**
@@ -182,22 +294,28 @@ const EditableTablesSchema = (() => {
   }
 
   /**
-   * Resolve the editable columns for a grid, given the headers it renders.
+   * Resolve the editable columns for a grid, given the headers it renders and
+   * the entity types its rows could belong to.
    *
-   * Cached (and de-duplicated) by header fingerprint: a MutationObserver fires
-   * this on every re-render, and the answer only changes when the columns do.
+   * Cached (and de-duplicated) by header fingerprint + types: a
+   * MutationObserver fires this on every re-render, and the answer only
+   * changes when the columns do.
    *
    * @param {Array<string>} labels - header labels in render order
-   * @returns {Promise<Object|null>} { type, hrefPrefix, byIndex } or null
+   * @param {Array<string>|string} [types] - candidate entity types; defaults to all
+   * @returns {Promise<Object|null>} { type, viewId, name, byIndex } or null
    */
-  function resolve(labels) {
+  function resolve(labels, types) {
     if (!Array.isArray(labels) || labels.length === 0) return Promise.resolve(null);
 
+    const wanted = normalizeTypes(types);
+    if (wanted.length === 0) return Promise.resolve(null);
+
     const normalized = labels.map(normalizeLabel);
-    const cacheKey = normalized.join(' | ');
+    const cacheKey = wanted.join('+') + ' :: ' + normalized.join(' | ');
     if (resolutionCache.has(cacheKey)) return resolutionCache.get(cacheKey);
 
-    const promise = computeResolution(normalized);
+    const promise = computeResolution(normalized, wanted);
     resolutionCache.set(cacheKey, promise);
     // Don't cache a network failure - the next re-render should retry.
     promise.catch(() => resolutionCache.delete(cacheKey));
@@ -205,28 +323,43 @@ const EditableTablesSchema = (() => {
   }
 
   /**
+   * @param {Array<string>|string|undefined} types
+   * @returns {Array<string>} supported types, in SUPPORTED_TYPES order
+   */
+  function normalizeTypes(types) {
+    if (types === undefined || types === null) return TYPE_KEYS.slice();
+    const list = Array.isArray(types) ? types : [types];
+    return TYPE_KEYS.filter((type) => list.indexOf(type) !== -1);
+  }
+
+  /**
    * @param {Array<string>} labels - normalized header labels
+   * @param {Array<string>} types - candidate entity types
    * @returns {Promise<Object|null>}
    */
-  async function computeResolution(labels) {
-    const [views, definitionList] = await Promise.all([
-      loadJobDataViews(),
-      JobTreadAPI.fetchCustomFieldDefinitions()
-    ]);
-    const definitions = new Map((definitionList || []).map((d) => [d.id, d]));
+  async function computeResolution(labels, types) {
+    const viewsByType = await loadDataViews();
+
+    // Only the types that actually have a view of the right width are worth
+    // fetching field definitions for - the others cannot match anyway.
+    const worthChecking = types.filter((type) =>
+      (viewsByType[type] || []).some((view) => (view.fields || []).length === labels.length));
 
     const candidates = [];
-    views.forEach((view) => {
-      const skipped = [];
-      const byIndex = matchView(view, labels, definitions, skipped);
-      if (byIndex && byIndex.size > 0) candidates.push({ view, byIndex, skipped });
-    });
+    for (const type of worthChecking) {
+      const definitions = await loadDefinitions(type);
+      for (const view of viewsByType[type]) {
+        const skipped = [];
+        const byIndex = matchView(view, labels, definitions, skipped);
+        if (byIndex && byIndex.size > 0) candidates.push({ type, view, byIndex, skipped });
+      }
+    }
 
     if (candidates.length === 0) {
       // Silence here is what made this feature look installed-but-dead, so say
       // which columns were on screen and that none of them could be proven.
       console.log(
-        `EditableTables: No saved job view matches these ${labels.length} columns ` +
+        `EditableTables: No saved ${types.join('/')} view matches these ${labels.length} columns ` +
         `[${labels.join(', ')}], so nothing here is editable. A renamed or ` +
         'reordered column, or a view you cannot read, will do this.'
       );
@@ -235,10 +368,11 @@ const EditableTablesSchema = (() => {
 
     // Several views can share a column layout (a filtered copy of the same
     // view), which is harmless while they agree on every field. If they
-    // disagree, which view is on screen is genuinely unknown, and guessing
-    // would write the value into whichever field we happened to pick.
+    // disagree - or belong to different entities - which view is on screen is
+    // genuinely unknown, and guessing would write the value into whichever
+    // field we happened to pick.
     const [first, ...rest] = candidates;
-    if (rest.some((c) => !sameMapping(c.byIndex, first.byIndex))) {
+    if (rest.some((c) => c.type !== first.type || !sameMapping(c.byIndex, first.byIndex))) {
       console.warn(
         'EditableTables: More than one saved view matches these columns with ' +
         'different fields, so inline editing is off for this grid'
@@ -247,7 +381,7 @@ const EditableTablesSchema = (() => {
     }
 
     const editable = [...first.byIndex.values()].map((f) => f.name).join(', ');
-    console.log(`EditableTables: "${first.view.name}" - editable columns: ${editable}`);
+    console.log(`EditableTables: "${first.view.name}" (${first.type}) - editable columns: ${editable}`);
     if (first.skipped.length > 0) {
       console.warn(`EditableTables: columns left read-only - ${first.skipped.join('; ')}`);
     }
@@ -255,8 +389,7 @@ const EditableTablesSchema = (() => {
     return {
       viewId: first.view.id,
       name: first.view.name,
-      type: 'job',
-      hrefPrefix: SUPPORTED_TYPES.job.hrefPrefix,
+      type: first.type,
       byIndex: first.byIndex
     };
   }
@@ -264,29 +397,29 @@ const EditableTablesSchema = (() => {
   /**
    * Extract the record id from a grid row.
    *
-   * The row itself is the link to the record (`<a href="/jobs/ID">` wrapping
-   * the cells), so check the row before looking inside it - a descendant
-   * lookup can never match the element it starts from.
+   * The row itself is the link to the record (`<a href="/customers/ID">`
+   * wrapping the cells), so check the row before looking inside it - a
+   * descendant lookup can never match the element it starts from.
    *
    * @param {HTMLElement} row
-   * @param {string} hrefPrefix - e.g. '/jobs/'
+   * @param {string} type - entity type key ('job', 'customer', 'vendor', 'location')
    * @returns {string|null}
    */
-  function getRecordId(row, hrefPrefix) {
-    if (!row) return null;
-    const selector = `a[href^="${hrefPrefix}"]`;
+  function getRecordId(row, type) {
+    const support = SUPPORTED_TYPES[type];
+    if (!row || !support) return null;
+    const selector = `a[href^="${support.hrefPrefix}"]`;
     const link = (row.matches && row.matches(selector)) ? row : row.querySelector(selector);
     if (!link) return null;
-    const rest = link.getAttribute('href').slice(hrefPrefix.length);
-    const id = rest.split(/[/?#]/)[0];
-    return /^[A-Za-z0-9]{6,32}$/.test(id) ? id : null;
+    const match = support.idPattern.exec(link.getAttribute('href') || '');
+    return match ? match[1] : null;
   }
 
   /**
    * Write one custom field value back to JobTread and return the value the
    * server actually stored (so the cell shows truth, not our optimism).
    * @param {Object} args
-   * @param {string} args.type - Entity type ('job')
+   * @param {string} args.type - Entity type ('job', 'customer', 'vendor', 'location')
    * @param {string} args.recordId
    * @param {string} args.fieldId
    * @param {string} args.value
@@ -319,19 +452,23 @@ const EditableTablesSchema = (() => {
   }
 
   /**
-   * Drop cached views and resolutions (org switch, feature cleanup).
+   * Drop cached views, definitions and resolutions (org switch, feature cleanup).
    */
   function clearCache() {
     viewsPromise = null;
+    definitionsPromises.clear();
     resolutionCache.clear();
   }
 
   return {
     normalizeLabel,
+    candidateTypes,
+    rowSelector,
     resolve,
     getRecordId,
     writeValue,
-    clearCache
+    clearCache,
+    SUPPORTED_TYPES
   };
 })();
 

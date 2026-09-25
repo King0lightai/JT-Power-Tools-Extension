@@ -95,8 +95,8 @@
       <div class="container">
         <div class="g-section">
           <h2>What it does</h2>
-          <p>You build a job view with the custom fields you care about — Project Manager, Designer, PDA Average — and then you can only read them. Updating twelve jobs means twelve jobs opened, twelve fields found, twelve tabs closed.</p>
-          <p>Editable Tables makes those custom field columns editable where they already are. Click the pencil on a cell or Alt+click the cell, type, and press Enter — the value goes straight to JobTread. Press Tab instead and it saves and moves to the next editable cell, so you can walk down a column and fill the whole thing in one pass.</p>
+          <p>You build a view with the custom fields you care about — Project Manager, Designer, PDA Average, a subcontractor's W-9 expiry — and then you can only read them. Updating twelve records means twelve records opened, twelve fields found, twelve tabs closed.</p>
+          <p>Editable Tables makes those custom field columns editable where they already are, on your Jobs, Customers, Vendors and Locations views alike. Click the pencil on a cell or Alt+click the cell, type, and press Enter — the value goes straight to JobTread. Press Tab instead and it saves and moves to the next editable cell, so you can walk down a column and fill the whole thing in one pass.</p>
         </div>
 
         <div class="g-section">
@@ -111,7 +111,7 @@
         <div class="g-section">
           <h2>How to use it</h2>
           <ol class="g-steps">
-            <li>Open a job view in the Data Browser — <em>/jobs</em> or any saved view built on it.</li>
+            <li>Open a saved view in the Data Browser — <em>/jobs</em>, <em>/customers</em>, <em>/vendors</em> or <em>/locations</em>.</li>
             <li>Hover a custom field cell. A pencil appears; click it, or <strong>Alt+click</strong> the cell itself.</li>
             <li>Type the new value. <strong>Enter</strong> saves it. <strong>Tab</strong> saves it and jumps to the next editable cell down the column. <strong>Esc</strong> backs out without saving.</li>
           </ol>
@@ -120,9 +120,10 @@
         <div class="g-section">
           <h2>Good to know</h2>
           <ul class="g-tips">
-            <li><strong>Why Alt+click and not double-click:</strong> in the Data Browser the whole row is a link, so an ordinary click opens the job. Alt+click and the pencil are the two ways to edit a cell without navigating away.</li>
+            <li><strong>Why Alt+click and not double-click:</strong> in the Data Browser the whole row is a link, so an ordinary click opens the record. Alt+click and the pencil are the two ways to edit a cell without navigating away.</li>
             <li><strong>Only custom fields, and only ones it can verify.</strong> A column becomes editable when the view proves it maps to a real custom field. Native columns — name, address, dates, totals — are left alone, and any column it can't line up with confidence is skipped rather than risked.</li>
-            <li>Job views today. Task and cost-item grids aren't in scope yet.</li>
+            <li>Jobs, customers, vendors and locations today. Task, cost-item and document grids aren't in scope yet.</li>
+            <li><strong>Each entity keeps its own fields.</strong> A vendor view is only ever matched against vendor custom fields, so a "Division" column on vendors can never be written into the job field of the same name.</li>
             <li>Writes go through JobTread's API, so your org needs a grant key configured.</li>
           </ul>
         </div>

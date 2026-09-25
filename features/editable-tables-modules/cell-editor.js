@@ -30,7 +30,7 @@ const EditableTablesEditor = (() => {
    * @param {HTMLElement} args.cell - the <td>
    * @param {Object} args.field - { id, name, type, options }
    * @param {string} args.recordId
-   * @param {string} args.type - entity type ('job')
+   * @param {string} args.type - entity type ('job', 'customer', 'vendor', 'location')
    * @param {Function} [args.onNavigate] - (direction) => void, called after a
    *   Tab commit with 1 (forward) or -1 (backward)
    */

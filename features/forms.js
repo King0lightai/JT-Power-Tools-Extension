@@ -7,6 +7,7 @@
  *   - features/forms-modules/drawer.js        (DOM skeleton)
  *   - features/forms-modules/field-renderers.js (field cards)
  *   - features/forms-modules/save-engine.js   (state machine, debounced upsert)
+ *   - features/forms-modules/completion.js    (answered counter + status)
  *
  * Lifecycle (orchestrator-driven):
  *   init()    — Auth + tier gate, inject CSS, mount drawer, wire callbacks,
@@ -26,6 +27,14 @@
  *   onMerge from save-engine fires with the list of fields the server
  *   refreshed. We re-render the active form (cheap for v1) and surface a
  *   toast naming the affected fields.
+ *
+ * Completion:
+ *   Two separate ideas, deliberately (see forms-modules/completion.js).
+ *   "All answered" is derived live from the schema + data and drives the
+ *   list card's pill, so a worksheet with every question filled stops
+ *   reading as "In progress". "Complete" is stored on the instance, set
+ *   only by the footer's Mark complete button, and LOCKS the worksheet —
+ *   every control renders disabled until someone clicks Reopen to edit.
  */
 const FormsFeature = (() => {
   const DEBUG = false;
@@ -39,6 +48,7 @@ const FormsFeature = (() => {
   let activeTemplate = null;      // template the user is currently filling (header-only when from instance wrapper)
   let activeSchema = null;        // schema being rendered (pinned for instances, current for unfilled)
   let activeInstance = null;      // instance object (or null when fresh)
+  let completionBusy = false;     // guards double-clicks on Mark complete / Reopen
   let savedAtTimer = null;        // ticks the "Saved Ns ago" relative time
   let printHeaderEl = null;       // injected print-only header element (cleaned in afterprint)
   let printAfterHandler = null;   // reference to the afterprint listener so we can detach
@@ -250,6 +260,7 @@ const FormsFeature = (() => {
     window.FormsDrawer.setTitle('Worksheets');
     window.FormsDrawer.setBackVisible(false);
     window.FormsDrawer.setStatusPill(null, '');
+    clearCompletionBar();
     if (typeof window.FormsDrawer.setSavePdfVisible === 'function') {
       window.FormsDrawer.setSavePdfVisible(false);
     }
@@ -289,7 +300,9 @@ const FormsFeature = (() => {
         jtJobId: currentJob.jobId,
         initialData,
         initialVersion,
+        initialStatus: window.FormsCompletion.statusOf(instance),
         onStateChange: handleSaveStateChange,
+        onStatusChange: handleStatusChange,
         onMerge: handleMerge,
       });
     } catch (err) {
@@ -298,9 +311,220 @@ const FormsFeature = (() => {
       return;
     }
 
-    renderFormFields(schema, initialData);
+    renderActiveForm(initialData);
     window.FormsDrawer.setStatusPill(null, '');
     recomputeSavePdfVisibility(schema, initialData);
+  }
+
+  // ─── Completion (answered counter, Mark complete / Reopen) ──────────
+
+  /**
+   * Render the field cards, apply the completion lock, and refresh the
+   * footer bar. Every path that repaints the form goes through here so the
+   * lock and the counter can never drift from what's on screen.
+   */
+  function renderActiveForm(data) {
+    renderFormFields(activeSchema, data);
+    applyFieldLock(isActiveFormComplete());
+    renderCompletionBar(data);
+  }
+
+  function isActiveFormComplete() {
+    return !!(window.FormsSaveEngine && window.FormsSaveEngine.isComplete
+      && window.FormsSaveEngine.isComplete());
+  }
+
+  /** Latest field values — the engine's copy while a form is open. */
+  function activeData() {
+    if (window.FormsSaveEngine && typeof window.FormsSaveEngine.getData === 'function') {
+      try { return window.FormsSaveEngine.getData(); } catch (_e) { /* fall through */ }
+    }
+    return (activeInstance && activeInstance.data) || {};
+  }
+
+  /**
+   * Disable every control in the form so a completed worksheet can be read
+   * but not changed. The class also parks pointer events on the signature
+   * canvas, which isn't a form control and so can't be disabled.
+   *
+   * Unlocking does NOT walk the controls back: some of them are legitimately
+   * disabled on their own account — an "Other ___" fill-in is disabled until
+   * its option is ticked — and blanket-enabling them would hand the user
+   * inputs the renderer meant to keep shut. Callers unlock by re-rendering,
+   * which is why this only ever runs straight after renderFormFields.
+   */
+  function applyFieldLock(locked) {
+    if (!window.FormsDrawer) return;
+    const container = window.FormsDrawer.getContentEl();
+    if (!container) return;
+    container.classList.toggle('jt-forms-locked', !!locked);
+    if (!locked) return;
+    container.querySelectorAll('input, textarea, select, button').forEach((el) => {
+      el.disabled = true;
+    });
+  }
+
+  /**
+   * Build the footer bar: an answered counter plus Mark complete while the
+   * worksheet is open, or the completion stamp plus Reopen to edit once it
+   * is locked.
+   */
+  function renderCompletionBar(data) {
+    if (!window.FormsDrawer) return;
+    const footer = window.FormsDrawer.getFooterEl();
+    if (!footer) return;
+    while (footer.firstChild) footer.removeChild(footer.firstChild);
+    if (!activeTemplate) return;
+
+    const complete = isActiveFormComplete();
+
+    const bar = document.createElement('div');
+    bar.className = 'jt-forms-completion' + (complete ? ' is-complete' : '');
+
+    const text = document.createElement('div');
+    text.className = 'jt-forms-completion-text';
+    text.textContent = completionText(complete, data);
+    bar.appendChild(text);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'jt-forms-completion-action';
+    button.disabled = completionBusy;
+    if (complete) {
+      button.textContent = 'Reopen to edit';
+      button.addEventListener('click', () => { void changeCompletion('in_progress'); });
+    } else {
+      button.textContent = 'Mark complete';
+      button.addEventListener('click', () => { void changeCompletion('complete'); });
+    }
+    bar.appendChild(button);
+
+    footer.appendChild(bar);
+  }
+
+  /**
+   * The sentence in the footer bar. Locked worksheets say when they were
+   * completed; open ones say how much is left.
+   */
+  function completionText(complete, data) {
+    if (complete) {
+      const when = activeInstance ? formatRelativeTime(activeInstance.completedAt) : '';
+      return when ? 'Completed ' + when + ' · locked' : 'Completed · locked';
+    }
+    const summary = window.FormsCompletion.summarize(activeSchema, data);
+    if (summary.total === 0) return 'No questions on this worksheet.';
+    const base = summary.answered + ' of ' + summary.total + ' answered';
+    if (summary.allAnswered) return base + ' · complete';
+    if (summary.requiredUnanswered > 0) {
+      return base + ' · ' + summary.requiredUnanswered + ' required left';
+    }
+    return base;
+  }
+
+  /** Repaint only the counter — cheap enough to run on every keystroke. */
+  function refreshCompletionText() {
+    if (!window.FormsDrawer) return;
+    const footer = window.FormsDrawer.getFooterEl();
+    const text = footer && footer.querySelector('.jt-forms-completion-text');
+    if (!text) return;
+    text.textContent = completionText(isActiveFormComplete(), activeData());
+  }
+
+  function clearCompletionBar() {
+    if (!window.FormsDrawer) return;
+    const footer = window.FormsDrawer.getFooterEl();
+    if (!footer) return;
+    while (footer.firstChild) footer.removeChild(footer.firstChild);
+    completionBusy = false;
+  }
+
+  /**
+   * Mark complete / Reopen. The status change rides a normal upsert, so
+   * whatever the user typed last is flushed in the same round trip.
+   */
+  async function changeCompletion(nextStatus) {
+    if (completionBusy || !window.FormsSaveEngine) return;
+    completionBusy = true;
+    setCompletionButtonBusy(true);
+    try {
+      await window.FormsSaveEngine.setStatus(nextStatus);
+    } catch (err) {
+      console.error('FormsFeature: status change failed', err);
+      showToast('Could not update the worksheet status: '
+        + (err && err.message ? err.message : 'unknown error'), 'error');
+    } finally {
+      completionBusy = false;
+      setCompletionButtonBusy(false);
+    }
+  }
+
+  function setCompletionButtonBusy(busy) {
+    if (!window.FormsDrawer) return;
+    const footer = window.FormsDrawer.getFooterEl();
+    const button = footer && footer.querySelector('.jt-forms-completion-action');
+    if (button) button.disabled = !!busy;
+  }
+
+  /**
+   * The server confirmed a lifecycle change. Repaint the form under the new
+   * lock, keep the cached instance in step so the list card is right the
+   * moment the user hits Back, and say what happened.
+   */
+  function handleStatusChange(status, instance) {
+    if (instance) syncInstance(instance);
+    else syncActiveInstanceFromEngine();
+    renderActiveForm(activeData());
+    showToast(
+      status === 'complete'
+        ? 'Worksheet marked complete — it is now locked.'
+        : 'Worksheet reopened — you can edit it again.',
+      'success'
+    );
+  }
+
+  /**
+   * Fold a server-returned instance into our cached copy.
+   */
+  function syncInstance(instance) {
+    activeInstance = Object.assign({}, activeInstance || {}, instance);
+    syncCacheInstance(activeInstance);
+  }
+
+  /**
+   * Push what the save engine holds back onto the cached instance. Without
+   * this the list view still renders the state the drawer opened with, so a
+   * worksheet the user just finished still reads as "In progress".
+   */
+  function syncActiveInstanceFromEngine() {
+    if (!window.FormsSaveEngine || !activeTemplate || !currentJob) return;
+    activeInstance = Object.assign({
+      templateId: activeTemplate.id,
+      jtOrgId: currentOrgId,
+      jtJobId: currentJob.jobId,
+    }, activeInstance || {}, {
+      data: window.FormsSaveEngine.getData(),
+      optimisticVersion: window.FormsSaveEngine.getVersion(),
+      status: window.FormsSaveEngine.getStatus(),
+    });
+    syncCacheInstance(activeInstance);
+  }
+
+  /**
+   * Keep formsCache in step with the instance we're editing. A template
+   * being filled for the first time moves out of `availableTemplates` and
+   * into `instances`, or computeDisplayable would list it twice.
+   */
+  function syncCacheInstance(instance) {
+    if (!formsCache || !activeTemplate || !instance) return;
+    const existing = formsCache.instances.find(
+      w => w && w.instance && w.instance.templateId === instance.templateId);
+    if (existing) {
+      existing.instance = instance;
+      return;
+    }
+    const idx = formsCache.availableTemplates.findIndex(t => t && t.id === activeTemplate.id);
+    const template = idx >= 0 ? formsCache.availableTemplates.splice(idx, 1)[0] : activeTemplate;
+    formsCache.instances.push({ instance, template, schema: activeSchema });
   }
 
   /**
@@ -363,6 +587,7 @@ const FormsFeature = (() => {
             if (window.FormsSaveEngine) {
               window.FormsSaveEngine.markDirty(fieldId, newValue);
             }
+            refreshCompletionText();
           }
         );
         if (card) container.appendChild(card);
@@ -402,6 +627,7 @@ const FormsFeature = (() => {
         window.FormsDrawer.setStatusPill('saving', 'Saving...');
         break;
       case 'saved':
+        syncActiveInstanceFromEngine();
         startSavedAtTimer(m.savedAt instanceof Date ? m.savedAt : new Date());
         break;
       case 'conflict':
@@ -410,22 +636,26 @@ const FormsFeature = (() => {
         break;
       case 'offline':
         stopSavedAtTimer();
-        if (m.permanent) {
-          const status = m.status;
-          let text;
-          if (status === 401) text = 'Auth error — please re-login';
-          else if (status === 403) text = 'Permission denied';
-          else if (status === 404) text = 'Worksheet deleted';
-          else text = 'Save failed (' + status + ')';
-          window.FormsDrawer.setStatusPill('offline', text);
-        } else {
-          window.FormsDrawer.setStatusPill('offline', 'Offline — will retry');
-        }
+        window.FormsDrawer.setStatusPill('offline', m.permanent
+          ? permanentFailureText(m.status)
+          : 'Offline — will retry');
         break;
       default:
         // Unknown state — leave pill alone
         break;
     }
+  }
+
+  /**
+   * Pill text for a save that will never succeed on retry.
+   * @param {number} status HTTP status from the failed upsert
+   */
+  function permanentFailureText(status) {
+    if (status === 401) return 'Auth error — please re-login';
+    if (status === 403) return 'Permission denied';
+    if (status === 404) return 'Worksheet deleted';
+    if (status === 423) return 'Complete — reopen to edit';
+    return 'Save failed (' + status + ')';
   }
 
   function startSavedAtTimer(savedAt) {
@@ -460,7 +690,7 @@ const FormsFeature = (() => {
     // Re-render with the merged data. Per design doc, a field-keyed renderer
     // is a v2 concern — full re-render is acceptable for v1.
     const data = window.FormsSaveEngine.getData();
-    renderFormFields(activeSchema, data);
+    renderActiveForm(data);
 
     const fieldNameMap = buildFieldNameMap(activeSchema);
     const names = refreshedFieldIds.map(id => fieldNameMap.get(id) || id).slice(0, 3);
@@ -618,28 +848,64 @@ const FormsFeature = (() => {
 
     card.appendChild(main);
 
-    const status = computeListCardStatus(template, instance);
+    const status = computeListCardStatus(entry);
     if (status) {
       const pill = document.createElement('span');
       pill.className = 'jt-forms-list-card-pill is-' + status.kind;
       pill.textContent = status.label;
+      if (status.title) pill.title = status.title;
       card.appendChild(pill);
     }
 
     return card;
   }
 
-  function computeListCardStatus(template, instance) {
+  /**
+   * The list card's status pill.
+   *
+   * "Complete" is shown as soon as every question carries an answer — the
+   * old rule ("any key in the data blob at all" → In progress) left a fully
+   * filled worksheet looking unfinished forever. A worksheet someone
+   * explicitly marked complete additionally reads as locked, because that
+   * one can't be edited without reopening it first.
+   *
+   * @param {{ template: Object, schema: Object|null, instance: Object|null }} entry
+   */
+  function computeListCardStatus(entry) {
+    const template = entry ? entry.template : null;
+    const instance = entry ? entry.instance : null;
+
     if (!instance) {
       if (template && template.autoAttachToNewJobs) {
         return { kind: 'auto', label: 'Auto-attached' };
       }
-      return { kind: 'empty', label: 'Empty' };
+      return { kind: 'empty', label: 'Not started' };
     }
-    const data = (instance.data && typeof instance.data === 'object') ? instance.data : null;
-    const hasData = data ? Object.keys(data).length > 0 : false;
-    if (hasData) return { kind: 'progress', label: 'In progress' };
-    return { kind: 'empty', label: 'Empty' };
+
+    if (window.FormsCompletion.isComplete(instance)) {
+      return {
+        kind: 'locked',
+        label: 'Complete · Locked',
+        title: 'Marked complete — open it and click Reopen to edit',
+      };
+    }
+
+    const summary = window.FormsCompletion.summarize(entry.schema, instance.data);
+    if (summary.allAnswered) {
+      return {
+        kind: 'complete',
+        label: 'Complete',
+        title: 'Every question is answered. Open it to mark it complete and lock it.',
+      };
+    }
+    if (summary.started) {
+      return {
+        kind: 'progress',
+        label: 'In progress',
+        title: summary.answered + ' of ' + summary.total + ' answered',
+      };
+    }
+    return { kind: 'empty', label: 'Not started' };
   }
 
   function computeListCardMeta(_template, instance) {
@@ -859,6 +1125,7 @@ const FormsFeature = (() => {
       try { window.FormsSaveEngine.dispose(); } catch (_e) { /* noop */ }
     }
     stopSavedAtTimer();
+    clearCompletionBar();
     activeTemplate = null;
     activeSchema = null;
     activeInstance = null;
@@ -887,7 +1154,8 @@ const FormsFeature = (() => {
     }
 
     if (!window.FormsDrawer || !window.FormsApi || !window.FormsJobDetector
-        || !window.FormsFieldRenderers || !window.FormsSaveEngine) {
+        || !window.FormsFieldRenderers || !window.FormsSaveEngine
+        || !window.FormsCompletion) {
       console.warn('FormsFeature: dependencies not available, aborting init');
       return;
     }
@@ -952,6 +1220,7 @@ const FormsFeature = (() => {
         try { window.FormsSaveEngine.dispose(); } catch (_e) { /* noop */ }
       }
       stopSavedAtTimer();
+      clearCompletionBar();
       activeTemplate = null;
       activeSchema = null;
       activeInstance = null;
@@ -1034,6 +1303,7 @@ const FormsFeature = (() => {
     activeTemplate = null;
     activeSchema = null;
     activeInstance = null;
+    completionBusy = false;
     active = false;
   }
 

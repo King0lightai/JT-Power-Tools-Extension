@@ -396,8 +396,9 @@ const FeatureGuides = (() => {
       summary: 'Edit custom field cells without opening each job. Click the pencil ' +
         'on a cell, or Alt+click it, then type and press Enter. Tab saves and moves ' +
         'to the next one.',
-      where: 'The Jobs list, in whichever saved view you have open.',
-      note: 'A plain click still opens the job. Only custom field columns become ' +
+      where: 'The Jobs, Customers, Vendors and Locations lists, in whichever ' +
+        'saved view you have open.',
+      note: 'A plain click still opens the record. Only custom field columns become ' +
         'editable — name, address and dates are left alone.',
       apiAccess: API_ACCESS.REQUIRED,
       accessNote: WRITES_KEY,

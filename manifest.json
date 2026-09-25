@@ -107,6 +107,7 @@
         "features/forms-modules/field-renderers.js",
         "features/forms-modules/save-engine.js",
         "features/forms-modules/pdf-exporter.js",
+        "features/forms-modules/completion.js",
         "features/forms.js",
         "features/help-sidebar-support.js",
         "features/keyboard-shortcuts.js",

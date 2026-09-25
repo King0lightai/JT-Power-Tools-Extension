@@ -2,10 +2,11 @@
  * JT Power Tools - Editable Tables (Power User)
  *
  * Makes custom field columns editable in place in JobTread's Data Browser
- * grids (/jobs and friends). Hover a custom field cell and click the pencil, or
- * Alt+click the cell, then type and press Enter - the value is written straight
- * to JobTread with a Pave `updateJob` mutation. Tab commits and steps to the
- * next editable cell, so a whole column can be filled without leaving the grid.
+ * grids - Jobs, Customers, Vendors, Locations. Hover a custom field cell and
+ * click the pencil, or Alt+click the cell, then type and press Enter - the value
+ * is written straight to JobTread with the matching Pave mutation (updateJob,
+ * updateAccount, updateLocation). Tab commits and steps to the next editable
+ * cell, so a whole column can be filled without leaving the grid.
  *
  * The Data Browser is NOT an HTML table. It is a Tailwind flex grid:
  *
@@ -22,13 +23,18 @@
  * scroll container than the rows, so it is found by matching the inline pixel
  * widths that header, body and footer rows all share - which doubles as proof
  * that column N of the header really is column N of the row. Second, because
- * the row is an anchor, any plain click opens the job; that is why editing is
+ * the row is an anchor, any plain click opens the record; that is why editing is
  * on the pencil and Alt+click, and why double-click can't be used at all (the
  * first click of the pair navigates before the second arrives).
  *
  * Only columns a saved view proves are custom fields are touched - see
  * editable-tables-modules/schema.js for why that proof matters. Native columns
  * (name, address, dates, totals) are left alone.
+ *
+ * Any Data Browser grid whose rows are records we can write works the same
+ * way: jobs, customers, vendors and locations. Which entity a grid holds is
+ * read off its row links and handed to the resolver, so a customer view can
+ * never be matched against a vendor grid.
  *
  * @module EditableTablesFeature
  * @requires EditableTablesSchema, EditableTablesEditor, JobTreadAPI
@@ -51,9 +57,41 @@ const EditableTablesFeature = (() => {
   const DECORATE_DEBOUNCE_MS = 250;
   const URL_POLL_MS = 1000;
 
-  // Scope today is job views. Widening to tasks or cost items means adding the
-  // entity type to SUPPORTED_TYPES in the schema module and generalising this.
-  const ROW_SELECTOR = 'a[href^="/jobs/"]';
+  // Fallback only. The live selector is built from the schema module's
+  // SUPPORTED_TYPES registry so adding an entity there is the single edit
+  // needed to widen scope; this constant covers the (impossible in the
+  // manifest's load order) case of the module not being resident yet.
+  const FALLBACK_ROW_SELECTOR = 'a[href^="/jobs/"]';
+
+  /**
+   * CSS selector matching a Data Browser row of any writable entity type.
+   * @returns {string}
+   */
+  function rowSelector() {
+    const schema = window.EditableTablesSchema;
+    return (schema && typeof schema.rowSelector === 'function')
+      ? schema.rowSelector()
+      : FALLBACK_ROW_SELECTOR;
+  }
+
+  /**
+   * The entity types a grid's rows could belong to, in the schema module's
+   * order of specificity. Unioned across every row so one odd link can't
+   * narrow the grid to nothing.
+   * @param {Array<HTMLElement>} rows
+   * @returns {Array<string>}
+   */
+  function gridTypes(rows) {
+    const schema = window.EditableTablesSchema;
+    if (!schema || typeof schema.candidateTypes !== 'function') return [];
+    const seen = [];
+    rows.forEach((row) => {
+      schema.candidateTypes(row).forEach((type) => {
+        if (seen.indexOf(type) === -1) seen.push(type);
+      });
+    });
+    return seen;
+  }
 
   // ─── LIFECYCLE ───────────────────────────────────────────────
 
@@ -237,7 +275,7 @@ const EditableTablesFeature = (() => {
    */
   function findGrids() {
     const rowsByScroller = new Map();
-    document.querySelectorAll(ROW_SELECTOR).forEach((row) => {
+    document.querySelectorAll(rowSelector()).forEach((row) => {
       // A row has one child per column; a plain link to a job does not.
       if (row.children.length < 2) return;
       const scroller = row.parentElement;
@@ -263,7 +301,9 @@ const EditableTablesFeature = (() => {
         }
         return;
       }
-      grids.push({ rows, headerRow, widths });
+      const types = gridTypes(rows);
+      if (types.length === 0) return;
+      grids.push({ rows, headerRow, widths, types });
     });
     return grids;
   }
@@ -276,7 +316,7 @@ const EditableTablesFeature = (() => {
     for (const grid of findGrids()) {
       let schema;
       try {
-        schema = await window.EditableTablesSchema.resolve(labelsOf(grid.headerRow));
+        schema = await window.EditableTablesSchema.resolve(labelsOf(grid.headerRow), grid.types);
       } catch (error) {
         console.error('EditableTables: Failed to resolve view schema:', error);
         return;
@@ -298,7 +338,7 @@ const EditableTablesFeature = (() => {
       // Row widths are re-checked per row: a grouped grid can put a spanning
       // subtotal row in among the record rows.
       if (!sameWidths(columnWidths(row), grid.widths)) return;
-      if (!window.EditableTablesSchema.getRecordId(row, schema.hrefPrefix)) return;
+      if (!window.EditableTablesSchema.getRecordId(row, schema.type)) return;
 
       // The class and button are a hover affordance only - which record and
       // field an edit targets is re-resolved at click time (see openEditor),
@@ -370,19 +410,22 @@ const EditableTablesFeature = (() => {
     if (!cell || !isActiveState) return;
 
     const row = cell.parentElement;
-    if (!row || !row.matches(ROW_SELECTOR)) return;
+    if (!row || !row.matches(rowSelector())) return;
 
     const widths = columnWidths(row);
     const headerRow = widths ? findHeaderRow(row.parentElement, widths) : null;
     if (!headerRow) return;
 
-    const schema = await window.EditableTablesSchema.resolve(labelsOf(headerRow));
+    const types = gridTypes([row]);
+    if (types.length === 0) return;
+
+    const schema = await window.EditableTablesSchema.resolve(labelsOf(headerRow), types);
     if (!schema || !isActiveState) return;
 
     const field = schema.byIndex.get(Array.prototype.indexOf.call(row.children, cell));
     if (!field) return;
 
-    const recordId = window.EditableTablesSchema.getRecordId(row, schema.hrefPrefix);
+    const recordId = window.EditableTablesSchema.getRecordId(row, schema.type);
     if (!recordId) return;
 
     window.EditableTablesEditor.open({

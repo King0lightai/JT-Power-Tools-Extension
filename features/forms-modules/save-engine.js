@@ -26,12 +26,18 @@
  * Local always wins for "ours". onMerge fires with the list of
  * server-refreshed field IDs so the caller can re-render those fields.
  *
+ * Lifecycle: setStatus('complete' | 'in_progress') queues a status change
+ * onto the next upsert. Completing LOCKS the instance server-side, so
+ * markDirty is dropped while complete and a stray write comes back 423
+ * (treated as permanent — retrying it would never succeed).
+ *
  * Server contract notes (see server/mcp-server/src/forms-handler.js
  * upsertInstanceData):
- *   - Request body uses `fields` (not `data`)
+ *   - Request body uses `fields` (not `data`), plus an optional `status`
  *   - 409 surfaces conflict info under err.payload.errors[0]:
  *     { field, reason, currentVersion, currentData }
- *   - 200 response shape: { instance: { ..., optimisticVersion }, schema }
+ *   - 423 means the instance is complete; reopen before writing again
+ *   - 200 response shape: { instance: { ..., optimisticVersion, status }, schema }
  */
 const FormsSaveEngine = (() => {
   const HEARTBEAT_MS = 30000;
@@ -47,6 +53,15 @@ const FormsSaveEngine = (() => {
   let heartbeatId = null;
   let state = 'idle';
   let abortController = null;
+  // Lifecycle (Migration 057). `status` mirrors the server's stored value;
+  // `pendingStatus` is a change the user asked for that hasn't landed yet and
+  // must ride the NEXT upsert, whether or not any field is dirty.
+  let status = 'in_progress';
+  let pendingStatus = null;
+  // Resolvers for setStatus() callers, released once the change has actually
+  // been sent (or given up on) — not when the save that happened to be in
+  // flight at the time finished.
+  let statusWaiters = [];
 
   // ─── State helpers ────────────────────────────────────────────────
 
@@ -84,6 +99,7 @@ const FormsSaveEngine = (() => {
    * @param {string} c.jtJobId
    * @param {Object} [c.initialData]    existing instance data_json or {}
    * @param {number} [c.initialVersion] existing optimistic_version or 0
+   * @param {string} [c.initialStatus]  'in_progress' (default) or 'complete'
    * @param {Function} c.onStateChange  (state, meta) => void
    * @param {Function} [c.onMerge]      (refreshedFieldIds, lastEditedBy, lastEditedAt) => void
    * @param {Function} [c.getSchema]    () => schema; reserved for future use
@@ -111,13 +127,15 @@ const FormsSaveEngine = (() => {
     cfg = c;
     data = Object.assign({}, c.initialData || {});
     version = Number.isInteger(c.initialVersion) ? c.initialVersion : 0;
+    status = c.initialStatus === 'complete' ? 'complete' : 'in_progress';
+    pendingStatus = null;
     dirtyFields = new Set();
     inFlight = null;
     nextSavePending = false;
     state = 'idle';
     abortController = null;
     heartbeatId = null;
-    log('init', { templateId: c.templateId, jtJobId: c.jtJobId, version });
+    log('init', { templateId: c.templateId, jtJobId: c.jtJobId, version, status });
   }
 
   // ─── Public: markDirty ───────────────────────────────────────────
@@ -129,6 +147,13 @@ const FormsSaveEngine = (() => {
   function markDirty(fieldId, value) {
     if (!cfg) return;
     if (typeof fieldId !== 'string' || !fieldId) return;
+    // A completed worksheet is read-only. The drawer already renders its
+    // controls disabled, so reaching here means something slipped through —
+    // drop the edit rather than send a write the server will refuse with 423.
+    if (status === 'complete' && pendingStatus !== 'in_progress') {
+      log('markDirty ignored — worksheet is complete');
+      return;
+    }
 
     data[fieldId] = value;
     dirtyFields.add(fieldId);
@@ -162,10 +187,12 @@ const FormsSaveEngine = (() => {
       nextSavePending = true;
       return inFlight;
     }
-    if (dirtyFields.size === 0 && state === 'saved') {
+    // A pending status change has to go out even with nothing dirty — that
+    // IS the change the user asked for.
+    if (pendingStatus === null && dirtyFields.size === 0 && state === 'saved') {
       return Promise.resolve();
     }
-    if (dirtyFields.size === 0 && state === 'idle') {
+    if (pendingStatus === null && dirtyFields.size === 0 && state === 'idle') {
       return Promise.resolve();
     }
 
@@ -186,16 +213,11 @@ const FormsSaveEngine = (() => {
         // Build payload from local data — server expects `fields` (full
         // current snapshot is fine; server merges field-level into its
         // existing data_json).
-        const fieldsSnapshot = buildFieldsPayload();
-        const result = await window.FormsApi.upsertInstance({
-          templateId: localTemplateId,
-          jtOrgId: localJtOrgId,
-          jtJobId: localJtJobId,
-          fields: fieldsSnapshot,
-          expectedVersion: version,
-        });
+        const payload = buildUpsertPayload(localTemplateId, localJtOrgId, localJtJobId);
+        const result = await window.FormsApi.upsertInstance(payload);
         // 200 path
         version = readVersion(result, version);
+        applyStatusFromResult(result, payload.status);
         // Only transition to 'saved' if no new edits arrived during the
         // save. If they did, the .finally block will kick another save and
         // the state will move 'saving' → 'dirty' implicitly via that call.
@@ -242,6 +264,11 @@ const FormsSaveEngine = (() => {
           nextSavePending = false;
           // Fire-and-forget — Promise tracked via the new inFlight
           forceSave();
+        } else {
+          // Nothing left to send. Release setStatus() callers whether the
+          // change landed or failed — a stuck promise would leave the
+          // drawer's Mark complete button disabled forever.
+          settleStatusWaiters();
         }
       }
     })();
@@ -263,6 +290,65 @@ const FormsSaveEngine = (() => {
       out[k] = data[k];
     }
     return out;
+  }
+
+  /**
+   * The full upsert body, including a pending lifecycle change when one is
+   * queued. `status` is only ever sent when the user explicitly asked for it
+   * — a background save must never carry one, or the server's completion
+   * lock would have nothing to bite on.
+   */
+  function buildUpsertPayload(templateId, jtOrgId, jtJobId) {
+    const payload = {
+      templateId,
+      jtOrgId,
+      jtJobId,
+      fields: buildFieldsPayload(),
+      expectedVersion: version,
+    };
+    if (pendingStatus !== null) payload.status = pendingStatus;
+    return payload;
+  }
+
+  /**
+   * Adopt the status the server confirmed and retire the change this save
+   * actually carried.
+   *
+   * `sentStatus` matters: a change queued WHILE this save was in flight was
+   * never in its payload, so clearing pendingStatus unconditionally would
+   * silently swallow the user's "Mark complete". Only the value we sent is
+   * retired; anything newer still has to go out.
+   *
+   * @param {Object} result - the 200 response
+   * @param {string|undefined} sentStatus - status included in the request, if any
+   */
+  function applyStatusFromResult(result, sentStatus) {
+    const previous = status;
+    const confirmed = result && result.instance && result.instance.status;
+    if (confirmed === 'complete' || confirmed === 'in_progress') {
+      status = confirmed;
+    } else if (sentStatus !== undefined) {
+      // Server predates Migration 057 and echoes no status — trust what we sent.
+      status = sentStatus;
+    }
+    if (sentStatus !== undefined && pendingStatus === sentStatus) {
+      pendingStatus = null;
+    }
+    if (status !== previous && cfg && typeof cfg.onStatusChange === 'function') {
+      try {
+        cfg.onStatusChange(status, result && result.instance ? result.instance : null);
+      } catch (err) {
+        console.error('FormsSaveEngine: onStatusChange threw', err);
+      }
+    }
+  }
+
+  /** Release every pending setStatus() promise. */
+  function settleStatusWaiters() {
+    if (statusWaiters.length === 0) return;
+    const waiters = statusWaiters;
+    statusWaiters = [];
+    waiters.forEach((resolve) => resolve());
   }
 
   /**
@@ -307,16 +393,13 @@ const FormsSaveEngine = (() => {
       }
     }
 
-    // Retry once with merged data + new version
+    // Retry once with merged data + new version (carrying any pending status
+    // change — a conflict must not swallow the user's "Mark complete").
     try {
-      const retry = await window.FormsApi.upsertInstance({
-        templateId,
-        jtOrgId,
-        jtJobId,
-        fields: buildFieldsPayload(),
-        expectedVersion: version,
-      });
+      const retryPayload = buildUpsertPayload(templateId, jtOrgId, jtJobId);
+      const retry = await window.FormsApi.upsertInstance(retryPayload);
       version = readVersion(retry, version);
+      applyStatusFromResult(retry, retryPayload.status);
       if (dirtyFields.size === 0 && !nextSavePending) {
         setState('saved', { savedAt: new Date(), refreshedFieldIds });
         if (heartbeatId) {
@@ -376,8 +459,11 @@ const FormsSaveEngine = (() => {
    * retrying the same request will keep failing (auth/perm/not-found).
    * 5xx, 429, and missing-status network errors stay transient.
    */
-  function isPermanentStatus(status) {
-    return status === 401 || status === 403 || status === 404;
+  function isPermanentStatus(httpStatus) {
+    // 423 Locked: the worksheet is marked complete, so the same write will
+    // keep being refused until someone reopens it. Retrying is pointless.
+    return httpStatus === 401 || httpStatus === 403
+      || httpStatus === 404 || httpStatus === 423;
   }
 
   /**
@@ -411,6 +497,50 @@ const FormsSaveEngine = (() => {
     return version;
   }
 
+  /**
+   * The lifecycle status this engine believes the instance holds.
+   * @returns {string} 'in_progress' | 'complete'
+   */
+  function getStatus() {
+    return pendingStatus !== null ? pendingStatus : status;
+  }
+
+  /**
+   * True while the worksheet is locked against edits.
+   */
+  function isComplete() {
+    return getStatus() === 'complete';
+  }
+
+  /**
+   * Queue a lifecycle change and push it immediately.
+   *
+   * 'complete' marks the worksheet done and locks it; 'in_progress' reopens
+   * it. The change rides a normal upsert, so whatever the user typed last
+   * is flushed in the same round trip.
+   *
+   * @param {string} newStatus 'in_progress' | 'complete'
+   * @returns {Promise<void>} resolves when the write settles
+   */
+  function setStatus(newStatus) {
+    if (!cfg) return Promise.resolve();
+    if (newStatus !== 'complete' && newStatus !== 'in_progress') {
+      return Promise.reject(new Error('FormsSaveEngine.setStatus: unknown status ' + newStatus));
+    }
+    if (newStatus === status && pendingStatus === null) return Promise.resolve();
+    pendingStatus = newStatus;
+    const settled = new Promise((resolve) => statusWaiters.push(resolve));
+    if (inFlight) {
+      // A save is mid-flight with the OLD payload; queue another so the
+      // status change goes out right behind it. The returned promise settles
+      // when THAT save lands, not this one.
+      nextSavePending = true;
+    } else {
+      forceSave();
+    }
+    return settled;
+  }
+
   // ─── Public: dispose ─────────────────────────────────────────────
 
   /**
@@ -431,9 +561,12 @@ const FormsSaveEngine = (() => {
       try { abortController.abort(); } catch (_e) { /* noop */ }
       abortController = null;
     }
+    settleStatusWaiters();
     cfg = null;
     data = {};
     version = 0;
+    status = 'in_progress';
+    pendingStatus = null;
     dirtyFields = new Set();
     inFlight = null;
     nextSavePending = false;
@@ -446,6 +579,9 @@ const FormsSaveEngine = (() => {
     forceSave,
     getData,
     getVersion,
+    getStatus,
+    isComplete,
+    setStatus,
     dispose,
   };
 })();

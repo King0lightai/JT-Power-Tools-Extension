@@ -317,9 +317,10 @@
 }
 
 /* Pill class name MUST match what forms.js#buildListCard sets:
-   `jt-forms-list-card-pill is-{auto|empty|progress}`
+   `jt-forms-list-card-pill is-{auto|empty|progress|complete|locked}`
    Base + is-empty + is-progress = neutral chrome (themed).
-   is-auto = semantic amber (NOT themed). */
+   is-auto = semantic amber, is-complete / is-locked = semantic green
+   (NOT themed — these carry meaning, not decoration). */
 .jt-forms-list-card-pill {
   display: inline-flex;
   align-items: center;
@@ -349,6 +350,90 @@
 .jt-forms-list-card-pill.is-auto {
   background: #fef3c7;
   color: #78350f;
+}
+
+/* Every question answered, but still editable. */
+.jt-forms-list-card-pill.is-complete {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+/* Explicitly marked complete — read-only until someone reopens it. */
+.jt-forms-list-card-pill.is-locked {
+  background: #dcfce7;
+  color: #14532d;
+  box-shadow: inset 0 0 0 1px #86efac;
+}
+
+/* ============================================================
+   Completion Bar — footer of the form-fill view
+   ============================================================ */
+.jt-forms-completion {
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  /* Typography */
+  font-size: 12px;
+}
+
+.jt-forms-completion-text {
+  color: var(--jt-theme-text-secondary, #6a737d);
+  line-height: 1.4;
+}
+
+.jt-forms-completion.is-complete .jt-forms-completion-text {
+  color: #14532d;
+  font-weight: 500;
+}
+
+.jt-forms-completion-action {
+  /* Layout */
+  flex-shrink: 0;
+  padding: 5px 12px;
+  /* Colors */
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border: 1px solid var(--jt-theme-border-strong, #d1d5da);
+  border-radius: 4px;
+  color: var(--jt-theme-text, #24292e);
+  /* Typography */
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  /* Animation */
+  transition: background var(--jtt-duration-fast) ease, border-color var(--jtt-duration-fast) ease;
+}
+
+.jt-forms-completion-action:hover:not(:disabled) {
+  background: var(--jt-theme-background-muted, #f1f3f5);
+  border-color: var(--jt-theme-primary, #ea580c);
+}
+
+.jt-forms-completion-action:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ============================================================
+   Locked state — a worksheet marked complete
+   ============================================================ */
+/* Controls are disabled in JS; this makes the whole surface read as
+   read-only, and parks pointer events on the signature canvas, which is
+   not a form control and so cannot be disabled. */
+.jt-forms-content.jt-forms-locked .jt-forms-field-card {
+  background: var(--jt-theme-background-subtle, #f8f9fa);
+}
+
+.jt-forms-content.jt-forms-locked .jt-forms-field-card:hover,
+.jt-forms-content.jt-forms-locked .jt-forms-field-card:focus-within {
+  border-color: var(--jt-theme-border, #e1e4e8);
+  box-shadow: none;
+}
+
+.jt-forms-content.jt-forms-locked .jt-forms-signature-pad {
+  pointer-events: none;
 }
 
 /* ============================================================
@@ -767,6 +852,46 @@ body.jt-dark-mode .jt-forms-list-card-pill.is-progress {
 body.jt-dark-mode .jt-forms-list-card-pill.is-auto {
   background: #78350f;
   color: #fef3c7;
+}
+
+body.jt-dark-mode .jt-forms-list-card-pill.is-complete {
+  background: #14532d;
+  color: #dcfce7;
+}
+
+body.jt-dark-mode .jt-forms-list-card-pill.is-locked {
+  background: #14532d;
+  color: #dcfce7;
+  box-shadow: inset 0 0 0 1px #166534;
+}
+
+/* Completion bar */
+body.jt-dark-mode .jt-forms-completion-text {
+  color: var(--jt-theme-text-secondary, #b0b0b0);
+}
+
+body.jt-dark-mode .jt-forms-completion.is-complete .jt-forms-completion-text {
+  color: #86efac;
+}
+
+body.jt-dark-mode .jt-forms-completion-action {
+  background: var(--jt-theme-background-elevated, #333333);
+  border-color: var(--jt-theme-border-strong, #505050);
+  color: var(--jt-theme-text, #e0e0e0);
+}
+
+body.jt-dark-mode .jt-forms-completion-action:hover:not(:disabled) {
+  background: var(--jt-theme-background-muted, #3a3a3a);
+}
+
+body.jt-dark-mode .jt-forms-content.jt-forms-locked .jt-forms-field-card {
+  background: var(--jt-theme-background-subtle, #2c2c2c);
+}
+
+body.jt-dark-mode .jt-forms-content.jt-forms-locked .jt-forms-field-card:hover,
+body.jt-dark-mode .jt-forms-content.jt-forms-locked .jt-forms-field-card:focus-within {
+  border-color: var(--jt-theme-border, #404040);
+  box-shadow: none;
 }
 
 /* Field cards */
