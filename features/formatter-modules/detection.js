@@ -183,12 +183,17 @@ const FormatterDetection = (() => {
         return true; // Native alert modal has its own formatter
       }
 
-      // Also check for any native formatter toolbar inside the modal
-      const nativeToolbar = modalContainer.querySelector('.flex.gap-1 button, .sticky button');
+      // Also check for any native formatter toolbar inside the modal.
+      // Our own toolbar's <button>s must not count: once embedded on a Message
+      // field inside a `.flex.gap-1` row (the Selection modal's composer), they
+      // made the next scan call it native and destroy the toolbar, and the scan
+      // after re-embed it — a create/destroy loop every frame.
+      const isNativeButton = (btn) => !btn.closest('.jt-formatter-toolbar');
+      const nativeToolbar = [...modalContainer.querySelectorAll('.flex.gap-1 button, .sticky button')].find(isNativeButton);
       if (nativeToolbar) {
         const toolbarContainer = nativeToolbar.closest('.flex.gap-1, .sticky');
         if (toolbarContainer) {
-          const buttons = toolbarContainer.querySelectorAll('button');
+          const buttons = [...toolbarContainer.querySelectorAll('button')].filter(isNativeButton);
           if (buttons.length >= 3) {
             return true; // Has native formatter buttons
           }
