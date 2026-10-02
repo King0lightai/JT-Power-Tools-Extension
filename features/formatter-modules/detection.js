@@ -314,8 +314,11 @@ const FormatterDetection = (() => {
       // Double-check: exclude if inside any modal with native formatter toolbar
       const modalContainer = textarea.closest('.m-auto.shadow-lg');
       if (modalContainer) {
-        // Check for native formatter buttons in the modal
-        const nativeButtons = modalContainer.querySelectorAll('.rounded-sm button, .flex.gap-1 button');
+        // Check for native formatter buttons in the modal — never our own
+        // toolbar's, or embedding it makes the next scan reject the field
+        // (same create/destroy loop hasNativeFormatter() had).
+        const nativeButtons = [...modalContainer.querySelectorAll('.rounded-sm button, .flex.gap-1 button')]
+          .filter((btn) => !btn.closest('.jt-formatter-toolbar'));
         if (nativeButtons.length >= 3) {
           return false; // Modal has native formatter, skip
         }
